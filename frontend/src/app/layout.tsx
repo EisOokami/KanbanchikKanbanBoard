@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Montserrat } from "next/font/google";
+import { cn } from "@/libs/utils";
 import "./globals.css";
 
-const geistSans = Geist({
-    variable: "--font-geist-sans",
-    subsets: ["latin"],
-});
+import { TooltipProvider } from "@/components/ui/shadcn/tooltip";
+import { SidebarProvider } from "@/components/ui/shadcn/sidebar";
+import AppSidebar from "@/components/ui/appSidebar/AppSidebar";
+import AccountSettingsProvider from "@/context/AccountSettingsProvider";
 
-const geistMono = Geist_Mono({
-    variable: "--font-geist-mono",
+const montserrat = Montserrat({
+    variable: "--font-montserrat",
     subsets: ["latin"],
 });
 
@@ -25,9 +26,19 @@ export default function RootLayout({
     return (
         <html lang="en">
             <body
-                className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+                className={cn(
+                    "font-montserrat",
+                    `${montserrat.variable} antialiased`,
+                )}
             >
-                {children}
+                <SidebarProvider>
+                    <AccountSettingsProvider>
+                        <AppSidebar />
+                        <TooltipProvider>
+                            <main className="w-full">{children}</main>
+                        </TooltipProvider>
+                    </AccountSettingsProvider>
+                </SidebarProvider>
             </body>
         </html>
     );
