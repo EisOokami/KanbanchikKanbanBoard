@@ -35,7 +35,7 @@ export default function RootLayout({
                     <AccountSettingsProvider>
                         <AppSidebar />
                         <TooltipProvider>
-                            <main className="w-full">{children}</main>
+                            <div className="w-full">{children}</div>
                         </TooltipProvider>
                     </AccountSettingsProvider>
                 </SidebarProvider>
