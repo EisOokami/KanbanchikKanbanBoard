@@ -17,12 +17,12 @@ import {
     SidebarMenuSub,
     SidebarMenuSubButton,
     SidebarMenuSubItem,
-} from "../shadcn/sidebar";
+} from "../../shadcn/sidebar";
 import {
     Collapsible,
     CollapsibleContent,
     CollapsibleTrigger,
-} from "../shadcn/collapsible";
+} from "../../shadcn/collapsible";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -46,7 +46,6 @@ const navMain = [
     { title: "Tasks", icon: ClipboardList, url: "/tasks", badge: "12" },
     { title: "Calendar", icon: Calendar, url: "/calendar" },
     { title: "Notifications", icon: Bell, url: "/notifications", badge: "2" },
-    // { title: "Analytics", icon: BarChart3, url: "/analytics" },
 ];
 
 export default function NavMain() {

@@ -15,8 +15,8 @@ import {
     SidebarSeparator,
 } from "../shadcn/sidebar";
 import { Star } from "lucide-react";
-import UserFooter from "../userFooter/UserFooter";
-import NavMain from "../navMain/NavMain";
+import UserFooter from "./userFooter/UserFooter";
+import NavMain from "./navMain/NavMain";
 import Image from "next/image";
 import AccountSettingsModal from "../accountSettings/AccountSettings";
 import { useAccountSettingsContext } from "@/hooks/useAccountSettingsContext";

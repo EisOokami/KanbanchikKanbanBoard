@@ -1,19 +1,19 @@
 "use client";
 
 import { Archive, ChevronsUpDown, LogOut, Settings, Star } from "lucide-react";
-import { Avatar, AvatarFallback } from "../shadcn/avatar";
+import { Avatar, AvatarFallback } from "../../shadcn/avatar";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
-} from "../shadcn/dropdown-menu";
+} from "../../shadcn/dropdown-menu";
 import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
-} from "../shadcn/sidebar";
+} from "../../shadcn/sidebar";
 import { useAccountSettingsContext } from "@/hooks/useAccountSettingsContext";
 
 export default function UserFooter() {
