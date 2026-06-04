@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import {
     DndContext,
     DragEndEvent,
@@ -11,13 +11,10 @@ import {
     useSensor,
     useSensors,
     closestCorners,
+    UniqueIdentifier,
 } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
 import {
-    CheckCircle2,
-    Circle,
-    Loader,
-    Clock,
     Settings,
     Link,
     SquareKanban,
@@ -28,7 +25,7 @@ import {
 } from "lucide-react";
 import OverlayCard from "@/components/ui/overlayCard/OverlayCard";
 import KanbanColumn from "@/components/ui/kanbanColumn/KanbanColumn";
-import { IColumn } from "@/interfaces/interfaces";
+import { Column, ColumnConfig, FilterState, Task } from "@/types/types";
 import { Button } from "@/components/ui/shadcn/button";
 import {
     Avatar,
@@ -39,214 +36,80 @@ import {
 } from "@/components/ui/shadcn/avatar";
 import { ButtonGroup } from "@/components/ui/shadcn/button-group";
 import { InviteAssignmentModal } from "@/components/ui/inviteAssigmentModal/InviteAssigmentModal";
-import {
-    TaskFilters,
-    TaskFilterSheet,
-} from "@/components/ui/taskFilterSheet/TaskFilterSheet";
+import { TaskFilterSheet } from "@/components/ui/taskFilterSheet/TaskFilterSheet";
 import { ProjectSettingsDialog } from "@/components/ui/projectSettingsDialog/ProjectSettingsDialog";
 import { ProjectListView } from "../projectListView/ProjectListView";
-import { ProjectCalendarView } from "../projectCalendarView/ProjectCalendarView";
+import ProjectCalendarView from "../projectCalendarView/ProjectCalendarView";
 import { TaskDetailsSheet } from "@/components/ui/taskDetailsSheet/TaskDetailsSheet";
-
-const members = [
-    { id: "u2", name: "Dmytro P.", avatar: "" },
-    { id: "u5", name: "Maria T.", avatar: "" },
-    { id: "u4", name: "Ivan S.", avatar: "" },
-    { id: "u6", name: "Serhii L.", avatar: "" },
-    { id: "u1", name: "Anna K.", avatar: "" },
-    { id: "u7", name: "Yulia B.", avatar: "" },
-    { id: "u8", name: "Kostya V.", avatar: "" },
-    { id: "u9", name: "Natasha R.", avatar: "" },
-];
-
-const initialColumns = [
-    {
-        id: "backlog",
-        title: "Backlog",
-        color: "#64748b",
-        icon: Circle,
-        cards: [
-            {
-                id: "t1",
-                title: "Research competitor pricing models",
-                tag: "Research",
-                priority: "low",
-                date: "Feb 28",
-            },
-            {
-                id: "t2",
-                title: "Define API schema for notifications",
-                tag: "Backend",
-                priority: "medium",
-                date: "Mar 2",
-            },
-            {
-                id: "t3",
-                title: "User interview synthesis",
-                tag: "UX",
-                priority: "low",
-                date: "Mar 5",
-            },
-        ],
-    },
-    {
-        id: "in-progress",
-        title: "In Progress",
-        color: "#6366f1",
-        icon: Loader,
-        cards: [
-            {
-                id: "t4",
-                title: "Redesign onboarding flow",
-                tag: "Design",
-                priority: "high",
-                date: "Feb 26",
-            },
-            {
-                id: "t5",
-                title: "Implement OAuth2 login",
-                tag: "Backend",
-                priority: "high",
-                date: "Feb 27",
-            },
-            {
-                id: "t6",
-                title: "Write unit tests for auth module",
-                tag: "QA",
-                priority: "medium",
-                date: "Mar 1",
-            },
-        ],
-    },
-    {
-        id: "review",
-        title: "In Review",
-        color: "#f59e0b",
-        icon: Clock,
-        cards: [
-            {
-                id: "t7",
-                title: "Landing page copywriting",
-                tag: "Marketing",
-                priority: "medium",
-                date: "Feb 25",
-            },
-            {
-                id: "t8",
-                title: "Accessibility audit — dashboard",
-                tag: "QA",
-                priority: "high",
-                date: "Feb 25",
-            },
-        ],
-    },
-    {
-        id: "done",
-        title: "Done",
-        color: "#10b981",
-        icon: CheckCircle2,
-        cards: [
-            {
-                id: "t9",
-                title: "Set up CI/CD pipeline",
-                tag: "DevOps",
-                priority: "high",
-                date: "Feb 20",
-            },
-            {
-                id: "t10",
-                title: "Design token system v1",
-                tag: "Design",
-                priority: "medium",
-                date: "Feb 22",
-            },
-        ],
-    },
-];
-
-let nextId = 20;
-
-const DEFAULT_FILTERS: TaskFilters = {
-    search: "",
-    priorities: [],
-    statuses: [],
-    assignees: [],
-    categories: [],
-    dateRange: undefined,
-    dueSoon: false,
-    overdue: false,
-    hasAttachment: false,
-    hasChecklist: false,
-    progress: [0, 100],
-};
+import { COLUMNS_CONFIG, DEFAULT_FILTER } from "@/constants/constants";
 
 export default function KanbanBoard() {
-    const [columns, setColumns] = useState(initialColumns);
-    const [activeCard, setActiveCard] = useState<IColumn | null>(null);
-    const [isOpenInvite, setIsOpenInvite] = useState<boolean>(false);
-    const [isOpenFilters, setIsOpenFilters] = useState<boolean>(false);
-    const [isOpenSettings, setIsOpenSettings] = useState<boolean>(false);
-    const [isOpenTaskDetails, setIsOpenTaskDetails] = useState<boolean>(false);
-    const [filters, setFilters] = useState<TaskFilters>(DEFAULT_FILTERS);
-    const [selectedMode, setSelectedMode] = useState<string>("kanban");
+    const [columns, setColumns] = useState<(ColumnConfig & Column)[]>(
+        Object.values(COLUMNS_CONFIG),
+    );
+    const [activeCard, setActiveCard] = useState<Task | null>(null);
+    const [isOpenInvite, setIsOpenInvite] = useState(false);
+    const [isOpenFilters, setIsOpenFilters] = useState(false);
+    const [isOpenSettings, setIsOpenSettings] = useState(false);
+    const [isOpenTaskDetails, setIsOpenTaskDetails] = useState(false);
+    const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTER);
+    const [selectedMode, setSelectedMode] = useState("kanban");
+
+    // Auto-incrementing id for new tasks (number, matching Task.id: number)
+    const nextId = useRef(1000);
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     );
 
-    const findColByCard = useCallback(
-        (cardId: string) =>
-            columns.find((col) => col.cards.some((c) => c.id === cardId)),
+    // UniqueIdentifier is string | number — Task.id is number, DndKit handles both
+    const findColByCardId = useCallback(
+        (cardId: UniqueIdentifier) =>
+            columns.find((col) =>
+                col.tasks.some((t) => t.id === (cardId as number)),
+            ),
         [columns],
     );
 
     const handleDragStart = (event: DragStartEvent) => {
-        const col = findColByCard(event.active.id as string);
-        if (col)
+        const col = findColByCardId(event.active.id);
+        if (col) {
             setActiveCard(
-                col.cards.find((c) => c.id === event.active.id) || null,
+                col.tasks.find((t) => t.id === event.active.id) ?? null,
             );
+        }
     };
 
     const handleDragOver = (event: DragOverEvent) => {
         const { active, over } = event;
-        if (!over) {
-            return;
-        }
+        if (!over) return;
 
-        const fromColId = findColByCard(active.id as string)?.id;
-        const toColId =
-            columns.find((c) => c.id === over.id)?.id ||
-            findColByCard(over.id as string)?.id;
+        const fromCol = findColByCardId(active.id);
+        const toCol =
+            columns.find((c) => c.id === over.id) ?? findColByCardId(over.id);
 
-        if (!fromColId || !toColId || fromColId === toColId) {
-            return;
-        }
+        if (!fromCol || !toCol || fromCol.id === toCol.id) return;
 
         setColumns((prev) => {
-            const fromCol = prev.find((c) => c.id === fromColId);
-            const toCol = prev.find((c) => c.id === toColId);
-            const card = fromCol?.cards.find((c) => c.id === active.id);
-            const overCard = toCol?.cards.find((c) => c.id === over.id);
+            const card = fromCol.tasks.find((t) => t.id === active.id);
+            if (!card) return prev;
+
+            const overCard = toCol.tasks.find((t) => t.id === over.id);
             const insertIdx =
-                (overCard
-                    ? toCol?.cards.indexOf(overCard)
-                    : toCol?.cards.length) ?? 0;
+                overCard !== undefined
+                    ? toCol.tasks.indexOf(overCard)
+                    : toCol.tasks.length;
 
             return prev.map((col) => {
-                if (col.id === fromColId)
+                if (col.id === fromCol.id)
                     return {
                         ...col,
-                        cards: col.cards.filter((c) => c.id !== active.id),
+                        tasks: col.tasks.filter((t) => t.id !== active.id),
                     };
-                if (col.id === toColId) {
-                    const next = [...col.cards];
-
-                    if (card) {
-                        next.splice(insertIdx, 0, card);
-                    }
-
-                    return { ...col, cards: next };
+                if (col.id === toCol.id) {
+                    const next = [...col.tasks];
+                    next.splice(insertIdx, 0, card);
+                    return { ...col, tasks: next };
                 }
                 return col;
             });
@@ -258,65 +121,40 @@ export default function KanbanBoard() {
         setActiveCard(null);
         if (!over) return;
 
-        const fromColId = findColByCard(active.id as string)?.id;
-        const toColId =
-            columns.find((c) => c.id === over.id)?.id ||
-            findColByCard(over.id as string)?.id;
+        const fromCol = findColByCardId(active.id);
+        const toCol =
+            columns.find((c) => c.id === over.id) ?? findColByCardId(over.id);
 
-        if (!fromColId || !toColId || fromColId !== toColId) return;
+        if (!fromCol || !toCol || fromCol.id !== toCol.id) return;
 
         setColumns((prev) =>
             prev.map((col) => {
-                if (col.id !== fromColId) return col;
-                const oldIdx = col.cards.findIndex((c) => c.id === active.id);
-                const newIdx = col.cards.findIndex((c) => c.id === over.id);
+                if (col.id !== fromCol.id) return col;
+                const oldIdx = col.tasks.findIndex((t) => t.id === active.id);
+                const newIdx = col.tasks.findIndex((t) => t.id === over.id);
                 if (oldIdx === newIdx) return col;
-                return { ...col, cards: arrayMove(col.cards, oldIdx, newIdx) };
+                return { ...col, tasks: arrayMove(col.tasks, oldIdx, newIdx) };
             }),
         );
     };
 
-    const handleAddCard = (colId: string, title: string) => {
-        nextId += 1;
-        setColumns((prev) =>
-            prev.map((col) =>
-                col.id === colId
-                    ? {
-                          ...col,
-                          cards: [
-                              ...col.cards,
-                              {
-                                  id: `t${nextId}`,
-                                  title,
-                                  tag: "Frontend",
-                                  priority: "medium",
-                                  date: new Date().toLocaleDateString("en-US", {
-                                      month: "short",
-                                      day: "numeric",
-                                  }),
-                              },
-                          ],
-                      }
-                    : col,
-            ),
-        );
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const handleAddCard = (_colId: number, _title: string) => {
+        nextId.current += 1;
     };
 
-    const handleDeleteCard = (cardId: string) => {
-        setColumns((prev) =>
-            prev.map((col) => ({
-                ...col,
-                cards: col.cards.filter((c) => c.id !== cardId),
-            })),
-        );
-    };
+    const handleDeleteCard = () => {};
 
-    const handleChangeMode = (mode: string) => {
-        setSelectedMode(mode);
-    };
+    const handleChangeMode = (mode: string) => setSelectedMode(mode);
+
+    const viewModes = [
+        { id: "kanban", label: "Kanban", icon: SquareKanban },
+        { id: "list", label: "List", icon: List },
+        { id: "calendar", label: "Calendar", icon: Calendar },
+    ] as const;
 
     return (
-        <div className="w-full">
+        <div className="h-full w-full">
             <header className="z-20 grid gap-5 border border-b px-8 py-4">
                 <div className="flex items-start justify-between">
                     <div className="flex items-start gap-3">
@@ -339,12 +177,11 @@ export default function KanbanBoard() {
                             <p className="w-3/4 text-sm text-muted-foreground">
                                 Lorem ipsum dolor sit amet consectetur
                                 adipisicing elit. Numquam provident magni
-                                deleniti suscipit ab, quas, consectetur, autem
-                                optio id ipsum cumque vel natus earum molestias.
+                                deleniti suscipit ab.
                             </p>
                         </div>
                     </div>
-                    <div className="flex items-center justify-center gap-3">
+                    <div className="flex items-center gap-3">
                         <AvatarGroup>
                             <Avatar className="size-8">
                                 <AvatarImage
@@ -386,79 +223,40 @@ export default function KanbanBoard() {
                         </Button>
                     </div>
                 </div>
-                {/* <div className="rounded-lg bg-gray-100 px-8 py-4">
-                    <p className="w-1/2">
-                        Lorem ipsum dolor sit amet consectetur adipisicing elit.
-                        Numquam provident magni deleniti suscipit ab, quas,
-                        consectetur, autem optio id ipsum cumque vel natus earum
-                        molestias.
-                    </p>
-                </div> */}
                 <div className="flex justify-between">
-                    <nav className="flex items-center gap-3">
+                    <nav>
                         <ButtonGroup>
-                            <Button
-                                variant={
-                                    selectedMode === "kanban"
-                                        ? "default"
-                                        : "outline"
-                                }
-                                onClick={() => handleChangeMode("kanban")}
-                                className={
-                                    selectedMode === "kanban"
-                                        ? "pointer-events-none bg-bright-blue text-white"
-                                        : ""
-                                }
-                            >
-                                <SquareKanban />
-                                Kanban
-                            </Button>
-                            <Button
-                                variant={
-                                    selectedMode === "list"
-                                        ? "default"
-                                        : "outline"
-                                }
-                                onClick={() => handleChangeMode("list")}
-                                className={
-                                    selectedMode === "list"
-                                        ? "pointer-events-none bg-bright-blue text-white"
-                                        : ""
-                                }
-                            >
-                                <List />
-                                List
-                            </Button>
-                            <Button
-                                variant={
-                                    selectedMode === "calendar"
-                                        ? "default"
-                                        : "outline"
-                                }
-                                onClick={() => handleChangeMode("calendar")}
-                                className={
-                                    selectedMode === "calendar"
-                                        ? "pointer-events-none bg-bright-blue text-white"
-                                        : ""
-                                }
-                            >
-                                <Calendar />
-                                Calendar
-                            </Button>
+                            {viewModes.map(({ id, label, icon: Icon }) => (
+                                <Button
+                                    key={id}
+                                    variant={
+                                        selectedMode === id
+                                            ? "default"
+                                            : "outline"
+                                    }
+                                    onClick={() => handleChangeMode(id)}
+                                    className={
+                                        selectedMode === id
+                                            ? "pointer-events-none bg-bright-blue text-white"
+                                            : ""
+                                    }
+                                >
+                                    <Icon />
+                                    {label}
+                                </Button>
+                            ))}
                         </ButtonGroup>
                     </nav>
-                    <div>
-                        <Button
-                            onClick={() => setIsOpenFilters(true)}
-                            className="bg-bright-blue hover:bg-blue-600"
-                        >
-                            <ListFilter />
-                            Filter
-                        </Button>
-                    </div>
+                    <Button
+                        onClick={() => setIsOpenFilters(true)}
+                        className="bg-bright-blue hover:bg-blue-600"
+                    >
+                        <ListFilter />
+                        Filter
+                    </Button>
                 </div>
             </header>
-            <main>
+            <main className="h-[calc(100svh-170px)]">
                 {selectedMode === "kanban" && (
                     <div className="w-full overflow-x-auto p-8">
                         <DndContext
@@ -507,14 +305,12 @@ export default function KanbanBoard() {
                 open={isOpenFilters}
                 onOpenChange={() => setIsOpenFilters(!isOpenFilters)}
                 filters={filters}
-                onChange={setFilters}
-                totalTasks={42}
+                onFiltersChange={setFilters}
             />
             <ProjectSettingsDialog
                 open={isOpenSettings}
                 onOpenChange={() => setIsOpenSettings(!isOpenSettings)}
                 onSave={(data) => console.log(data)}
-                onDelete={() => {}}
             />
             <TaskDetailsSheet
                 open={isOpenTaskDetails}
