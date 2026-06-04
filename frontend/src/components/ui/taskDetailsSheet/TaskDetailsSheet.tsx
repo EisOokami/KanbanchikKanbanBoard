@@ -28,8 +28,6 @@ import {
     TooltipTrigger,
 } from "@/components/ui/shadcn/tooltip";
 import {
-    ArrowDown,
-    ArrowUp,
     CalendarDays,
     Check,
     CheckSquare2,
@@ -39,467 +37,224 @@ import {
     Edit2,
     ExternalLink,
     FileText,
-    Flame,
     Link2,
-    Minus,
     MoreHorizontal,
     Paperclip,
     Plus,
     Send,
     Tag,
+    Bookmark,
     Trash2,
     Upload,
     UserPlus,
     X,
-    ZapIcon,
+    Zap,
 } from "lucide-react";
+import { format, formatDistanceToNow } from "date-fns";
+import { cn, getInitials, toDueDate } from "@/libs/utils";
+import { commentsToActivity, dueDateMeta } from "@/libs/taskDetailsSheet";
+import FieldRow from "./fieldRow/FieldRow";
 import {
-    format,
-    formatDistanceToNow,
-    isPast,
-    isToday,
-    isTomorrow,
-} from "date-fns";
-import { cn } from "@/libs/utils";
-
-type Priority = "critical" | "high" | "medium" | "low";
-type Status = "todo" | "in_progress" | "in_review" | "done";
-
-interface Member {
-    id: string;
-    name: string;
-    initials: string;
-    color: string;
-}
-
-interface ChecklistItem {
-    id: string;
-    text: string;
-    done: boolean;
-}
-
-interface Attachment {
-    id: string;
-    name: string;
-    size: string;
-    type: "image" | "doc" | "pdf" | "other";
-    uploadedAt: Date;
-    uploadedBy: string;
-}
-
-interface ActivityEntry {
-    id: string;
-    type: "comment" | "change";
-    authorId: string;
-    content: string;
-    timestamp: Date;
-    field?: string;
-    from?: string;
-    to?: string;
-}
-
-export interface TaskData {
-    id: string;
-    title: string;
-    description: string;
-    status: Status;
-    priority: Priority;
-    assignees: string[];
-    dueDate: Date | undefined;
-    categories: string[];
-    attachments: Attachment[];
-    checklist: ChecklistItem[];
-    activity: ActivityEntry[];
-    createdAt: Date;
-    createdBy: string;
-}
-
-const PRIORITY_META: Record<
+    Category,
+    Columns,
+    Label,
+    Member,
     Priority,
-    {
-        label: string;
-        icon: React.ReactNode;
-        color: string;
-        bg: string;
-        border: string;
-    }
-> = {
-    critical: {
-        label: "Critical",
-        icon: <Flame size={12} />,
-        color: "#D93025",
-        bg: "#FEF0EF",
-        border: "#FACACB",
-    },
-    high: {
-        label: "High",
-        icon: <ArrowUp size={12} />,
-        color: "#C9620A",
-        bg: "#FEF4EC",
-        border: "#FCD9B5",
-    },
-    medium: {
-        label: "Medium",
-        icon: <Minus size={12} />,
-        color: "#1A6BBF",
-        bg: "#EEF4FD",
-        border: "#BDD5F5",
-    },
-    low: {
-        label: "Low",
-        icon: <ArrowDown size={12} />,
-        color: "#1E7E3A",
-        bg: "#EEFAF2",
-        border: "#AEDFC0",
-    },
-};
-
-const STATUS_META: Record<
-    Status,
-    {
-        label: string;
-        color: string;
-        bg: string;
-        border: string;
-        dot: string;
-    }
-> = {
-    todo: {
-        label: "To Do",
-        color: "#6B7280",
-        bg: "#F9FAFB",
-        border: "#E5E7EB",
-        dot: "#D1D5DB",
-    },
-    in_progress: {
-        label: "In Progress",
-        color: "#1A6BBF",
-        bg: "#EEF4FD",
-        border: "#BDD5F5",
-        dot: "#1A6BBF",
-    },
-    in_review: {
-        label: "In Review",
-        color: "#C9620A",
-        bg: "#FEF4EC",
-        border: "#FCD9B5",
-        dot: "#C9620A",
-    },
-    done: {
-        label: "Done",
-        color: "#1E7E3A",
-        bg: "#EEFAF2",
-        border: "#AEDFC0",
-        dot: "#1E7E3A",
-    },
-};
-
-const MEMBERS: Member[] = [
-    { id: "m1", name: "Sofia Marchetti", initials: "SM", color: "#7C5CBF" },
-    { id: "m2", name: "Luca Ferrara", initials: "LF", color: "#2A9D8F" },
-    { id: "m3", name: "Anna Kowalski", initials: "AK", color: "#E76F51" },
-    { id: "m4", name: "James Okafor", initials: "JO", color: "#264653" },
-    { id: "m5", name: "Mei Lin", initials: "ML", color: "#C09A3A" },
-];
-
-const CATEGORIES_OPTIONS = [
-    "Design",
-    "Engineering",
-    "Research",
-    "Marketing",
-    "QA",
-    "DevOps",
-    "Product",
-    "Data",
-];
-
-const ATTACHMENT_ICONS: Record<Attachment["type"], React.ReactNode> = {
-    image: (
-        <span className="text-[10px] font-bold" style={{ color: "#1A6BBF" }}>
-            IMG
-        </span>
-    ),
-    doc: <FileText size={12} style={{ color: "#7C5CBF" }} />,
-    pdf: (
-        <span className="text-[10px] font-bold" style={{ color: "#D93025" }}>
-            PDF
-        </span>
-    ),
-    other: <Paperclip size={12} style={{ color: "#6b7280" }} />,
-};
-
-export const DEMO_TASK: TaskData = {
-    id: "t-001",
-    title: "Redesign onboarding flow",
-    description:
-        "Overhaul the end-to-end onboarding experience based on user research findings from Q2. Covers welcome screen, profile setup, tutorial tooltips, and first-run empty states.",
-    status: "in_progress",
-    priority: "high",
-    assignees: ["m1", "m2"],
-    dueDate: new Date(Date.now() + 2 * 86400000),
-    categories: ["Design", "Research"],
-    attachments: [
-        {
-            id: "a1",
-            name: "onboarding-wireframes.fig",
-            size: "4.2 MB",
-            type: "doc",
-            uploadedAt: new Date(Date.now() - 3 * 86400000),
-            uploadedBy: "m1",
-        },
-        {
-            id: "a2",
-            name: "user-journey-map.pdf",
-            size: "1.8 MB",
-            type: "pdf",
-            uploadedAt: new Date(Date.now() - 1 * 86400000),
-            uploadedBy: "m2",
-        },
-        {
-            id: "a3",
-            name: "screen-recording.mp4",
-            size: "22.4 MB",
-            type: "other",
-            uploadedAt: new Date(Date.now() - 86400000),
-            uploadedBy: "m1",
-        },
-    ],
-    checklist: [
-        {
-            id: "c1",
-            text: "Audit current onboarding drop-off points",
-            done: true,
-        },
-        {
-            id: "c2",
-            text: "Create low-fi wireframes for all 5 screens",
-            done: true,
-        },
-        { id: "c3", text: "Conduct 6 usability tests", done: true },
-        {
-            id: "c4",
-            text: "Design high-fidelity mockups in Figma",
-            done: false,
-        },
-        { id: "c5", text: "Hand off assets to engineering", done: false },
-        { id: "c6", text: "QA review on staging", done: false },
-    ],
-    activity: [
-        {
-            id: "act1",
-            type: "change",
-            authorId: "m1",
-            content: "created this task",
-            timestamp: new Date(Date.now() - 5 * 86400000),
-        },
-        {
-            id: "act2",
-            type: "change",
-            authorId: "m2",
-            content: "changed status",
-            timestamp: new Date(Date.now() - 4 * 86400000),
-            field: "status",
-            from: "To Do",
-            to: "In Progress",
-        },
-        {
-            id: "act3",
-            type: "comment",
-            authorId: "m3",
-            content:
-                "Checked the wireframes — they look solid. One concern: the progress indicator on step 3 might be confusing for mobile users. Let's discuss in standup.",
-            timestamp: new Date(Date.now() - 2 * 86400000),
-        },
-        {
-            id: "act4",
-            type: "change",
-            authorId: "m1",
-            content: "added Anna Kowalski",
-            timestamp: new Date(Date.now() - 1 * 86400000),
-            field: "assignees",
-        },
-        {
-            id: "act5",
-            type: "comment",
-            authorId: "m1",
-            content:
-                "Usability tests done! All 6 participants completed onboarding successfully. Handing off design files this afternoon.",
-            timestamp: new Date(Date.now() - 3600000),
-        },
-    ],
-    createdAt: new Date(Date.now() - 5 * 86400000),
-    createdBy: "m1",
-};
-
-function dueDateMeta(
-    date: Date | undefined,
-): { text: string; color: string; bg: string; border: string } | null {
-    if (!date) return null;
-    if (!isToday(date) && isPast(date))
-        return {
-            text: "Overdue",
-            color: "#D93025",
-            bg: "#FEF0EF",
-            border: "#FACACB",
-        };
-    if (isToday(date))
-        return {
-            text: "Today",
-            color: "#C9620A",
-            bg: "#FEF4EC",
-            border: "#FCD9B5",
-        };
-    if (isTomorrow(date))
-        return {
-            text: "Tomorrow",
-            color: "#1A6BBF",
-            bg: "#EEF4FD",
-            border: "#BDD5F5",
-        };
-    return {
-        text: format(date, "MMM d, yyyy"),
-        color: "#374151",
-        bg: "#F9FAFB",
-        border: "#E5E7EB",
-    };
-}
-
-function FieldRow({
-    icon,
-    label,
-    children,
-}: {
-    icon: React.ReactNode;
-    label: string;
-    children: React.ReactNode;
-}) {
-    return (
-        <div className="group/row flex items-center gap-3 py-2.5">
-            <div className="flex w-32 shrink-0 items-center gap-1.5 pt-0.5">
-                <span className="mb-0.5 text-gray-500">{icon}</span>
-                <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    {label}
-                </span>
-            </div>
-            <div className="min-w-0 flex-1">{children}</div>
-        </div>
-    );
-}
+    Subtask,
+    Task,
+} from "@/types/types";
+import {
+    COLUMNS_CONFIG,
+    INITIAL_TASKS,
+    LABELS,
+    MOCK_CATEGORIES,
+    MOCK_MEMBERS,
+    PRIORITY_CONFIG,
+} from "@/constants/constants";
+import {
+    ActivityChange,
+    ActivityComment,
+    ActivityEntry,
+} from "@/types/taskDetailsSheet";
 
 interface TaskDetailsSheetProps {
     open: boolean;
     onOpenChange: (v: boolean) => void;
-    task?: TaskData;
-    onSave?: (task: TaskData) => void;
-    onDelete?: (id: string) => void;
+    task?: Task;
+    onSave?: (task: Task) => void;
+    onDelete?: (id: number) => void;
 }
 
 export function TaskDetailsSheet({
     open,
     onOpenChange,
-    task: initialTask = DEMO_TASK,
+    task: initialTask = INITIAL_TASKS[0],
     onSave,
     onDelete,
 }: TaskDetailsSheetProps) {
-    const [task, setTask] = useState<TaskData>(initialTask);
+    const [task, setTask] = useState<Task>(initialTask);
     const [editingTitle, setEditingTitle] = useState(false);
     const [editingDesc, setEditingDesc] = useState(false);
     const [calOpen, setCalOpen] = useState(false);
     const [assigneeOpen, setAssigneeOpen] = useState(false);
     const [catOpen, setCatOpen] = useState(false);
-    const [newCheckItem, setNewCheckItem] = useState("");
+    const [labelOpen, setLabelOpen] = useState(false);
+    const [newSubtaskText, setNewSubtaskText] = useState("");
     const [newComment, setNewComment] = useState("");
     const [linkCopied, setLinkCopied] = useState(false);
+    const [activity, setActivity] = useState<ActivityEntry[]>(() =>
+        commentsToActivity(initialTask.comments),
+    );
     const fileInputRef = useRef<HTMLInputElement>(null);
     const titleRef = useRef<HTMLTextAreaElement>(null);
 
     const update = useCallback(
-        <K extends keyof TaskData>(key: K, value: TaskData[K]) =>
+        <K extends keyof Task>(key: K, value: Task[K]) =>
             setTask((t) => ({ ...t, [key]: value })),
         [],
     );
+    const pushChange = useCallback(
+        (field: string, from: string, to: string) => {
+            const entry: ActivityChange = {
+                id: Date.now(),
+                type: "change",
+                author: Object.values(MOCK_MEMBERS)[0],
+                field,
+                from,
+                to,
+                timestamp: new Date(),
+            };
+            setActivity((prev) => [...prev, entry]);
+        },
+        [],
+    );
 
-    const addCheckItem = () => {
-        if (!newCheckItem.trim()) return;
-        update("checklist", [
-            ...task.checklist,
-            { id: crypto.randomUUID(), text: newCheckItem.trim(), done: false },
-        ]);
-        setNewCheckItem("");
+    const addSubtask = () => {
+        if (!newSubtaskText.trim()) return;
+        const next: Subtask = {
+            id: Date.now(),
+            text: newSubtaskText.trim(),
+            is_done: false,
+            created_at: new Date(),
+            position: task.subtasks.length,
+        };
+        update("subtasks", [...task.subtasks, next]);
+        setNewSubtaskText("");
     };
 
-    const toggleCheckItem = (id: string) =>
+    const toggleSubtask = (id: number) =>
         update(
-            "checklist",
-            task.checklist.map((i) =>
-                i.id === id ? { ...i, done: !i.done } : i,
+            "subtasks",
+            task.subtasks.map((s) =>
+                s.id === id ? { ...s, is_done: !s.is_done } : s,
             ),
         );
 
-    const removeCheckItem = (id: string) =>
+    const removeSubtask = (id: number) =>
         update(
-            "checklist",
-            task.checklist.filter((i) => i.id !== id),
+            "subtasks",
+            task.subtasks.filter((s) => s.id !== id),
         );
 
-    const updateCheckText = (id: string, text: string) =>
+    const updateSubtaskText = (id: number, text: string) =>
         update(
-            "checklist",
-            task.checklist.map((i) => (i.id === id ? { ...i, text } : i)),
+            "subtasks",
+            task.subtasks.map((s) => (s.id === id ? { ...s, text } : s)),
         );
 
-    const toggleAssignee = (id: string) =>
+    const toggleAssignee = (member: Omit<Member, "email">) => {
+        const exists = task.assignees.some((a) => a.id === member.id);
         update(
             "assignees",
-            task.assignees.includes(id)
-                ? task.assignees.filter((a) => a !== id)
-                : [...task.assignees, id],
+            exists
+                ? task.assignees.filter((a) => a.id !== member.id)
+                : [...task.assignees, member],
         );
+        pushChange(
+            "assignee",
+            exists ? `${member.name} ${member.surname}` : "—",
+            exists ? "—" : `${member.name} ${member.surname}`,
+        );
+    };
 
-    const toggleCategory = (cat: string) =>
+    const toggleCategory = (cat: Category) => {
+        const exists = task.categories.some((c) => c.id === cat.id);
         update(
             "categories",
-            task.categories.includes(cat)
-                ? task.categories.filter((c) => c !== cat)
+            exists
+                ? task.categories.filter((c) => c.id !== cat.id)
                 : [...task.categories, cat],
         );
+        pushChange(
+            "category",
+            exists ? cat.name : "—",
+            exists ? "—" : cat.name,
+        );
+    };
+
+    const toggleLabel = (label: Label) => {
+        const exists = task.labels.includes(label.name);
+        update(
+            "labels",
+            exists
+                ? task.labels.filter((l) => l !== label.name)
+                : [...task.labels, label.name],
+        );
+        pushChange(
+            "label",
+            exists ? label.name : "—",
+            exists ? "—" : label.name,
+        );
+    };
+
+    const currentUser: Omit<Member, "email"> = Object.values(MOCK_MEMBERS)[0];
+
+    const addComment = () => {
+        if (!newComment.trim()) return;
+        const entry: ActivityComment = {
+            id: Date.now(),
+            type: "comment",
+            author: currentUser,
+            body: newComment.trim(),
+            timestamp: new Date(),
+        };
+        update("comments", [
+            ...task.comments,
+            {
+                id: entry.id,
+                assignee: currentUser,
+                body: entry.body,
+                created_at: entry.timestamp,
+                updated_at: null,
+            },
+        ]);
+        setActivity((prev) => [...prev, entry]);
+        setNewComment("");
+    };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files ?? []);
-        const mapped: Attachment[] = files.map((f) => ({
-            id: crypto.randomUUID(),
-            name: f.name,
-            size: `${(f.size / 1024).toFixed(1)} KB`,
-            type: f.type.startsWith("image/")
-                ? "image"
-                : f.type === "application/pdf"
-                  ? "pdf"
-                  : "other",
-            uploadedAt: new Date(),
-            uploadedBy: "m1",
+        const mapped = files.map((f) => ({
+            id: Date.now() + Math.random(),
+            uploader_id: currentUser.id,
+            filename: f.name,
+            file_url: URL.createObjectURL(f),
+            mime_type: f.type,
+            size_bytes: f.size,
+            created_at: new Date(),
         }));
         update("attachments", [...task.attachments, ...mapped]);
         e.target.value = "";
     };
 
-    const removeAttachment = (id: string) =>
+    const removeAttachment = (id: number) =>
         update(
             "attachments",
             task.attachments.filter((a) => a.id !== id),
         );
 
-    const addComment = () => {
-        if (!newComment.trim()) return;
-        const entry: ActivityEntry = {
-            id: crypto.randomUUID(),
-            type: "comment",
-            authorId: "m1",
-            content: newComment.trim(),
-            timestamp: new Date(),
-        };
-        update("activity", [...task.activity, entry]);
-        setNewComment("");
-    };
+    const dueDate = toDueDate(task.due_date);
+    const ddMeta = dueDateMeta(dueDate);
 
     const handleCopyLink = () => {
         navigator.clipboard
@@ -514,17 +269,15 @@ export function TaskDetailsSheet({
         onOpenChange(false);
     };
 
-    const pm = PRIORITY_META[task.priority];
-    const sm = STATUS_META[task.status];
-    const ddMeta = dueDateMeta(task.dueDate);
-    const doneChecks = task.checklist.filter((i) => i.done).length;
-    const totalChecks = task.checklist.length;
-    const checklistPct = totalChecks
-        ? Math.round((doneChecks / totalChecks) * 100)
+    const pm = PRIORITY_CONFIG[task.priority];
+    const sm = COLUMNS_CONFIG[task.column];
+    const doneSubtasks = task.subtasks.filter((s) => s.is_done).length;
+    const totalSubtasks = task.subtasks.length;
+    const subtasksPct = totalSubtasks
+        ? Math.round((doneSubtasks / totalSubtasks) * 100)
         : 0;
-    const assignedMembers = MEMBERS.filter((m) =>
-        task.assignees.includes(m.id),
-    );
+
+    const createdAt = toDueDate(task.created_at) ?? new Date();
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
@@ -535,85 +288,45 @@ export function TaskDetailsSheet({
                 <SheetHeader className="shrink-0 px-6 py-3">
                     <div className="flex items-center justify-between gap-3">
                         <div className="flex flex-wrap items-center gap-2">
+                            {/* Status / column picker */}
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <button
-                                        className="flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors hover:brightness-95"
-                                        style={{
-                                            background: sm.bg,
-                                            color: sm.color,
-                                            border: `1px solid ${sm.border}`,
-                                        }}
-                                    >
+                                    <button className="flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors hover:brightness-95">
                                         <span
-                                            className="size-1.5 rounded-full"
-                                            style={{ background: sm.dot }}
+                                            className={cn(
+                                                "size-1.5 rounded-full",
+                                                sm.dot,
+                                            )}
                                         />
                                         {sm.label}
                                         <ChevronDown size={11} />
                                     </button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent>
-                                    {(Object.keys(STATUS_META) as Status[]).map(
-                                        (s) => (
-                                            <DropdownMenuItem
-                                                key={s}
-                                                className="cursor-pointer gap-2 text-sm"
-                                                onClick={() =>
-                                                    update("status", s)
-                                                }
-                                            >
-                                                <span
-                                                    className="size-2 rounded-full"
-                                                    style={{
-                                                        background:
-                                                            STATUS_META[s].dot,
-                                                    }}
-                                                />
-                                                {STATUS_META[s].label}
-                                                {task.status === s && (
-                                                    <Check
-                                                        size={12}
-                                                        className="ml-auto text-bright-blue"
-                                                    />
-                                                )}
-                                            </DropdownMenuItem>
-                                        ),
-                                    )}
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <button
-                                        className="flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors hover:brightness-95"
-                                        style={{
-                                            background: pm.bg,
-                                            color: pm.color,
-                                            border: `1px solid ${pm.border}`,
-                                        }}
-                                    >
-                                        {pm.icon}
-                                        {pm.label}
-                                        <ChevronDown size={11} />
-                                    </button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent>
                                     {(
-                                        Object.keys(PRIORITY_META) as Priority[]
-                                    ).map((p) => (
+                                        Object.keys(COLUMNS_CONFIG) as Columns[]
+                                    ).map((s) => (
                                         <DropdownMenuItem
-                                            key={p}
+                                            key={s}
                                             className="cursor-pointer gap-2 text-sm"
-                                            style={{
-                                                color: PRIORITY_META[p].color,
+                                            onClick={() => {
+                                                pushChange(
+                                                    "status",
+                                                    COLUMNS_CONFIG[task.column]
+                                                        .label,
+                                                    COLUMNS_CONFIG[s].label,
+                                                );
+                                                update("column", s);
                                             }}
-                                            onClick={() =>
-                                                update("priority", p)
-                                            }
                                         >
-                                            {PRIORITY_META[p].icon}
-                                            {PRIORITY_META[p].label}
-                                            {task.priority === p && (
+                                            <span
+                                                className={cn(
+                                                    "size-2 rounded-full",
+                                                    COLUMNS_CONFIG[s].dot,
+                                                )}
+                                            />
+                                            {COLUMNS_CONFIG[s].label}
+                                            {task.column === s && (
                                                 <Check
                                                     size={12}
                                                     className="ml-auto text-bright-blue"
@@ -621,6 +334,52 @@ export function TaskDetailsSheet({
                                             )}
                                         </DropdownMenuItem>
                                     ))}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <button className="flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors hover:brightness-95">
+                                        {pm.label}
+                                        <ChevronDown size={11} />
+                                    </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent>
+                                    {(
+                                        Object.keys(
+                                            PRIORITY_CONFIG,
+                                        ) as Priority[]
+                                    ).map((p) => {
+                                        const Icon = PRIORITY_CONFIG[p].icon!;
+                                        return (
+                                            <DropdownMenuItem
+                                                key={p}
+                                                className={cn(
+                                                    "cursor-pointer gap-2 text-sm",
+                                                    PRIORITY_CONFIG[p].pill,
+                                                )}
+                                                onClick={() => {
+                                                    pushChange(
+                                                        "priority",
+                                                        PRIORITY_CONFIG[
+                                                            task.priority
+                                                        ].label,
+                                                        PRIORITY_CONFIG[p]
+                                                            .label,
+                                                    );
+                                                    update("priority", p);
+                                                }}
+                                            >
+                                                <Icon size={13} />
+                                                {PRIORITY_CONFIG[p].label}
+                                                {task.priority === p && (
+                                                    <Check
+                                                        size={12}
+                                                        className="ml-auto text-bright-blue"
+                                                    />
+                                                )}
+                                            </DropdownMenuItem>
+                                        );
+                                    })}
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </div>
@@ -658,14 +417,14 @@ export function TaskDetailsSheet({
                                         <ExternalLink
                                             size={13}
                                             className="text-gray-500"
-                                        />{" "}
+                                        />
                                         Open full page
                                     </DropdownMenuItem>
                                     <DropdownMenuItem className="cursor-pointer gap-2 text-sm">
                                         <Copy
                                             size={13}
                                             className="text-gray-500"
-                                        />{" "}
+                                        />
                                         Duplicate task
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
@@ -764,21 +523,22 @@ export function TaskDetailsSheet({
                                                         ddMeta.text !==
                                                             "Tomorrow"
                                                             ? ddMeta.text
-                                                            : `${ddMeta.text} · ${format(task.dueDate!, "MMM d")}`}
+                                                            : `${ddMeta.text} · ${format(dueDate!, "MMM d")}`}
                                                     </span>
                                                 ) : (
                                                     <span className="text-sm text-gray-300">
                                                         No due date
                                                     </span>
                                                 )}
-                                                {task.dueDate && (
+                                                {dueDate && (
                                                     <X
                                                         size={11}
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             update(
-                                                                "dueDate",
-                                                                undefined,
+                                                                "due_date",
+                                                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                                                undefined as any,
                                                             );
                                                         }}
                                                         className="text-gray-500 transition-colors hover:text-red-400"
@@ -789,9 +549,13 @@ export function TaskDetailsSheet({
                                         <PopoverContent className="p-0">
                                             <Calendar
                                                 mode="single"
-                                                selected={task.dueDate}
+                                                selected={dueDate ?? undefined}
                                                 onSelect={(d) => {
-                                                    update("dueDate", d);
+                                                    update(
+                                                        "due_date",
+                                                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                                        d ?? (undefined as any),
+                                                    );
                                                     setCalOpen(false);
                                                 }}
                                             />
@@ -803,7 +567,7 @@ export function TaskDetailsSheet({
                                     label="Assignees"
                                 >
                                     <div className="flex flex-wrap items-center gap-2">
-                                        {assignedMembers.map((m) => (
+                                        {task.assignees.map((m) => (
                                             <Tooltip key={m.id}>
                                                 <TooltipTrigger asChild>
                                                     <div className="group/av relative">
@@ -815,13 +579,16 @@ export function TaskDetailsSheet({
                                                                         m.color,
                                                                 }}
                                                             >
-                                                                {m.initials}
+                                                                {getInitials(
+                                                                    m.name,
+                                                                    m.surname,
+                                                                )}
                                                             </AvatarFallback>
                                                         </Avatar>
                                                         <button
                                                             onClick={() =>
                                                                 toggleAssignee(
-                                                                    m.id,
+                                                                    m,
                                                                 )
                                                             }
                                                             className="absolute -right-0.5 -top-0.5 hidden size-3.5 items-center justify-center rounded-full bg-red-500 group-hover/av:flex"
@@ -834,7 +601,7 @@ export function TaskDetailsSheet({
                                                     </div>
                                                 </TooltipTrigger>
                                                 <TooltipContent>
-                                                    {m.name}
+                                                    {m.name} {m.surname}
                                                 </TooltipContent>
                                             </Tooltip>
                                         ))}
@@ -851,17 +618,20 @@ export function TaskDetailsSheet({
                                                 </button>
                                             </PopoverTrigger>
                                             <PopoverContent className="w-52 p-1.5">
-                                                {MEMBERS.map((m) => {
+                                                {Object.values(
+                                                    MOCK_MEMBERS,
+                                                ).map((m) => {
                                                     const sel =
-                                                        task.assignees.includes(
-                                                            m.id,
+                                                        task.assignees.some(
+                                                            (a) =>
+                                                                a.id === m.id,
                                                         );
                                                     return (
                                                         <button
                                                             key={m.id}
                                                             onClick={() =>
                                                                 toggleAssignee(
-                                                                    m.id,
+                                                                    m,
                                                                 )
                                                             }
                                                             className={cn(
@@ -879,11 +649,15 @@ export function TaskDetailsSheet({
                                                                             m.color,
                                                                     }}
                                                                 >
-                                                                    {m.initials}
+                                                                    {getInitials(
+                                                                        m.name,
+                                                                        m.surname,
+                                                                    )}
                                                                 </AvatarFallback>
                                                             </Avatar>
                                                             <span>
-                                                                {m.name}
+                                                                {m.name}{" "}
+                                                                {m.surname}
                                                             </span>
                                                             {sel && (
                                                                 <Check
@@ -896,7 +670,7 @@ export function TaskDetailsSheet({
                                                 })}
                                             </PopoverContent>
                                         </Popover>
-                                        {assignedMembers.length === 0 && (
+                                        {task.assignees.length === 0 && (
                                             <span className="text-sm text-gray-300">
                                                 No assignees
                                             </span>
@@ -910,13 +684,16 @@ export function TaskDetailsSheet({
                                     <div className="flex flex-wrap items-center gap-1.5">
                                         {task.categories.map((cat) => (
                                             <span
-                                                key={cat}
-                                                className="flex cursor-pointer items-center gap-1 rounded-md border border-bright-blue px-2 py-0.5 text-xs font-medium text-bright-blue"
+                                                key={cat.id}
+                                                className={cn(
+                                                    "flex cursor-pointer items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium",
+                                                    cat.pill,
+                                                )}
                                                 onClick={() =>
                                                     toggleCategory(cat)
                                                 }
                                             >
-                                                {cat}
+                                                {cat.name}
                                                 <X size={9} />
                                             </span>
                                         ))}
@@ -932,27 +709,34 @@ export function TaskDetailsSheet({
                                             </PopoverTrigger>
                                             <PopoverContent className="w-52 p-2">
                                                 <div className="flex flex-wrap gap-1.5">
-                                                    {CATEGORIES_OPTIONS.map(
-                                                        (c) => (
+                                                    {Object.values(
+                                                        MOCK_CATEGORIES,
+                                                    ).map((c) => {
+                                                        const sel =
+                                                            task.categories.some(
+                                                                (tc) =>
+                                                                    tc.id ===
+                                                                    c.id,
+                                                            );
+                                                        return (
                                                             <button
-                                                                key={c}
+                                                                key={c.id}
                                                                 onClick={() =>
                                                                     toggleCategory(
                                                                         c,
                                                                     )
                                                                 }
-                                                                className={`rounded-md border px-2.5 py-1 text-xs font-medium transition-colors ${
-                                                                    task.categories.includes(
-                                                                        c,
-                                                                    )
-                                                                        ? "border-bright-blue text-bright-blue"
-                                                                        : ""
-                                                                }`}
+                                                                className={cn(
+                                                                    "rounded-md border px-2.5 py-1 text-xs font-medium transition-colors",
+                                                                    sel
+                                                                        ? c.pill
+                                                                        : "border-gray-200 text-gray-600 hover:bg-gray-50",
+                                                                )}
                                                             >
-                                                                {c}
+                                                                {c.name}
                                                             </button>
-                                                        ),
-                                                    )}
+                                                        );
+                                                    })}
                                                 </div>
                                             </PopoverContent>
                                         </Popover>
@@ -968,16 +752,102 @@ export function TaskDetailsSheet({
                                     label="Created"
                                 >
                                     <span className="text-sm text-gray-500">
-                                        {formatDistanceToNow(task.createdAt, {
+                                        {formatDistanceToNow(createdAt, {
                                             addSuffix: true,
-                                        })}{" "}
-                                        by{" "}
-                                        <span className="font-medium text-black">
-                                            {MEMBERS.find(
-                                                (m) => m.id === task.createdBy,
-                                            )?.name ?? "Unknown"}
-                                        </span>
+                                        })}
                                     </span>
+                                </FieldRow>
+                                <FieldRow
+                                    icon={<Bookmark size={13} />}
+                                    label="Labels"
+                                >
+                                    <div className="flex flex-wrap items-center gap-1.5">
+                                        {task.labels.map((labelName) => {
+                                            const meta = LABELS.find(
+                                                (l) => l.name === labelName,
+                                            );
+                                            return (
+                                                <span
+                                                    key={labelName}
+                                                    className="flex cursor-pointer items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium transition-colors hover:opacity-80"
+                                                    style={{
+                                                        borderColor:
+                                                            meta?.color ??
+                                                            "#d1d5db",
+                                                        color:
+                                                            meta?.color ??
+                                                            "#6b7280",
+                                                        background: meta
+                                                            ? `${meta.color}18`
+                                                            : "#f9fafb",
+                                                    }}
+                                                    onClick={() =>
+                                                        meta &&
+                                                        toggleLabel(meta)
+                                                    }
+                                                >
+                                                    {labelName}
+                                                    <X size={9} />
+                                                </span>
+                                            );
+                                        })}
+                                        <Popover
+                                            open={labelOpen}
+                                            onOpenChange={setLabelOpen}
+                                        >
+                                            <PopoverTrigger asChild>
+                                                <button className="flex items-center gap-1 text-xs text-gray-500 transition-colors hover:text-gray-600">
+                                                    <Plus size={12} />
+                                                    Add
+                                                </button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-48 p-2">
+                                                <div className="flex flex-col gap-0.5">
+                                                    {LABELS.map((l) => {
+                                                        const sel =
+                                                            task.labels.includes(
+                                                                l.name,
+                                                            );
+                                                        return (
+                                                            <button
+                                                                key={l.id}
+                                                                onClick={() =>
+                                                                    toggleLabel(
+                                                                        l,
+                                                                    )
+                                                                }
+                                                                className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-xs transition-colors hover:bg-gray-50"
+                                                            >
+                                                                <span
+                                                                    className="size-2 shrink-0 rounded-full"
+                                                                    style={{
+                                                                        background:
+                                                                            l.color,
+                                                                    }}
+                                                                />
+                                                                <span className="flex-1 text-left font-medium text-gray-700">
+                                                                    {l.name}
+                                                                </span>
+                                                                {sel && (
+                                                                    <Check
+                                                                        size={
+                                                                            11
+                                                                        }
+                                                                        className="text-bright-blue"
+                                                                    />
+                                                                )}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </PopoverContent>
+                                        </Popover>
+                                        {task.labels.length === 0 && (
+                                            <span className="text-sm text-gray-300">
+                                                No labels
+                                            </span>
+                                        )}
+                                    </div>
                                 </FieldRow>
                             </div>
                         </div>
@@ -1030,36 +900,36 @@ export function TaskDetailsSheet({
                                         className="text-gray-500"
                                     />
                                     <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                                        Checklist
+                                        Subtasks
                                     </span>
-                                    {totalChecks > 0 && (
+                                    {totalSubtasks > 0 && (
                                         <span className="text-xs text-gray-500">
-                                            {doneChecks}/{totalChecks}
+                                            {doneSubtasks}/{totalSubtasks}
                                         </span>
                                     )}
                                 </div>
-                                {totalChecks > 0 && (
+                                {totalSubtasks > 0 && (
                                     <span
                                         className="text-xs font-semibold"
                                         style={{
                                             color:
-                                                checklistPct === 100
+                                                subtasksPct === 100
                                                     ? "#1E7E3A"
                                                     : "#0096FF",
                                         }}
                                     >
-                                        {checklistPct}%
+                                        {subtasksPct}%
                                     </span>
                                 )}
                             </div>
-                            {totalChecks > 0 && (
+                            {totalSubtasks > 0 && (
                                 <div className="mb-4 h-1.5 overflow-hidden rounded-full bg-gray-100">
                                     <div
                                         className="h-full rounded-full transition-all duration-500"
                                         style={{
-                                            width: `${checklistPct}%`,
+                                            width: `${subtasksPct}%`,
                                             background:
-                                                checklistPct === 100
+                                                subtasksPct === 100
                                                     ? "#1E7E3A"
                                                     : "#0096FF",
                                         }}
@@ -1067,39 +937,41 @@ export function TaskDetailsSheet({
                                 </div>
                             )}
                             <div className="space-y-2">
-                                {task.checklist.map((item) => (
+                                {task.subtasks.map((item) => (
                                     <div
                                         key={item.id}
                                         className="group/ci flex items-center gap-2.5 rounded-md px-1 py-0.5 transition-colors hover:bg-gray-50"
                                     >
                                         <Checkbox
-                                            checked={item.done}
+                                            checked={item.is_done}
                                             onCheckedChange={() =>
-                                                toggleCheckItem(item.id)
+                                                toggleSubtask(item.id)
                                             }
                                             className="size-3.5 rounded border-gray-300 data-[state=checked]:border-bright-blue data-[state=checked]:bg-bright-blue"
                                         />
                                         <Input
                                             value={item.text}
                                             onChange={(e) =>
-                                                updateCheckText(
+                                                updateSubtaskText(
                                                     item.id,
                                                     e.target.value,
                                                 )
                                             }
                                             className={cn(
                                                 "h-auto flex-1 rounded-none border-0 bg-transparent px-0 py-0 text-sm focus-visible:ring-0",
-                                                item.done ? "line-through" : "",
+                                                item.is_done
+                                                    ? "line-through"
+                                                    : "",
                                             )}
                                             style={{
-                                                color: item.done
+                                                color: item.is_done
                                                     ? "#6b7280"
                                                     : "#374151",
                                             }}
                                         />
                                         <button
                                             onClick={() =>
-                                                removeCheckItem(item.id)
+                                                removeSubtask(item.id)
                                             }
                                             className="shrink-0 text-gray-300 opacity-0 transition-all hover:text-red-400 group-hover/ci:opacity-100"
                                         >
@@ -1110,19 +982,19 @@ export function TaskDetailsSheet({
                             </div>
                             <div className="mt-3 flex gap-2">
                                 <Input
-                                    placeholder="Add item…"
-                                    value={newCheckItem}
+                                    placeholder="Add subtask…"
+                                    value={newSubtaskText}
                                     onChange={(e) =>
-                                        setNewCheckItem(e.target.value)
+                                        setNewSubtaskText(e.target.value)
                                     }
                                     onKeyDown={(e) =>
-                                        e.key === "Enter" && addCheckItem()
+                                        e.key === "Enter" && addSubtask()
                                     }
                                     className="h-8 flex-1 rounded-md text-sm placeholder:text-gray-300 focus-visible:ring-1 focus-visible:ring-bright-blue"
                                 />
                                 <Button
                                     size="sm"
-                                    onClick={addCheckItem}
+                                    onClick={addSubtask}
                                     className="h-8 rounded-md border bg-bright-blue px-3 transition-colors hover:bg-blue-600"
                                 >
                                     <Plus size={13} />
@@ -1165,18 +1037,20 @@ export function TaskDetailsSheet({
                                                     background: "#EDE9FD",
                                                 }}
                                             >
-                                                {ATTACHMENT_ICONS[a.type]}
+                                                <FileText
+                                                    size={14}
+                                                    className="text-violet-600"
+                                                />
                                             </div>
                                             <div className="min-w-0 flex-1">
                                                 <p className="truncate text-xs font-medium">
-                                                    {a.name}
+                                                    {a.filename}
                                                 </p>
                                                 <p className="text-xs text-gray-500">
-                                                    {a.size} ·{" "}
-                                                    {formatDistanceToNow(
-                                                        a.uploadedAt,
-                                                        { addSuffix: true },
-                                                    )}
+                                                    {(
+                                                        a.size_bytes / 1024
+                                                    ).toFixed(1)}{" "}
+                                                    KB
                                                 </p>
                                             </div>
                                             <button
@@ -1201,105 +1075,106 @@ export function TaskDetailsSheet({
                         </div>
                         <Separator />
                         <div className="mb-4 flex items-center gap-2">
-                            <ZapIcon size={13} className="text-gray-500" />
+                            <Zap size={13} className="text-gray-500" />
                             <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
                                 Activity
                             </span>
+                            {activity.length > 0 && (
+                                <span className="text-xs text-gray-500">
+                                    {activity.length}
+                                </span>
+                            )}
                         </div>
-                        <div className="">
-                            {task.activity.map((entry) => {
-                                const author = MEMBERS.find(
-                                    (m) => m.id === entry.authorId,
-                                );
-
-                                return (
-                                    <div key={entry.id} className="mb-3">
-                                        <div className="flex items-start gap-3">
-                                            <Avatar className="mt-0.5 size-7 shrink-0">
-                                                <AvatarFallback
-                                                    className="text-[10px] font-bold text-white"
-                                                    style={{
-                                                        background:
-                                                            author?.color ??
-                                                            "#6b7280",
-                                                    }}
-                                                >
-                                                    {author?.initials ?? "?"}
-                                                </AvatarFallback>
-                                            </Avatar>
-                                            <div className="min-w-0 flex-1">
-                                                <div className="flex flex-wrap items-center gap-1.5">
-                                                    <span className="text-xs font-semibold">
-                                                        {author?.name}
-                                                    </span>
-                                                    <span className="ml-auto text-xs text-gray-300">
-                                                        {formatDistanceToNow(
-                                                            entry.timestamp,
-                                                            {
-                                                                addSuffix: true,
-                                                            },
-                                                        )}
-                                                    </span>
-                                                </div>
-                                                {entry.type === "change" ? (
-                                                    <div className="text-gray-500">
-                                                        <span className="text-xs capitalize">
-                                                            {entry.content}
-                                                        </span>
-                                                        {entry.from &&
-                                                            entry.to && (
-                                                                <>
-                                                                    {" "}
-                                                                    <span
-                                                                        className="mx-0.5 rounded px-1.5 py-0.5 text-xs line-through"
-                                                                        style={{
-                                                                            background:
-                                                                                "#FEF0EF",
-                                                                            color: "#D93025",
-                                                                        }}
-                                                                    >
-                                                                        {
-                                                                            entry.from
-                                                                        }
-                                                                    </span>
-                                                                    <span className="text-xs text-gray-500">
-                                                                        →
-                                                                    </span>
-                                                                    <span
-                                                                        className="mx-0.5 rounded px-1.5 py-0.5 text-xs"
-                                                                        style={{
-                                                                            background:
-                                                                                "#EEFAF2",
-                                                                            color: "#1E7E3A",
-                                                                        }}
-                                                                    >
-                                                                        {
-                                                                            entry.to
-                                                                        }
-                                                                    </span>
-                                                                </>
-                                                            )}
-                                                    </div>
-                                                ) : null}
-                                                {entry.type === "comment" && (
-                                                    <div className="mt-1.5 rounded-md rounded-tl-sm border px-3 py-2.5 text-sm leading-relaxed text-gray-700">
-                                                        {entry.content}
-                                                    </div>
+                        <div>
+                            {activity.map((entry) => (
+                                <div key={entry.id} className="mb-3">
+                                    <div className="flex items-start gap-3">
+                                        <Avatar className="mt-0.5 size-7 shrink-0">
+                                            <AvatarFallback
+                                                className="text-[10px] font-bold text-white"
+                                                style={{
+                                                    background:
+                                                        entry.author.color,
+                                                }}
+                                            >
+                                                {getInitials(
+                                                    entry.author.name,
+                                                    entry.author.surname,
                                                 )}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex flex-wrap items-center gap-1.5">
+                                                <span className="text-xs font-semibold">
+                                                    {entry.author.name}{" "}
+                                                    {entry.author.surname}
+                                                </span>
+                                                <span className="ml-auto text-xs text-gray-300">
+                                                    {formatDistanceToNow(
+                                                        entry.timestamp,
+                                                        {
+                                                            addSuffix: true,
+                                                        },
+                                                    )}
+                                                </span>
                                             </div>
+                                            {entry.type === "change" && (
+                                                <p className="mt-0.5 text-xs text-gray-500">
+                                                    changed{" "}
+                                                    <span className="font-medium text-gray-700">
+                                                        {entry.field}
+                                                    </span>{" "}
+                                                    <span
+                                                        className="mx-0.5 rounded px-1.5 py-0.5 line-through"
+                                                        style={{
+                                                            background:
+                                                                "#FEF0EF",
+                                                            color: "#D93025",
+                                                        }}
+                                                    >
+                                                        {entry.from}
+                                                    </span>
+                                                    <span className="text-gray-400">
+                                                        →
+                                                    </span>
+                                                    <span
+                                                        className="mx-0.5 rounded px-1.5 py-0.5"
+                                                        style={{
+                                                            background:
+                                                                "#EEFAF2",
+                                                            color: "#1E7E3A",
+                                                        }}
+                                                    >
+                                                        {entry.to}
+                                                    </span>
+                                                </p>
+                                            )}
+                                            {entry.type === "comment" && (
+                                                <div className="mt-1.5 rounded-md rounded-tl-sm border px-3 py-2.5 text-sm leading-relaxed text-gray-700">
+                                                    {entry.body}
+                                                </div>
+                                            )}
                                         </div>
-                                        <Separator className="mt-3" />
                                     </div>
-                                );
-                            })}
+                                    <Separator className="mt-3" />
+                                </div>
+                            ))}
+                            {activity.length === 0 && (
+                                <p className="py-2 text-xs text-gray-300">
+                                    No activity yet.
+                                </p>
+                            )}
                         </div>
                         <div className="mt-5 flex items-start gap-3">
                             <Avatar className="mt-1 size-7 shrink-0">
                                 <AvatarFallback
                                     className="text-[10px] font-bold text-white"
-                                    style={{ background: "#7C5CBF" }}
+                                    style={{ background: currentUser.color }}
                                 >
-                                    SM
+                                    {getInitials(
+                                        currentUser.name,
+                                        currentUser.surname,
+                                    )}
                                 </AvatarFallback>
                             </Avatar>
                             <div className="flex-1">
@@ -1353,16 +1228,13 @@ export function TaskDetailsSheet({
                 <div className="flex shrink-0 items-center justify-between border-t bg-gray-50 px-6 py-3.5">
                     <div className="flex items-center gap-2.5 text-xs text-gray-300">
                         <span
-                            className="flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium"
-                            style={{
-                                background: sm.bg,
-                                color: sm.color,
-                                border: `1px solid ${sm.border}`,
-                            }}
+                            className={cn(
+                                "flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium",
+                                sm.pill,
+                            )}
                         >
                             <span
-                                className="size-1.5 rounded-full"
-                                style={{ background: sm.dot }}
+                                className={cn("size-1.5 rounded-full", sm.dot)}
                             />
                             {sm.label}
                         </span>
