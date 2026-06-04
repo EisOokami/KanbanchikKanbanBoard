@@ -9,17 +9,8 @@ import {
 } from "@/components/ui/shadcn/dialog";
 import { Button } from "@/components/ui/shadcn/button";
 import { Input } from "@/components/ui/shadcn/input";
-import { Avatar, AvatarFallback } from "@/components/ui/shadcn/avatar";
-import { Badge } from "@/components/ui/shadcn/badge";
 import { ScrollArea } from "@/components/ui/shadcn/scroll-area";
 import { Separator } from "@/components/ui/shadcn/separator";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/shadcn/select";
 import {
     Tooltip,
     TooltipContent,
@@ -38,210 +29,11 @@ import {
     X,
 } from "lucide-react";
 import { cn } from "@/libs/utils";
-
-type Role = "editor" | "viewer" | "commenter";
-
-interface Member {
-    id: string;
-    name: string;
-    email: string;
-    initials: string;
-    color: string;
-    role: Role;
-    status: "active" | "pending";
-}
-
-interface Invite {
-    email: string;
-    role: Role;
-}
-
-const EXISTING_MEMBERS: Member[] = [
-    {
-        id: "1",
-        name: "Sofia Marchetti",
-        email: "sofia@studio.io",
-        initials: "SM",
-        color: "#7C5CBF",
-        role: "editor",
-        status: "active",
-    },
-    {
-        id: "2",
-        name: "Luca Ferrara",
-        email: "luca@studio.io",
-        initials: "LF",
-        color: "#2A9D8F",
-        role: "editor",
-        status: "active",
-    },
-    {
-        id: "3",
-        name: "Anna Kowalski",
-        email: "anna@studio.io",
-        initials: "AK",
-        color: "#E76F51",
-        role: "commenter",
-        status: "active",
-    },
-    {
-        id: "4",
-        name: "James Okafor",
-        email: "james@studio.io",
-        initials: "JO",
-        color: "#264653",
-        role: "viewer",
-        status: "active",
-    },
-    {
-        id: "5",
-        name: "Mei Lin",
-        email: "mei@studio.io",
-        initials: "ML",
-        color: "#C09A3A",
-        role: "viewer",
-        status: "pending",
-    },
-];
-
-const ROLE_META: Record<
-    Role,
-    {
-        label: string;
-        description: string;
-        color: string;
-        bg: string;
-        border: string;
-    }
-> = {
-    editor: {
-        label: "Editor",
-        description: "Can edit tasks",
-        color: "#1A6BBF",
-        bg: "#EEF4FD",
-        border: "#BDD5F5",
-    },
-    commenter: {
-        label: "Commenter",
-        description: "Can comment only",
-        color: "#C9620A",
-        bg: "#FEF4EC",
-        border: "#FCD9B5",
-    },
-    viewer: {
-        label: "Viewer",
-        description: "Read-only access",
-        color: "#1E7E3A",
-        bg: "#EEFAF2",
-        border: "#AEDFC0",
-    },
-};
-
-function RoleSelect({
-    value,
-    onChange,
-    compact = false,
-}: {
-    value: Role;
-    onChange: (r: Role) => void;
-    compact?: boolean;
-}) {
-    return (
-        <Select value={value} onValueChange={(v) => onChange(v as Role)}>
-            <SelectTrigger
-                className={cn(
-                    "h-8 gap-1 rounded-md border text-xs font-medium focus:ring-1 focus:ring-bright-blue",
-                    compact ? "w-[110px]" : "w-[130px]",
-                )}
-            >
-                <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-                {(
-                    Object.entries(ROLE_META) as [
-                        Role,
-                        (typeof ROLE_META)[Role],
-                    ][]
-                ).map(([key, m]) => (
-                    <SelectItem
-                        key={key}
-                        value={key}
-                        className="cursor-pointer text-sm font-medium"
-                    >
-                        <span style={{ color: m.color }}>{m.label}</span>
-                    </SelectItem>
-                ))}
-            </SelectContent>
-        </Select>
-    );
-}
-
-function MemberRow({
-    member,
-    onRoleChange,
-    onRemove,
-}: {
-    member: Member;
-    onRoleChange: (id: string, role: Role) => void;
-    onRemove: (id: string) => void;
-}) {
-    return (
-        <div className="group flex items-center gap-3 rounded-md px-1 py-2.5 transition-colors hover:bg-gray-50">
-            <div className="relative">
-                <Avatar className="size-9 ring-2 ring-white">
-                    <AvatarFallback
-                        className="text-xs font-bold text-white"
-                        style={{ background: member.color }}
-                    >
-                        {member.initials}
-                    </AvatarFallback>
-                </Avatar>
-                {member.status === "active" && (
-                    <div className="absolute bottom-0 right-0 size-2.5 rounded-full bg-green-500 ring-2 ring-white" />
-                )}
-            </div>
-            <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                    <p className="truncate text-sm font-medium">
-                        {member.name}
-                    </p>
-                    {member.status === "pending" && (
-                        <Badge
-                            variant="outline"
-                            className="border px-1.5 py-0 text-[10px] font-medium"
-                        >
-                            Pending
-                        </Badge>
-                    )}
-                </div>
-                <p className="truncate text-xs text-gray-500">{member.email}</p>
-            </div>
-            <div className="flex items-center gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
-                <RoleSelect
-                    value={member.role}
-                    onChange={(r) => onRoleChange(member.id, r)}
-                    compact
-                />
-                <button
-                    onClick={() => onRemove(member.id)}
-                    className="flex size-8 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-red-50 hover:text-red-500"
-                >
-                    <X size={14} />
-                </button>
-            </div>
-            <div className="group-hover:hidden">
-                <span
-                    className="rounded-md border px-2 py-0.5 text-xs font-medium"
-                    style={{
-                        color: ROLE_META[member.role].color,
-                    }}
-                >
-                    {ROLE_META[member.role].label}
-                </span>
-            </div>
-        </div>
-    );
-}
+import { Invite } from "@/types/inviteAssigmentModal";
+import RoleSelect from "./roleSelect/RoleSelect";
+import MemberRow from "./memberRow/MemberRow";
+import { Member, Role } from "@/types/types";
+import { MOCK_MEMBERS } from "@/constants/constants";
 
 interface InviteAssignmentModalProps {
     open: boolean;
@@ -253,9 +45,11 @@ export function InviteAssignmentModal({
     open,
     onOpenChange,
 }: InviteAssignmentModalProps) {
-    const [members, setMembers] = useState<Member[]>(EXISTING_MEMBERS);
+    const [members, setMembers] = useState<Omit<Member, "email">[]>(
+        Object.values(MOCK_MEMBERS),
+    );
     const [invites, setInvites] = useState<Invite[]>([
-        { email: "", role: "editor" },
+        { email: "", role: "viewer" },
     ]);
     const [search, setSearch] = useState("");
     const [linkCopied, setLinkCopied] = useState(false);
@@ -263,14 +57,14 @@ export function InviteAssignmentModal({
         "invite",
     );
 
-    const updateRole = (id: string, role: Role) =>
+    const updateRole = (id: number, role: Role) =>
         setMembers((m) => m.map((x) => (x.id === id ? { ...x, role } : x)));
 
-    const removeMember = (id: string) =>
+    const removeMember = (id: number) =>
         setMembers((m) => m.filter((x) => x.id !== id));
 
     const addInviteRow = () =>
-        setInvites((i) => [...i, { email: "", role: "editor" }]);
+        setInvites((i) => [...i, { email: "", role: "viewer" }]);
 
     const removeInviteRow = (idx: number) =>
         setInvites((i) => i.filter((_, n) => n !== idx));
@@ -292,13 +86,13 @@ export function InviteAssignmentModal({
         const valid = invites.filter((i) => i.email.trim());
         if (!valid.length) return;
 
-        setInvites([{ email: "", role: "editor" }]);
+        setInvites([{ email: "", role: "viewer" }]);
     };
 
     const filteredMembers = members.filter(
-        (m) =>
-            m.name.toLowerCase().includes(search.toLowerCase()) ||
-            m.email.toLowerCase().includes(search.toLowerCase()),
+        (m) => m.name.toLowerCase().includes(search.toLowerCase()),
+        // ||
+        //     m.email.toLowerCase().includes(search.toLowerCase()),
     );
 
     const hasValidInvite = invites.some((i) => i.email.trim());
@@ -458,10 +252,10 @@ export function InviteAssignmentModal({
                             <ScrollArea className="max-h-[280px] pr-1">
                                 {filteredMembers.length > 0 ? (
                                     <div className="space-y-0.5">
-                                        {filteredMembers.map((m) => (
+                                        {filteredMembers.map((member) => (
                                             <MemberRow
-                                                key={m.id}
-                                                member={m}
+                                                key={member.id}
+                                                member={member}
                                                 onRoleChange={updateRole}
                                                 onRemove={removeMember}
                                             />
@@ -482,7 +276,7 @@ export function InviteAssignmentModal({
                                 )}
                             </ScrollArea>
                             <div className="flex items-center justify-between rounded-md border bg-gray-50 px-3 py-2 text-xs">
-                                <div>
+                                {/* <div>
                                     <span className="font-semibold">
                                         {
                                             members.filter(
@@ -500,7 +294,7 @@ export function InviteAssignmentModal({
                                         }
                                     </span>{" "}
                                     pending
-                                </div>
+                                </div> */}
                                 <button
                                     onClick={() => setSelectedTab("invite")}
                                     className="flex items-center gap-1 font-medium text-bright-blue transition-colors hover:opacity-80"
