@@ -20,8 +20,6 @@ import {
 import { Calendar } from "@/components/ui/shadcn/calendar";
 import {
     CalendarDays,
-    ChevronDown,
-    ChevronRight,
     Paperclip,
     Plus,
     Trash2,
@@ -29,217 +27,21 @@ import {
     UserPlus,
     X,
     CheckSquare,
-    Flame,
-    ArrowUp,
-    ArrowDown,
-    Minus,
     Smile,
-    Check,
     Layers,
 } from "lucide-react";
 import { format } from "date-fns";
-import { cn } from "@/libs/utils";
-
-type Priority = "critical" | "high" | "medium" | "low";
-
-interface ChecklistItem {
-    id: string;
-    text: string;
-    done: boolean;
-}
-
-interface Attachment {
-    id: string;
-    name: string;
-    size: string;
-    type: string;
-}
-
-interface Member {
-    id: string;
-    name: string;
-    initials: string;
-    color: string;
-}
-
-interface TaskFormData {
-    title: string;
-    description: string;
-    dueDate: Date | undefined;
-    priority: Priority | null;
-    categories: string[];
-    assignees: string[];
-    attachments: Attachment[];
-    checklist: ChecklistItem[];
-}
-
-const MEMBERS: Member[] = [
-    { id: "1", name: "Sofia Marchetti", initials: "SM", color: "#7C5CBF" },
-    { id: "2", name: "Luca Ferrara", initials: "LF", color: "#2A9D8F" },
-    { id: "3", name: "Anna Kowalski", initials: "AK", color: "#E76F51" },
-    { id: "4", name: "James Okafor", initials: "JO", color: "#264653" },
-    { id: "5", name: "Mei Lin", initials: "ML", color: "#C09A3A" },
-];
-
-const CATEGORIES = [
-    "Design",
-    "Engineering",
-    "Research",
-    "Marketing",
-    "QA",
-    "DevOps",
-    "Product",
-    "Data",
-];
-
-const PRIORITY_CONFIG: Record<
-    Priority,
-    { label: string; color: string; bg: string; icon: React.ReactNode }
-> = {
-    critical: {
-        label: "Critical",
-        color: "text-red-500",
-        bg: "bg-red-50 dark:bg-red-900/30",
-        icon: <Flame className="size-3" />,
-    },
-    high: {
-        label: "High",
-        color: "text-orange-500",
-        bg: "bg-orange-50 dark:bg-orange-900/30",
-        icon: <ArrowUp className="size-3" />,
-    },
-    medium: {
-        label: "Medium",
-        color: "text-amber-500",
-        bg: "bg-amber-50 dark:bg-amber-900/30",
-        icon: <Minus className="size-3" />,
-    },
-    low: {
-        label: "Low",
-        color: "text-slate-500",
-        bg: "bg-slate-100 dark:bg-slate-800",
-        icon: <ArrowDown className="size-3" />,
-    },
-};
-
-const CATEGORY_COLORS = [
-    "#94a3b8",
-    "#6366f1",
-    "#ec4899",
-    "#f59e0b",
-    "#10b981",
-    "#3b82f6",
-    "#8b5cf6",
-    "#ef4444",
-    "#14b8a6",
-    "#f97316",
-];
-
-function Section({
-    icon,
-    title,
-    children,
-    defaultOpen = true,
-    badge,
-}: {
-    icon: React.ReactNode;
-    title: string;
-    children: React.ReactNode;
-    defaultOpen?: boolean;
-    badge?: number;
-}) {
-    const [open, setOpen] = useState(defaultOpen);
-
-    return (
-        <div className="overflow-hidden rounded-md border border-border/60 bg-muted/20">
-            <button
-                type="button"
-                onClick={() => setOpen((o) => !o)}
-                className="flex w-full items-center gap-2.5 px-4 py-3 text-left transition-colors hover:bg-muted/40"
-            >
-                <span className="text-muted-foreground">{icon}</span>
-                <span className="flex-1 text-sm font-semibold text-foreground">
-                    {title}
-                </span>
-                {badge !== undefined && badge > 0 && (
-                    <span className="rounded-full bg-bright-blue/15 px-2 py-0.5 text-[10px] font-semibold text-bright-blue">
-                        {badge}
-                    </span>
-                )}
-                {open ? (
-                    <ChevronDown className="size-3.5 text-muted-foreground" />
-                ) : (
-                    <ChevronRight className="size-3.5 text-muted-foreground" />
-                )}
-            </button>
-            {open && (
-                <div className="border-t border-border/50 px-4 pb-4 pt-3">
-                    {children}
-                </div>
-            )}
-        </div>
-    );
-}
-
-function Chip({
-    label,
-    color,
-    onRemove,
-}: {
-    label: string;
-    color: string;
-    onRemove?: () => void;
-}) {
-    return (
-        <span
-            className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium"
-            style={{ backgroundColor: color + "22", color }}
-        >
-            {label}
-            {onRemove && (
-                <button
-                    type="button"
-                    onClick={onRemove}
-                    className="ml-0.5 opacity-60 transition-opacity hover:opacity-100"
-                >
-                    <X className="size-3" />
-                </button>
-            )}
-        </span>
-    );
-}
-
-function ColorDotPicker({
-    value,
-    onChange,
-    colors,
-}: {
-    value: string;
-    onChange: (c: string) => void;
-    colors: string[];
-}) {
-    return (
-        <div className="flex flex-wrap gap-1.5">
-            {colors.map((c) => (
-                <button
-                    key={c}
-                    type="button"
-                    onClick={() => onChange(c)}
-                    className="size-5 rounded-full ring-offset-background transition-transform"
-                    style={{
-                        backgroundColor: c,
-                        outline: value === c ? `2px solid ${c}` : "none",
-                        outlineOffset: 2,
-                    }}
-                >
-                    {value === c && (
-                        <Check className="mx-auto size-3 text-white" />
-                    )}
-                </button>
-            ))}
-        </div>
-    );
-}
+import { cn, getInitials } from "@/libs/utils";
+import Section from "./section/Section";
+import Chip from "./chip/Chip";
+import ColorDotPicker from "./colorDotPicker/ColorDotPicker";
+import {
+    MOCK_CATEGORIES,
+    MOCK_MEMBERS,
+    PRIORITY_CONFIG,
+} from "@/constants/constants";
+import { Priority } from "@/types/types";
+import { TaskFormData } from "@/types/createTaskModal";
 
 interface CreateTaskModalProps {
     open: boolean;
@@ -252,7 +54,7 @@ export function CreateTaskModal({
     onOpenChange,
     onSubmit,
 }: CreateTaskModalProps) {
-    const [accentColor, setAccentColor] = useState("#6366f1");
+    const [accentColor, setAccentColor] = useState<string>("#6366f1");
     const [form, setForm] = useState<TaskFormData>({
         title: "",
         description: "",
@@ -261,12 +63,12 @@ export function CreateTaskModal({
         categories: [],
         assignees: [],
         attachments: [],
-        checklist: [],
+        subtasks: [],
     });
-    const [newCheckItem, setNewCheckItem] = useState("");
-    const [newCategory, setNewCategory] = useState("");
-    const [newCategoryColor, setNewCategoryColor] = useState(
-        CATEGORY_COLORS[1],
+    const [newCheckItem, setNewCheckItem] = useState<string>("");
+    const [newCategory, setNewCategory] = useState<string>("");
+    const [newCategoryColor, setNewCategoryColor] = useState<string>(
+        Object.values(MOCK_CATEGORIES)[0].color,
     );
     const [calOpen, setCalOpen] = useState(false);
     const [errors, setErrors] = useState<{ title?: string }>({});
@@ -279,28 +81,34 @@ export function CreateTaskModal({
 
     const addCheckItem = () => {
         if (!newCheckItem.trim()) return;
-        update("checklist", [
-            ...form.checklist,
-            { id: crypto.randomUUID(), text: newCheckItem.trim(), done: false },
+        update("subtasks", [
+            ...form.subtasks,
+            {
+                id: form.subtasks.length + 1,
+                text: newCheckItem.trim(),
+                position: form.subtasks.length,
+                is_done: false,
+                created_at: new Date(),
+            },
         ]);
         setNewCheckItem("");
     };
 
-    const toggleCheck = (id: string) =>
+    const toggleCheck = (id: number) =>
         update(
-            "checklist",
-            form.checklist.map((i) =>
-                i.id === id ? { ...i, done: !i.done } : i,
+            "subtasks",
+            form.subtasks.map((i) =>
+                i.id === id ? { ...i, done: !i.is_done } : i,
             ),
         );
 
-    const removeCheck = (id: string) =>
+    const removeCheck = (id: number) =>
         update(
-            "checklist",
-            form.checklist.filter((i) => i.id !== id),
+            "subtasks",
+            form.subtasks.filter((i) => i.id !== id),
         );
 
-    const toggleAssignee = (id: string) =>
+    const toggleAssignee = (id: number) =>
         update(
             "assignees",
             form.assignees.includes(id)
@@ -326,16 +134,19 @@ export function CreateTaskModal({
         update("attachments", [
             ...form.attachments,
             ...files.map((f) => ({
-                id: crypto.randomUUID(),
-                name: f.name,
-                size: `${(f.size / 1024).toFixed(1)} KB`,
-                type: f.type,
+                id: form.attachments.length + 1,
+                uploader_id: form.attachments.length + 1,
+                filename: f.name,
+                file_url: "",
+                mime_type: f.type,
+                size_bytes: f.size,
+                created_at: new Date(),
             })),
         ]);
         e.target.value = "";
     };
 
-    const removeAttachment = (id: string) =>
+    const removeAttachment = (id: number) =>
         update(
             "attachments",
             form.attachments.filter((a) => a.id !== id),
@@ -359,7 +170,7 @@ export function CreateTaskModal({
             categories: [],
             assignees: [],
             attachments: [],
-            checklist: [],
+            subtasks: [],
         });
         setAccentColor("#6366f1");
         setNewCheckItem("");
@@ -368,8 +179,8 @@ export function CreateTaskModal({
         onOpenChange(false);
     };
 
-    const completedChecks = form.checklist.filter((i) => i.done).length;
-    const selectedMembers = MEMBERS.filter((m) =>
+    const completedChecks = form.subtasks.filter((i) => i.is_done).length;
+    const selectedMembers = Object.values(MOCK_MEMBERS).filter((m) =>
         form.assignees.includes(m.id),
     );
 
@@ -478,19 +289,30 @@ export function CreateTaskModal({
                                             Object.keys(
                                                 PRIORITY_CONFIG,
                                             ) as Priority[]
-                                        ).map((p) => (
-                                            <button
-                                                key={p}
-                                                type="button"
-                                                onClick={() =>
-                                                    update("priority", p)
-                                                }
-                                                className={`flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium transition-all ${PRIORITY_CONFIG[p].bg} ${PRIORITY_CONFIG[p].color} ${form.priority === p ? "ring-1 ring-current" : "opacity-60 hover:opacity-100"}`}
-                                            >
-                                                {PRIORITY_CONFIG[p].icon}
-                                                {PRIORITY_CONFIG[p].label}
-                                            </button>
-                                        ))}
+                                        ).map((p) => {
+                                            const Icon =
+                                                PRIORITY_CONFIG[p].icon;
+
+                                            return (
+                                                <button
+                                                    key={p}
+                                                    type="button"
+                                                    onClick={() =>
+                                                        update("priority", p)
+                                                    }
+                                                    className={cn(
+                                                        "flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium transition-all",
+                                                        form.priority === p
+                                                            ? "ring-1 ring-current"
+                                                            : "opacity-60 hover:opacity-100",
+                                                        PRIORITY_CONFIG[p].pill,
+                                                    )}
+                                                >
+                                                    {/* {Icon && <Icon />} */}
+                                                    {PRIORITY_CONFIG[p].label}
+                                                </button>
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             </div>
@@ -504,28 +326,33 @@ export function CreateTaskModal({
                         <div className="space-y-3">
                             {selectedMembers.length > 0 && (
                                 <div className="flex flex-wrap gap-2">
-                                    {selectedMembers.map((m) => (
+                                    {selectedMembers.map((member) => (
                                         <div
-                                            key={m.id}
+                                            key={member.id}
                                             className="flex items-center gap-2 rounded-md border border-border/60 bg-muted/40 px-2.5 py-1.5"
                                         >
                                             <div
                                                 className="flex size-6 items-center justify-center rounded-full text-[10px] font-bold text-white"
-                                                style={{
-                                                    backgroundColor: m.color,
-                                                }}
+                                                // style={{
+                                                //     backgroundColor: m.color,
+                                                // }}
                                             >
-                                                {m.initials}
+                                                {/* {m.initials} */}
+                                                {getInitials(
+                                                    member.name,
+                                                    member.surname,
+                                                )}
                                             </div>
                                             <div className="min-w-0">
                                                 <p className="text-xs font-medium leading-none">
-                                                    {m.name}
+                                                    {member.name}{" "}
+                                                    {member.surname}
                                                 </p>
                                             </div>
                                             <button
                                                 type="button"
                                                 onClick={() =>
-                                                    toggleAssignee(m.id)
+                                                    toggleAssignee(member.id)
                                                 }
                                                 className="ml-1 text-muted-foreground transition-colors hover:text-foreground"
                                             >
@@ -536,25 +363,28 @@ export function CreateTaskModal({
                                 </div>
                             )}
                             <div className="flex flex-wrap gap-1.5">
-                                {MEMBERS.filter(
-                                    (m) => !form.assignees.includes(m.id),
-                                ).map((m) => (
-                                    <button
-                                        key={m.id}
-                                        type="button"
-                                        onClick={() => toggleAssignee(m.id)}
-                                        className="flex items-center gap-1.5 rounded-md border border-border/60 bg-white px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
-                                    >
-                                        <div
-                                            className="flex size-5 items-center justify-center rounded-full text-[9px] font-bold text-white"
-                                            style={{ backgroundColor: m.color }}
+                                {Object.values(MOCK_MEMBERS)
+                                    .filter(
+                                        (member) =>
+                                            !form.assignees.includes(member.id),
+                                    )
+                                    .map((member) => (
+                                        <button
+                                            key={member.id}
+                                            type="button"
+                                            onClick={() =>
+                                                toggleAssignee(member.id)
+                                            }
+                                            className="flex items-center gap-1.5 rounded-md border border-border/60 bg-white px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
                                         >
-                                            {m.initials}
-                                        </div>
-                                        {m.name}
-                                        <Plus className="size-3 opacity-50" />
-                                    </button>
-                                ))}
+                                            <div className="flex size-5 items-center justify-center rounded-full text-[9px] font-bold text-white">
+                                                {member.name.slice(0, 1)}{" "}
+                                                {member.surname.slice(0, 1)}
+                                            </div>
+                                            {member.name}
+                                            <Plus className="size-3 opacity-50" />
+                                        </button>
+                                    ))}
                             </div>
                         </div>
                     </Section>
@@ -578,23 +408,23 @@ export function CreateTaskModal({
                                 </div>
                             )}
                             <div className="flex flex-wrap gap-1.5">
-                                {CATEGORIES.filter(
-                                    (c) => !form.categories.includes(c),
-                                ).map((c) => (
-                                    <button
-                                        key={c}
-                                        type="button"
-                                        onClick={() =>
-                                            update("categories", [
-                                                ...form.categories,
-                                                c,
-                                            ])
-                                        }
-                                        className="rounded-full border border-border/60 bg-white px-2.5 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
-                                    >
-                                        + {c}
-                                    </button>
-                                ))}
+                                {Object.keys(MOCK_CATEGORIES)
+                                    .filter((c) => !form.categories.includes(c))
+                                    .map((c) => (
+                                        <button
+                                            key={c}
+                                            type="button"
+                                            onClick={() =>
+                                                update("categories", [
+                                                    ...form.categories,
+                                                    c,
+                                                ])
+                                            }
+                                            className="rounded-full border border-border/60 bg-white px-2.5 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+                                        >
+                                            + {c}
+                                        </button>
+                                    ))}
                             </div>
                             <div className="space-y-2">
                                 <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
@@ -603,7 +433,9 @@ export function CreateTaskModal({
                                 <ColorDotPicker
                                     value={newCategoryColor}
                                     onChange={setNewCategoryColor}
-                                    colors={CATEGORY_COLORS}
+                                    colors={Object.values(MOCK_CATEGORIES).map(
+                                        (category) => category.color,
+                                    )}
                                 />
                                 <div className="flex gap-2">
                                     <Input
@@ -635,37 +467,37 @@ export function CreateTaskModal({
                         icon={<CheckSquare className="size-4" />}
                         title="Checklist"
                         badge={
-                            form.checklist.length > 0
-                                ? form.checklist.length
+                            form.subtasks.length > 0
+                                ? form.subtasks.length
                                 : undefined
                         }
                         defaultOpen={false}
                     >
                         <div className="space-y-3">
-                            {form.checklist.length > 0 && (
+                            {form.subtasks.length > 0 && (
                                 <>
                                     <div className="flex items-center gap-2">
                                         <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
                                             <div
                                                 className="h-full rounded-full bg-bright-blue transition-all duration-500"
                                                 style={{
-                                                    width: `${(completedChecks / form.checklist.length) * 100}%`,
+                                                    width: `${(completedChecks / form.subtasks.length) * 100}%`,
                                                 }}
                                             />
                                         </div>
                                         <span className="text-[10px] text-muted-foreground">
                                             {completedChecks}/
-                                            {form.checklist.length}
+                                            {form.subtasks.length}
                                         </span>
                                     </div>
                                     <div className="space-y-1.5">
-                                        {form.checklist.map((item) => (
+                                        {form.subtasks.map((item) => (
                                             <div
                                                 key={item.id}
                                                 className="group flex items-center gap-3 rounded-md border border-border/50 bg-white px-3 py-2"
                                             >
                                                 <Checkbox
-                                                    checked={item.done}
+                                                    checked={item.is_done}
                                                     onCheckedChange={() =>
                                                         toggleCheck(item.id)
                                                     }
@@ -674,7 +506,7 @@ export function CreateTaskModal({
                                                 <span
                                                     className={cn(
                                                         "flex-1 text-sm",
-                                                        item.done
+                                                        item.is_done
                                                             ? "text-muted-foreground line-through"
                                                             : "text-foreground",
                                                     )}
@@ -697,7 +529,7 @@ export function CreateTaskModal({
                             )}
                             <div className="flex gap-2">
                                 <Input
-                                    placeholder="Add checklist item…"
+                                    placeholder="Add subtasks item…"
                                     value={newCheckItem}
                                     onChange={(e) =>
                                         setNewCheckItem(e.target.value)
@@ -761,10 +593,10 @@ export function CreateTaskModal({
                                             </div>
                                             <div className="min-w-0 flex-1">
                                                 <p className="truncate text-xs font-medium">
-                                                    {a.name}
+                                                    {a.filename}
                                                 </p>
                                                 <p className="text-[10px] text-muted-foreground">
-                                                    {a.size}
+                                                    {a.size_bytes}
                                                 </p>
                                             </div>
                                             <button
