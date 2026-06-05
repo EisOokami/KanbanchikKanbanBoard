@@ -20,7 +20,6 @@ import {
 } from "@/components/ui/shadcn/dropdown-menu";
 import {
     MoreHorizontal,
-    Star,
     Archive,
     Pencil,
     Trash2,
@@ -28,62 +27,30 @@ import {
 } from "lucide-react";
 import { ProjectSettingsDialog } from "../projectSettingsDialog/ProjectSettingsDialog";
 import { useState } from "react";
+import { Project } from "@/types/types";
+import { STATUS_CONFIG } from "@/constants/constants";
+import { getInitials } from "@/libs/utils";
 
-type Priority = "low" | "medium" | "high" | "critical";
-type Status = "active" | "paused" | "completed" | "archived";
-
-interface Member {
-    id: string;
-    name: string;
-    avatar?: string;
+interface ProjectCardProps {
+    project: Project;
+    // onStar: (id: number) => void;
+    onDelete: (id: number) => void;
 }
-
-interface Project {
-    id: string;
-    name: string;
-    icon: string;
-    description: string;
-    status: Status;
-    priority: Priority;
-    progress: number;
-    tasksTotal: number;
-    tasksDone: number;
-    members: Member[];
-    dueDate: string;
-    color: string;
-    starred: boolean;
-}
-
-function initials(name: string): string {
-    return name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase();
-}
-
-const STATUS_CONFIG: Record<Status, { label: string; dot: string }> = {
-    active: { label: "Active", dot: "bg-emerald-500" },
-    paused: { label: "Paused", dot: "bg-amber-400" },
-    completed: { label: "Completed", dot: "bg-blue-400" },
-    archived: { label: "Archived", dot: "bg-slate-400" },
-};
 
 export default function ProjectCard({
     project,
-    onStar,
+    // onStar,
     onDelete,
-}: {
-    project: Project;
-    onStar: (id: string) => void;
-    onDelete: (id: string) => void;
-}) {
+}: Readonly<ProjectCardProps>) {
     const [showProjectSettings, setShowProjectSettings] =
         useState<boolean>(false);
 
     const status = STATUS_CONFIG[project.status];
     const visibleMembers = project.members.slice(0, 3);
     const extraMembers = project.members.length - 3;
+    const progress = Math.round(
+        ((project.tasksDone ?? 0) * 100) / (project.tasksTotal ?? 1),
+    );
 
     const handleShopProjectSettings = () => {
         setShowProjectSettings(!showProjectSettings);
@@ -118,7 +85,7 @@ export default function ProjectCard({
                         </div>
                     </div>
                     <div className="flex flex-shrink-0 items-center gap-1">
-                        <button
+                        {/* <button
                             onClick={() => onStar(project.id)}
                             className="rounded p-1 transition-colors hover:bg-accent"
                         >
@@ -127,7 +94,7 @@ export default function ProjectCard({
                             ) : (
                                 <Star className="size-4 text-muted-foreground" />
                             )}
-                        </button>
+                        </button> */}
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <button className="rounded p-1 transition-colors hover:bg-accent">
@@ -163,11 +130,11 @@ export default function ProjectCard({
                                 Progress
                             </span>
                             <span className="text-xs font-medium tabular-nums">
-                                {project.progress}%
+                                {progress}%
                             </span>
                         </div>
                         <Progress
-                            value={project.progress}
+                            value={progress}
                             className="h-1.5 [&>*]:bg-bright-blue"
                         />
                     </div>
@@ -180,7 +147,7 @@ export default function ProjectCard({
                                     key={m.id}
                                     className="size-6 border-2 border-background"
                                 >
-                                    {m.avatar && <AvatarImage src={m.avatar} />}
+                                    <AvatarImage src={m.avatar_url} />
                                     <AvatarFallback
                                         className="text-[9px] font-semibold"
                                         style={{
@@ -188,7 +155,7 @@ export default function ProjectCard({
                                             color: project.color,
                                         }}
                                     >
-                                        {initials(m.name)}
+                                        {getInitials(m.name, m.surname)}
                                     </AvatarFallback>
                                 </Avatar>
                             ))}
@@ -203,7 +170,8 @@ export default function ProjectCard({
                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                             <CheckSquare className="size-3.5 flex-shrink-0" />
                             <span>
-                                {project.tasksDone}/{project.tasksTotal} tasks
+                                {project.tasksDone ?? 0}/
+                                {project.tasksTotal ?? 0} tasks
                             </span>
                         </div>
                     </div>
