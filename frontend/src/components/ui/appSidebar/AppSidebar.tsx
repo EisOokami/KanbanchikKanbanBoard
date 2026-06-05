@@ -21,22 +21,11 @@ import Image from "next/image";
 import AccountSettingsModal from "../accountSettings/AccountSettings";
 import { useAccountSettingsContext } from "@/hooks/useAccountSettingsContext";
 import Link from "next/link";
-
-// const navSecondary = [
-//     { title: "Team", icon: Users, url: "#" },
-//     { title: "Notifications", icon: Bell, url: "/notifications", badge: "2" },
-//     { title: "Settings", icon: Settings, url: "#" },
-// ];
-
-const favorites = [
-    { title: "Sprint #14 — Active", color: "#6366f1" },
-    { title: "Launch Checklist", color: "#f59e0b" },
-];
+import { favorites } from "@/constants/appSidebar";
 
 export default function AppSidebar() {
     const { showAccountSettings, handleShowAccountSettings } =
         useAccountSettingsContext();
-    // const pathname = usePathname();
 
     return (
         <>
@@ -94,33 +83,6 @@ export default function AppSidebar() {
                             </SidebarMenu>
                         </SidebarGroupContent>
                     </SidebarGroup>
-                    {/* <SidebarSeparator /> */}
-                    {/* <SidebarGroup>
-                    <SidebarGroupContent>
-                        <SidebarMenu>
-                            {navSecondary.map((item) => (
-                                <SidebarMenuItem key={item.title}>
-                                    <SidebarMenuButton
-                                        asChild
-                                        tooltip={item.title}
-                                        size="sm"
-                                        isActive={item.url === pathname}
-                                    >
-                                        <Link href={item.url}>
-                                            <item.icon className="size-4" />
-                                            <span>{item.title}</span>
-                                            {item.badge && (
-                                                <SidebarMenuBadge>
-                                                    {item.badge}
-                                                </SidebarMenuBadge>
-                                            )}
-                                        </Link>
-                                    </SidebarMenuButton>
-                                </SidebarMenuItem>
-                            ))}
-                        </SidebarMenu>
-                    </SidebarGroupContent>
-                </SidebarGroup> */}
                 </SidebarContent>
                 <SidebarFooter className="bg-white">
                     <UserFooter />
