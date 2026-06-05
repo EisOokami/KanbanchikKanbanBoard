@@ -15,268 +15,39 @@ import {
     X,
     Plus,
     Mail,
-    ChevronDown,
-    ChevronRight,
     Tag,
-    Columns,
     Layers,
     Users,
     Smile,
-    Check,
     GripVertical,
+    ColumnsIcon,
 } from "lucide-react";
-
-type Priority = "low" | "medium" | "high" | "critical";
-type Status = "active" | "paused" | "completed" | "archived";
-
-interface Member {
-    id: string;
-    name: string;
-    email: string;
-    avatar?: string;
-}
-
-interface Column {
-    id: string;
-    name: string;
-    color: string;
-}
-
-interface Category {
-    id: string;
-    name: string;
-    color: string;
-}
-
-interface Label {
-    id: string;
-    name: string;
-    color: string;
-}
-
-interface NewProjectData {
-    name: string;
-    icon: string;
-    description: string;
-    priority: Priority;
-    status: Status;
-    color: string;
-    members: Member[];
-    columns: Column[];
-    categories: Category[];
-    labels: Label[];
-}
+import ColorDotPicker from "./colorDotPicker/ColorDotPicker";
+import Section from "./section/Section";
+import Chip from "./chip/Chip";
+import {
+    Category,
+    ColumnConfig,
+    Label,
+    Member,
+    Priority,
+    Project,
+    Status,
+} from "@/types/types";
+import {
+    COLUMN_COLORS,
+    COLUMNS_CONFIG,
+    PRIORITY_CONFIG,
+    PROJECT_COLORS,
+    PROJECT_ICONS,
+    STATUS_CONFIG,
+} from "@/constants/constants";
+import { cn, getInitials } from "@/libs/utils";
 
 interface NewProjectModalProps {
     open: boolean;
     onClose: () => void;
-    onSubmit: (data: NewProjectData) => void;
-}
-
-const EMOJI_OPTIONS = [
-    "🔥",
-    "⚡",
-    "🚀",
-    "💡",
-    "🎯",
-    "🛠️",
-    "📊",
-    "🎨",
-    "🔐",
-    "🌐",
-    "📱",
-    "⚙️",
-    "🗓️",
-    "🗿",
-    "⚠️",
-    "🌟",
-    "💎",
-    "🧩",
-    "🔬",
-    "📦",
-];
-
-const COLOR_OPTIONS = [
-    "#6366f1",
-    "#ec4899",
-    "#f59e0b",
-    "#10b981",
-    "#3b82f6",
-    "#8b5cf6",
-    "#ef4444",
-    "#14b8a6",
-    "#f97316",
-    "#06b6d4",
-];
-
-const COLUMN_COLORS = [
-    "#94a3b8",
-    "#6366f1",
-    "#ec4899",
-    "#f59e0b",
-    "#10b981",
-    "#3b82f6",
-    "#8b5cf6",
-    "#ef4444",
-    "#14b8a6",
-    "#f97316",
-];
-
-const PRIORITY_CONFIG: Record<
-    Priority,
-    { label: string; color: string; bg: string }
-> = {
-    low: {
-        label: "Low",
-        color: "text-slate-500",
-        bg: "bg-slate-100 dark:bg-slate-800",
-    },
-    medium: {
-        label: "Medium",
-        color: "text-amber-500",
-        bg: "bg-amber-50 dark:bg-amber-900/30",
-    },
-    high: {
-        label: "High",
-        color: "text-orange-500",
-        bg: "bg-orange-50 dark:bg-orange-900/30",
-    },
-    critical: {
-        label: "Critical",
-        color: "text-red-500",
-        bg: "bg-red-50 dark:bg-red-900/30",
-    },
-};
-
-const STATUS_CONFIG: Record<Status, { label: string; dot: string }> = {
-    active: { label: "Active", dot: "bg-emerald-500" },
-    paused: { label: "Paused", dot: "bg-amber-400" },
-    completed: { label: "Completed", dot: "bg-blue-400" },
-    archived: { label: "Archived", dot: "bg-slate-400" },
-};
-
-const DEFAULT_COLUMNS: Column[] = [
-    { id: "col-1", name: "To Do", color: "#94a3b8" },
-    { id: "col-2", name: "In Progress", color: "#6366f1" },
-    { id: "col-3", name: "Done", color: "#10b981" },
-];
-
-function uid() {
-    return Math.random().toString(36).slice(2, 9);
-}
-
-function getInitials(name: string) {
-    return name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2);
-}
-
-function Section({
-    icon,
-    title,
-    children,
-    defaultOpen = true,
-    badge,
-}: {
-    icon: React.ReactNode;
-    title: string;
-    children: React.ReactNode;
-    defaultOpen?: boolean;
-    badge?: number;
-}) {
-    const [open, setOpen] = useState(defaultOpen);
-    return (
-        <div className="overflow-hidden rounded-md border border-border/60 bg-muted/20">
-            <button
-                type="button"
-                onClick={() => setOpen((o) => !o)}
-                className="flex w-full items-center gap-2.5 px-4 py-3 text-left transition-colors hover:bg-muted/40"
-            >
-                <span className="text-muted-foreground">{icon}</span>
-                <span className="flex-1 text-sm font-semibold text-foreground">
-                    {title}
-                </span>
-                {badge !== undefined && badge > 0 && (
-                    <span className="rounded-full bg-bright-blue/15 px-2 py-0.5 text-[10px] font-semibold text-bright-blue">
-                        {badge}
-                    </span>
-                )}
-                {open ? (
-                    <ChevronDown className="size-3.5 text-muted-foreground" />
-                ) : (
-                    <ChevronRight className="size-3.5 text-muted-foreground" />
-                )}
-            </button>
-            {open && (
-                <div className="border-t border-border/50 px-4 pb-4 pt-3">
-                    {children}
-                </div>
-            )}
-        </div>
-    );
-}
-
-function Chip({
-    label,
-    color,
-    onRemove,
-}: {
-    label: string;
-    color: string;
-    onRemove?: () => void;
-}) {
-    return (
-        <span
-            className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium"
-            style={{ backgroundColor: color + "22", color }}
-        >
-            {label}
-            {onRemove && (
-                <button
-                    type="button"
-                    onClick={onRemove}
-                    className="ml-0.5 opacity-60 transition-opacity hover:opacity-100"
-                >
-                    <X className="size-3" />
-                </button>
-            )}
-        </span>
-    );
-}
-
-function ColorDotPicker({
-    value,
-    onChange,
-    colors,
-}: {
-    value: string;
-    onChange: (c: string) => void;
-    colors: string[];
-}) {
-    return (
-        <div className="flex flex-wrap gap-1.5">
-            {colors.map((c) => (
-                <button
-                    key={c}
-                    type="button"
-                    onClick={() => onChange(c)}
-                    className="size-5 rounded-full ring-offset-background transition-transform"
-                    style={{
-                        backgroundColor: c,
-                        outline: value === c ? `2px solid ${c}` : "none",
-                        outlineOffset: 2,
-                    }}
-                >
-                    {value === c && (
-                        <Check className="mx-auto size-3 text-white" />
-                    )}
-                </button>
-            ))}
-        </div>
-    );
+    onSubmit: (data: Project) => void;
 }
 
 export default function NewProjectModal({
@@ -294,7 +65,9 @@ export default function NewProjectModal({
     const [members, setMembers] = useState<Member[]>([]);
     const [emailInput, setEmailInput] = useState("");
     const [emailError, setEmailError] = useState("");
-    const [columns, setColumns] = useState<Column[]>(DEFAULT_COLUMNS);
+    const [columns, setColumns] = useState<ColumnConfig[]>(
+        Object.values(COLUMNS_CONFIG),
+    );
     const [newColName, setNewColName] = useState("");
     const [newColColor, setNewColColor] = useState(COLUMN_COLORS[3]);
     const [dragIdx, setDragIdx] = useState<number | null>(null);
@@ -320,7 +93,17 @@ export default function NewProjectModal({
         }
         setMembers((prev) => [
             ...prev,
-            { id: uid(), name: email.split("@")[0], email },
+            {
+                id: new Date().getTime(),
+                name: email.split("@")[0],
+                surname: "",
+                email,
+                joined_at: new Date(),
+                avatar_url: "",
+                color: "",
+                initials: "",
+                role: "member",
+            },
         ]);
         setEmailInput("");
         setEmailError("");
@@ -328,10 +111,15 @@ export default function NewProjectModal({
 
     const addColumn = () => {
         if (!newColName.trim()) return;
-        setColumns((prev) => [
-            ...prev,
-            { id: uid(), name: newColName.trim(), color: newColColor },
-        ]);
+        setColumns((prevState) => ({
+            ...prevState,
+            [newColName.trim()]: {
+                id: Object.keys(columns).length,
+                label: newColName.trim(),
+                pill: `bg-[${newColColor}]/10 text-[${newColColor}]/70 border-[${newColColor}]/20`,
+                order: Object.keys(columns).length,
+            },
+        }));
         setNewColName("");
     };
 
@@ -358,7 +146,15 @@ export default function NewProjectModal({
         if (!newCatName.trim()) return;
         setCategories((prev) => [
             ...prev,
-            { id: uid(), name: newCatName.trim(), color: newCatColor },
+            {
+                id: categories.length + 1,
+                name: newCatName.trim(),
+                color: newCatColor,
+                pill: "",
+                created_at: new Date(),
+                description: "",
+                updated_at: null,
+            },
         ]);
         setNewCatName("");
     };
@@ -367,7 +163,11 @@ export default function NewProjectModal({
         if (!newLabelName.trim()) return;
         setLabels((prev) => [
             ...prev,
-            { id: uid(), name: newLabelName.trim(), color: newLabelColor },
+            {
+                id: labels.length + 1,
+                name: newLabelName.trim(),
+                color: newLabelColor,
+            },
         ]);
         setNewLabelName("");
     };
@@ -377,17 +177,23 @@ export default function NewProjectModal({
             setErrors({ name: "Project name is required" });
             return;
         }
+
         onSubmit({
+            id: new Date().getTime(),
             name: name.trim(),
             icon,
             description,
-            priority,
             status,
             color,
             members,
-            columns,
-            categories,
-            labels,
+            owner: { name: "", avatar_url: "" },
+            columns: [],
+            created_at: new Date(),
+            updated_at: null,
+            // priority,
+            // columns,
+            // categories,
+            // labels,
         });
         handleClose();
     };
@@ -402,7 +208,7 @@ export default function NewProjectModal({
         setMembers([]);
         setEmailInput("");
         setEmailError("");
-        setColumns(DEFAULT_COLUMNS);
+        setColumns(Object.values(COLUMNS_CONFIG));
         setNewColName("");
         setCategories([]);
         setNewCatName("");
@@ -432,7 +238,7 @@ export default function NewProjectModal({
                                         Icon
                                     </p>
                                     <div className="mb-3 flex flex-wrap gap-1">
-                                        {EMOJI_OPTIONS.map((e) => (
+                                        {PROJECT_ICONS.map((e) => (
                                             <button
                                                 key={e}
                                                 type="button"
@@ -452,7 +258,7 @@ export default function NewProjectModal({
                                     <ColorDotPicker
                                         value={color}
                                         onChange={setColor}
-                                        colors={COLOR_OPTIONS}
+                                        colors={PROJECT_COLORS}
                                     />
                                 </div>
                             )}
@@ -522,7 +328,13 @@ export default function NewProjectModal({
                                                 key={p}
                                                 type="button"
                                                 onClick={() => setPriority(p)}
-                                                className={`rounded-md px-2.5 py-1 text-xs font-medium transition-all ${PRIORITY_CONFIG[p].bg} ${PRIORITY_CONFIG[p].color} ${priority === p ? "ring-1 ring-current" : "opacity-60 hover:opacity-100"}`}
+                                                className={cn(
+                                                    "rounded-md px-2.5 py-1 text-xs font-medium transition-all",
+                                                    PRIORITY_CONFIG[p].pill,
+                                                    priority === p
+                                                        ? "ring-1 ring-current"
+                                                        : "opacity-60 hover:opacity-100",
+                                                )}
                                             >
                                                 {PRIORITY_CONFIG[p].label}
                                             </button>
@@ -546,7 +358,10 @@ export default function NewProjectModal({
                                                 className={`flex items-center gap-1.5 rounded-md bg-muted/60 px-2.5 py-1 text-xs font-medium transition-all hover:bg-muted ${status === s ? "bg-muted ring-1 ring-border" : "opacity-60 hover:opacity-100"}`}
                                             >
                                                 <span
-                                                    className={`size-1.5 rounded-full ${STATUS_CONFIG[s].dot}`}
+                                                    className={cn(
+                                                        "size-1.5 rounded-full",
+                                                        STATUS_CONFIG[s].dot,
+                                                    )}
                                                 />
                                                 {STATUS_CONFIG[s].label}
                                             </button>
@@ -575,7 +390,7 @@ export default function NewProjectModal({
                                                     backgroundColor: color,
                                                 }}
                                             >
-                                                {getInitials(m.name)}
+                                                {getInitials(m.name, m.surname)}
                                             </div>
                                             <div className="min-w-0">
                                                 <p className="text-xs font-medium leading-none">
@@ -637,7 +452,7 @@ export default function NewProjectModal({
                         </div>
                     </Section>
                     <Section
-                        icon={<Columns className="size-4" />}
+                        icon={<ColumnsIcon className="size-4" />}
                         title="Board Columns"
                         badge={columns.length}
                     >
@@ -655,13 +470,13 @@ export default function NewProjectModal({
                                     >
                                         <GripVertical className="size-3.5 flex-shrink-0 text-muted-foreground/50" />
                                         <span
-                                            className="size-3 flex-shrink-0 rounded-full"
-                                            style={{
-                                                backgroundColor: col.color,
-                                            }}
+                                            className={cn(
+                                                "size-3 flex-shrink-0 rounded-full",
+                                                col.pill,
+                                            )}
                                         />
                                         <span className="flex-1 text-sm font-medium">
-                                            {col.name}
+                                            {col.label}
                                         </span>
                                         <button
                                             type="button"
