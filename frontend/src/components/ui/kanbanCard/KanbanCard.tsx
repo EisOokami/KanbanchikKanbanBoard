@@ -2,42 +2,36 @@
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import {
-    Circle,
-    Flame,
-    GripVertical,
-    MoreHorizontal,
-    Trash2,
-} from "lucide-react";
+import { MoreHorizontal, Paperclip, CheckSquare, Trash2 } from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "../shadcn/dropdown-menu";
-import { ICard } from "@/interfaces/interfaces";
-
-const PRIORITY = {
-    low: { label: "Low", color: "#10b981", icon: Circle },
-    medium: { label: "Medium", color: "#f59e0b", icon: Flame },
-    high: { label: "High", color: "#ef4444", icon: Flame },
-};
-
-const TAG_COLORS = {
-    Research: "#8b5cf6",
-    Backend: "#3b82f6",
-    UX: "#ec4899",
-    Design: "#6366f1",
-    QA: "#f59e0b",
-    Marketing: "#10b981",
-    DevOps: "#64748b",
-    Frontend: "#06b6d4",
-};
+import { Task } from "@/types/types";
+import { PRIORITY_CONFIG } from "@/constants/constants";
+import {
+    Avatar,
+    AvatarFallback,
+    AvatarImage,
+} from "@/components/ui/shadcn/avatar";
+import { getInitials } from "@/libs/utils";
 
 interface KanbanCardProps {
-    card: ICard;
-    onDelete: (id: string) => void;
+    card: Task;
+    onDelete: () => void;
     onOpenDetails: () => void;
+}
+
+function formatDate(date: string | Date): string {
+    const d = typeof date === "string" ? new Date(date) : date;
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+function isOverdue(date: string | Date): boolean {
+    const d = typeof date === "string" ? new Date(date) : date;
+    return d < new Date();
 }
 
 export default function KanbanCard({
@@ -60,60 +54,140 @@ export default function KanbanCard({
         opacity: isDragging ? 0.3 : 1,
     };
 
-    const PriorityIcon = PRIORITY[card.priority]?.icon || Circle;
-    const priorityColor = PRIORITY[card.priority]?.color || "#64748b";
-    const tagColor = TAG_COLORS[card.tag] || "#6366f1";
+    const priorityDot = PRIORITY_CONFIG[card.priority]?.dot ?? "bg-gray-300";
+    const category = card.categories[0];
+    const overdue = isOverdue(card.due_date);
+    const subtasksDone = card.subtasks.filter((s) => s.is_done).length;
+    const subtasksTotal = card.subtasks.length;
 
     return (
         <div
             ref={setNodeRef}
-            style={{ ...style }}
+            style={style}
             onClick={onOpenDetails}
-            className="group relative cursor-default select-none rounded-xl border bg-white p-3.5 text-left transition-all duration-150 hover:border-gray-300 hover:shadow-lg"
+            className="group relative cursor-default select-none rounded-xl border bg-white p-3 text-left transition-shadow duration-150 hover:border-gray-300 hover:shadow-md"
         >
-            <div
+            {/* <div
                 {...attributes}
                 {...listeners}
-                className="absolute left-2 top-1/2 z-10 -translate-y-1/2 cursor-grab p-1 opacity-30 transition-opacity hover:!opacity-80 active:cursor-grabbing group-hover:opacity-40"
+                onClick={(e) => e.stopPropagation()}
+                className="absolute left-1 top-1/2 z-10 -translate-y-1/2 cursor-grab p-1 opacity-0 transition-opacity hover:!opacity-80 active:cursor-grabbing group-hover:opacity-40"
             >
-                <GripVertical className="size-3.5" />
-            </div>
-            <div className="flex items-center justify-between gap-2 pl-4">
-                <span
-                    className="rounded-md px-1.5 py-0.5 text-[10px] font-semibold leading-none"
-                    style={{ background: tagColor + "22", color: tagColor }}
-                >
-                    {card.tag}
-                </span>
+                <GripVertical className="size-3.5 text-gray-400" />
+            </div> */}
+            {/* <div className="pl-4"> */}
+            <div
+                className="mb-2.5 flex items-center justify-between gap-2"
+                {...attributes}
+                {...listeners}
+                onClick={(e) => e.stopPropagation()}
+            >
+                {category && (
+                    <span
+                        className="rounded-md px-1.5 py-0.5 text-[10px] font-semibold capitalize leading-none"
+                        style={{
+                            background: category.color + "22",
+                            color: category.color,
+                        }}
+                    >
+                        {category.name}
+                    </span>
+                )}
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <button className="flex-shrink-0 rounded p-0.5 opacity-0 transition-opacity hover:bg-gray-100 hover:!opacity-100 group-hover:opacity-60">
+                        <button
+                            onClick={(e) => e.stopPropagation()}
+                            className="ml-auto flex-shrink-0 rounded p-0.5 opacity-0 transition-opacity hover:bg-gray-100 hover:!opacity-100 group-hover:opacity-50"
+                        >
                             <MoreHorizontal className="size-3.5 text-gray-400" />
                         </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-36 border">
                         <DropdownMenuItem
                             className="cursor-pointer gap-2 text-xs text-red-400 focus:bg-red-500/10 focus:text-red-400"
-                            onClick={() => onDelete(card.id)}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onDelete();
+                            }}
                         >
                             <Trash2 className="size-3" /> Delete card
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
-            <p className="mb-3 mt-2 pl-4 text-sm font-medium">{card.title}</p>
-            <div className="flex items-center justify-between pl-4">
-                <div
-                    className="flex items-center gap-1"
-                    style={{ color: priorityColor }}
-                >
-                    <PriorityIcon className="size-3" />
-                    <span className="text-[10px] font-medium">
-                        {PRIORITY[card.priority]?.label}
+            <p className="mb-3 text-sm font-medium leading-snug">
+                {card.title}
+            </p>
+            {subtasksTotal > 0 && (
+                <div className="mb-2.5">
+                    <div className="mb-1 flex items-center justify-between">
+                        <span className="text-[10px] text-gray-400">
+                            {subtasksDone}/{subtasksTotal} subtasks
+                        </span>
+                    </div>
+                    <div className="h-1 w-full overflow-hidden rounded-full bg-gray-100">
+                        <div
+                            className="h-full rounded-full bg-bright-blue transition-all"
+                            style={{
+                                width: `${Math.round((subtasksDone / subtasksTotal) * 100)}%`,
+                            }}
+                        />
+                    </div>
+                </div>
+            )}
+            <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
+                        <span
+                            className={`size-1.5 rounded-full ${priorityDot}`}
+                        />
+                        <span className="text-[10px] text-gray-500">
+                            {PRIORITY_CONFIG[card.priority]?.label}
+                        </span>
+                    </div>
+                    {card.attachments.length > 0 && (
+                        <div className="flex items-center gap-0.5 text-gray-400">
+                            <Paperclip className="size-2.5" />
+                            <span className="text-[10px]">
+                                {card.attachments.length}
+                            </span>
+                        </div>
+                    )}
+                    {subtasksTotal > 0 && (
+                        <div className="flex items-center gap-0.5 text-gray-400">
+                            <CheckSquare className="size-2.5" />
+                            <span className="text-[10px]">
+                                {subtasksDone}/{subtasksTotal}
+                            </span>
+                        </div>
+                    )}
+                </div>
+                <div className="flex items-center gap-2">
+                    {card.assignees.length > 0 && (
+                        <div className="flex -space-x-1.5">
+                            {card.assignees.slice(0, 2).map((a) => (
+                                <Avatar
+                                    key={a.id}
+                                    className="size-5 ring-1 ring-white"
+                                >
+                                    <AvatarImage src={a.avatar_url} />
+                                    <AvatarFallback className="text-[8px]">
+                                        {getInitials(a.name, a.surname)}
+                                    </AvatarFallback>
+                                </Avatar>
+                            ))}
+                        </div>
+                    )}
+                    <span
+                        className={`text-[10px] font-medium ${
+                            overdue ? "text-rose-500" : "text-gray-400"
+                        }`}
+                    >
+                        {formatDate(card.due_date)}
                     </span>
                 </div>
-                <span className="text-[10px] text-gray-500">{card.date}</span>
             </div>
+            {/* </div> */}
         </div>
     );
 }
