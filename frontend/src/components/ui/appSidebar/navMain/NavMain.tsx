@@ -45,7 +45,6 @@ const navMain = [
     },
     { title: "Tasks", icon: ClipboardList, url: "/tasks", badge: "12" },
     { title: "Calendar", icon: Calendar, url: "/calendar" },
-    { title: "Notifications", icon: Bell, url: "/notifications", badge: "2" },
 ];
 
 export default function NavMain() {
