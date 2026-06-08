@@ -55,12 +55,7 @@ export default function ProjectsOverview() {
         <div className="h-full overflow-y-auto rounded-xl bg-white">
             <header className="sticky top-0 z-10 border-b border-border/60 bg-card/80 backdrop-blur">
                 <div className="flex items-center justify-between gap-4 px-8 py-4">
-                    <div>
-                        <h1 className="text-xl font-semibold">Projects</h1>
-                        <p className="mt-0.5 text-sm text-muted-foreground">
-                            Manage and track all your work
-                        </p>
-                    </div>
+                    <h1 className="text-xl font-semibold">Projects</h1>
                     <Button
                         className="gap-1.5 bg-bright-blue text-white hover:bg-blue-600 [&_svg]:size-5"
                         onClick={handleShowNewProjectModal}
@@ -70,7 +65,7 @@ export default function ProjectsOverview() {
                     </Button>
                 </div>
             </header>
-            <main className="space-y-8 px-8 py-4">
+            <main className="space-y-5 px-8 py-4">
                 <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
                     <div className="relative w-full sm:w-72">
                         <MagnifyingGlassIcon
@@ -90,7 +85,7 @@ export default function ProjectsOverview() {
                                 <button
                                     key={o.value}
                                     onClick={() => setFilterStatus(o.value)}
-                                    className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+                                    className={`h-7 rounded-md px-3 py-1 text-xs font-medium transition-colors ${
                                         filterStatus === o.value
                                             ? "bg-background text-foreground shadow-sm"
                                             : "text-muted-foreground hover:text-foreground"
@@ -105,7 +100,7 @@ export default function ProjectsOverview() {
                                 <button
                                     key={v}
                                     onClick={() => setView(v)}
-                                    className={`rounded-md p-1.5 transition-colors ${
+                                    className={`rounded-md p-1 transition-colors ${
                                         view === v
                                             ? "bg-background text-foreground shadow-sm"
                                             : "text-muted-foreground hover:text-foreground"
