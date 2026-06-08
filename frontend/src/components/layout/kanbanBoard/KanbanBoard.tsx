@@ -1,28 +1,17 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState } from "react";
 import {
     DndContext,
-    DragEndEvent,
-    DragOverEvent,
-    DragStartEvent,
     DragOverlay,
     PointerSensor,
     useSensor,
     useSensors,
     closestCorners,
-    UniqueIdentifier,
+    DragEndEvent,
+    DragOverEvent,
+    DragStartEvent,
 } from "@dnd-kit/core";
-import { arrayMove } from "@dnd-kit/sortable";
-import {
-    Settings,
-    Link,
-    SquareKanban,
-    List,
-    Calendar,
-    ListFilter,
-    UserPlus,
-} from "lucide-react";
 import OverlayCard from "@/components/ui/overlayCard/OverlayCard";
 import KanbanColumn from "@/components/ui/kanbanColumn/KanbanColumn";
 import { Column, ColumnConfig, FilterState, Task } from "@/types/types";
@@ -42,144 +31,156 @@ import { ProjectListView } from "../projectListView/ProjectListView";
 import ProjectCalendarView from "../projectCalendarView/ProjectCalendarView";
 import { TaskDetailsSheet } from "@/components/ui/taskDetailsSheet/TaskDetailsSheet";
 import { COLUMNS_CONFIG, DEFAULT_FILTER } from "@/constants/constants";
+import {
+    CalendarDotsIcon,
+    FunnelIcon,
+    GearSixIcon,
+    KanbanIcon,
+    ListIcon,
+    PlusIcon,
+    ShareNetworkIcon,
+    UserPlusIcon,
+} from "@phosphor-icons/react";
+import { CreateTaskModal } from "@/components/ui/createTaskModal/CreateTaskModal";
+import { arrayMove } from "@dnd-kit/sortable";
 
 export default function KanbanBoard() {
     const [columns, setColumns] = useState<(ColumnConfig & Column)[]>(
         Object.values(COLUMNS_CONFIG),
     );
     const [activeCard, setActiveCard] = useState<Task | null>(null);
-    const [isOpenInvite, setIsOpenInvite] = useState(false);
-    const [isOpenFilters, setIsOpenFilters] = useState(false);
-    const [isOpenSettings, setIsOpenSettings] = useState(false);
-    const [isOpenTaskDetails, setIsOpenTaskDetails] = useState(false);
+    const [isOpenInvite, setIsOpenInvite] = useState<boolean>(false);
+    const [isOpenFilters, setIsOpenFilters] = useState<boolean>(false);
+    const [isOpenSettings, setIsOpenSettings] = useState<boolean>(false);
+    const [isOpenTaskDetails, setIsOpenTaskDetails] = useState<boolean>(false);
+    const [isOpenCreateTask, setIsOpenCreateTask] = useState<boolean>(false);
     const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTER);
-    const [selectedMode, setSelectedMode] = useState("kanban");
-
-    // Auto-incrementing id for new tasks (number, matching Task.id: number)
-    const nextId = useRef(1000);
+    const [selectedMode, setSelectedMode] = useState<
+        "kanban" | "list" | "calendar"
+    >("kanban");
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     );
 
-    // UniqueIdentifier is string | number — Task.id is number, DndKit handles both
-    const findColByCardId = useCallback(
-        (cardId: UniqueIdentifier) =>
-            columns.find((col) =>
-                col.tasks.some((t) => t.id === (cardId as number)),
-            ),
-        [columns],
-    );
+    const findColumnByTaskId = (taskId: number) =>
+        columns.find((col) => col.tasks.some((t) => t.id === taskId));
 
     const handleDragStart = (event: DragStartEvent) => {
-        const col = findColByCardId(event.active.id);
-        if (col) {
-            setActiveCard(
-                col.tasks.find((t) => t.id === event.active.id) ?? null,
-            );
-        }
+        const { active } = event;
+        const col = findColumnByTaskId(active.id as number);
+        const task = col?.tasks.find((t) => t.id === active.id);
+        setActiveCard(task ?? null);
     };
 
     const handleDragOver = (event: DragOverEvent) => {
         const { active, over } = event;
-        if (!over) return;
+        if (!over || active.id === over.id) return;
 
-        const fromCol = findColByCardId(active.id);
-        const toCol =
-            columns.find((c) => c.id === over.id) ?? findColByCardId(over.id);
+        const activeColIdx = columns.findIndex((col) =>
+            col.tasks.some((t) => t.id === active.id),
+        );
+        if (activeColIdx === -1) return;
 
-        if (!fromCol || !toCol || fromCol.id === toCol.id) return;
+        const overColIdx = columns.findIndex(
+            (col) =>
+                col.id === over.id || col.tasks.some((t) => t.id === over.id),
+        );
+        if (overColIdx === -1 || activeColIdx === overColIdx) return;
 
         setColumns((prev) => {
-            const card = fromCol.tasks.find((t) => t.id === active.id);
-            if (!card) return prev;
+            const next = prev.map((col) => ({ ...col, tasks: [...col.tasks] }));
+            const task = next[activeColIdx].tasks.find(
+                (t) => t.id === active.id,
+            )!;
+            next[activeColIdx].tasks = next[activeColIdx].tasks.filter(
+                (t) => t.id !== active.id,
+            );
 
-            const overCard = toCol.tasks.find((t) => t.id === over.id);
-            const insertIdx =
-                overCard !== undefined
-                    ? toCol.tasks.indexOf(overCard)
-                    : toCol.tasks.length;
-
-            return prev.map((col) => {
-                if (col.id === fromCol.id)
-                    return {
-                        ...col,
-                        tasks: col.tasks.filter((t) => t.id !== active.id),
-                    };
-                if (col.id === toCol.id) {
-                    const next = [...col.tasks];
-                    next.splice(insertIdx, 0, card);
-                    return { ...col, tasks: next };
-                }
-                return col;
-            });
+            const overTaskIdx = next[overColIdx].tasks.findIndex(
+                (t) => t.id === over.id,
+            );
+            if (overTaskIdx === -1) {
+                next[overColIdx].tasks.push(task);
+            } else {
+                next[overColIdx].tasks.splice(overTaskIdx, 0, task);
+            }
+            return next;
         });
     };
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
         setActiveCard(null);
-        if (!over) return;
+        if (!over || active.id === over.id) return;
 
-        const fromCol = findColByCardId(active.id);
-        const toCol =
-            columns.find((c) => c.id === over.id) ?? findColByCardId(over.id);
+        const activeColIdx = columns.findIndex((col) =>
+            col.tasks.some((t) => t.id === active.id),
+        );
+        if (activeColIdx === -1) return;
 
-        if (!fromCol || !toCol || fromCol.id !== toCol.id) return;
+        const overColIdx = columns.findIndex(
+            (col) =>
+                col.id === over.id || col.tasks.some((t) => t.id === over.id),
+        );
+        if (overColIdx === -1) return;
 
-        setColumns((prev) =>
-            prev.map((col) => {
-                if (col.id !== fromCol.id) return col;
+        if (activeColIdx === overColIdx) {
+            setColumns((prev) => {
+                const next = prev.map((col) => ({
+                    ...col,
+                    tasks: [...col.tasks],
+                }));
+                const col = next[activeColIdx];
                 const oldIdx = col.tasks.findIndex((t) => t.id === active.id);
                 const newIdx = col.tasks.findIndex((t) => t.id === over.id);
-                if (oldIdx === newIdx) return col;
-                return { ...col, tasks: arrayMove(col.tasks, oldIdx, newIdx) };
-            }),
-        );
-    };
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const handleAddCard = (_colId: number, _title: string) => {
-        nextId.current += 1;
+                if (oldIdx !== -1 && newIdx !== -1) {
+                    col.tasks = arrayMove(col.tasks, oldIdx, newIdx);
+                }
+                return next;
+            });
+        }
     };
 
     const handleDeleteCard = () => {};
 
-    const handleChangeMode = (mode: string) => setSelectedMode(mode);
+    const handleChangeMode = (mode: "kanban" | "list" | "calendar") =>
+        setSelectedMode(mode);
+
+    const handleIsOpenCreateTask = () => {
+        setIsOpenCreateTask(!isOpenCreateTask);
+    };
 
     const viewModes = [
-        { id: "kanban", label: "Kanban", icon: SquareKanban },
-        { id: "list", label: "List", icon: List },
-        { id: "calendar", label: "Calendar", icon: Calendar },
+        { id: "kanban", label: "Kanban", icon: KanbanIcon },
+        { id: "list", label: "List", icon: ListIcon },
+        { id: "calendar", label: "Calendar", icon: CalendarDotsIcon },
     ] as const;
+
+    // const tasks = columns.map((column) => column.tasks).flat(1);
+
+    // const stats = useMemo(
+    //     () => ({
+    //         total: tasks.length,
+    //         inProgress: tasks.filter((t) => t.column === "in_progress").length,
+    //         done: tasks.filter((t) => t.column === "done").length,
+    //         overdue: tasks.filter((t) => isOverdue(t.due_date, t.column))
+    //             .length,
+    //     }),
+    //     [tasks],
+    // );
 
     return (
         <div className="h-full w-full overflow-y-auto rounded-xl bg-white">
             <header className="sticky top-0 z-10 grid gap-5 border-b bg-white px-8 py-4">
                 <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-3">
+                    <div className="flex items-center gap-3">
                         <div className="grid size-10 place-content-center rounded-md bg-blue-100">
                             <span className="text-lg">⚙️</span>
                         </div>
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <h1 className="text-xl font-semibold">
-                                    Kabanchik: Web Application
-                                </h1>
-                                <Button
-                                    size="icon"
-                                    variant="ghost"
-                                    className="size-8 rounded-full [&_svg]:size-3.5"
-                                >
-                                    <Link />
-                                </Button>
-                            </div>
-                            <p className="w-3/4 text-sm text-muted-foreground">
-                                Lorem ipsum dolor sit amet consectetur
-                                adipisicing elit. Numquam provident magni
-                                deleniti suscipit ab.
-                            </p>
-                        </div>
+                        <h1 className="text-2xl font-semibold">
+                            Kabanchik: Web Application
+                        </h1>
                     </div>
                     <div className="flex items-center gap-3">
                         <AvatarGroup>
@@ -207,10 +208,10 @@ export default function KanbanBoard() {
                             <AvatarGroupCount>+3</AvatarGroupCount>
                         </AvatarGroup>
                         <Button
+                            variant="outline"
                             onClick={() => setIsOpenInvite(true)}
-                            className="bg-bright-blue hover:bg-blue-600"
                         >
-                            <UserPlus />
+                            <UserPlusIcon weight="duotone" />
                             Invite
                         </Button>
                         <Button
@@ -219,7 +220,15 @@ export default function KanbanBoard() {
                             className="[&_svg]:size-5"
                             onClick={() => setIsOpenSettings(true)}
                         >
-                            <Settings />
+                            <ShareNetworkIcon weight="duotone" />
+                        </Button>
+                        <Button
+                            size="icon"
+                            variant="ghost"
+                            className="[&_svg]:size-5"
+                            onClick={() => setIsOpenSettings(true)}
+                        >
+                            <GearSixIcon weight="duotone" />
                         </Button>
                     </div>
                 </div>
@@ -241,22 +250,81 @@ export default function KanbanBoard() {
                                             : ""
                                     }
                                 >
-                                    <Icon />
+                                    <Icon weight="duotone" />
                                     {label}
                                 </Button>
                             ))}
                         </ButtonGroup>
                     </nav>
-                    <Button
-                        onClick={() => setIsOpenFilters(true)}
-                        className="bg-bright-blue hover:bg-blue-600"
-                    >
-                        <ListFilter />
-                        Filter
-                    </Button>
+                    <div className="flex gap-3">
+                        {/* {selectedMode === "list" && (
+                            <div className="hidden items-center gap-1 md:flex">
+                                {[
+                                    {
+                                        label: "Total",
+                                        val: stats.total,
+                                        col: "text-gray-600",
+                                    },
+                                    {
+                                        label: "In Progress",
+                                        val: stats.inProgress,
+                                        col: "text-blue-600",
+                                    },
+                                    {
+                                        label: "Done",
+                                        val: stats.done,
+                                        col: "text-emerald-600",
+                                    },
+                                    {
+                                        label: "Overdue",
+                                        val: stats.overdue,
+                                        col: "text-rose-600",
+                                    },
+                                ].map((s, i) => (
+                                    <div
+                                        key={s.label}
+                                        className="flex items-center gap-2"
+                                    >
+                                        {i > 0 && (
+                                            <div className="h-3 w-px bg-gray-200" />
+                                        )}
+                                        <span className="text-xs text-gray-400">
+                                            {s.label}
+                                        </span>
+                                        <span
+                                            className={cn(
+                                                "text-xs font-bold",
+                                                s.col,
+                                            )}
+                                        >
+                                            {s.val}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        )} */}
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsOpenFilters(true)}
+                        >
+                            <FunnelIcon weight="duotone" />
+                            Filter
+                        </Button>
+                        <Button
+                            className="gap-1.5 bg-bright-blue px-3 text-xs hover:bg-blue-600"
+                            onClick={handleIsOpenCreateTask}
+                        >
+                            <PlusIcon weight="duotone" className="size-3.5" />{" "}
+                            New Task
+                        </Button>
+                    </div>
                 </div>
             </header>
-            <main className="h-[calc(100svh-170px)]">
+            <main
+                className={
+                    selectedMode === "kanban" ? "h-[calc(100svh-187px)]" : ""
+                }
+            >
                 {selectedMode === "kanban" && (
                     <div className="w-full overflow-x-auto p-8">
                         <DndContext
@@ -271,8 +339,11 @@ export default function KanbanBoard() {
                                     <KanbanColumn
                                         key={col.id}
                                         column={col}
-                                        onAddCard={handleAddCard}
                                         onDeleteCard={handleDeleteCard}
+                                        isOpenCreateTask={isOpenCreateTask}
+                                        onOpenCreateTask={
+                                            handleIsOpenCreateTask
+                                        }
                                         onOpenDetails={() =>
                                             setIsOpenTaskDetails(
                                                 !isOpenTaskDetails,
@@ -316,6 +387,11 @@ export default function KanbanBoard() {
                 open={isOpenTaskDetails}
                 onOpenChange={() => setIsOpenTaskDetails(!isOpenTaskDetails)}
                 onSave={(updated) => console.log(updated)}
+            />
+            <CreateTaskModal
+                open={isOpenCreateTask}
+                onOpenChange={handleIsOpenCreateTask}
+                onSubmit={(data) => console.log(data)}
             />
         </div>
     );

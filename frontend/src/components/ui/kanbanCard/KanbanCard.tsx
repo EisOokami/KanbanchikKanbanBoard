@@ -2,7 +2,6 @@
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { MoreHorizontal, Paperclip, CheckSquare, Trash2 } from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -32,16 +31,6 @@ interface KanbanCardProps {
     onOpenDetails: () => void;
 }
 
-function formatDate(date: string | Date): string {
-    const d = typeof date === "string" ? new Date(date) : date;
-    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
-
-function isOverdue(date: string | Date): boolean {
-    const d = typeof date === "string" ? new Date(date) : date;
-    return d < new Date();
-}
-
 export default function KanbanCard({
     card,
     onDelete,
@@ -62,9 +51,8 @@ export default function KanbanCard({
         opacity: isDragging ? 0.3 : 1,
     };
 
-    const priorityDot = PRIORITY_CONFIG[card.priority]?.dot ?? "bg-gray-300";
     const category = card.categories[0];
-    const overdue = isOverdue(card.due_date);
+    const overdue = isOverdue(card.due_date, card.column);
     const subtasksDone = card.subtasks.filter((s) => s.is_done).length;
     const subtasksTotal = card.subtasks.length;
 
@@ -73,26 +61,25 @@ export default function KanbanCard({
             ref={setNodeRef}
             style={style}
             onClick={onOpenDetails}
+            {...attributes}
+            {...listeners}
             className="group relative cursor-default select-none rounded-xl border bg-white p-3 text-left transition-shadow duration-150 hover:border-gray-300 hover:shadow-md"
         >
-            {/* <div
-                {...attributes}
-                {...listeners}
-                onClick={(e) => e.stopPropagation()}
-                className="absolute left-1 top-1/2 z-10 -translate-y-1/2 cursor-grab p-1 opacity-0 transition-opacity hover:!opacity-80 active:cursor-grabbing group-hover:opacity-40"
-            >
-                <GripVertical className="size-3.5 text-gray-400" />
-            </div> */}
-            {/* <div className="pl-4"> */}
-            <div
-                className="mb-2.5 flex items-center justify-between gap-2"
-                {...attributes}
-                {...listeners}
-                onClick={(e) => e.stopPropagation()}
-            >
+            <div className="mb-2.5 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1">
+                    <span
+                        className="rounded-md px-1.5 py-0.5 text-[10px] font-medium capitalize text-white"
+                        style={{
+                            backgroundColor:
+                                PRIORITY_CONFIG[card.priority].color,
+                        }}
+                    >
+                        {PRIORITY_CONFIG[card.priority]?.label}
+                    </span>
+                </div>
                 {category && (
                     <span
-                        className="rounded-md px-1.5 py-0.5 text-[10px] font-semibold capitalize leading-none"
+                        className="rounded-md px-1.5 py-0.5 text-[10px] font-medium capitalize"
                         style={{
                             background: category.color + "22",
                             color: category.color,
@@ -127,7 +114,7 @@ export default function KanbanCard({
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
-            <p className="mb-3 text-sm font-medium leading-snug">
+            <p className="mb-1 text-sm font-medium leading-snug">
                 {card.title}
             </p>
             <p className="line-clamp-1 text-xs text-gray-500">
@@ -188,7 +175,7 @@ export default function KanbanCard({
                             {card.assignees.slice(0, 2).map((a) => (
                                 <Avatar
                                     key={a.id}
-                                    className="size-5 ring-1 ring-white"
+                                    className="size-6 ring-1 ring-white"
                                 >
                                     <AvatarImage src={a.avatar_url} />
                                     <AvatarFallback className="text-[8px]">
@@ -235,7 +222,6 @@ export default function KanbanCard({
                     )}
                 </div>
             </div>
-            {/* </div> */}
         </div>
     );
 }

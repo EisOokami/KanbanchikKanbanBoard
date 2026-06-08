@@ -5,32 +5,32 @@ import {
     SortableContext,
     verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { Plus } from "lucide-react";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import KanbanCard from "../kanbanCard/KanbanCard";
-import { CreateTaskModal } from "../createTaskModal/CreateTaskModal";
 import { Column, ColumnConfig } from "@/types/types";
 import { PlusIcon } from "@phosphor-icons/react";
 
 interface KanbanColumnProps {
     column: ColumnConfig & Column;
-    onAddCard: (id: number, title: string) => void;
     onDeleteCard: () => void;
     onOpenDetails: () => void;
+    isOpenCreateTask: boolean;
+    onOpenCreateTask: () => void;
 }
 
 export default function KanbanColumn({
     column,
     onDeleteCard,
     onOpenDetails,
+    isOpenCreateTask,
+    onOpenCreateTask,
 }: Readonly<KanbanColumnProps>) {
-    const [adding, setAdding] = useState(false);
     const inputRef = useRef<HTMLInputElement | null>(null);
 
     const { setNodeRef, isOver } = useDroppable({ id: column.id });
 
     const startAdding = () => {
-        setAdding(true);
+        onOpenCreateTask();
         setTimeout(() => inputRef.current?.focus(), 50);
     };
 
@@ -39,21 +39,15 @@ export default function KanbanColumn({
 
     return (
         <div
-            className={`flex w-[320px] flex-shrink-0 flex-col rounded-2xl transition-colors duration-150 ${
+            className={`flex w-[320px] flex-shrink-0 flex-col rounded-xl p-2 transition-colors duration-150 ${
                 isOver ? "bg-gray-200" : "bg-gray-100"
             }`}
         >
-            <div className="flex items-center justify-between px-4 pb-2.5 pt-4">
-                <div className="flex items-center gap-2.5">
-                    <span className="text-sm font-semibold">{column.name}</span>
-                    <span
-                        className="min-w-[20px] rounded-full px-1.5 text-center text-xs font-bold"
-                        style={{
-                            background: column.color + "22",
-                            color: column.color,
-                        }}
-                    >
-                        {column.tasks.length}
+            <div className="relative mb-3 flex items-center justify-between rounded-md border bg-white px-3 py-2">
+                <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-medium">{column.name}</span>
+                    <span className="text-center text-xs">
+                        ({column.tasks.length})
                     </span>
                     {wipExceeded && (
                         <span className="rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] font-semibold text-rose-500">
@@ -63,18 +57,12 @@ export default function KanbanColumn({
                 </div>
                 <button
                     onClick={startAdding}
-                    className="flex size-6 items-center justify-center rounded-md text-gray-600 transition-colors hover:bg-gray-200 hover:text-gray-800"
+                    className="absolute right-3 flex size-5 items-center justify-center rounded-md text-gray-600 transition-colors hover:bg-gray-200 hover:text-gray-800"
                 >
                     <PlusIcon weight="duotone" className="size-3.5" />
                 </button>
             </div>
-            <div
-                className="mx-4 mb-3 h-px rounded-full"
-                style={{
-                    background: `linear-gradient(to right, ${column.color}66, transparent)`,
-                }}
-            />
-            <div className="flex-1 overflow-y-auto px-3 pb-3">
+            <div className="flex-1 overflow-y-auto">
                 <SortableContext
                     items={column.tasks.map((c) => c.id)}
                     strategy={verticalListSortingStrategy}
@@ -93,12 +81,7 @@ export default function KanbanColumn({
                         ))}
                     </div>
                 </SortableContext>
-                <CreateTaskModal
-                    open={adding}
-                    onOpenChange={() => setAdding(!adding)}
-                    onSubmit={(data) => console.log(data)}
-                />
-                {column.tasks.length === 0 && !adding && (
+                {column.tasks.length === 0 && !isOpenCreateTask && (
                     <div className="flex flex-col items-center py-8 text-gray-400">
                         <div className="mb-2 flex size-8 items-center justify-center rounded-lg border border-dashed border-gray-300">
                             <PlusIcon weight="duotone" className="size-4" />
