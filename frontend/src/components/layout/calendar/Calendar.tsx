@@ -44,6 +44,7 @@ export default function Calendar({
         null,
     );
     const [addOpen, setAddOpen] = useState<boolean>(false);
+    const [showGantt, setShowGantt] = useState<boolean>(false);
 
     const prevMonth = (): void => {
         if (month === 0) {
@@ -76,10 +77,23 @@ export default function Calendar({
     const tasksByDate: Record<string, Task[]> = useMemo(() => {
         const map: Record<string, Task[]> = {};
         filtered.forEach((t) => {
-            const ds = taskDateStr(t);
-            if (!ds) return;
-            if (!map[ds]) map[ds] = [];
-            map[ds].push(t);
+            if (!t.start_date || !t.due_date) return;
+            const start = new Date(t.start_date);
+            const end = new Date(t.due_date);
+
+            for (
+                let d = new Date(start);
+                d <= end;
+                d.setDate(d.getDate() + 1)
+            ) {
+                const ds = toDateStr(
+                    d.getFullYear(),
+                    d.getMonth(),
+                    d.getDate(),
+                );
+                if (!map[ds]) map[ds] = [];
+                map[ds].push(t);
+            }
         });
         return map;
     }, [filtered]);
@@ -94,6 +108,7 @@ export default function Calendar({
     const prevMonthDays = getDaysInMonth(year, month === 0 ? 11 : month - 1);
 
     const cells: GridCell[] = [];
+
     for (let i = firstDay - 1; i >= 0; i--) {
         const d = prevMonthDays - i;
         const m2 = month === 0 ? 11 : month - 1;
@@ -120,6 +135,48 @@ export default function Calendar({
             isOtherMonth: true,
         });
     }
+
+    const taskLanes: Record<number, number> = useMemo(() => {
+        const lanes: Record<number, number> = {};
+        const sorted = [...filtered]
+            .filter((t) => t.start_date && t.due_date)
+            .sort((a, b) => {
+                const startDiff =
+                    new Date(a.start_date).getTime() -
+                    new Date(b.start_date).getTime();
+                if (startDiff !== 0) return startDiff;
+
+                return (
+                    new Date(b.due_date).getTime() -
+                    new Date(b.start_date).getTime() -
+                    (new Date(a.due_date).getTime() -
+                        new Date(a.start_date).getTime())
+                );
+            });
+
+        sorted.forEach((task) => {
+            const start = new Date(task.start_date).getTime();
+            const end = new Date(task.due_date).getTime();
+
+            const occupiedLanes = new Set<number>();
+            sorted.forEach((other) => {
+                if (other.id === task.id || lanes[other.id] === undefined)
+                    return;
+                const otherStart = new Date(other.start_date).getTime();
+                const otherEnd = new Date(other.due_date).getTime();
+
+                if (start <= otherEnd && end >= otherStart) {
+                    occupiedLanes.add(lanes[other.id]);
+                }
+            });
+
+            let lane = 0;
+            while (occupiedLanes.has(lane)) lane++;
+            lanes[task.id] = lane;
+        });
+
+        return lanes;
+    }, [filtered]);
 
     const monthStr = `${year}-${String(month + 1).padStart(2, "0")}`;
     const monthTasks = initialTasks.filter((t) => {
@@ -263,27 +320,25 @@ export default function Calendar({
                                 />
                             </button>
                         </div>
-                        <h2 className="min-w-0 text-base font-black tracking-tight text-gray-800">
-                            {MONTHS[month]}{" "}
-                            <span className="font-normal text-gray-400">
-                                {year}
-                            </span>
-                        </h2>
-                        <button
-                            onClick={goToday}
-                            className="rounded-md border bg-white px-2.5 py-1 text-xs font-semibold text-gray-600 transition-colors hover:bg-gray-50"
-                        >
-                            Today
-                        </button>
-                        {/* <div className="ml-auto">
-                            <Button
-                                onClick={() => setAddOpen(true)}
-                                size="sm"
-                                className="h-8 gap-1.5 bg-bright-blue px-3 text-xs hover:bg-blue-600"
+                        <div className="space-x-1">
+                            <button
+                                onClick={goToday}
+                                className="rounded-md border bg-white px-2.5 py-1 text-xs font-semibold text-gray-600 transition-colors hover:bg-gray-50"
                             >
-                                <Plus className="size-3.5" /> Add Task
-                            </Button>
-                        </div> */}
+                                Today
+                            </button>
+                            <button
+                                onClick={() => setShowGantt((s) => !s)}
+                                className={cn(
+                                    "rounded-md border px-2.5 py-1 text-xs font-semibold transition-colors",
+                                    showGantt
+                                        ? "bg-bright-blue text-white hover:bg-blue-600"
+                                        : "bg-white text-gray-600 hover:bg-gray-50",
+                                )}
+                            >
+                                Gantt bars: {showGantt ? "ON" : "OFF"}
+                            </button>
+                        </div>
                     </div>
                     <div className="flex min-h-0 flex-1 overflow-hidden">
                         <div className="flex flex-1 flex-col overflow-hidden">
@@ -320,6 +375,14 @@ export default function Calendar({
                                             }
                                             isOtherMonth={cell.isOtherMonth}
                                             onClick={setSelected}
+                                            onTaskClick={(task) =>
+                                                setSelected(
+                                                    task.start_date.toString(),
+                                                )
+                                            }
+                                            showGantt={showGantt}
+                                            taskLanes={taskLanes}
+                                            maxLanes={MAX_LANES}
                                         />
                                     ))}
                                 </div>

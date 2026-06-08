@@ -13,7 +13,7 @@ import {
     toDueDate,
 } from "@/libs/utils";
 import MiniCalendar from "@/components/ui/miniCalendar/MiniCalendar";
-import EventChip from "@/components/ui/eventChip/EventChip";
+import DayCell from "@/components/ui/dayCell/DayCell";
 import DaySidebar from "@/components/ui/daySidebar/DaySidebar";
 import { Task } from "@/types/types";
 import {
@@ -24,9 +24,17 @@ import {
 } from "@/constants/constants";
 import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
 
+interface GridCell {
+    day: number;
+    dateStr: string;
+    isOtherMonth: boolean;
+}
+
 interface ProjectCalendarViewProps {
     initialTasks?: Task[];
 }
+
+const MAX_LANES = 3;
 
 export default function ProjectCalendarView({
     initialTasks = INITIAL_TASKS,
@@ -37,6 +45,7 @@ export default function ProjectCalendarView({
     const [selectedDate, setSelected] = useState(todayStr());
     const [filterCategory, setFilterCategory] = useState<string>("all");
     const [showNewTaskModal, setShowNewTaskModal] = useState(false);
+    const [showGantt, setShowGantt] = useState(true);
 
     const prevMonth = () => {
         if (month === 0) {
@@ -56,29 +65,98 @@ export default function ProjectCalendarView({
         setSelected(todayStr());
     };
 
-    const handleShowNewTaskModal = useCallback(() => {
-        setShowNewTaskModal((v) => !v);
-    }, []);
-
     const filtered = useMemo(
         () =>
-            initialTasks.filter((t) =>
-                filterCategory === "all"
-                    ? true
-                    : t.categories.some((c) => c.name === filterCategory),
-            ),
-        [initialTasks, filterCategory],
+            filterCategoryId === null
+                ? initialTasks
+                : initialTasks.filter((t) =>
+                      t.categories.some((c) => c.id === filterCategoryId),
+                  ),
+        [initialTasks, filterCategoryId],
     );
+
+    const tasksByDate = useMemo(() => {
+        const map: Record<string, Task[]> = {};
+        filtered.forEach((t) => {
+            if (!t.start_date || !t.due_date) return;
+            if (showGantt) {
+                const start = new Date(t.start_date);
+                const end = new Date(t.due_date);
+                for (
+                    let d = new Date(start);
+                    d <= end;
+                    d.setDate(d.getDate() + 1)
+                ) {
+                    const ds = toDateStr(
+                        d.getFullYear(),
+                        d.getMonth(),
+                        d.getDate(),
+                    );
+                    if (!map[ds]) map[ds] = [];
+                    map[ds].push(t);
+                }
+            } else {
+                const end = new Date(t.due_date);
+                const ds = toDateStr(
+                    end.getFullYear(),
+                    end.getMonth(),
+                    end.getDate(),
+                );
+                if (!map[ds]) map[ds] = [];
+                map[ds].push(t);
+            }
+        });
+        return map;
+    }, [filtered, showGantt]);
+
+    const taskDates = useMemo(
+        () => new Set(Object.keys(tasksByDate)),
+        [tasksByDate],
+    );
+
+    const taskLanes = useMemo(() => {
+        const lanes: Record<number, number> = {};
+
+        const sorted = [...filtered]
+            .filter((t) => t.start_date && t.due_date)
+            .sort((a, b) => {
+                const diff =
+                    new Date(a.start_date).getTime() -
+                    new Date(b.start_date).getTime();
+                if (diff !== 0) return diff;
+                return (
+                    new Date(b.due_date).getTime() -
+                    new Date(b.start_date).getTime() -
+                    (new Date(a.due_date).getTime() -
+                        new Date(a.start_date).getTime())
+                );
+            });
+
+        sorted.forEach((task) => {
+            const start = new Date(task.start_date).getTime();
+            const end = new Date(task.due_date).getTime();
+
+            const occupiedLanes = new Set<number>();
+            sorted.forEach((other) => {
+                if (other.id === task.id || lanes[other.id] === undefined)
+                    return;
+                const os = new Date(other.start_date).getTime();
+                const oe = new Date(other.due_date).getTime();
+                if (start <= oe && end >= os)
+                    occupiedLanes.add(lanes[other.id]);
+            });
+
+            let lane = 0;
+            while (occupiedLanes.has(lane)) lane++;
+            lanes[task.id] = lane;
+        });
+
+        return lanes;
+    }, [filtered]);
 
     const daysInMonth = getDaysInMonth(year, month);
     const firstDay = getFirstDayOfMonth(year, month);
     const prevMonthDays = getDaysInMonth(year, month === 0 ? 11 : month - 1);
-
-    interface GridCell {
-        day: number;
-        dateStr: string;
-        isOtherMonth: boolean;
-    }
 
     const cells = useMemo<GridCell[]>(() => {
         const result: GridCell[] = [];
@@ -296,15 +374,17 @@ export default function ProjectCalendarView({
                     >
                         Today
                     </button>
-                    <div className="ml-auto">
-                        <Button
-                            size="sm"
-                            className="h-8 gap-1.5 bg-bright-blue px-3 text-xs hover:bg-blue-600"
-                            onClick={handleShowNewTaskModal}
-                        >
-                            <Plus className="size-3.5" /> Add Task
-                        </Button>
-                    </div>
+                    <button
+                        onClick={() => setShowGantt((s) => !s)}
+                        className={cn(
+                            "ml-2 rounded-md border px-2.5 py-1 text-xs font-semibold transition-colors",
+                            showGantt
+                                ? "bg-bright-blue text-white hover:bg-blue-600"
+                                : "bg-white text-gray-600 hover:bg-gray-50",
+                        )}
+                    >
+                        Gantt bars: {showGantt ? "ON" : "OFF"}
+                    </button>
                 </div>
                 <div className="flex min-h-0 flex-1 overflow-hidden">
                     <div className="flex flex-1 flex-col overflow-hidden">
@@ -325,69 +405,28 @@ export default function ProjectCalendarView({
                         </div>
                         <div className="flex-1 overflow-y-auto">
                             <div className="grid grid-cols-7">
-                                {cells.map((cell) => {
-                                    const cellTasks =
-                                        tasksByDate[cell.dateStr] ?? [];
-                                    const isT = cell.dateStr === todayStr();
-                                    const isSel = cell.dateStr === selectedDate;
-                                    const visible = cellTasks.slice(0, 3);
-                                    const overflow = cellTasks.length - 3;
-
-                                    return (
-                                        <div
-                                            key={cell.dateStr}
-                                            onClick={() =>
-                                                setSelected(cell.dateStr)
-                                            }
-                                            className={cn(
-                                                "flex min-h-[110px] cursor-pointer flex-col gap-1 border-b border-r p-2 transition-colors",
-                                                cell.isOtherMonth
-                                                    ? "bg-gray-50/50"
-                                                    : "bg-white hover:bg-blue-50/25",
-                                                isSel &&
-                                                    "bg-blue-50/50 ring-1 ring-inset ring-blue-300",
-                                            )}
-                                        >
-                                            <div className="mb-0.5 flex items-center justify-between">
-                                                <span
-                                                    className={cn(
-                                                        "flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold transition-colors",
-                                                        isT
-                                                            ? "bg-bright-blue text-white"
-                                                            : cell.isOtherMonth
-                                                              ? "text-gray-300"
-                                                              : "text-gray-600",
-                                                    )}
-                                                >
-                                                    {cell.day}
-                                                </span>
-                                                {cellTasks.length > 0 && (
-                                                    <span className="text-[9px] font-bold text-gray-400">
-                                                        {cellTasks.length}
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <div className="flex flex-1 flex-col gap-0.5">
-                                                {visible.map((task) => (
-                                                    <EventChip
-                                                        key={task.id}
-                                                        task={task}
-                                                        onClick={() =>
-                                                            setSelected(
-                                                                cell.dateStr,
-                                                            )
-                                                        }
-                                                    />
-                                                ))}
-                                                {overflow > 0 && (
-                                                    <span className="pl-1.5 text-[10px] font-semibold text-gray-400">
-                                                        +{overflow} more
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
+                                {cells.map((cell) => (
+                                    <DayCell
+                                        key={cell.dateStr}
+                                        day={cell.day}
+                                        dateStr={cell.dateStr}
+                                        tasks={tasksByDate[cell.dateStr] ?? []}
+                                        isToday={cell.dateStr === todayStr()}
+                                        isSelected={
+                                            cell.dateStr === selectedDate
+                                        }
+                                        isOtherMonth={cell.isOtherMonth}
+                                        onClick={setSelected}
+                                        onTaskClick={(task) =>
+                                            setSelected(
+                                                task.start_date.toString(),
+                                            )
+                                        }
+                                        showGantt={showGantt}
+                                        taskLanes={taskLanes}
+                                        maxLanes={MAX_LANES}
+                                    />
+                                ))}
                             </div>
                         </div>
                     </div>
