@@ -22,6 +22,7 @@ import {
 } from "@/constants/constants";
 import { taskDateStr } from "@/libs/calendar";
 import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
+import { Progress } from "@/components/ui/shadcn/progress";
 
 interface GridCell {
     day: number;
@@ -217,9 +218,7 @@ export default function Calendar({
                     />
                     <Separator />
                     <div className="space-y-3 px-4 py-4">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                            This Month
-                        </p>
+                        <p className="text-sm font-semibold">This Month</p>
                         <div className="space-y-2">
                             {statRows.map(({ label, value, color }) => (
                                 <div
@@ -231,7 +230,7 @@ export default function Calendar({
                                     </span>
                                     <span
                                         className={cn(
-                                            "text-xs font-bold",
+                                            "text-xs font-semibold",
                                             color,
                                         )}
                                     >
@@ -241,25 +240,21 @@ export default function Calendar({
                             ))}
                             {monthTasks.length > 0 && (
                                 <div className="pt-0.5">
-                                    <div className="mb-1 flex justify-between text-[10px] text-gray-400">
+                                    <div className="mb-1 flex justify-between text-[10px]">
                                         <span>Progress</span>
                                         <span>{progress}%</span>
                                     </div>
-                                    <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
-                                        <div
-                                            className="h-full rounded-full bg-blue-500 transition-all duration-500"
-                                            style={{ width: `${progress}%` }}
-                                        />
-                                    </div>
+                                    <Progress
+                                        value={progress}
+                                        className="h-1.5 [&>*]:bg-bright-blue"
+                                    />
                                 </div>
                             )}
                         </div>
                     </div>
                     <Separator />
                     <div className="flex-1 px-4 py-4">
-                        <p className="mb-3 text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                            Categories
-                        </p>
+                        <p className="mb-3 text-sm font-semibold">Categories</p>
                         <div className="space-y-0.5">
                             <button
                                 onClick={() => setFilterCategoryId(null)}
@@ -284,7 +279,7 @@ export default function Calendar({
                                         )
                                     }
                                     className={cn(
-                                        "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs transition-colors",
+                                        "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs capitalize transition-colors",
                                         filterCategoryId === cat.id
                                             ? "bg-gray-100 font-semibold text-gray-700"
                                             : "text-gray-500 hover:bg-gray-50",
@@ -301,20 +296,26 @@ export default function Calendar({
                     </div>
                 </div>
                 <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-                    <div className="flex flex-shrink-0 items-center gap-3 border-b bg-white px-5 py-3">
-                        <div className="flex items-center gap-0.5">
+                    <div className="flex flex-shrink-0 items-center gap-3 border-b px-5 py-3">
+                        <div className="flex items-center gap-3">
                             <button
                                 onClick={prevMonth}
-                                className="rounded-md p-1.5 text-gray-500 transition-colors hover:bg-gray-100"
+                                className="rounded-md p-1.5 transition-colors hover:bg-gray-100"
                             >
                                 <CaretLeftIcon
                                     weight="duotone"
                                     className="size-4"
                                 />
                             </button>
+                            <h2 className="min-w-0 text-base font-bold">
+                                {MONTHS[month]}{" "}
+                                <span className="font-normal text-gray-500">
+                                    {year}
+                                </span>
+                            </h2>
                             <button
                                 onClick={nextMonth}
-                                className="rounded-md p-1.5 text-gray-500 transition-colors hover:bg-gray-100"
+                                className="rounded-md p-1.5 transition-colors hover:bg-gray-100"
                             >
                                 <CaretRightIcon
                                     weight="duotone"
@@ -344,7 +345,7 @@ export default function Calendar({
                     </div>
                     <div className="flex min-h-0 flex-1 overflow-hidden">
                         <div className="flex flex-1 flex-col overflow-hidden">
-                            <div className="grid flex-shrink-0 grid-cols-7 border-b bg-white">
+                            <div className="grid flex-shrink-0 grid-cols-7 border-b">
                                 {WEEKDAYS.map((d, i) => (
                                     <div
                                         key={d}
