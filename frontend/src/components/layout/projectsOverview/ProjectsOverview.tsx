@@ -52,7 +52,7 @@ export default function ProjectsOverview() {
     // const otherProjects = filtered.filter((p) => !p.starred);
 
     return (
-        <div className="min-h-screen bg-background font-sans">
+        <div className="h-full overflow-y-auto rounded-xl bg-white">
             <header className="sticky top-0 z-10 border-b border-border/60 bg-card/80 backdrop-blur">
                 <div className="flex items-center justify-between gap-4 px-8 py-4">
                     <div>

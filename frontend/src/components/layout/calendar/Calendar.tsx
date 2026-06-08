@@ -33,6 +33,8 @@ interface CalendarProps {
     initialTasks?: Task[];
 }
 
+const MAX_LANES = 3;
+
 export default function Calendar({
     initialTasks = INITIAL_TASKS,
 }: CalendarProps) {
@@ -204,8 +206,8 @@ export default function Calendar({
 
     return (
         <>
-            <div className="flex h-screen overflow-hidden">
-                <div className="flex w-56 flex-shrink-0 flex-col overflow-y-auto border-r bg-white">
+            <div className="flex h-full w-full rounded-xl bg-white">
+                <div className="flex w-56 flex-shrink-0 flex-col border-r">
                     <MiniCalendar
                         viewYear={year}
                         viewMonth={month}

@@ -249,8 +249,8 @@ export default function ProjectCalendarView({
     const allCategories = Object.values(MOCK_CATEGORIES);
 
     return (
-        <div className="flex h-screen overflow-hidden">
-            <div className="flex w-56 flex-shrink-0 flex-col overflow-y-auto border-r bg-white">
+        <div className="flex h-full w-full overflow-hidden rounded-xl bg-white">
+            <div className="flex w-56 flex-shrink-0 flex-col border-r">
                 <MiniCalendar
                     viewYear={year}
                     viewMonth={month}

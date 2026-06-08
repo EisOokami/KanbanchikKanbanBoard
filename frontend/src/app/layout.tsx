@@ -28,14 +28,16 @@ export default function RootLayout({
             <body
                 className={cn(
                     "font-montserrat",
-                    `${montserrat.variable} antialiased`,
+                    `${montserrat.variable} overflow-hidden bg-gray-100 antialiased`,
                 )}
             >
                 <SidebarProvider>
                     <AccountSettingsProvider>
                         <AppSidebar />
                         <TooltipProvider>
-                            <div className="w-full">{children}</div>
+                            <div className="my-3 mr-3 max-h-[calc(100svh-1.5rem)] w-full rounded-xl border">
+                                {children}
+                            </div>
                         </TooltipProvider>
                     </AccountSettingsProvider>
                 </SidebarProvider>

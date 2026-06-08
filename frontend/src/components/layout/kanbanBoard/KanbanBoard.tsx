@@ -154,8 +154,8 @@ export default function KanbanBoard() {
     ] as const;
 
     return (
-        <div className="h-full w-full">
-            <header className="z-20 grid gap-5 border border-b px-8 py-4">
+        <div className="h-full w-full overflow-y-auto rounded-xl bg-white">
+            <header className="sticky top-0 z-10 grid gap-5 border-b bg-white px-8 py-4">
                 <div className="flex items-start justify-between">
                     <div className="flex items-start gap-3">
                         <div className="grid size-10 place-content-center rounded-md bg-blue-100">
