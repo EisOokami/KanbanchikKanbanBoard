@@ -1,16 +1,13 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
-import { Button } from "@/components/ui/shadcn/button";
+import { useState, useMemo } from "react";
 import { Separator } from "@/components/ui/shadcn/separator";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import {
     cn,
     getDaysInMonth,
     getFirstDayOfMonth,
     toDateStr,
     todayStr,
-    toDueDate,
 } from "@/libs/utils";
 import MiniCalendar from "@/components/ui/miniCalendar/MiniCalendar";
 import DayCell from "@/components/ui/dayCell/DayCell";
@@ -43,8 +40,9 @@ export default function ProjectCalendarView({
     const [year, setYear] = useState(now.getFullYear());
     const [month, setMonth] = useState(now.getMonth());
     const [selectedDate, setSelected] = useState(todayStr());
-    const [filterCategory, setFilterCategory] = useState<string>("all");
-    const [showNewTaskModal, setShowNewTaskModal] = useState(false);
+    const [filterCategoryId, setFilterCategoryId] = useState<number | null>(
+        null,
+    );
     const [showGantt, setShowGantt] = useState(true);
 
     const prevMonth = () => {
@@ -160,7 +158,6 @@ export default function ProjectCalendarView({
 
     const cells = useMemo<GridCell[]>(() => {
         const result: GridCell[] = [];
-
         for (let i = firstDay - 1; i >= 0; i--) {
             const d = prevMonthDays - i;
             const m2 = month === 0 ? 11 : month - 1;
@@ -171,7 +168,6 @@ export default function ProjectCalendarView({
                 isOtherMonth: true,
             });
         }
-
         for (let d = 1; d <= daysInMonth; d++) {
             result.push({
                 day: d,
@@ -179,7 +175,6 @@ export default function ProjectCalendarView({
                 isOtherMonth: false,
             });
         }
-
         for (let d = 1; result.length < 42; d++) {
             const m2 = month === 11 ? 0 : month + 1;
             const y2 = month === 11 ? year + 1 : year;
@@ -192,30 +187,12 @@ export default function ProjectCalendarView({
         return result;
     }, [year, month, firstDay, daysInMonth, prevMonthDays]);
 
-    const tasksByDate = useMemo(() => {
-        const map: Record<string, Task[]> = {};
-        filtered.forEach((t) => {
-            const d = toDueDate(t.due_date);
-            if (!d) return;
-            const ds = toDateStr(d.getFullYear(), d.getMonth(), d.getDate());
-            if (!map[ds]) map[ds] = [];
-            map[ds].push(t);
-        });
-        return map;
-    }, [filtered]);
-
-    const taskDates = useMemo(
-        () => new Set(Object.keys(tasksByDate)),
-        [tasksByDate],
-    );
-
     const monthStr = `${year}-${String(month + 1).padStart(2, "0")}`;
-
     const monthTasks = useMemo(
         () =>
             initialTasks.filter((t) => {
-                const d = toDueDate(t.due_date);
-                if (!d) return false;
+                if (!t.due_date) return false;
+                const d = new Date(t.due_date);
                 return toDateStr(
                     d.getFullYear(),
                     d.getMonth(),
@@ -224,7 +201,6 @@ export default function ProjectCalendarView({
             }),
         [initialTasks, monthStr],
     );
-
     const doneCnt = monthTasks.filter((t) => t.column === "done").length;
     const progress = monthTasks.length
         ? Math.round((doneCnt / monthTasks.length) * 100)
@@ -243,10 +219,6 @@ export default function ProjectCalendarView({
             color: "text-bright-blue",
         },
     ];
-
-    const sidebarTasks = tasksByDate[selectedDate] ?? [];
-
-    const allCategories = Object.values(MOCK_CATEGORIES);
 
     return (
         <div className="flex h-full w-full overflow-hidden rounded-xl bg-white">
@@ -302,10 +274,10 @@ export default function ProjectCalendarView({
                     </p>
                     <div className="space-y-0.5">
                         <button
-                            onClick={() => setFilterCategory("all")}
+                            onClick={() => setFilterCategoryId(null)}
                             className={cn(
                                 "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs transition-colors",
-                                filterCategory === "all"
+                                filterCategoryId === null
                                     ? "bg-gray-100 font-semibold text-gray-700"
                                     : "text-gray-500 hover:bg-gray-50",
                             )}
@@ -313,19 +285,19 @@ export default function ProjectCalendarView({
                             <span className="size-2 rounded-full bg-gray-300" />
                             All categories
                         </button>
-                        {allCategories.map((cat) => (
+                        {Object.values(MOCK_CATEGORIES).map((cat) => (
                             <button
                                 key={cat.id}
                                 onClick={() =>
-                                    setFilterCategory(
-                                        filterCategory === cat.name
-                                            ? "all"
-                                            : cat.name,
+                                    setFilterCategoryId(
+                                        filterCategoryId === cat.id
+                                            ? null
+                                            : cat.id,
                                     )
                                 }
                                 className={cn(
                                     "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs transition-colors",
-                                    filterCategory === cat.name
+                                    filterCategoryId === cat.id
                                         ? "bg-gray-100 font-semibold text-gray-700"
                                         : "text-gray-500 hover:bg-gray-50",
                                 )}
@@ -341,7 +313,7 @@ export default function ProjectCalendarView({
                 </div>
             </div>
             <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-                <div className="flex flex-shrink-0 items-center gap-3 border-b bg-white px-5 py-3">
+                <div className="flex flex-shrink-0 items-center gap-3 border-b px-5 py-3">
                     <div className="flex items-center gap-0.5">
                         <button
                             onClick={prevMonth}
@@ -388,7 +360,7 @@ export default function ProjectCalendarView({
                 </div>
                 <div className="flex min-h-0 flex-1 overflow-hidden">
                     <div className="flex flex-1 flex-col overflow-hidden">
-                        <div className="grid flex-shrink-0 grid-cols-7 border-b bg-white">
+                        <div className="grid flex-shrink-0 grid-cols-7 border-b">
                             {WEEKDAYS.map((d, i) => (
                                 <div
                                     key={d}
@@ -430,7 +402,10 @@ export default function ProjectCalendarView({
                             </div>
                         </div>
                     </div>
-                    <DaySidebar dateStr={selectedDate} tasks={sidebarTasks} />
+                    <DaySidebar
+                        dateStr={selectedDate}
+                        tasks={tasksByDate[selectedDate] ?? []}
+                    />
                 </div>
             </div>
         </div>
