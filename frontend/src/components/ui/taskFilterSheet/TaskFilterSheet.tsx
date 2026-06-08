@@ -19,17 +19,6 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/shadcn/popover";
-import {
-    CalendarDays,
-    Filter,
-    Flame,
-    LayoutGrid,
-    RotateCcw,
-    Search,
-    SlidersHorizontal,
-    Tag,
-    X,
-} from "lucide-react";
 import { format } from "date-fns";
 import { countActive } from "@/libs/taskFilterSheet";
 import FilterSection from "./filterSection/FilterSection";
@@ -43,6 +32,21 @@ import {
     PRIORITY_CONFIG,
 } from "@/constants/constants";
 import { cn, getInitials } from "@/libs/utils";
+import {
+    ArrowCounterClockwiseIcon,
+    CalendarBlankIcon,
+    CalendarIcon,
+    ChartLineIcon,
+    CheckSquareIcon,
+    ColumnsIcon,
+    MagnifyingGlassIcon,
+    PaperclipIcon,
+    TagIcon,
+    UploadSimpleIcon,
+    UsersIcon,
+    XIcon,
+} from "@phosphor-icons/react";
+import { RotateCcw } from "lucide-react";
 
 interface TaskFilterSheetProps {
     open: boolean;
@@ -127,7 +131,7 @@ export function TaskFilterSheet({
                                 onClick={() => onOpenChange(false)}
                                 className="flex size-8 items-center justify-center rounded-md transition-colors hover:bg-gray-100"
                             >
-                                <X size={15} />
+                                <XIcon weight="duotone" size={15} />
                             </button>
                         </div>
                     </div>
@@ -135,8 +139,9 @@ export function TaskFilterSheet({
                 <div className="grid flex-1 gap-2 overflow-y-auto px-5 py-2">
                     <div className="py-3">
                         <div className="relative">
-                            <Search
-                                size={14}
+                            <MagnifyingGlassIcon
+                                weight="duotone"
+                                size={16}
                                 className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
                             />
                             <Input
@@ -152,7 +157,7 @@ export function TaskFilterSheet({
                                     onClick={() => update({ search: "" })}
                                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
                                 >
-                                    <X size={13} />
+                                    <XIcon weight="duotone" size={16} />
                                 </button>
                             )}
                         </div>
@@ -160,7 +165,7 @@ export function TaskFilterSheet({
                     <Separator />
                     <FilterSection
                         title="Priority"
-                        icon={<Flame size={13} />}
+                        icon={<UploadSimpleIcon weight="duotone" size={16} />}
                         count={filters.priorities.length || undefined}
                     >
                         <div className="flex flex-wrap gap-2 pt-1">
@@ -188,7 +193,7 @@ export function TaskFilterSheet({
                     <Separator />
                     <FilterSection
                         title="Column"
-                        icon={<LayoutGrid size={13} />}
+                        icon={<ColumnsIcon weight="duotone" size={16} />}
                         count={filters.columns.length || undefined}
                     >
                         <div className="space-y-1.5 pt-1">
@@ -243,13 +248,14 @@ export function TaskFilterSheet({
                         <>
                             <FilterSection
                                 title="Assignees"
-                                icon={<Filter size={13} />}
+                                icon={<UsersIcon weight="duotone" size={16} />}
                                 count={filters.assignees.length || undefined}
                             >
                                 <div className="space-y-1 pt-1">
                                     <div className="relative mb-2">
-                                        <Search
-                                            size={12}
+                                        <MagnifyingGlassIcon
+                                            weight="duotone"
+                                            size={16}
                                             className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400"
                                         />
                                         <Input
@@ -317,7 +323,7 @@ export function TaskFilterSheet({
                         <>
                             <FilterSection
                                 title="Categories"
-                                icon={<Tag size={13} />}
+                                icon={<TagIcon weight="duotone" size={16} />}
                                 count={filters.categories.length || undefined}
                             >
                                 <div className="flex flex-wrap gap-2 pt-1">
@@ -351,7 +357,7 @@ export function TaskFilterSheet({
                     )}
                     <FilterSection
                         title="Due Date"
-                        icon={<CalendarDays size={13} />}
+                        icon={<CalendarBlankIcon weight="duotone" size={16} />}
                         count={filters.dateRange?.from ? 1 : undefined}
                     >
                         <div className="space-y-2 pt-1">
@@ -387,7 +393,9 @@ export function TaskFilterSheet({
                                         }
                                     >
                                         {label}
-                                        {filters[key] && <X size={10} />}
+                                        {filters[key] && (
+                                            <XIcon weight="duotone" size={14} />
+                                        )}
                                     </button>
                                 ))}
                             </div>
@@ -407,8 +415,9 @@ export function TaskFilterSheet({
                                                 : "#6b7280",
                                         }}
                                     >
-                                        <CalendarDays
-                                            size={13}
+                                        <CalendarIcon
+                                            weight="duotone"
+                                            size={16}
                                             style={{
                                                 color: filters.dateRange?.from
                                                     ? "#0096FF"
@@ -433,7 +442,10 @@ export function TaskFilterSheet({
                                                     });
                                                 }}
                                             >
-                                                <X size={12} />
+                                                <XIcon
+                                                    weight="duotone"
+                                                    size={16}
+                                                />
                                             </span>
                                         )}
                                     </button>
@@ -458,7 +470,9 @@ export function TaskFilterSheet({
                         <>
                             <FilterSection
                                 title="Progress"
-                                icon={<SlidersHorizontal size={13} />}
+                                icon={
+                                    <ChartLineIcon weight="duotone" size={16} />
+                                }
                                 count={
                                     filters.progress[0] > 0 ||
                                     filters.progress[1] < 100
@@ -507,12 +521,14 @@ export function TaskFilterSheet({
                             {
                                 key: "hasAttachment" as const,
                                 label: "Attachment",
+                                Icon: PaperclipIcon,
                             },
                             {
-                                key: "hasChecklist" as const,
-                                label: "Checklist",
+                                key: "hasSubtasks" as const,
+                                label: "Subtasks",
+                                Icon: CheckSquareIcon,
                             },
-                        ].map(({ key, label }) => (
+                        ].map(({ key, label, Icon }) => (
                             <label
                                 key={key}
                                 className="flex cursor-pointer items-center justify-between rounded-md px-3 py-2.5 transition-colors hover:bg-gray-50"
@@ -533,6 +549,7 @@ export function TaskFilterSheet({
                                             : "#374151",
                                     }}
                                 >
+                                    <Icon weight="duotone" size={16} />
                                     {label}
                                 </span>
                                 <Checkbox
@@ -560,7 +577,10 @@ export function TaskFilterSheet({
                                 onClick={reset}
                                 className="h-9 gap-1.5 px-4 text-sm text-gray-500 hover:bg-gray-200"
                             >
-                                <RotateCcw size={13} />
+                                <ArrowCounterClockwiseIcon
+                                    weight="duotone"
+                                    size={16}
+                                />
                                 Reset all
                             </Button>
                         )}

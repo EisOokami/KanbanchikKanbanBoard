@@ -16,7 +16,15 @@ import {
     AvatarFallback,
     AvatarImage,
 } from "@/components/ui/shadcn/avatar";
-import { getInitials } from "@/libs/utils";
+import { formatDate, getInitials, isOverdue } from "@/libs/utils";
+import {
+    CalendarBlankIcon,
+    ChatTeardropDotsIcon,
+    CheckSquareIcon,
+    DotsThreeOutlineIcon,
+    PaperclipIcon,
+    TrashIcon,
+} from "@phosphor-icons/react";
 
 interface KanbanCardProps {
     card: Task;
@@ -99,7 +107,10 @@ export default function KanbanCard({
                             onClick={(e) => e.stopPropagation()}
                             className="ml-auto flex-shrink-0 rounded p-0.5 opacity-0 transition-opacity hover:bg-gray-100 hover:!opacity-100 group-hover:opacity-50"
                         >
-                            <MoreHorizontal className="size-3.5 text-gray-400" />
+                            <DotsThreeOutlineIcon
+                                weight="duotone"
+                                className="size-3.5 text-gray-400"
+                            />
                         </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-36 border">
@@ -110,7 +121,8 @@ export default function KanbanCard({
                                 onDelete();
                             }}
                         >
-                            <Trash2 className="size-3" /> Delete card
+                            <TrashIcon weight="duotone" className="size-3" />{" "}
+                            Delete card
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
@@ -118,12 +130,46 @@ export default function KanbanCard({
             <p className="mb-3 text-sm font-medium leading-snug">
                 {card.title}
             </p>
-            {subtasksTotal > 0 && (
-                <div className="mb-2.5">
+            <p className="line-clamp-1 text-xs text-gray-500">
+                {card.description}
+            </p>
+            {!card.showProgress && (
+                <div className="my-2 flex items-center gap-0.5 text-gray-400">
+                    <CalendarBlankIcon weight="duotone" className="size-4" />
+                    <span
+                        className={`text-xs font-medium ${
+                            overdue ? "text-rose-500" : "text-gray-400"
+                        }`}
+                    >
+                        {formatDate(card.due_date)}
+                    </span>
+                </div>
+            )}
+            {card.showProgress && subtasksTotal > 0 && (
+                <div className="my-3">
                     <div className="mb-1 flex items-center justify-between">
-                        <span className="text-[10px] text-gray-400">
-                            {subtasksDone}/{subtasksTotal} subtasks
-                        </span>
+                        <div className="flex items-center gap-0.5 text-gray-400">
+                            <CheckSquareIcon
+                                weight="duotone"
+                                className="size-3"
+                            />
+                            <span className="text-[10px]">
+                                {subtasksDone}/{subtasksTotal}
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-0.5 text-gray-400">
+                            <CalendarBlankIcon
+                                weight="duotone"
+                                className="size-3"
+                            />
+                            <span
+                                className={`text-[10px] font-medium ${
+                                    overdue ? "text-rose-500" : "text-gray-400"
+                                }`}
+                            >
+                                {formatDate(card.due_date)}
+                            </span>
+                        </div>
                     </div>
                     <div className="h-1 w-full overflow-hidden rounded-full bg-gray-100">
                         <div
@@ -135,33 +181,7 @@ export default function KanbanCard({
                     </div>
                 </div>
             )}
-            <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1">
-                        <span
-                            className={`size-1.5 rounded-full ${priorityDot}`}
-                        />
-                        <span className="text-[10px] text-gray-500">
-                            {PRIORITY_CONFIG[card.priority]?.label}
-                        </span>
-                    </div>
-                    {card.attachments.length > 0 && (
-                        <div className="flex items-center gap-0.5 text-gray-400">
-                            <Paperclip className="size-2.5" />
-                            <span className="text-[10px]">
-                                {card.attachments.length}
-                            </span>
-                        </div>
-                    )}
-                    {subtasksTotal > 0 && (
-                        <div className="flex items-center gap-0.5 text-gray-400">
-                            <CheckSquare className="size-2.5" />
-                            <span className="text-[10px]">
-                                {subtasksDone}/{subtasksTotal}
-                            </span>
-                        </div>
-                    )}
-                </div>
+            <div className="flex items-center justify-between gap-2 border-t pt-2">
                 <div className="flex items-center gap-2">
                     {card.assignees.length > 0 && (
                         <div className="flex -space-x-1.5">
@@ -178,13 +198,41 @@ export default function KanbanCard({
                             ))}
                         </div>
                     )}
-                    <span
-                        className={`text-[10px] font-medium ${
-                            overdue ? "text-rose-500" : "text-gray-400"
-                        }`}
-                    >
-                        {formatDate(card.due_date)}
-                    </span>
+                </div>
+                <div className="flex items-center gap-2">
+                    {card.attachments.length > 0 && (
+                        <div className="flex items-center gap-0.5 text-gray-400">
+                            <PaperclipIcon
+                                weight="duotone"
+                                className="size-4"
+                            />
+                            <span className="text-xs">
+                                {card.attachments.length}
+                            </span>
+                        </div>
+                    )}
+                    {card.comments.length > 0 && (
+                        <div className="flex items-center gap-0.5 text-gray-400">
+                            <ChatTeardropDotsIcon
+                                weight="duotone"
+                                className="size-4"
+                            />
+                            <span className="text-xs">
+                                {card.comments.length}
+                            </span>
+                        </div>
+                    )}
+                    {!card.showProgress && subtasksTotal > 0 && (
+                        <div className="flex items-center gap-0.5 text-gray-400">
+                            <CheckSquareIcon
+                                weight="duotone"
+                                className="size-4"
+                            />
+                            <span className="text-xs">
+                                {subtasksDone}/{subtasksTotal}
+                            </span>
+                        </div>
+                    )}
                 </div>
             </div>
             {/* </div> */}

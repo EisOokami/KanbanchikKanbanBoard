@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from "lucide-react";
+import { XIcon } from "@phosphor-icons/react";
 
 export default function Chip({
     label,
@@ -23,7 +23,7 @@ export default function Chip({
                     onClick={onRemove}
                     className="ml-0.5 opacity-60 transition-opacity hover:opacity-100"
                 >
-                    <X className="size-3" />
+                    <XIcon weight="duotone" className="size-3" />
                 </button>
             )}
         </span>

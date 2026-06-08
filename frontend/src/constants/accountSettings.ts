@@ -10,28 +10,21 @@ import {
     ThemeOption,
 } from "@/types/accountSettings";
 import {
-    Bell,
-    Github,
-    Globe,
-    Lock,
-    Monitor,
-    Moon,
-    Palette,
-    Sun,
-    Twitter,
-    User,
-} from "lucide-react";
+    GithubLogoIcon,
+    GlobeIcon,
+    LockKeyIcon,
+    MonitorIcon,
+    MoonIcon,
+    PaletteIcon,
+    SunIcon,
+    TwitterLogoIcon,
+    UserIcon,
+} from "@phosphor-icons/react";
 
 export const NAV: NavItem[] = [
-    { id: "profile", label: "Profile", icon: User, group: "Account" },
-    { id: "security", label: "Security", icon: Lock, group: "Account" },
-    {
-        id: "notifications",
-        label: "Notifications",
-        icon: Bell,
-        group: "Account",
-    },
-    { id: "appearance", label: "Appearance", icon: Palette, group: "Account" },
+    { id: "profile", label: "Profile", icon: UserIcon },
+    { id: "security", label: "Security", icon: LockKeyIcon },
+    { id: "appearance", label: "Appearance", icon: PaletteIcon },
 ];
 
 export const GROUPS: NavGroup[] = ["Account"];
@@ -39,19 +32,19 @@ export const GROUPS: NavGroup[] = ["Account"];
 export const socialLinks: SocialLink[] = [
     {
         key: "website",
-        icon: Globe,
+        icon: GlobeIcon,
         label: "Website",
         placeholder: "https://…",
     },
     {
         key: "twitter",
-        icon: Twitter,
+        icon: TwitterLogoIcon,
         label: "Twitter",
         placeholder: "@handle",
     },
     {
         key: "github",
-        icon: Github,
+        icon: GithubLogoIcon,
         label: "GitHub",
         placeholder: "username",
     },
@@ -148,9 +141,9 @@ export const notificationsSection: NotificationSettings = {
 };
 
 export const themes: ThemeOption[] = [
-    { id: "light", label: "Light", icon: Sun },
-    { id: "dark", label: "Dark", icon: Moon },
-    { id: "system", label: "System", icon: Monitor },
+    { id: "light", label: "Light", icon: SunIcon },
+    { id: "dark", label: "Dark", icon: MoonIcon },
+    { id: "system", label: "System", icon: MonitorIcon },
 ];
 
 export const accents: string[] = [

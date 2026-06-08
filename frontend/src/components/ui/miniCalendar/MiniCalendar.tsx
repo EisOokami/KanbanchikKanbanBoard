@@ -6,7 +6,7 @@ import {
     toDateStr,
     todayStr,
 } from "@/libs/utils";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 
 interface MiniCalendarProps {
@@ -50,24 +50,22 @@ export default function MiniCalendar({
 
     return (
         <div className="p-4">
-            <div className="mb-3 flex items-center justify-between">
-                <span className="text-xs font-bold text-gray-700">
+            <div className="mb-3 flex items-center justify-between gap-0.5">
+                <button
+                    onClick={prev}
+                    className="rounded p-1  transition-colors hover:bg-gray-100"
+                >
+                    <CaretLeftIcon weight="duotone" className="size-3" />
+                </button>
+                <span className="text-xs font-bold">
                     {MONTHS[mMonth].slice(0, 3)} {mYear}
                 </span>
-                <div className="flex gap-0.5">
-                    <button
-                        onClick={prev}
-                        className="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100"
-                    >
-                        <ChevronLeft className="size-3" />
-                    </button>
-                    <button
-                        onClick={next}
-                        className="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100"
-                    >
-                        <ChevronRight className="size-3" />
-                    </button>
-                </div>
+                <button
+                    onClick={next}
+                    className="rounded p-1 transition-colors hover:bg-gray-100"
+                >
+                    <CaretRightIcon weight="duotone" className="size-3" />
+                </button>
             </div>
             <div className="mb-1 grid grid-cols-7">
                 {WEEKDAYS.map((d) => (
@@ -103,7 +101,7 @@ export default function MiniCalendar({
                         >
                             {day}
                             {hasEv && !isT && (
-                                <span className="-mt-0.5 h-1 w-1 rounded-full bg-blue-400" />
+                                <span className="-mt-0.5 size-1 rounded-full bg-blue-400" />
                             )}
                         </button>
                     );

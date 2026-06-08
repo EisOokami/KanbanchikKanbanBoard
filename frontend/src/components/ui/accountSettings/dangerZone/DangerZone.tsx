@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, Trash2 } from "lucide-react";
+import { TrashSimpleIcon, WarningIcon } from "@phosphor-icons/react";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -36,13 +36,20 @@ export default function DangerZone() {
                             size="sm"
                             className="h-7 gap-1.5 border-rose-300 text-xs text-rose-600 hover:bg-rose-50 hover:text-rose-400"
                         >
-                            <Trash2 className="size-3.5" /> Delete
+                            <TrashSimpleIcon
+                                weight="duotone"
+                                className="size-4"
+                            />{" "}
+                            Delete
                         </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                         <AlertDialogHeader>
                             <AlertDialogTitle className="flex items-center gap-2">
-                                <AlertTriangle className="size-5 text-rose-500" />
+                                <WarningIcon
+                                    weight="duotone"
+                                    className="size-5 text-rose-500"
+                                />
                                 Delete your account?
                             </AlertDialogTitle>
                             <AlertDialogDescription>

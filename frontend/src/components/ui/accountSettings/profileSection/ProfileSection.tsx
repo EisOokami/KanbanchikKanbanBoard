@@ -12,6 +12,7 @@ import { Input } from "../../shadcn/input";
 import { Textarea } from "../../shadcn/textarea";
 import SaveBar from "../saveBar/SaveBar";
 import { Badge } from "../../shadcn/badge";
+import { CameraIcon, CheckCircleIcon } from "@phosphor-icons/react";
 
 export default function ProfileSection() {
     const [dirty, setDirty] = useState<boolean>(false);
@@ -177,7 +178,8 @@ export default function ProfileSection() {
             />
             {saved && (
                 <div className="mt-3 flex items-center gap-2 text-sm text-emerald-600 animate-in fade-in slide-in-from-bottom-2">
-                    <CheckCircle2 className="size-4" /> Changes saved!
+                    <CheckCircleIcon weight="duotone" className="size-4" />{" "}
+                    Changes saved!
                 </div>
             )}
         </div>

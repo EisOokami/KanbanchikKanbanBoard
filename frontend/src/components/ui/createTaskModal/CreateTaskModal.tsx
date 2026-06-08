@@ -42,6 +42,14 @@ import {
 } from "@/constants/constants";
 import { Priority } from "@/types/types";
 import { TaskFormData } from "@/types/createTaskModal";
+import {
+    CalendarIcon,
+    PaperclipIcon,
+    PlusIcon,
+    TrashSimpleIcon,
+    UploadSimpleIcon,
+    XIcon,
+} from "@phosphor-icons/react";
 
 interface CreateTaskModalProps {
     open: boolean;
@@ -356,7 +364,10 @@ export function CreateTaskModal({
                                                 }
                                                 className="ml-1 text-muted-foreground transition-colors hover:text-foreground"
                                             >
-                                                <X className="size-3.5" />
+                                                <XIcon
+                                                    weight="duotone"
+                                                    className="size-3.5"
+                                                />
                                             </button>
                                         </div>
                                     ))}
@@ -382,7 +393,10 @@ export function CreateTaskModal({
                                                 {member.surname.slice(0, 1)}
                                             </div>
                                             {member.name}
-                                            <Plus className="size-3 opacity-50" />
+                                            <PlusIcon
+                                                weight="duotone"
+                                                className="size-4 opacity-50"
+                                            />
                                         </button>
                                     ))}
                             </div>
@@ -422,7 +436,11 @@ export function CreateTaskModal({
                                             }
                                             className="rounded-full border border-border/60 bg-white px-2.5 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
                                         >
-                                            + {c}
+                                            {c}
+                                            <PlusIcon
+                                                weight="duotone"
+                                                className="size-4"
+                                            />
                                         </button>
                                     ))}
                             </div>
@@ -457,7 +475,11 @@ export function CreateTaskModal({
                                         onClick={addCategory}
                                         className="h-8 gap-1"
                                     >
-                                        <Plus className="size-3.5" /> Add
+                                        <PlusIcon
+                                            weight="duotone"
+                                            className="size-3.5"
+                                        />{" "}
+                                        Add
                                     </Button>
                                 </div>
                             </div>
@@ -520,7 +542,10 @@ export function CreateTaskModal({
                                                     }
                                                     className="text-muted-foreground/50 opacity-0 transition-all hover:text-red-500 group-hover:opacity-100"
                                                 >
-                                                    <X className="size-3.5" />
+                                                    <XIcon
+                                                        weight="duotone"
+                                                        className="size-3.5"
+                                                    />
                                                 </button>
                                             </div>
                                         ))}
@@ -547,7 +572,11 @@ export function CreateTaskModal({
                                     onClick={addCheckItem}
                                     className="h-8 gap-1"
                                 >
-                                    <Plus className="size-3.5" /> Add
+                                    <PlusIcon
+                                        weight="duotone"
+                                        className="size-3.5"
+                                    />{" "}
+                                    Add
                                 </Button>
                             </div>
                         </div>
@@ -584,8 +613,9 @@ export function CreateTaskModal({
                                                         accentColor + "22",
                                                 }}
                                             >
-                                                <Paperclip
-                                                    className="size-3.5"
+                                                <PaperclipIcon
+                                                    weight="duotone"
+                                                    className="size-4"
                                                     style={{
                                                         color: accentColor,
                                                     }}
@@ -606,7 +636,10 @@ export function CreateTaskModal({
                                                 }
                                                 className="text-muted-foreground/50 opacity-0 transition-all hover:text-red-500 group-hover:opacity-100"
                                             >
-                                                <Trash2 className="size-3.5" />
+                                                <TrashSimpleIcon
+                                                    weight="duotone"
+                                                    className="size-4"
+                                                />
                                             </button>
                                         </div>
                                     ))}
@@ -617,7 +650,10 @@ export function CreateTaskModal({
                                 onClick={() => fileInputRef.current?.click()}
                                 className="flex w-full items-center gap-2 rounded-md border border-dashed border-border/60 bg-white px-3 py-2.5 text-xs text-muted-foreground transition-colors hover:bg-muted/30 hover:text-foreground"
                             >
-                                <Upload className="size-3.5" />
+                                <UploadSimpleIcon
+                                    weight="duotone"
+                                    className="size-3.5"
+                                />
                                 Upload files or drag &amp; drop
                             </button>
                         </div>
@@ -640,7 +676,8 @@ export function CreateTaskModal({
                             onClick={handleSubmit}
                             className="h-9 gap-1.5 bg-bright-blue text-white hover:bg-blue-600"
                         >
-                            <Plus className="size-4" /> Create Task
+                            <PlusIcon weight="duotone" className="size-4" />{" "}
+                            Create Task
                         </Button>
                     </div>
                 </DialogFooter>

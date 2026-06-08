@@ -1,12 +1,4 @@
 import { cn, formatDate, getInitials, isOverdue } from "@/libs/utils";
-import {
-    Calendar,
-    Flame,
-    MessageSquare,
-    MoreHorizontal,
-    Paperclip,
-    Trash2,
-} from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../shadcn/tooltip";
 import { Avatar, AvatarFallback, AvatarImage } from "../shadcn/avatar";
 import {
@@ -30,6 +22,14 @@ import {
 import { Task } from "@/types/types";
 import { Progress } from "../shadcn/progress";
 import { COLUMNS_CONFIG, PRIORITY_CONFIG } from "@/constants/constants";
+import {
+    CalendarBlankIcon,
+    ChatTeardropDotsIcon,
+    DotsThreeOutlineIcon,
+    FireIcon,
+    PaperclipIcon,
+    TrashSimpleIcon,
+} from "@phosphor-icons/react";
 
 interface TaskRowProps {
     task: Task;
@@ -153,9 +153,12 @@ export default function TaskRow({
                         )}
                     >
                         {overdue ? (
-                            <Flame className="size-3" />
+                            <FireIcon weight="duotone" className="size-3" />
                         ) : (
-                            <Calendar className="size-3" />
+                            <CalendarBlankIcon
+                                weight="duotone"
+                                className="size-3"
+                            />
                         )}
                         {formatDate(task.due_date)}
                     </div>
@@ -178,13 +181,19 @@ export default function TaskRow({
                 <div className="flex items-center gap-2.5 text-gray-400">
                     {task.comments.length > 0 && (
                         <span className="flex items-center gap-0.5 text-[10px]">
-                            <MessageSquare className="size-3" />{" "}
+                            <ChatTeardropDotsIcon
+                                weight="duotone"
+                                className="size-3"
+                            />{" "}
                             {task.comments.length}
                         </span>
                     )}
                     {task.attachments.length > 0 && (
                         <span className="flex items-center gap-0.5 text-[10px]">
-                            <Paperclip className="size-3" />{" "}
+                            <PaperclipIcon
+                                weight="duotone"
+                                className="size-3"
+                            />{" "}
                             {task.attachments.length}
                         </span>
                     )}
@@ -198,7 +207,10 @@ export default function TaskRow({
                             size="icon"
                             className="size-6 opacity-0 transition-opacity group-hover:opacity-100"
                         >
-                            <MoreHorizontal className="size-3.5 text-gray-400" />
+                            <DotsThreeOutlineIcon
+                                weight="duotone"
+                                className="size-3.5 text-gray-400"
+                            />
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-44">
@@ -208,7 +220,11 @@ export default function TaskRow({
                                     className="cursor-pointer gap-2 text-xs text-rose-500 focus:text-rose-500"
                                     onSelect={(e) => e.preventDefault()}
                                 >
-                                    <Trash2 className="size-3.5" /> Delete
+                                    <TrashSimpleIcon
+                                        weight="duotone"
+                                        className="size-3.5"
+                                    />{" "}
+                                    Delete
                                 </DropdownMenuItem>
                             </AlertDialogTrigger>
                             <AlertDialogContent>

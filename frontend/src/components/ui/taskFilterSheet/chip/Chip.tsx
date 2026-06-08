@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/libs/utils";
-import { X } from "lucide-react";
+import { XIcon } from "@phosphor-icons/react";
 
 export default function Chip({
     active,
@@ -23,7 +23,7 @@ export default function Chip({
             )}
         >
             {children}
-            {active && <X size={10} />}
+            {active && <XIcon weight="duotone" size={12} />}
         </button>
     );
 }

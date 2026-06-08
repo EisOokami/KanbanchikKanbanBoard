@@ -43,6 +43,14 @@ import {
     STATUS_CONFIG,
 } from "@/constants/constants";
 import { cn, getInitials } from "@/libs/utils";
+import {
+    CheckIcon,
+    DotsSixVerticalIcon,
+    EnvelopeIcon,
+    PencilSimpleIcon,
+    PlusIcon,
+    XIcon,
+} from "@phosphor-icons/react";
 
 interface NewProjectModalProps {
     open: boolean;
@@ -412,7 +420,10 @@ export default function NewProjectModal({
                                                 }
                                                 className="ml-1 text-muted-foreground transition-colors hover:text-foreground"
                                             >
-                                                <X className="size-3.5" />
+                                                <XIcon
+                                                    weight="duotone"
+                                                    className="size-4"
+                                                />
                                             </button>
                                         </div>
                                     ))}
@@ -420,7 +431,10 @@ export default function NewProjectModal({
                             )}
                             <div className="flex gap-2">
                                 <div className="relative flex-1">
-                                    <Mail className="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+                                    <EnvelopeIcon
+                                        weight="duotone"
+                                        className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+                                    />
                                     <Input
                                         placeholder="Invite by email…"
                                         value={emailInput}
@@ -441,7 +455,11 @@ export default function NewProjectModal({
                                     onClick={inviteMember}
                                     className="h-9 gap-1.5 bg-bright-blue text-white hover:bg-blue-600"
                                 >
-                                    <Plus className="size-3.5" /> Invite
+                                    <PlusIcon
+                                        weight="duotone"
+                                        className="size-4"
+                                    />{" "}
+                                    Invite
                                 </Button>
                             </div>
                             {emailError && (
@@ -468,7 +486,10 @@ export default function NewProjectModal({
                                         onDragOver={(e) => e.preventDefault()}
                                         className={`flex cursor-grab items-center gap-2.5 rounded-md border border-border/50 bg-muted/30 bg-white px-3 py-2 transition-all active:cursor-grabbing ${dragIdx === i ? "opacity-40" : ""}`}
                                     >
-                                        <GripVertical className="size-3.5 flex-shrink-0 text-muted-foreground/50" />
+                                        <DotsSixVerticalIcon
+                                            weight="duotone"
+                                            className="size-3.5 flex-shrink-0 text-muted-foreground/50"
+                                        />
                                         <span
                                             className={cn(
                                                 "size-3 flex-shrink-0 rounded-full",
@@ -489,7 +510,10 @@ export default function NewProjectModal({
                                             }
                                             className="text-muted-foreground/50 transition-colors hover:text-muted-foreground"
                                         >
-                                            <X className="size-3.5" />
+                                            <XIcon
+                                                weight="duotone"
+                                                className="size-4"
+                                            />
                                         </button>
                                     </div>
                                 ))}
@@ -523,7 +547,11 @@ export default function NewProjectModal({
                                         onClick={addColumn}
                                         className="h-8 gap-1"
                                     >
-                                        <Plus className="size-3.5" /> Add
+                                        <PlusIcon
+                                            weight="duotone"
+                                            className="size-4"
+                                        />{" "}
+                                        Add
                                     </Button>
                                 </div>
                             </div>
@@ -583,7 +611,11 @@ export default function NewProjectModal({
                                         onClick={addCategory}
                                         className="h-8 gap-1"
                                     >
-                                        <Plus className="size-3.5" /> Add
+                                        <PlusIcon
+                                            weight="duotone"
+                                            className="size-4"
+                                        />{" "}
+                                        Add
                                     </Button>
                                 </div>
                             </div>
@@ -667,7 +699,8 @@ export default function NewProjectModal({
                             onClick={handleSubmit}
                             className="h-9 gap-1.5 bg-bright-blue text-white hover:bg-blue-600"
                         >
-                            <Plus className="size-4" /> Create Project
+                            <PlusIcon weight="duotone" className="size-4" />{" "}
+                            Create Project
                         </Button>
                     </div>
                 </DialogFooter>

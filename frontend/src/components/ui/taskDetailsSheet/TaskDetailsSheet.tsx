@@ -27,29 +27,6 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from "@/components/ui/shadcn/tooltip";
-import {
-    CalendarDays,
-    Check,
-    CheckSquare2,
-    ChevronDown,
-    Clock,
-    Copy,
-    Edit2,
-    ExternalLink,
-    FileText,
-    Link2,
-    MoreHorizontal,
-    Paperclip,
-    Plus,
-    Send,
-    Tag,
-    Bookmark,
-    Trash2,
-    Upload,
-    UserPlus,
-    X,
-    Zap,
-} from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { cn, getInitials, toDueDate } from "@/libs/utils";
 import { commentsToActivity, dueDateMeta } from "@/libs/taskDetailsSheet";
@@ -76,6 +53,28 @@ import {
     ActivityComment,
     ActivityEntry,
 } from "@/types/taskDetailsSheet";
+import {
+    ArticleIcon,
+    BookmarkSimpleIcon,
+    CalendarBlankIcon,
+    CalendarIcon,
+    CaretDownIcon,
+    CheckIcon,
+    CheckSquareIcon,
+    ClockIcon,
+    FileIcon,
+    LightningIcon,
+    LinkIcon,
+    PaperclipIcon,
+    PaperPlaneTiltIcon,
+    PencilSimpleIcon,
+    PlusIcon,
+    TagIcon,
+    TrashSimpleIcon,
+    UploadSimpleIcon,
+    UserPlusIcon,
+    XIcon,
+} from "@phosphor-icons/react";
 
 interface TaskDetailsSheetProps {
     open: boolean;
@@ -288,7 +287,6 @@ export function TaskDetailsSheet({
                 <SheetHeader className="shrink-0 px-6 py-3">
                     <div className="flex items-center justify-between gap-3">
                         <div className="flex flex-wrap items-center gap-2">
-                            {/* Status / column picker */}
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <button className="flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors hover:brightness-95">
@@ -299,7 +297,10 @@ export function TaskDetailsSheet({
                                             )}
                                         />
                                         {sm.label}
-                                        <ChevronDown size={11} />
+                                        <CaretDownIcon
+                                            weight="duotone"
+                                            size={12}
+                                        />
                                     </button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent>
@@ -327,7 +328,8 @@ export function TaskDetailsSheet({
                                             />
                                             {COLUMNS_CONFIG[s].label}
                                             {task.column === s && (
-                                                <Check
+                                                <CheckIcon
+                                                    weight="duotone"
                                                     size={12}
                                                     className="ml-auto text-bright-blue"
                                                 />
@@ -340,7 +342,10 @@ export function TaskDetailsSheet({
                                 <DropdownMenuTrigger asChild>
                                     <button className="flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors hover:brightness-95">
                                         {pm.label}
-                                        <ChevronDown size={11} />
+                                        <CaretDownIcon
+                                            weight="duotone"
+                                            size={12}
+                                        />
                                     </button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent>
@@ -348,38 +353,35 @@ export function TaskDetailsSheet({
                                         Object.keys(
                                             PRIORITY_CONFIG,
                                         ) as Priority[]
-                                    ).map((p) => {
-                                        const Icon = PRIORITY_CONFIG[p].icon!;
-                                        return (
-                                            <DropdownMenuItem
-                                                key={p}
-                                                className={cn(
-                                                    "cursor-pointer gap-2 text-sm",
-                                                    PRIORITY_CONFIG[p].pill,
-                                                )}
-                                                onClick={() => {
-                                                    pushChange(
-                                                        "priority",
-                                                        PRIORITY_CONFIG[
-                                                            task.priority
-                                                        ].label,
-                                                        PRIORITY_CONFIG[p]
-                                                            .label,
-                                                    );
-                                                    update("priority", p);
-                                                }}
-                                            >
-                                                <Icon size={13} />
-                                                {PRIORITY_CONFIG[p].label}
-                                                {task.priority === p && (
-                                                    <Check
-                                                        size={12}
-                                                        className="ml-auto text-bright-blue"
-                                                    />
-                                                )}
-                                            </DropdownMenuItem>
-                                        );
-                                    })}
+                                    ).map((p) => (
+                                        <DropdownMenuItem
+                                            key={p}
+                                            className="cursor-pointer gap-2 text-sm"
+                                            // style={{
+                                            //     backgroundColor:
+                                            //         PRIORITY_CONFIG[p].color,
+                                            // }}
+                                            onClick={() => {
+                                                pushChange(
+                                                    "priority",
+                                                    PRIORITY_CONFIG[
+                                                        task.priority
+                                                    ].label,
+                                                    PRIORITY_CONFIG[p].label,
+                                                );
+                                                update("priority", p);
+                                            }}
+                                        >
+                                            {PRIORITY_CONFIG[p].label}
+                                            {task.priority === p && (
+                                                <CheckIcon
+                                                    weight="duotone"
+                                                    size={12}
+                                                    className="ml-auto text-bright-blue"
+                                                />
+                                            )}
+                                        </DropdownMenuItem>
+                                    ))}
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </div>
@@ -396,9 +398,15 @@ export function TaskDetailsSheet({
                                         }}
                                     >
                                         {linkCopied ? (
-                                            <Check size={14} />
+                                            <CheckIcon
+                                                weight="duotone"
+                                                size={18}
+                                            />
                                         ) : (
-                                            <Link2 size={14} />
+                                            <LinkIcon
+                                                weight="duotone"
+                                                size={16}
+                                            />
                                         )}
                                     </button>
                                 </TooltipTrigger>
@@ -406,45 +414,34 @@ export function TaskDetailsSheet({
                                     {linkCopied ? "Copied!" : "Copy link"}
                                 </TooltipContent>
                             </Tooltip>
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <button className="flex size-8 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-100">
-                                        <MoreHorizontal size={15} />
-                                    </button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                    <DropdownMenuItem className="cursor-pointer gap-2 text-sm">
-                                        <ExternalLink
-                                            size={13}
-                                            className="text-gray-500"
-                                        />
-                                        Open full page
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem className="cursor-pointer gap-2 text-sm">
-                                        <Copy
-                                            size={13}
-                                            className="text-gray-500"
-                                        />
-                                        Duplicate task
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem
-                                        className="cursor-pointer gap-2 text-sm text-red-500 focus:text-red-500"
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <button
+                                        className="flex size-8 items-center justify-center rounded-md text-red-500 transition-colors hover:bg-red-50"
                                         onClick={() => {
                                             onDelete?.(task.id);
                                             onOpenChange(false);
                                         }}
                                     >
-                                        <Trash2 size={13} /> Delete task
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                            <button
-                                onClick={() => onOpenChange(false)}
-                                className="ml-1 flex size-8 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-100"
-                            >
-                                <X size={15} />
-                            </button>
+                                        <TrashSimpleIcon
+                                            weight="duotone"
+                                            size={16}
+                                        />
+                                    </button>
+                                </TooltipTrigger>
+                                <TooltipContent>Delete task</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <button
+                                        className="ml-1 flex size-8 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-100"
+                                        onClick={() => onOpenChange(false)}
+                                    >
+                                        <XIcon weight="duotone" size={18} />
+                                    </button>
+                                </TooltipTrigger>
+                                <TooltipContent>Close task</TooltipContent>
+                            </Tooltip>
                         </div>
                     </div>
                 </SheetHeader>
@@ -485,16 +482,22 @@ export function TaskDetailsSheet({
                                                 </span>
                                             )}
                                         </span>
-                                        <Edit2
-                                            size={13}
-                                            className="mt-1.5 shrink-0 text-gray-500 opacity-0 transition-opacity group-hover:opacity-100"
+                                        <PencilSimpleIcon
+                                            weight="duotone"
+                                            size={16}
+                                            className="text-gray-500 opacity-0 transition-opacity group-hover:opacity-100"
                                         />
                                     </h1>
                                 )}
                             </div>
                             <div className="mb-5">
                                 <FieldRow
-                                    icon={<CalendarDays size={13} />}
+                                    icon={
+                                        <CalendarBlankIcon
+                                            weight="duotone"
+                                            size={16}
+                                        />
+                                    }
                                     label="Due date"
                                 >
                                     <Popover
@@ -513,8 +516,9 @@ export function TaskDetailsSheet({
                                                             border: `1px solid ${ddMeta.border}`,
                                                         }}
                                                     >
-                                                        <CalendarDays
-                                                            size={11}
+                                                        <CalendarIcon
+                                                            weight="duotone"
+                                                            size={14}
                                                         />
                                                         {ddMeta.text !==
                                                             "Overdue" &&
@@ -531,8 +535,9 @@ export function TaskDetailsSheet({
                                                     </span>
                                                 )}
                                                 {dueDate && (
-                                                    <X
-                                                        size={11}
+                                                    <XIcon
+                                                        weight="duotone"
+                                                        size={14}
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             update(
@@ -563,7 +568,12 @@ export function TaskDetailsSheet({
                                     </Popover>
                                 </FieldRow>
                                 <FieldRow
-                                    icon={<UserPlus size={13} />}
+                                    icon={
+                                        <UserPlusIcon
+                                            weight="duotone"
+                                            size={16}
+                                        />
+                                    }
                                     label="Assignees"
                                 >
                                     <div className="flex flex-wrap items-center gap-2">
@@ -593,8 +603,9 @@ export function TaskDetailsSheet({
                                                             }
                                                             className="absolute -right-0.5 -top-0.5 hidden size-3.5 items-center justify-center rounded-full bg-red-500 group-hover/av:flex"
                                                         >
-                                                            <X
-                                                                size={7}
+                                                            <XIcon
+                                                                weight="duotone"
+                                                                size={10}
                                                                 className="text-white"
                                                             />
                                                         </button>
@@ -611,8 +622,9 @@ export function TaskDetailsSheet({
                                         >
                                             <PopoverTrigger asChild>
                                                 <button className="flex size-7 items-center justify-center rounded-full border border-dashed transition-colors hover:border-bright-blue hover:bg-bright-blue/5">
-                                                    <Plus
-                                                        size={12}
+                                                    <PlusIcon
+                                                        weight="duotone"
+                                                        size={16}
                                                         className="text-gray-500"
                                                     />
                                                 </button>
@@ -660,8 +672,9 @@ export function TaskDetailsSheet({
                                                                 {m.surname}
                                                             </span>
                                                             {sel && (
-                                                                <Check
-                                                                    size={12}
+                                                                <CheckIcon
+                                                                    weight="duotone"
+                                                                    size={16}
                                                                     className="ml-auto text-bright-blue"
                                                                 />
                                                             )}
@@ -678,7 +691,9 @@ export function TaskDetailsSheet({
                                     </div>
                                 </FieldRow>
                                 <FieldRow
-                                    icon={<Tag size={13} />}
+                                    icon={
+                                        <TagIcon weight="duotone" size={16} />
+                                    }
                                     label="Categories"
                                 >
                                     <div className="flex flex-wrap items-center gap-1.5">
@@ -694,7 +709,10 @@ export function TaskDetailsSheet({
                                                 }
                                             >
                                                 {cat.name}
-                                                <X size={9} />
+                                                <XIcon
+                                                    weight="duotone"
+                                                    size={14}
+                                                />
                                             </span>
                                         ))}
                                         <Popover
@@ -703,7 +721,10 @@ export function TaskDetailsSheet({
                                         >
                                             <PopoverTrigger asChild>
                                                 <button className="flex items-center gap-1 text-xs text-gray-500 transition-colors hover:text-gray-600">
-                                                    <Plus size={12} />
+                                                    <PlusIcon
+                                                        weight="duotone"
+                                                        size={14}
+                                                    />
                                                     Add
                                                 </button>
                                             </PopoverTrigger>
@@ -748,7 +769,9 @@ export function TaskDetailsSheet({
                                     </div>
                                 </FieldRow>
                                 <FieldRow
-                                    icon={<Clock size={13} />}
+                                    icon={
+                                        <ClockIcon weight="duotone" size={16} />
+                                    }
                                     label="Created"
                                 >
                                     <span className="text-sm text-gray-500">
@@ -758,7 +781,12 @@ export function TaskDetailsSheet({
                                     </span>
                                 </FieldRow>
                                 <FieldRow
-                                    icon={<Bookmark size={13} />}
+                                    icon={
+                                        <BookmarkSimpleIcon
+                                            weight="duotone"
+                                            size={16}
+                                        />
+                                    }
                                     label="Labels"
                                 >
                                     <div className="flex flex-wrap items-center gap-1.5">
@@ -787,7 +815,10 @@ export function TaskDetailsSheet({
                                                     }
                                                 >
                                                     {labelName}
-                                                    <X size={9} />
+                                                    <XIcon
+                                                        weight="duotone"
+                                                        size={14}
+                                                    />
                                                 </span>
                                             );
                                         })}
@@ -797,7 +828,10 @@ export function TaskDetailsSheet({
                                         >
                                             <PopoverTrigger asChild>
                                                 <button className="flex items-center gap-1 text-xs text-gray-500 transition-colors hover:text-gray-600">
-                                                    <Plus size={12} />
+                                                    <PlusIcon
+                                                        weight="duotone"
+                                                        size={14}
+                                                    />
                                                     Add
                                                 </button>
                                             </PopoverTrigger>
@@ -829,9 +863,10 @@ export function TaskDetailsSheet({
                                                                     {l.name}
                                                                 </span>
                                                                 {sel && (
-                                                                    <Check
+                                                                    <CheckIcon
+                                                                        weight="duotone"
                                                                         size={
-                                                                            11
+                                                                            16
                                                                         }
                                                                         className="text-bright-blue"
                                                                     />
@@ -853,8 +888,12 @@ export function TaskDetailsSheet({
                         </div>
                         <Separator />
                         <div className="mb-5">
-                            <div className="mb-3 flex items-center gap-2">
-                                <FileText size={13} className="text-gray-500" />
+                            <div className="mb-3 flex items-center gap-1.5">
+                                <ArticleIcon
+                                    weight="duotone"
+                                    size={16}
+                                    className="text-gray-500"
+                                />
                                 <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
                                     Description
                                 </span>
@@ -883,8 +922,9 @@ export function TaskDetailsSheet({
                                 >
                                     {task.description || "Add a description…"}
                                     {task.description && (
-                                        <Edit2
-                                            size={11}
+                                        <PencilSimpleIcon
+                                            weight="duotone"
+                                            size={16}
                                             className="ml-2 inline text-gray-500 opacity-0 transition-opacity group-hover/desc:opacity-100"
                                         />
                                     )}
@@ -894,9 +934,10 @@ export function TaskDetailsSheet({
                         <Separator />
                         <div className="mb-5">
                             <div className="mb-2 flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <CheckSquare2
-                                        size={13}
+                                <div className="flex items-center gap-1.5">
+                                    <CheckSquareIcon
+                                        weight="duotone"
+                                        size={16}
                                         className="text-gray-500"
                                     />
                                     <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
@@ -975,7 +1016,7 @@ export function TaskDetailsSheet({
                                             }
                                             className="shrink-0 text-gray-300 opacity-0 transition-all hover:text-red-400 group-hover/ci:opacity-100"
                                         >
-                                            <X size={12} />
+                                            <XIcon weight="duotone" size={16} />
                                         </button>
                                     </div>
                                 ))}
@@ -997,15 +1038,16 @@ export function TaskDetailsSheet({
                                     onClick={addSubtask}
                                     className="h-8 rounded-md border bg-bright-blue px-3 transition-colors hover:bg-blue-600"
                                 >
-                                    <Plus size={13} />
+                                    <PlusIcon weight="duotone" size={16} />
                                 </Button>
                             </div>
                         </div>
                         <Separator />
                         <div className="mb-5">
-                            <div className="mb-3 flex items-center gap-2">
-                                <Paperclip
-                                    size={13}
+                            <div className="mb-3 flex items-center gap-1.5">
+                                <PaperclipIcon
+                                    weight="duotone"
+                                    size={16}
                                     className="text-gray-500"
                                 />
                                 <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
@@ -1037,8 +1079,9 @@ export function TaskDetailsSheet({
                                                     background: "#EDE9FD",
                                                 }}
                                             >
-                                                <FileText
-                                                    size={14}
+                                                <FileIcon
+                                                    weight="duotone"
+                                                    size={16}
                                                     className="text-violet-600"
                                                 />
                                             </div>
@@ -1059,7 +1102,10 @@ export function TaskDetailsSheet({
                                                 }
                                                 className="shrink-0 text-gray-300 opacity-0 transition-all hover:text-red-400 group-hover/att:opacity-100"
                                             >
-                                                <Trash2 size={12} />
+                                                <TrashSimpleIcon
+                                                    weight="duotone"
+                                                    size={16}
+                                                />
                                             </button>
                                         </div>
                                     ))}
@@ -1069,13 +1115,17 @@ export function TaskDetailsSheet({
                                 onClick={() => fileInputRef.current?.click()}
                                 className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-gray-300 py-2 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-50"
                             >
-                                <Upload size={12} />
+                                <UploadSimpleIcon weight="duotone" size={14} />
                                 Upload file
                             </button>
                         </div>
                         <Separator />
-                        <div className="mb-4 flex items-center gap-2">
-                            <Zap size={13} className="text-gray-500" />
+                        <div className="mb-4 flex items-center gap-1.5">
+                            <LightningIcon
+                                weight="duotone"
+                                size={16}
+                                className="text-gray-500"
+                            />
                             <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
                                 Activity
                             </span>
@@ -1215,7 +1265,10 @@ export function TaskDetailsSheet({
                                                 onClick={addComment}
                                                 className="h-7 gap-2 rounded-md bg-bright-blue px-3 text-xs text-white hover:bg-blue-600 [&_svg]:size-3.5"
                                             >
-                                                <Send />
+                                                <PaperPlaneTiltIcon
+                                                    weight="duotone"
+                                                    size={14}
+                                                />
                                                 Send
                                             </Button>
                                         </div>
@@ -1261,7 +1314,7 @@ export function TaskDetailsSheet({
                             disabled={!task.title.trim()}
                             className="h-8 gap-1.5 rounded-md bg-bright-blue px-4 text-xs font-semibold text-white hover:bg-blue-600 disabled:opacity-40"
                         >
-                            <Check />
+                            <CheckIcon weight="duotone" size={16}  />
                             Save
                         </Button>
                     </div>

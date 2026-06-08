@@ -8,6 +8,7 @@ import {
 } from "@/constants/constants";
 import { cn } from "@/libs/utils";
 import { Task } from "@/types/types";
+import { CalendarBlankIcon } from "@phosphor-icons/react";
 
 interface SidebarEventCardProps {
     task: Task;
@@ -44,15 +45,6 @@ export default function SidebarEventCard({
             onClick={onOpen}
         >
             <div className="flex items-start gap-2">
-                {StatusIcon && (
-                    <div
-                        // onClick={cycleStatus}
-                        className={`mt-0.5 flex-shrink-0 ${statusColor} transition-transform hover:scale-110`}
-                        title="Click to advance status"
-                    >
-                        <StatusIcon className="size-3.5" />
-                    </div>
-                )}
                 <div className="min-w-0 flex-1">
                     <p
                         className={`text-xs font-semibold leading-tight ${isDone ? "text-gray-400 line-through" : "text-gray-800"}`}
@@ -67,8 +59,6 @@ export default function SidebarEventCard({
                                 color: proj.color,
                             }}
                         >
-                            {/* {proj.emoji}  */}
-                            {/* {task.project} */}
                             {proj.icon}
                             {proj.name}
                         </span>
@@ -85,25 +75,13 @@ export default function SidebarEventCard({
                         </span>
                     </div>
                     <div className="mt-2 flex items-center justify-between">
-                        <div className="flex items-center gap-1 text-[10px] text-gray-400">
-                            <Clock className="size-3" />{" "}
+                        <div className="flex items-center gap-1 text-[10px] text-gray-500">
+                            <CalendarBlankIcon
+                                weight="duotone"
+                                className="size-3"
+                            />{" "}
                             {task.due_date.toString()}
                         </div>
-                        {/* <div className="flex items-center gap-1">
-                            <Avatar className="size-5">
-                                <AvatarFallback
-                                    className={`text-[8px] font-bold text-white ${TEAM_COLORS[task.assignee]?.bg ?? "bg-gray-400"}`}
-                                >
-                                    {task.assignee}
-                                </AvatarFallback>
-                            </Avatar> */}
-                        {/* <button
-                                onClick={() => onDelete(task.id)}
-                                className="rounded p-0.5 text-gray-300 transition-colors hover:bg-red-50 hover:text-red-400"
-                            >
-                                <X className="size-3" />
-                            </button> */}
-                        {/* </div> */}
                     </div>
                 </div>
             </div>

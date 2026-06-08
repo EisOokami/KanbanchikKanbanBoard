@@ -1,6 +1,6 @@
-import { LucideProps } from "lucide-react";
+import { Icon } from "@phosphor-icons/react";
 
-export type SectionId = "profile" | "security" | "notifications" | "appearance";
+export type SectionId = "profile" | "security" | "appearance";
 
 export type NavGroup = "Account";
 
@@ -12,8 +12,8 @@ export type EmailDigest = "realtime" | "daily" | "weekly" | "never";
 export interface NavItem {
     id: SectionId;
     label: string;
-    icon: React.FC<LucideProps>;
-    group: NavGroup;
+    icon: Icon;
+    group?: NavGroup;
 }
 
 export interface ProfileForm {
@@ -31,7 +31,7 @@ export interface ProfileForm {
 
 export interface SocialLink {
     key: keyof ProfileForm;
-    icon: React.FC<LucideProps>;
+    icon: Icon;
     label: string;
     placeholder: string;
 }
@@ -71,7 +71,7 @@ export interface NotificationRow {
 export interface ThemeOption {
     id: ThemeId;
     label: string;
-    icon: React.FC<LucideProps>;
+    icon: Icon;
 }
 
 export interface DensityOption {

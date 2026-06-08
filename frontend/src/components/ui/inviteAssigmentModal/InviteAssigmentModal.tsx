@@ -16,24 +16,24 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from "@/components/ui/shadcn/tooltip";
-import {
-    Check,
-    Copy,
-    Link2,
-    Mail,
-    Plus,
-    Search,
-    Send,
-    UserPlus,
-    Users,
-    X,
-} from "lucide-react";
 import { cn } from "@/libs/utils";
 import { Invite } from "@/types/inviteAssigmentModal";
 import RoleSelect from "./roleSelect/RoleSelect";
 import MemberRow from "./memberRow/MemberRow";
 import { Member, Role } from "@/types/types";
 import { MOCK_MEMBERS } from "@/constants/constants";
+import {
+    CheckIcon,
+    CopyIcon,
+    EnvelopeIcon,
+    LinkIcon,
+    MagnifyingGlassIcon,
+    PaperPlaneTiltIcon,
+    PlusIcon,
+    UserPlusIcon,
+    UsersIcon,
+    XIcon,
+} from "@phosphor-icons/react";
 
 interface InviteAssignmentModalProps {
     open: boolean;
@@ -115,7 +115,7 @@ export function InviteAssignmentModal({
                             onClick={() => onOpenChange(false)}
                             className="rounded-md p-1.5 transition-colors hover:bg-gray-100"
                         >
-                            <X size={16} />
+                            <XIcon weight="duotone" size={16} />
                         </button>
                     </div>
                     <div className="flex gap-1.5 rounded-xl bg-gray-100 p-1.5">
@@ -131,9 +131,9 @@ export function InviteAssignmentModal({
                                 )}
                             >
                                 {tab === "invite" ? (
-                                    <UserPlus size={13} />
+                                    <UserPlusIcon weight="duotone" size={13} />
                                 ) : (
-                                    <Users size={13} />
+                                    <UsersIcon weight="duotone" size={13} />
                                 )}
                                 {tab === "invite"
                                     ? "Invite people"
@@ -152,7 +152,8 @@ export function InviteAssignmentModal({
                                         className="flex items-center gap-2"
                                     >
                                         <div className="relative flex-1">
-                                            <Mail
+                                            <EnvelopeIcon
+                                                weight="duotone"
                                                 size={14}
                                                 className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
                                             />
@@ -183,7 +184,10 @@ export function InviteAssignmentModal({
                                                 }
                                                 className="flex size-8 shrink-0 items-center justify-center rounded-md border transition-colors hover:bg-red-50 hover:text-red-400"
                                             >
-                                                <X size={14} />
+                                                <XIcon
+                                                    weight="duotone"
+                                                    size={14}
+                                                />
                                             </button>
                                         )}
                                     </div>
@@ -194,14 +198,15 @@ export function InviteAssignmentModal({
                                 className="flex items-center gap-2 text-xs text-gray-500 transition-colors hover:text-gray-700"
                             >
                                 <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-100">
-                                    <Plus size={10} />
+                                    <PlusIcon weight="duotone" size={10} />
                                 </div>
                                 Add another
                             </button>
                             <Separator />
                             <div className="flex items-center gap-2 rounded-md border bg-gray-50 p-3">
                                 <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-gray-200">
-                                    <Link2
+                                    <LinkIcon
+                                        weight="duotone"
                                         size={13}
                                         className="text-gray-500"
                                     />
@@ -221,9 +226,15 @@ export function InviteAssignmentModal({
                                             className={`flex h-8 items-center gap-1.5 rounded-md border px-3 text-xs font-medium transition-all ${linkCopied ? "border-green-300 text-green-500" : "bg-gray-100 text-gray-500"}`}
                                         >
                                             {linkCopied ? (
-                                                <Check size={12} />
+                                                <CheckIcon
+                                                    weight="duotone"
+                                                    size={12}
+                                                />
                                             ) : (
-                                                <Copy size={12} />
+                                                <CopyIcon
+                                                    weight="duotone"
+                                                    size={12}
+                                                />
                                             )}
                                             {linkCopied ? "Copied!" : "Copy"}
                                         </button>
@@ -238,7 +249,8 @@ export function InviteAssignmentModal({
                     {selectedTab === "members" && (
                         <div className="space-y-3">
                             <div className="relative">
-                                <Search
+                                <MagnifyingGlassIcon
+                                    weight="duotone"
                                     size={14}
                                     className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
                                 />
@@ -264,7 +276,8 @@ export function InviteAssignmentModal({
                                 ) : (
                                     <div className="flex flex-col items-center gap-2 py-10">
                                         <div className="flex h-10 w-10 items-center justify-center rounded-md bg-gray-100">
-                                            <Users
+                                            <UsersIcon
+                                                weight="duotone"
                                                 size={18}
                                                 className="text-gray-500"
                                             />
@@ -299,7 +312,7 @@ export function InviteAssignmentModal({
                                     onClick={() => setSelectedTab("invite")}
                                     className="flex items-center gap-1 font-medium text-bright-blue transition-colors hover:opacity-80"
                                 >
-                                    <UserPlus size={12} />
+                                    <UserPlusIcon weight="duotone" size={12} />
                                     Add more
                                 </button>
                             </div>
@@ -326,7 +339,10 @@ export function InviteAssignmentModal({
                                 disabled={!hasValidInvite}
                                 className="flex h-9 items-center gap-2 bg-bright-blue px-5 text-sm font-semibold text-white hover:bg-blue-600 disabled:opacity-40"
                             >
-                                <Send size={13} />
+                                <PaperPlaneTiltIcon
+                                    weight="duotone"
+                                    size={13}
+                                />
                                 Send invites
                             </Button>
                         )}

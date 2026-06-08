@@ -4,13 +4,18 @@ import { useState } from "react";
 import { Button } from "@/components/ui/shadcn/button";
 import { Card, CardContent } from "@/components/ui/shadcn/card";
 import { Input } from "@/components/ui/shadcn/input";
-import { Plus, Search, LayoutGrid, List } from "lucide-react";
 import ProjectCard from "@/components/ui/projectCard/ProjectCard";
 import NewProjectModal from "@/components/ui/newProjectModal/NewProjectModal";
 import { FilterStatus, ViewMode } from "@/types/projectsOverview";
 import { FILTER_OPTIONS } from "@/constants/projectsOverview";
 import { Project } from "@/types/types";
 import { INITIAL_PROJECTS, STATUS_CONFIG } from "@/constants/constants";
+import {
+    GridFourIcon,
+    MagnifyingGlassIcon,
+    PlusIcon,
+    RowsIcon,
+} from "@phosphor-icons/react";
 
 export default function ProjectsOverview() {
     const [projects, setProjects] = useState<Project[]>(INITIAL_PROJECTS);
@@ -60,7 +65,7 @@ export default function ProjectsOverview() {
                         className="gap-1.5 bg-bright-blue text-white hover:bg-blue-600 [&_svg]:size-5"
                         onClick={handleShowNewProjectModal}
                     >
-                        <Plus />
+                        <PlusIcon weight="duotone" />
                         New project
                     </Button>
                 </div>
@@ -68,7 +73,10 @@ export default function ProjectsOverview() {
             <main className="space-y-8 px-8 py-4">
                 <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
                     <div className="relative w-full sm:w-72">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 text-muted-foreground" />
+                        <MagnifyingGlassIcon
+                            weight="duotone"
+                            className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400 text-muted-foreground"
+                        />
                         <Input
                             placeholder="Search projects…"
                             value={search}
@@ -104,9 +112,15 @@ export default function ProjectsOverview() {
                                     }`}
                                 >
                                     {v === "grid" ? (
-                                        <LayoutGrid className="h-4 w-4" />
+                                        <GridFourIcon
+                                            weight="duotone"
+                                            className="size-5"
+                                        />
                                     ) : (
-                                        <List className="h-4 w-4" />
+                                        <RowsIcon
+                                            weight="duotone"
+                                            className="size-5"
+                                        />
                                     )}
                                 </button>
                             ))}
@@ -150,8 +164,11 @@ export default function ProjectsOverview() {
                     {projects.length === 0 ? (
                         <Card className="border-dashed border-border/60">
                             <CardContent className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-md bg-muted">
-                                    <LayoutGrid className="h-6 w-6 text-muted-foreground" />
+                                <div className="flex size-12 items-center justify-center rounded-md bg-muted">
+                                    <GridFourIcon
+                                        weight="duotone"
+                                        className="size-6 text-muted-foreground"
+                                    />
                                 </div>
                                 <div>
                                     <p className="text-sm font-medium text-foreground">
@@ -168,7 +185,11 @@ export default function ProjectsOverview() {
                                     className="mt-1 gap-1.5"
                                     onClick={handleShowNewProjectModal}
                                 >
-                                    <Plus className="h-4 w-4" /> New project
+                                    <PlusIcon
+                                        weight="duotone"
+                                        className="size-4"
+                                    />{" "}
+                                    New project
                                 </Button>
                             </CardContent>
                         </Card>

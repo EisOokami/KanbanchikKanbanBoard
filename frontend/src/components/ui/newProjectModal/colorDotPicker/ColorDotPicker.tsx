@@ -26,7 +26,10 @@ export default function ColorDotPicker({
                     }}
                 >
                     {value === c && (
-                        <Check className="mx-auto size-3 text-white" />
+                        <CheckIcon
+                            weight="duotone"
+                            className="mx-auto size-3 text-white"
+                        />
                     )}
                 </button>
             ))}

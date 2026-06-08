@@ -24,18 +24,6 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/shadcn/alert-dialog";
-import {
-    Archive,
-    Check,
-    ChevronRight,
-    Edit2,
-    GripVertical,
-    Hash,
-    Plus,
-    Trash2,
-    UserPlus,
-    X,
-} from "lucide-react";
 import { cn, getInitials } from "@/libs/utils";
 import { NavSection } from "@/types/projectSettingsDialog";
 import { NAV_ITEMS } from "@/constants/projectSettingsDialog";
@@ -53,6 +41,18 @@ import {
     PROJECT_ICONS,
     ROLE_META,
 } from "@/constants/constants";
+import {
+    ArchiveIcon,
+    CaretRightIcon,
+    CheckIcon,
+    DotsSixVerticalIcon,
+    HashIcon,
+    PencilSimpleIcon,
+    PlusIcon,
+    TrashSimpleIcon,
+    UserPlusIcon,
+    XIcon,
+} from "@phosphor-icons/react";
 
 interface ProjectSettingsDialogProps {
     open: boolean;
@@ -235,11 +235,12 @@ export function ProjectSettingsDialog({
                                     <span
                                         className={`${activeSection === item.id ? "text-bright-blue" : "text-gray-500"}`}
                                     >
-                                        <Icon size={12} />
+                                        <Icon weight="duotone" size={18} />
                                     </span>
                                     {item.label}
                                     {activeSection === item.id && (
-                                        <ChevronRight
+                                        <CaretRightIcon
+                                            weight="duotone"
                                             size={12}
                                             className="ml-auto text-bright-blue"
                                         />
@@ -276,7 +277,8 @@ export function ProjectSettingsDialog({
                                                 >
                                                     {icon}
                                                     <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-bright-blue">
-                                                        <Edit2
+                                                        <PencilSimpleIcon
+                                                            weight="duotone"
                                                             size={9}
                                                             className="text-white"
                                                         />
@@ -305,7 +307,8 @@ export function ProjectSettingsDialog({
                                                         }}
                                                     />
                                                     <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-bright-blue">
-                                                        <Edit2
+                                                        <PencilSimpleIcon
+                                                            weight="duotone"
                                                             size={9}
                                                             className="text-white"
                                                         />
@@ -380,7 +383,8 @@ export function ProjectSettingsDialog({
                                                         }}
                                                     >
                                                         {projectColor === c && (
-                                                            <Check
+                                                            <CheckIcon
+                                                                weight="duotone"
                                                                 size={13}
                                                                 className="text-white"
                                                             />
@@ -433,7 +437,8 @@ export function ProjectSettingsDialog({
                                                         : "#F3F4F6",
                                                 }}
                                             >
-                                                <Archive
+                                                <ArchiveIcon
+                                                    weight="duotone"
                                                     size={14}
                                                     className="transition-colors"
                                                     style={{
@@ -1069,25 +1074,22 @@ export function ProjectSettingsDialog({
                         </div>
                     </ScrollArea>
                 </div>
-                <div className="flex shrink-0 items-center justify-between border-t px-6 py-4">
-                    <p className="text-xs text-gray-500">Last saved just now</p>
-                    <div className="flex items-center gap-2">
-                        <Button
-                            variant="ghost"
-                            onClick={() => onOpenChange(false)}
-                            className="h-9 rounded-md px-4 text-sm hover:bg-gray-100"
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            onClick={handleSave}
-                            disabled={!title.trim()}
-                            className="h-9 rounded-md bg-bright-blue text-sm font-semibold text-white hover:bg-blue-600 disabled:opacity-40"
-                        >
-                            <Check size={14} />
-                            Save changes
-                        </Button>
-                    </div>
+                <div className="flex shrink-0 items-center justify-end gap-2 border-t px-6 py-4">
+                    <Button
+                        variant="outline"
+                        onClick={() => onOpenChange(false)}
+                        className="h-9 rounded-md px-4 text-sm hover:bg-gray-100"
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={handleSave}
+                        disabled={!title.trim()}
+                        className="h-9 rounded-md bg-bright-blue text-sm font-semibold text-white hover:bg-blue-600 disabled:opacity-40"
+                    >
+                        <CheckIcon weight="duotone" size={14} />
+                        Save changes
+                    </Button>
                 </div>
             </DialogContent>
         </Dialog>

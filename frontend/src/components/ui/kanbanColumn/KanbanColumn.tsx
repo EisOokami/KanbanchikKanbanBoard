@@ -10,6 +10,7 @@ import { useRef, useState } from "react";
 import KanbanCard from "../kanbanCard/KanbanCard";
 import { CreateTaskModal } from "../createTaskModal/CreateTaskModal";
 import { Column, ColumnConfig } from "@/types/types";
+import { PlusIcon } from "@phosphor-icons/react";
 
 interface KanbanColumnProps {
     column: ColumnConfig & Column;
@@ -64,7 +65,7 @@ export default function KanbanColumn({
                     onClick={startAdding}
                     className="flex size-6 items-center justify-center rounded-md text-gray-600 transition-colors hover:bg-gray-200 hover:text-gray-800"
                 >
-                    <Plus className="size-3.5" />
+                    <PlusIcon weight="duotone" className="size-3.5" />
                 </button>
             </div>
             <div
@@ -100,7 +101,7 @@ export default function KanbanColumn({
                 {column.tasks.length === 0 && !adding && (
                     <div className="flex flex-col items-center py-8 text-gray-400">
                         <div className="mb-2 flex size-8 items-center justify-center rounded-lg border border-dashed border-gray-300">
-                            <Plus className="size-4" />
+                            <PlusIcon weight="duotone" className="size-4" />
                         </div>
                         <span className="text-xs">No tasks</span>
                     </div>

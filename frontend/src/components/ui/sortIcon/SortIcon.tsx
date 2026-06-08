@@ -1,5 +1,9 @@
 import { SortDir, SortField } from "@/types/types";
-import { ChevronDown, ChevronsUpDown, ChevronUp } from "lucide-react";
+import {
+    CaretDownIcon,
+    CaretUpDownIcon,
+    CaretUpIcon,
+} from "@phosphor-icons/react";
 
 export default function SortIcon({
     field,
@@ -11,10 +15,15 @@ export default function SortIcon({
     sortDir: SortDir;
 }) {
     if (field !== sortField)
-        return <ChevronsUpDown className="size-3 text-gray-300" />;
+        return (
+            <CaretUpDownIcon
+                weight="duotone"
+                className="size-3 text-gray-300"
+            />
+        );
     return sortDir === "asc" ? (
-        <ChevronUp className="size-3 text-blue-500" />
+        <CaretUpIcon weight="duotone" className="size-3 text-blue-500" />
     ) : (
-        <ChevronDown className="size-3 text-blue-500" />
+        <CaretDownIcon weight="duotone" className="size-3 text-blue-500" />
     );
 }

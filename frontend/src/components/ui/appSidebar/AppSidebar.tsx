@@ -14,7 +14,7 @@ import {
     SidebarRail,
     SidebarSeparator,
 } from "../shadcn/sidebar";
-import { Star } from "lucide-react";
+import { StarIcon } from "@phosphor-icons/react";
 import UserFooter from "./userFooter/UserFooter";
 import NavMain from "./navMain/NavMain";
 import Image from "next/image";
@@ -56,7 +56,7 @@ export default function AppSidebar() {
                     <SidebarGroup>
                         <SidebarGroupLabel className="flex items-center justify-between">
                             <span>Favourites</span>
-                            <Star className="size-3 text-muted-foreground" />
+                            <StarIcon weight="duotone" />
                         </SidebarGroupLabel>
                         <SidebarGroupContent>
                             <SidebarMenu>

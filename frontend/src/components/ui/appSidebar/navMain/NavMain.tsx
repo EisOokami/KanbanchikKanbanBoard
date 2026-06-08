@@ -2,14 +2,6 @@
 
 import { useState } from "react";
 import {
-    Bell,
-    Calendar,
-    ChevronRight,
-    ClipboardList,
-    Kanban,
-    LayoutDashboard,
-} from "lucide-react";
-import {
     SidebarMenu,
     SidebarMenuBadge,
     SidebarMenuButton,
@@ -25,16 +17,23 @@ import {
 } from "../../shadcn/collapsible";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+    CalendarDotsIcon,
+    CaretRightIcon,
+    ClipboardTextIcon,
+    KanbanIcon,
+    SquaresFourIcon,
+} from "@phosphor-icons/react";
 
 const navMain = [
     {
         title: "Overview",
-        icon: LayoutDashboard,
+        icon: SquaresFourIcon,
         url: "/overview",
     },
     {
         title: "My Boards",
-        icon: Kanban,
+        icon: KanbanIcon,
         url: "/board",
         badge: "3",
         children: [
@@ -43,8 +42,8 @@ const navMain = [
             { title: "Backend API", url: "/board", color: "#10b981" },
         ],
     },
-    { title: "Tasks", icon: ClipboardList, url: "/tasks", badge: "12" },
-    { title: "Calendar", icon: Calendar, url: "/calendar" },
+    { title: "Tasks", icon: ClipboardTextIcon, url: "/tasks", badge: "12" },
+    { title: "Calendar", icon: CalendarDotsIcon, url: "/calendar" },
 ];
 
 export default function NavMain() {
@@ -79,7 +78,10 @@ export default function NavMain() {
                                             {item.badge}
                                         </SidebarMenuBadge>
                                     )}
-                                    <ChevronRight className="ml-auto mr-4 size-4 transition-transform duration-200 group-data-[state=open]:rotate-90" />
+                                    <CaretRightIcon
+                                        weight="duotone"
+                                        className="ml-auto mr-4 size-4 transition-transform duration-200 group-data-[state=open]:rotate-90"
+                                    />
                                 </SidebarMenuButton>
                             </CollapsibleTrigger>
                             <CollapsibleContent>

@@ -6,7 +6,7 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from "../../shadcn/collapsible";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { CaretDownIcon, CaretRightIcon } from "@phosphor-icons/react";
 
 export default function FilterSection({
     title,
@@ -16,7 +16,7 @@ export default function FilterSection({
     defaultOpen = true,
 }: {
     title: string;
-    icon: React.ReactNode;
+    icon?: React.ReactNode;
     count?: number;
     children: React.ReactNode;
     defaultOpen?: boolean;
@@ -37,7 +37,11 @@ export default function FilterSection({
                         </span>
                     ) : null}
                 </div>
-                {open ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                {open ? (
+                    <CaretDownIcon weight="duotone" size={14} />
+                ) : (
+                    <CaretRightIcon weight="duotone" size={14} />
+                )}
             </CollapsibleTrigger>
             <CollapsibleContent>
                 <div className="pb-4">{children}</div>

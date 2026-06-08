@@ -22,6 +22,7 @@ import {
     MONTHS,
     WEEKDAYS,
 } from "@/constants/constants";
+import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
 
 interface ProjectCalendarViewProps {
     initialTasks?: Task[];
@@ -268,13 +269,19 @@ export default function ProjectCalendarView({
                             onClick={prevMonth}
                             className="rounded-md p-1.5 text-gray-500 transition-colors hover:bg-gray-100"
                         >
-                            <ChevronLeft className="size-4" />
+                            <CaretLeftIcon
+                                weight="duotone"
+                                className="size-4"
+                            />
                         </button>
                         <button
                             onClick={nextMonth}
                             className="rounded-md p-1.5 text-gray-500 transition-colors hover:bg-gray-100"
                         >
-                            <ChevronRight className="size-4" />
+                            <CaretRightIcon
+                                weight="duotone"
+                                className="size-4"
+                            />
                         </button>
                     </div>
                     <h2 className="min-w-0 text-base font-black tracking-tight text-gray-800">

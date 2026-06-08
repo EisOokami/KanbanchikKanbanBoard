@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from "react";
 import { Separator } from "@/components/ui/shadcn/separator";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { CreateTaskModal } from "@/components/ui/createTaskModal/CreateTaskModal";
 import {
     cn,
@@ -22,6 +21,7 @@ import {
     WEEKDAYS,
 } from "@/constants/constants";
 import { taskDateStr } from "@/libs/calendar";
+import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
 
 interface GridCell {
     day: number;
@@ -248,13 +248,19 @@ export default function Calendar({
                                 onClick={prevMonth}
                                 className="rounded-md p-1.5 text-gray-500 transition-colors hover:bg-gray-100"
                             >
-                                <ChevronLeft className="size-4" />
+                                <CaretLeftIcon
+                                    weight="duotone"
+                                    className="size-4"
+                                />
                             </button>
                             <button
                                 onClick={nextMonth}
                                 className="rounded-md p-1.5 text-gray-500 transition-colors hover:bg-gray-100"
                             >
-                                <ChevronRight className="size-4" />
+                                <CaretRightIcon
+                                    weight="duotone"
+                                    className="size-4"
+                                />
                             </button>
                         </div>
                         <h2 className="min-w-0 text-base font-black tracking-tight text-gray-800">

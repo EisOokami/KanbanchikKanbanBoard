@@ -3,13 +3,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/shadcn/button";
 import { ScrollArea } from "@/components/ui/shadcn/scroll-area";
-import { CalendarCheck, Plus } from "lucide-react";
 import { cn, todayStr } from "@/libs/utils";
 import { CreateTaskModal } from "@/components/ui/createTaskModal/CreateTaskModal";
 import { TaskDetailsSheet } from "@/components/ui/taskDetailsSheet/TaskDetailsSheet";
 import SidebarEventCard from "@/components/ui/sidebarEventCard/SidebarEventCard";
 import { Task } from "@/types/types";
 import { COLUMNS_CONFIG } from "@/constants/constants";
+import { CalendarCheckIcon, PlusIcon } from "@phosphor-icons/react";
 
 interface DaySidebarProps {
     dateStr: string;
@@ -66,14 +66,18 @@ export default function DaySidebar({ dateStr, tasks }: DaySidebarProps) {
                         size="sm"
                         className="h-8 w-full gap-1.5 bg-bright-blue text-xs hover:bg-blue-600"
                     >
-                        <Plus className="size-3.5" /> Add Task
+                        <PlusIcon weight="duotone" className="size-3.5" /> Add
+                        Task
                     </Button>
                 </div>
                 <ScrollArea className="flex-1">
                     <div className="space-y-5 px-4 py-3">
                         {tasks.length === 0 ? (
                             <div className="py-10 text-center text-gray-400">
-                                <CalendarCheck className="mx-auto mb-2 size-8 opacity-25" />
+                                <CalendarCheckIcon
+                                    weight="duotone"
+                                    className="mx-auto mb-2 size-8 opacity-25"
+                                />
                                 <p className="text-xs font-medium">
                                     No tasks scheduled
                                 </p>

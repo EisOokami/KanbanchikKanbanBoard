@@ -13,7 +13,10 @@ export default function SaveBar({ dirty, onSave, onDiscard }: SaveBarProps) {
     return (
         <div className="sticky bottom-0 -mx-6 mt-6 flex items-center justify-between gap-3 border-t bg-white/95 px-6 py-3 backdrop-blur">
             <p className="flex items-center gap-1.5 text-xs text-gray-500">
-                <CircleAlert className="size-3.5 text-amber-500" />
+                <WarningIcon
+                    weight="duotone"
+                    className="size-4 text-amber-500"
+                />
                 You have unsaved changes
             </p>
             <div className="flex gap-2">
@@ -30,7 +33,8 @@ export default function SaveBar({ dirty, onSave, onDiscard }: SaveBarProps) {
                     onClick={onSave}
                     className="h-7 gap-1.5 bg-bright-blue text-xs hover:bg-blue-600"
                 >
-                    <Check className="size-3" /> Save changes
+                    <CheckIcon weight="duotone" className="size-4" /> Save
+                    changes
                 </Button>
             </div>
         </div>

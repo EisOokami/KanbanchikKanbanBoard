@@ -2,9 +2,9 @@
 
 import { Avatar, AvatarFallback } from "../../shadcn/avatar";
 import RoleSelect from "../roleSelect/RoleSelect";
-import { X } from "lucide-react";
 import { Member, Role } from "@/types/types";
 import { getInitials } from "@/libs/utils";
+import { XIcon } from "@phosphor-icons/react";
 
 export default function MemberRow({
     member,
@@ -56,7 +56,7 @@ export default function MemberRow({
                     onClick={() => onRemove(member.id)}
                     className="flex size-8 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-red-50 hover:text-red-500"
                 >
-                    <X size={14} />
+                    <XIcon weight="duotone" size={14} />
                 </button>
             </div>
             <div className="group-hover:hidden">

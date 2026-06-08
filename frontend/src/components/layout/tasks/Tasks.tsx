@@ -53,7 +53,24 @@ import {
     INITIAL_TASKS,
     PRIORITY_CONFIG,
 } from "@/constants/constants";
-import { isOverdue } from "@/libs/utils";
+import { cn, isOverdue } from "@/libs/utils";
+import {
+    CalendarBlankIcon,
+    ChartLineIcon,
+    FireIcon,
+    FlagIcon,
+    FunnelIcon,
+    HashIcon,
+    Icon,
+    LayoutIcon,
+    MagnifyingGlassIcon,
+    PlusIcon,
+    PulseIcon,
+    SealIcon,
+    TextTIcon,
+    UsersIcon,
+    XIcon,
+} from "@phosphor-icons/react";
 
 function TH({
     label,
@@ -62,6 +79,7 @@ function TH({
     sortField,
     sortDir,
     onSort,
+    Icon,
 }: {
     label: string;
     field: SortField;
@@ -69,6 +87,7 @@ function TH({
     sortField: SortField;
     sortDir: SortDir;
     onSort: (field: SortField) => void;
+    Icon?: Icon;
 }) {
     return (
         <th
@@ -76,6 +95,7 @@ function TH({
             onClick={() => onSort(field)}
         >
             <span className="flex items-center gap-1 transition-colors hover:text-gray-600">
+                {Icon && <Icon weight="duotone" className="size-4" />}
                 {label}
                 <SortIcon
                     field={field}

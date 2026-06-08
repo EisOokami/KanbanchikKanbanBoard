@@ -1,6 +1,10 @@
 "use client";
 
-import { Archive, ChevronsUpDown, LogOut, Settings, Star } from "lucide-react";
+import {
+    CaretUpDownIcon,
+    GearSixIcon,
+    SignOutIcon,
+} from "@phosphor-icons/react";
 import { Avatar, AvatarFallback } from "../../shadcn/avatar";
 import {
     DropdownMenu,
@@ -41,7 +45,10 @@ export default function UserFooter() {
                                     alex@acme.com
                                 </span>
                             </div>
-                            <ChevronsUpDown className="ml-auto size-4 text-muted-foreground" />
+                            <CaretUpDownIcon
+                                weight="duotone"
+                                className="ml-auto size-4 text-muted-foreground"
+                            />
                         </SidebarMenuButton>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
@@ -50,22 +57,17 @@ export default function UserFooter() {
                         align="end"
                         sideOffset={4}
                     >
-                        <DropdownMenuItem className="cursor-pointer gap-2">
-                            <Star className="size-4" /> Starred boards
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="cursor-pointer gap-2">
-                            <Archive className="size-4" /> Archive
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
                         <DropdownMenuItem
                             className="cursor-pointer gap-2"
                             onClick={handleShowAccountSettings}
                         >
-                            <Settings className="size-4" /> Account settings
+                            <GearSixIcon weight="duotone" className="size-4" />{" "}
+                            Account settings
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem className="cursor-pointer gap-2 text-red-500 focus:text-red-500">
-                            <LogOut className="size-4" /> Log out
+                            <SignOutIcon weight="duotone" className="size-4" />{" "}
+                            Log out
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>

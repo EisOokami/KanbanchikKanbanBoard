@@ -12,6 +12,7 @@ import SecuritySection from "./securitySection/SecuritySection";
 import NotificationsSection from "./notificationsSection/NotificationsSection";
 import AppearanceSection from "./appearanceSection/AppearanceSection";
 import { GROUPS, NAV } from "@/constants/accountSettings";
+import { CaretRightIcon, SignOutIcon } from "@phosphor-icons/react";
 
 interface AccountSettingsModalProps {
     open: boolean;
@@ -29,8 +30,6 @@ function renderSection(id: SectionId): React.ReactNode {
             );
         case "security":
             return <SecuritySection />;
-        case "notifications":
-            return <NotificationsSection />;
         case "appearance":
             return <AppearanceSection />;
     }
@@ -107,7 +106,11 @@ export default function AccountSettingsModal({
                                 </div>
                             </div>
                             <button className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs text-gray-400 transition-colors hover:bg-rose-50 hover:text-rose-500">
-                                <LogOut className="size-3.5" /> Sign out
+                                <SignOutIcon
+                                    weight="duotone"
+                                    className="size-4"
+                                />{" "}
+                                Sign out
                             </button>
                         </div>
                     </aside>
