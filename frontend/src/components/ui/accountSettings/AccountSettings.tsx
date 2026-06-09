@@ -4,14 +4,13 @@ import { useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/shadcn/dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/shadcn/avatar";
 import { ScrollArea } from "@/components/ui/shadcn/scroll-area";
-import { LogOut, ChevronRight } from "lucide-react";
 import { SectionId } from "@/types/accountSettings";
 import ProfileSection from "./profileSection/ProfileSection";
 import DangerZone from "./dangerZone/DangerZone";
 import SecuritySection from "./securitySection/SecuritySection";
-import NotificationsSection from "./notificationsSection/NotificationsSection";
 import AppearanceSection from "./appearanceSection/AppearanceSection";
-import { GROUPS, NAV } from "@/constants/accountSettings";
+import { NAV } from "@/constants/accountSettings";
+import { cn } from "@/libs/utils";
 import { CaretRightIcon, SignOutIcon } from "@phosphor-icons/react";
 
 interface AccountSettingsModalProps {
@@ -43,52 +42,53 @@ export default function AccountSettingsModal({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="flex max-h-[90vh] w-full max-w-[860px] flex-col gap-0 overflow-hidden rounded-md p-0 shadow-2xl">
-                <div className="flex min-h-0 flex-1">
-                    <aside className="flex w-52 flex-shrink-0 flex-col border-r bg-gray-50">
-                        <nav className="flex-1 space-y-0.5 overflow-y-auto px-2 py-3">
-                            {GROUPS.map((group) => (
-                                <div key={group} className="mb-4">
-                                    <p className="mb-1.5 px-2 text-[10px] font-bold uppercase tracking-widest text-gray-400">
-                                        {group}
-                                    </p>
-                                    <div className="space-y-1">
-                                        {NAV.filter(
-                                            (n) => n.group === group,
-                                        ).map((item) => {
-                                            const Icon = item.icon;
-                                            const active =
-                                                activeSection === item.id;
+            <DialogContent className="flex h-[88vh] max-h-[680px] w-[95vw] max-w-[860px] flex-col gap-0 overflow-hidden rounded-md border bg-white p-0 shadow-xl [&>button:last-child]:hidden">
+                <div className="flex flex-1 overflow-hidden">
+                    <nav className="flex w-48 shrink-0 flex-col border-r">
+                        <div className="flex-1 space-y-0 overflow-y-auto px-2 py-3">
+                            <div className="space-y-0.5">
+                                {NAV.map((item) => {
+                                    const Icon = item.icon;
+                                    const active = activeSection === item.id;
 
-                                            return (
-                                                <button
-                                                    key={item.id}
-                                                    onClick={() =>
-                                                        setActiveSection(
-                                                            item.id,
-                                                        )
-                                                    }
-                                                    className={`flex w-full items-center gap-2.5 rounded-md border px-2.5 py-2 text-left text-xs font-medium transition-all
-                                                    ${
-                                                        active
-                                                            ? "bg-white font-semibold text-bright-blue shadow-sm"
-                                                            : "border-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-                                                    }`}
-                                                >
-                                                    <Icon
-                                                        className={`size-3.5 flex-shrink-0 ${active ? "text-bright-blue" : "text-gray-400"}`}
-                                                    />
-                                                    {item.label}
-                                                    {active && (
-                                                        <ChevronRight className="ml-auto size-3 text-bright-blue" />
-                                                    )}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            ))}
-                        </nav>
+                                    return (
+                                        <button
+                                            key={item.id}
+                                            onClick={() =>
+                                                setActiveSection(item.id)
+                                            }
+                                            className={cn(
+                                                "flex w-full items-center gap-2.5 rounded-md border px-3 py-2 text-left text-sm font-medium transition-all",
+                                                active
+                                                    ? "bg-white text-bright-blue shadow-sm"
+                                                    : "border-transparent text-gray-500 hover:bg-white/80",
+                                            )}
+                                        >
+                                            <span
+                                                className={
+                                                    active
+                                                        ? "text-bright-blue"
+                                                        : "text-gray-500"
+                                                }
+                                            >
+                                                <Icon
+                                                    weight="duotone"
+                                                    size={16}
+                                                />
+                                            </span>
+                                            {item.label}
+                                            {active && (
+                                                <CaretRightIcon
+                                                    weight="duotone"
+                                                    size={12}
+                                                    className="ml-auto text-bright-blue"
+                                                />
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
                         <div className="border-t p-3">
                             <div className="mb-2 flex items-center gap-2 px-1">
                                 <Avatar className="size-7">
@@ -113,14 +113,12 @@ export default function AccountSettingsModal({
                                 Sign out
                             </button>
                         </div>
-                    </aside>
-                    <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-                        <ScrollArea className="flex-1">
-                            <div className="px-7 py-6">
-                                {renderSection(activeSection)}
-                            </div>
-                        </ScrollArea>
-                    </div>
+                    </nav>
+                    <ScrollArea className="flex-1">
+                        <div className="p-6">
+                            {renderSection(activeSection)}
+                        </div>
+                    </ScrollArea>
                 </div>
             </DialogContent>
         </Dialog>
