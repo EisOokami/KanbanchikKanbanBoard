@@ -16,17 +16,24 @@ import { Button } from "../../shadcn/button";
 
 export default function DangerZone() {
     return (
-        <div className="mt-8 border-t pt-6">
-            <p className="mb-4 text-xs font-bold uppercase tracking-widest text-gray-400">
+        <div className="mb-10 border-t pt-5">
+            <p className="mb-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">
                 Danger zone
             </p>
-            <div className="flex items-center justify-between rounded-md border border-rose-200 bg-rose-50/40 p-4">
+            <div
+                className="flex items-center justify-between rounded-md border p-4"
+                style={{ background: "#FEF0EF", border: "1px solid #FACACB" }}
+            >
                 <div>
-                    <p className="text-sm font-bold text-rose-700">
+                    <p
+                        className="text-sm font-semibold"
+                        style={{ color: "#D93025" }}
+                    >
                         Delete account
                     </p>
-                    <p className="mt-0.5 text-xs text-rose-500">
-                        This action is permanent and cannot be undone.
+                    <p className="mt-0.5 text-xs text-gray-500">
+                        Permanently delete your account and all data. This
+                        cannot be undone.
                     </p>
                 </div>
                 <AlertDialog>
@@ -34,7 +41,12 @@ export default function DangerZone() {
                         <Button
                             variant="outline"
                             size="sm"
-                            className="h-7 gap-1.5 border-rose-300 text-xs text-rose-600 hover:bg-rose-50 hover:text-rose-400"
+                            className="h-8 shrink-0 gap-1.5 rounded-md px-3 text-xs font-medium"
+                            style={{
+                                border: "1px solid #FACACB",
+                                color: "#D93025",
+                                background: "#FFF",
+                            }}
                         >
                             <TrashSimpleIcon
                                 weight="duotone"
@@ -59,10 +71,10 @@ export default function DangerZone() {
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                            <AlertDialogCancel className="text-sm">
+                            <AlertDialogCancel className="rounded-md text-sm">
                                 Cancel
                             </AlertDialogCancel>
-                            <AlertDialogAction className="bg-rose-600 text-sm hover:bg-rose-700">
+                            <AlertDialogAction className="rounded-md bg-red-500 text-sm font-semibold text-white hover:bg-red-600">
                                 Yes, delete everything
                             </AlertDialogAction>
                         </AlertDialogFooter>
