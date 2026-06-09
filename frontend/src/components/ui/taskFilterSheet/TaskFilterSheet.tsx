@@ -23,7 +23,7 @@ import { format } from "date-fns";
 import { countActive } from "@/libs/taskFilterSheet";
 import FilterSection from "./filterSection/FilterSection";
 import Chip from "./chip/Chip";
-import { Columns, FilterState, Priority } from "@/types/types";
+import { FilterState, Priority } from "@/types/types";
 import {
     COLUMNS_CONFIG,
     DEFAULT_FILTER,
@@ -46,7 +46,6 @@ import {
     UsersIcon,
     XIcon,
 } from "@phosphor-icons/react";
-import { RotateCcw } from "lucide-react";
 
 interface TaskFilterSheetProps {
     open: boolean;
@@ -80,6 +79,7 @@ export function TaskFilterSheet({
         value: string,
     ) => {
         const arr = filters[key] as string[];
+
         update({
             [key]: arr.includes(value)
                 ? arr.filter((x) => x !== value)
@@ -116,24 +116,12 @@ export function TaskFilterSheet({
                                     : "No filters applied"}
                             </p>
                         </div>
-                        <div className="flex items-center gap-1.5">
-                            {activeCount > 0 && (
-                                <Button
-                                    variant="outline"
-                                    onClick={reset}
-                                    className="flex h-8 items-center gap-1.5 rounded-md px-3 text-xs font-medium transition-colors hover:bg-gray-100 [&_svg]:size-3"
-                                >
-                                    <RotateCcw />
-                                    Reset
-                                </Button>
-                            )}
-                            <button
-                                onClick={() => onOpenChange(false)}
-                                className="flex size-8 items-center justify-center rounded-md transition-colors hover:bg-gray-100"
-                            >
-                                <XIcon weight="duotone" size={15} />
-                            </button>
-                        </div>
+                        <button
+                            onClick={() => onOpenChange(false)}
+                            className="flex size-8 items-center justify-center rounded-md transition-colors hover:bg-gray-100"
+                        >
+                            <XIcon weight="duotone" size={18} />
+                        </button>
                     </div>
                 </SheetHeader>
                 <div className="grid flex-1 gap-2 overflow-y-auto px-5 py-2">
@@ -169,25 +157,21 @@ export function TaskFilterSheet({
                         count={filters.priorities.length || undefined}
                     >
                         <div className="flex flex-wrap gap-2 pt-1">
-                            {Object.values(PRIORITY_CONFIG).map((priority) => {
-                                const Icon = priority.icon;
-
-                                return (
-                                    <Chip
-                                        key={priority.label}
-                                        active={filters.priorities.includes(
-                                            priority.label.toLowerCase() as Priority,
-                                        )}
-                                        pill={priority.pill}
-                                        onClick={() =>
-                                            toggle("priorities", priority.label)
-                                        }
-                                    >
-                                        {Icon && <Icon />}
-                                        {priority.label}
-                                    </Chip>
-                                );
-                            })}
+                            {Object.values(PRIORITY_CONFIG).map((priority) => (
+                                <Chip
+                                    key={priority.label}
+                                    active={filters.priorities.includes(
+                                        priority.label.toLowerCase() as Priority,
+                                    )}
+                                    bgColor={priority.color ?? ""}
+                                    textColor="#fff"
+                                    onClick={() =>
+                                        toggle("priorities", priority.label)
+                                    }
+                                >
+                                    {priority.label}
+                                </Chip>
+                            ))}
                         </div>
                     </FilterSection>
                     <Separator />
@@ -199,7 +183,7 @@ export function TaskFilterSheet({
                         <div className="space-y-1.5 pt-1">
                             {Object.values(COLUMNS_CONFIG).map((column) => {
                                 const active = filters.columns.includes(
-                                    column.label.toLowerCase() as Columns,
+                                    column.label,
                                 );
 
                                 return (
@@ -215,12 +199,6 @@ export function TaskFilterSheet({
                                             className="rounded data-[state=checked]:border-bright-blue data-[state=checked]:bg-bright-blue"
                                         />
                                         <div className="flex flex-1 items-center gap-2">
-                                            <span
-                                                className="size-2 rounded-full"
-                                                style={{
-                                                    background: column.dot,
-                                                }}
-                                            />
                                             <span
                                                 className={cn(
                                                     "text-sm",
@@ -331,13 +309,16 @@ export function TaskFilterSheet({
                                         (mockCategory) => (
                                             <Chip
                                                 key={mockCategory.id}
-                                                pill={mockCategory.pill}
+                                                bgColor={mockCategory.color}
+                                                textColor="#fff"
                                                 active={
-                                                    filters.categories?.some(
-                                                        (category) =>
-                                                            category.name ===
-                                                            mockCategory.name,
-                                                    ) ?? false
+                                                    filters.categories
+                                                        ? filters.categories.some(
+                                                              (category) =>
+                                                                  category ===
+                                                                  mockCategory.name,
+                                                          )
+                                                        : false
                                                 }
                                                 onClick={() =>
                                                     toggle(
@@ -542,7 +523,7 @@ export function TaskFilterSheet({
                                 }
                             >
                                 <span
-                                    className="text-sm"
+                                    className="flex items-center gap-1.5 text-sm"
                                     style={{
                                         color: filters[key]
                                             ? "#0096FF"
@@ -564,7 +545,7 @@ export function TaskFilterSheet({
                     </div>
                     <div className="h-4" />
                 </div>
-                <div className="flex shrink-0 items-center justify-between border-t bg-gray-100 px-5 py-4">
+                <div className="flex shrink-0 items-center justify-between border-t px-5 py-4">
                     <p className="text-xs text-gray-500">
                         {activeCount > 0
                             ? `${activeCount} filter${activeCount > 1 ? "s" : ""} applied`
@@ -573,9 +554,9 @@ export function TaskFilterSheet({
                     <div className="flex items-center gap-2">
                         {activeCount > 0 && (
                             <Button
-                                variant="ghost"
+                                variant="outline"
                                 onClick={reset}
-                                className="h-9 gap-1.5 px-4 text-sm text-gray-500 hover:bg-gray-200"
+                                className="h-9 gap-1.5 px-4 text-sm text-gray-500 hover:bg-gray-200 [&_svg]:size-4"
                             >
                                 <ArrowCounterClockwiseIcon
                                     weight="duotone"
