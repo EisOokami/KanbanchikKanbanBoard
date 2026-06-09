@@ -7,11 +7,5 @@ export default function SectionTitle({
     children,
     className,
 }: SectionTitleProps) {
-    return (
-        <h3
-            className={`mb-4 pt-1 text-xs font-bold uppercase tracking-widest text-gray-400 ${className ?? ""}`}
-        >
-            {children}
-        </h3>
-    );
+    return <h3 className={`font-semibold ${className ?? ""}`}>{children}</h3>;
 }
