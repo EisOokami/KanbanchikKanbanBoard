@@ -1,5 +1,3 @@
-import { LucideProps } from "lucide-react";
-import { FC } from "react";
 import { DateRange } from "react-day-picker";
 
 export type Priority = "low" | "medium" | "high" | "critical";
@@ -7,10 +5,7 @@ export type Priority = "low" | "medium" | "high" | "critical";
 export interface PriorityConfig {
     id: number;
     label: string;
-    pill: string;
-    dot?: string;
     order?: number;
-    icon?: FC<LucideProps>;
     color?: string;
 }
 
@@ -20,10 +15,7 @@ export type Columns = "todo" | "in_progress" | "in_review" | "done";
 export interface ColumnConfig {
     id: number;
     label: string;
-    pill: string;
-    dot?: string;
     order?: number;
-    icon?: FC<LucideProps>;
     color?: string;
 }
 
@@ -85,7 +77,6 @@ export interface Category extends ExtendedBase {
     name: string;
     description: string;
     color: string;
-    pill: string;
 }
 
 export interface Label extends Omit<Base, "created_at"> {
@@ -98,6 +89,7 @@ export interface Task extends ExtendedBase {
     description: string;
     position: number;
     due_date: string | Date;
+    start_date: string | Date;
     priority: Priority;
     column: Columns;
     labels: string[];
@@ -106,6 +98,7 @@ export interface Task extends ExtendedBase {
     subtasks: Subtask[];
     subtasksDone?: number;
     subtasksTotal?: number;
+    showProgress: boolean;
     attachments: Attachment[];
     comments: Comment[];
 }
@@ -130,15 +123,15 @@ export type SortDir = "asc" | "desc";
 
 export interface FilterState {
     search: string;
-    columns: Columns[];
+    columns: string[];
     priorities: Priority[];
     projects?: Pick<Project, "name">[];
     assignees?: Omit<Member, "email">[];
-    categories?: Category[];
+    categories?: string[];
     overdue: boolean;
     progress?: [number, number];
     hasAttachment?: boolean;
-    hasChecklist?: boolean;
+    hasSubtasks?: boolean;
     dueSoon?: boolean;
     dateRange?: DateRange | undefined;
 }
