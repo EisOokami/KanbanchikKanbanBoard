@@ -29,10 +29,14 @@ export default function AppSidebar() {
 
     return (
         <>
-            <Sidebar collapsible="icon" variant="sidebar">
-                <SidebarHeader className="bg-white">
+            <Sidebar
+                collapsible="icon"
+                variant="sidebar"
+                className="z-50 border-transparent"
+            >
+                <SidebarHeader className="bg-gray-100">
                     <div className="flex items-center gap-1.5 px-2 py-1 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center">
+                        <div className="flex size-7 shrink-0 items-center justify-center">
                             <Image
                                 src="/logo.png"
                                 alt="logo"
@@ -46,7 +50,7 @@ export default function AppSidebar() {
                         </span>
                     </div>
                 </SidebarHeader>
-                <SidebarContent className="bg-white">
+                <SidebarContent className="bg-gray-100">
                     <SidebarGroup>
                         <SidebarGroupContent>
                             <NavMain />
@@ -84,7 +88,7 @@ export default function AppSidebar() {
                         </SidebarGroupContent>
                     </SidebarGroup>
                 </SidebarContent>
-                <SidebarFooter className="bg-white">
+                <SidebarFooter className="border-t bg-gray-100">
                     <UserFooter />
                 </SidebarFooter>
                 <SidebarRail />
