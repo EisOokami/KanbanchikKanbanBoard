@@ -18,21 +18,8 @@ import {
     PopoverTrigger,
 } from "@/components/ui/shadcn/popover";
 import { Calendar } from "@/components/ui/shadcn/calendar";
-import {
-    CalendarDays,
-    Paperclip,
-    Plus,
-    Trash2,
-    Upload,
-    UserPlus,
-    X,
-    CheckSquare,
-    Smile,
-    Layers,
-} from "lucide-react";
 import { format } from "date-fns";
 import { cn, getInitials } from "@/libs/utils";
-import Section from "./section/Section";
 import Chip from "./chip/Chip";
 import ColorDotPicker from "./colorDotPicker/ColorDotPicker";
 import {
@@ -205,132 +192,111 @@ export function CreateTaskModal({
                         </p>
                     </div>
                 </DialogHeader>
-                <div className="flex-1 space-y-4 overflow-y-auto px-6 py-5">
-                    <Section
-                        icon={<Smile className="size-4" />}
-                        title="Basic Information"
-                        defaultOpen
-                    >
-                        <div className="space-y-3">
-                            <div>
-                                <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
-                                    Task title{" "}
-                                    <span className="text-red-500">*</span>
-                                </label>
-                                <Input
-                                    placeholder="e.g. Design login screen"
-                                    value={form.title}
-                                    onChange={(e) => {
-                                        update("title", e.target.value);
-                                        setErrors({});
-                                    }}
-                                    className={`h-9 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue ${errors.title ? "border-red-400" : ""}`}
-                                />
-                                {errors.title && (
-                                    <p className="mt-1 text-xs text-red-500">
-                                        {errors.title}
-                                    </p>
-                                )}
-                            </div>
-                            <div>
-                                <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
-                                    Description
-                                </label>
-                                <Textarea
-                                    placeholder="Add context, goals, or acceptance criteria…"
-                                    value={form.description}
-                                    onChange={(e) =>
-                                        update("description", e.target.value)
-                                    }
-                                    className="min-h-[72px] resize-none bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue"
-                                />
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
-                                        Due Date
-                                    </label>
-                                    <Popover
-                                        open={calOpen}
-                                        onOpenChange={setCalOpen}
+                <div className="flex-1 space-y-8 overflow-y-auto px-6 py-5">
+                    <div className="space-y-1">
+                        <label className="block font-semibold">
+                            Task title <span className="text-red-500">*</span>
+                        </label>
+                        <Input
+                            placeholder="e.g. Design login screen"
+                            value={form.title}
+                            onChange={(e) => {
+                                update("title", e.target.value);
+                                setErrors({});
+                            }}
+                            className={`h-9 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue ${errors.title ? "border-red-400" : ""}`}
+                        />
+                        {errors.title && (
+                            <p className="mt-1 text-xs text-red-500">
+                                {errors.title}
+                            </p>
+                        )}
+                    </div>
+                    <div className="space-y-1">
+                        <label className="block font-semibold">
+                            Description
+                        </label>
+                        <Textarea
+                            placeholder="Add context, goals, or acceptance criteria…"
+                            value={form.description}
+                            onChange={(e) =>
+                                update("description", e.target.value)
+                            }
+                            className="min-h-[72px] resize-none bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue"
+                        />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                            <label className="block font-semibold">
+                                Due Date
+                            </label>
+                            <Popover open={calOpen} onOpenChange={setCalOpen}>
+                                <PopoverTrigger asChild>
+                                    <button
+                                        type="button"
+                                        className={cn(
+                                            "flex h-9 w-full items-center gap-1.5 rounded-md border border-input bg-white px-3 text-sm transition-colors hover:bg-muted/40",
+                                            form.dueDate
+                                                ? "text-foreground"
+                                                : "text-muted-foreground",
+                                        )}
                                     >
-                                        <PopoverTrigger asChild>
-                                            <button
-                                                type="button"
-                                                className={cn(
-                                                    "flex h-9 w-full items-center gap-2 rounded-md border border-input bg-white px-3 text-sm transition-colors hover:bg-muted/40",
-                                                    form.dueDate
-                                                        ? "text-foreground"
-                                                        : "text-muted-foreground",
-                                                )}
-                                            >
-                                                <CalendarDays className="size-3.5 flex-shrink-0 text-muted-foreground" />
-                                                {form.dueDate
-                                                    ? format(
-                                                          form.dueDate,
-                                                          "MMM d, yyyy",
-                                                      )
-                                                    : "Pick a date"}
-                                            </button>
-                                        </PopoverTrigger>
-                                        <PopoverContent
-                                            className="p-0"
-                                            align="start"
-                                        >
-                                            <Calendar
-                                                mode="single"
-                                                selected={form.dueDate}
-                                                onSelect={(d) => {
-                                                    update("dueDate", d);
-                                                    setCalOpen(false);
-                                                }}
-                                            />
-                                        </PopoverContent>
-                                    </Popover>
-                                </div>
-                                <div>
-                                    <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
-                                        Priority
-                                    </label>
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {(
-                                            Object.keys(
-                                                PRIORITY_CONFIG,
-                                            ) as Priority[]
-                                        ).map((p) => {
-                                            const Icon =
-                                                PRIORITY_CONFIG[p].icon;
-
-                                            return (
-                                                <button
-                                                    key={p}
-                                                    type="button"
-                                                    onClick={() =>
-                                                        update("priority", p)
-                                                    }
-                                                    className={cn(
-                                                        "flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium transition-all",
-                                                        form.priority === p
-                                                            ? "ring-1 ring-current"
-                                                            : "opacity-60 hover:opacity-100",
-                                                        PRIORITY_CONFIG[p].pill,
-                                                    )}
-                                                >
-                                                    {/* {Icon && <Icon />} */}
-                                                    {PRIORITY_CONFIG[p].label}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
+                                        <CalendarIcon
+                                            weight="duotone"
+                                            className="size-4 flex-shrink-0 text-muted-foreground"
+                                        />
+                                        {form.dueDate
+                                            ? format(
+                                                  form.dueDate,
+                                                  "MMM d, yyyy",
+                                              )
+                                            : "Pick a date"}
+                                    </button>
+                                </PopoverTrigger>
+                                <PopoverContent className="p-0" align="start">
+                                    <Calendar
+                                        mode="single"
+                                        selected={form.dueDate}
+                                        onSelect={(d) => {
+                                            update("dueDate", d);
+                                            setCalOpen(false);
+                                        }}
+                                    />
+                                </PopoverContent>
+                            </Popover>
+                        </div>
+                        <div className="space-y-1">
+                            <label className="block font-semibold">
+                                Priority
+                            </label>
+                            <div className="flex flex-wrap gap-1.5">
+                                {(
+                                    Object.keys(PRIORITY_CONFIG) as Priority[]
+                                ).map((p) => (
+                                    <button
+                                        key={p}
+                                        type="button"
+                                        onClick={() => update("priority", p)}
+                                        className={cn(
+                                            "flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium transition-all",
+                                            form.priority === p
+                                                ? "ring-1 ring-current"
+                                                : "opacity-60 hover:opacity-100",
+                                        )}
+                                        style={{
+                                            backgroundColor:
+                                                PRIORITY_CONFIG[p].color,
+                                            color: "#fff",
+                                        }}
+                                    >
+                                        {PRIORITY_CONFIG[p].label}
+                                    </button>
+                                ))}
                             </div>
                         </div>
-                    </Section>
-                    <Section
-                        icon={<UserPlus className="size-4" />}
-                        title="Assignments"
-                        badge={form.assignees.length}
-                    >
+                    </div>
+                    <div className="space-y-1">
+                        <h3 className="font-semibold">Assignments</h3>
                         <div className="space-y-3">
                             {selectedMembers.length > 0 && (
                                 <div className="flex flex-wrap gap-2">
@@ -341,11 +307,11 @@ export function CreateTaskModal({
                                         >
                                             <div
                                                 className="flex size-6 items-center justify-center rounded-full text-[10px] font-bold text-white"
-                                                // style={{
-                                                //     backgroundColor: m.color,
-                                                // }}
+                                                style={{
+                                                    backgroundColor:
+                                                        member.color,
+                                                }}
                                             >
-                                                {/* {m.initials} */}
                                                 {getInitials(
                                                     member.name,
                                                     member.surname,
@@ -386,11 +352,19 @@ export function CreateTaskModal({
                                             onClick={() =>
                                                 toggleAssignee(member.id)
                                             }
-                                            className="flex items-center gap-1.5 rounded-md border border-border/60 bg-white px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+                                            className="flex items-center gap-1.5 rounded-md border border-border/60 bg-white px-2.5 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
                                         >
-                                            <div className="flex size-5 items-center justify-center rounded-full text-[9px] font-bold text-white">
-                                                {member.name.slice(0, 1)}{" "}
-                                                {member.surname.slice(0, 1)}
+                                            <div
+                                                className="flex size-5 items-center justify-center rounded-full text-[10px] font-medium text-white"
+                                                style={{
+                                                    backgroundColor:
+                                                        member.color,
+                                                }}
+                                            >
+                                                {getInitials(
+                                                    member.name,
+                                                    member.surname,
+                                                )}
                                             </div>
                                             {member.name}
                                             <PlusIcon
@@ -401,13 +375,9 @@ export function CreateTaskModal({
                                     ))}
                             </div>
                         </div>
-                    </Section>
-                    <Section
-                        icon={<Layers className="size-4" />}
-                        title="Categories"
-                        badge={form.categories.length}
-                        defaultOpen={false}
-                    >
+                    </div>
+                    <div className="space-y-1">
+                        <h3 className="font-semibold">Categories</h3>
                         <div className="space-y-3">
                             {form.categories.length > 0 && (
                                 <div className="flex flex-wrap gap-1.5">
@@ -434,7 +404,7 @@ export function CreateTaskModal({
                                                     c,
                                                 ])
                                             }
-                                            className="rounded-full border border-border/60 bg-white px-2.5 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+                                            className="flex items-center gap-1 rounded-md border border-border/60 bg-white px-2.5 py-0.5 text-sm capitalize text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
                                         >
                                             {c}
                                             <PlusIcon
@@ -444,10 +414,7 @@ export function CreateTaskModal({
                                         </button>
                                     ))}
                             </div>
-                            <div className="space-y-2">
-                                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                                    Custom Category
-                                </p>
+                            <div className="space-y-4">
                                 <ColorDotPicker
                                     value={newCategoryColor}
                                     onChange={setNewCategoryColor}
@@ -471,9 +438,8 @@ export function CreateTaskModal({
                                     <Button
                                         type="button"
                                         size="sm"
-                                        variant="outline"
                                         onClick={addCategory}
-                                        className="h-8 gap-1"
+                                        className="h-8 gap-1 bg-bright-blue text-white hover:bg-blue-600"
                                     >
                                         <PlusIcon
                                             weight="duotone"
@@ -484,17 +450,9 @@ export function CreateTaskModal({
                                 </div>
                             </div>
                         </div>
-                    </Section>
-                    <Section
-                        icon={<CheckSquare className="size-4" />}
-                        title="Checklist"
-                        badge={
-                            form.subtasks.length > 0
-                                ? form.subtasks.length
-                                : undefined
-                        }
-                        defaultOpen={false}
-                    >
+                    </div>
+                    <div className="space-y-1">
+                        <h3 className="font-semibold">Checklist</h3>
                         <div className="space-y-3">
                             {form.subtasks.length > 0 && (
                                 <>
@@ -568,9 +526,8 @@ export function CreateTaskModal({
                                 <Button
                                     type="button"
                                     size="sm"
-                                    variant="outline"
                                     onClick={addCheckItem}
-                                    className="h-8 gap-1"
+                                    className="h-8 gap-1 bg-bright-blue text-white hover:bg-blue-600"
                                 >
                                     <PlusIcon
                                         weight="duotone"
@@ -580,18 +537,10 @@ export function CreateTaskModal({
                                 </Button>
                             </div>
                         </div>
-                    </Section>
-                    <Section
-                        icon={<Paperclip className="size-4" />}
-                        title="Attachments"
-                        badge={
-                            form.attachments.length > 0
-                                ? form.attachments.length
-                                : undefined
-                        }
-                        defaultOpen={false}
-                    >
-                        <div className="space-y-3">
+                    </div>
+                    <div className="space-y-1">
+                        <h3 className="font-semibold">Attachments</h3>
+                        <div className="space-y-1">
                             <input
                                 ref={fileInputRef}
                                 type="file"
@@ -657,7 +606,7 @@ export function CreateTaskModal({
                                 Upload files or drag &amp; drop
                             </button>
                         </div>
-                    </Section>
+                    </div>
                 </div>
                 <DialogFooter className="flex flex-shrink-0 items-center justify-between gap-3 border-t border-border/60 px-6 py-4">
                     <div className="flex gap-2">
