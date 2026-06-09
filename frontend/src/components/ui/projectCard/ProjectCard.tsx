@@ -18,28 +18,27 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/shadcn/dropdown-menu";
-import {
-    MoreHorizontal,
-    Archive,
-    Pencil,
-    Trash2,
-    CheckSquare,
-} from "lucide-react";
 import { ProjectSettingsDialog } from "../projectSettingsDialog/ProjectSettingsDialog";
 import { useState } from "react";
 import { Project } from "@/types/types";
 import { STATUS_CONFIG } from "@/constants/constants";
 import { getInitials } from "@/libs/utils";
+import {
+    ArchiveIcon,
+    CheckSquareIcon,
+    DotsThreeOutlineIcon,
+    PencilSimpleIcon,
+    TrashIcon,
+} from "@phosphor-icons/react";
+import Link from "next/link";
 
 interface ProjectCardProps {
     project: Project;
-    // onStar: (id: number) => void;
     onDelete: (id: number) => void;
 }
 
 export default function ProjectCard({
     project,
-    // onStar,
     onDelete,
 }: Readonly<ProjectCardProps>) {
     const [showProjectSettings, setShowProjectSettings] =
@@ -58,125 +57,144 @@ export default function ProjectCard({
 
     return (
         <>
-            <Card className="group relative flex flex-col overflow-hidden border border-border/60 bg-card shadow-sm transition-shadow duration-200 hover:shadow-md">
-                <CardHeader className="flex-row items-start justify-between gap-2 px-5 pb-3 pt-5">
-                    <div className="flex min-w-0 items-center gap-3">
-                        <div
-                            className="mt-0.5 flex size-9 flex-shrink-0 items-center justify-center rounded-lg text-sm font-bold text-white"
-                            style={{
-                                background: project.color + "22",
-                                color: project.color,
-                            }}
-                        >
-                            <span>{project.icon}</span>
+            <Link href="/board" className="grid">
+                <Card className="group relative flex flex-col overflow-hidden border border-border/60 bg-card shadow-sm transition-shadow duration-200 hover:shadow-md">
+                    <CardHeader className="flex-row items-start justify-between gap-2 px-3 pb-0 pt-3">
+                        <div className="flex min-w-0 items-center gap-3">
+                            <div
+                                className="mt-0.5 flex size-9 flex-shrink-0 items-center justify-center rounded-lg font-bold text-white"
+                                style={{
+                                    background: project.color + "22",
+                                    color: project.color,
+                                }}
+                            >
+                                <span className="text-lg">{project.icon}</span>
+                            </div>
+                            <div className="min-w-0">
+                                <h3 className="max-w-[180px] truncate text-sm font-medium leading-tight text-foreground">
+                                    {project.name}
+                                </h3>
+                                <div className="flex items-center gap-1.5">
+                                    <span
+                                        className="size-1.5 flex-shrink-0 rounded-full"
+                                        style={{
+                                            backgroundColor: status.dot,
+                                        }}
+                                    />
+                                    <span className="text-xs text-muted-foreground">
+                                        {status.label}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
-                        <div className="min-w-0">
-                            <h3 className="max-w-[180px] truncate text-sm font-semibold leading-tight text-foreground">
-                                {project.name}
-                            </h3>
-                            <div className="flex items-center gap-1.5">
-                                <span
-                                    className={`size-1.5 flex-shrink-0 rounded-full ${status.dot}`}
+                        <div className="flex flex-shrink-0 items-center gap-1">
+                            <DropdownMenu>
+                                <DropdownMenuTrigger
+                                    asChild
+                                    onClick={(e) => e.preventDefault()}
+                                >
+                                    <button className="rounded p-1 transition-colors hover:bg-accent">
+                                        <DotsThreeOutlineIcon
+                                            weight="duotone"
+                                            className="size-4 text-muted-foreground"
+                                        />
+                                    </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                    align="end"
+                                    className="w-44"
+                                    onClick={(e) => e.preventDefault()}
+                                >
+                                    <DropdownMenuItem
+                                        onClick={handleShopProjectSettings}
+                                    >
+                                        <PencilSimpleIcon
+                                            weight="duotone"
+                                            className="size-4"
+                                        />{" "}
+                                        Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem>
+                                        <ArchiveIcon
+                                            weight="duotone"
+                                            className="size-4"
+                                        />{" "}
+                                        Archive
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        className="text-destructive focus:text-destructive"
+                                        onClick={() => onDelete(project.id)}
+                                    >
+                                        <TrashIcon
+                                            weight="duotone"
+                                            className="size-4"
+                                        />{" "}
+                                        Delete
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="flex h-full flex-1 flex-col justify-between gap-3 p-3">
+                        <p className="line-clamp-2 text-xs leading-relaxed text-muted-foreground">
+                            {project.description}
+                        </p>
+                        <div className="space-y-1.5">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs">Progress</span>
+                                <span className="text-xs font-medium tabular-nums">
+                                    {progress}%
+                                </span>
+                            </div>
+                            <Progress
+                                value={progress}
+                                className="h-1.5 [&>*]:bg-bright-blue"
+                            />
+                        </div>
+                    </CardContent>
+                    <CardFooter className="flex items-center justify-between border-t border-border/50 p-3">
+                        <div className="flex items-center">
+                            <div className="flex -space-x-2">
+                                {visibleMembers.map((m) => (
+                                    <Avatar
+                                        key={m.id}
+                                        className="size-6 border-2 border-background"
+                                    >
+                                        <AvatarImage src={m.avatar_url} />
+                                        <AvatarFallback
+                                            className="text-[9px] font-semibold"
+                                            style={{
+                                                background:
+                                                    project.color + "33",
+                                                color: project.color,
+                                            }}
+                                        >
+                                            {getInitials(m.name, m.surname)}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                ))}
+                            </div>
+                            {extraMembers > 0 && (
+                                <span className="ml-1 text-[10px] text-muted-foreground">
+                                    +{extraMembers}
+                                </span>
+                            )}
+                        </div>
+                        <div className="grid gap-2">
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                <CheckSquareIcon
+                                    weight="duotone"
+                                    className="size-3.5 flex-shrink-0"
                                 />
-                                <span className="text-xs text-muted-foreground">
-                                    {status.label}
+                                <span>
+                                    {project.tasksDone ?? 0}/
+                                    {project.tasksTotal ?? 0} tasks
                                 </span>
                             </div>
                         </div>
-                    </div>
-                    <div className="flex flex-shrink-0 items-center gap-1">
-                        {/* <button
-                            onClick={() => onStar(project.id)}
-                            className="rounded p-1 transition-colors hover:bg-accent"
-                        >
-                            {project.starred ? (
-                                <Star className="size-4 fill-amber-400 text-amber-400" />
-                            ) : (
-                                <Star className="size-4 text-muted-foreground" />
-                            )}
-                        </button> */}
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <button className="rounded p-1 transition-colors hover:bg-accent">
-                                    <MoreHorizontal className="size-4 text-muted-foreground" />
-                                </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-44">
-                                <DropdownMenuItem
-                                    onClick={handleShopProjectSettings}
-                                >
-                                    <Pencil className="size-4" /> Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                    <Archive className="size-4" /> Archive
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    className="text-destructive focus:text-destructive"
-                                    onClick={() => onDelete(project.id)}
-                                >
-                                    <Trash2 className="size-4" /> Delete
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                </CardHeader>
-                <CardContent className="flex flex-1 flex-col gap-4 px-5 pb-4">
-                    <p className="line-clamp-2 text-xs leading-relaxed text-muted-foreground">
-                        {project.description}
-                    </p>
-                    <div className="space-y-1.5">
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs text-muted-foreground">
-                                Progress
-                            </span>
-                            <span className="text-xs font-medium tabular-nums">
-                                {progress}%
-                            </span>
-                        </div>
-                        <Progress
-                            value={progress}
-                            className="h-1.5 [&>*]:bg-bright-blue"
-                        />
-                    </div>
-                </CardContent>
-                <CardFooter className="flex items-center justify-between border-t border-border/50 px-5 py-3">
-                    <div className="flex items-center">
-                        <div className="flex -space-x-2">
-                            {visibleMembers.map((m) => (
-                                <Avatar
-                                    key={m.id}
-                                    className="size-6 border-2 border-background"
-                                >
-                                    <AvatarImage src={m.avatar_url} />
-                                    <AvatarFallback
-                                        className="text-[9px] font-semibold"
-                                        style={{
-                                            background: project.color + "33",
-                                            color: project.color,
-                                        }}
-                                    >
-                                        {getInitials(m.name, m.surname)}
-                                    </AvatarFallback>
-                                </Avatar>
-                            ))}
-                        </div>
-                        {extraMembers > 0 && (
-                            <span className="ml-1 text-[10px] text-muted-foreground">
-                                +{extraMembers}
-                            </span>
-                        )}
-                    </div>
-                    <div className="grid gap-2">
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                            <CheckSquare className="size-3.5 flex-shrink-0" />
-                            <span>
-                                {project.tasksDone ?? 0}/
-                                {project.tasksTotal ?? 0} tasks
-                            </span>
-                        </div>
-                    </div>
-                </CardFooter>
-            </Card>
+                    </CardFooter>
+                </Card>
+            </Link>
             <ProjectSettingsDialog
                 open={showProjectSettings}
                 onOpenChange={handleShopProjectSettings}
