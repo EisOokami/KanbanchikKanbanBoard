@@ -57,7 +57,7 @@ export default function TaskRow({
                 </span>
             </td>
             <td className="min-w-[240px] py-3 pr-4">
-                <span className="text-sm font-semibold leading-snug text-gray-800">
+                <span className="text-sm font-medium leading-snug text-gray-800">
                     {task.title}
                 </span>
                 {task.labels.length > 0 && (
@@ -65,7 +65,7 @@ export default function TaskRow({
                         {task.labels.slice(0, 2).map((l) => (
                             <span
                                 key={l}
-                                className="rounded-md bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-500"
+                                className="rounded-md bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium capitalize text-gray-500"
                             >
                                 {l}
                             </span>
@@ -76,7 +76,7 @@ export default function TaskRow({
                             </span>
                         )}
                         {task.categories.length > 0 && (
-                            <span className="rounded-md bg-gray-200 px-1.5 py-0.5 text-[10px] font-medium text-gray-600">
+                            <span className="rounded-md bg-gray-200 px-1.5 py-0.5 text-[10px] font-medium capitalize text-gray-600">
                                 {task.categories
                                     .map((category) => category.name)
                                     .join(", ")}
@@ -87,30 +87,22 @@ export default function TaskRow({
             </td>
             <td className="w-36 py-3 pr-4">
                 <span
-                    className={cn(
-                        "inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-semibold",
-                        column.pill,
-                    )}
+                    className="inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-medium text-white"
+                    style={{ backgroundColor: column.color }}
                 >
-                    <span className={cn("size-1.5 rounded-full", column.dot)} />
                     {column.label}
                 </span>
             </td>
             <td className="w-28 py-3 pr-4">
                 <span
-                    className={cn(
-                        "inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-semibold",
-                        priority.pill,
-                    )}
+                    className="inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-medium text-white"
+                    style={{ backgroundColor: priority.color }}
                 >
-                    <span
-                        className={cn("size-1.5 rounded-full", priority.dot)}
-                    />
                     {priority.label}
                 </span>
             </td>
             <td className="w-36 py-3 pr-4">
-                <span className="inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-semibold">
+                <span className="inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-medium">
                     {projectName}
                 </span>
             </td>
@@ -148,7 +140,7 @@ export default function TaskRow({
                 {task.due_date && (
                     <div
                         className={cn(
-                            "flex items-center gap-1 text-xs font-semibold",
+                            "flex items-center gap-1 text-xs font-medium",
                             overdue ? "text-rose-500" : "text-gray-500",
                         )}
                     >
