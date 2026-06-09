@@ -1,6 +1,6 @@
 "use client";
 
-import { Check } from "lucide-react";
+import { CheckIcon } from "@phosphor-icons/react";
 
 export default function ColorDotPicker({
     value,

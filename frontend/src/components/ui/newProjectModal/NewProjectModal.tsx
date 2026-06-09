@@ -11,19 +11,7 @@ import {
     DialogTitle,
     DialogFooter,
 } from "@/components/ui/shadcn/dialog";
-import {
-    X,
-    Plus,
-    Mail,
-    Tag,
-    Layers,
-    Users,
-    Smile,
-    GripVertical,
-    ColumnsIcon,
-} from "lucide-react";
 import ColorDotPicker from "./colorDotPicker/ColorDotPicker";
-import Section from "./section/Section";
 import Chip from "./chip/Chip";
 import {
     Category,
@@ -64,19 +52,18 @@ export default function NewProjectModal({
     onSubmit,
 }: NewProjectModalProps) {
     const [icon, setIcon] = useState("🚀");
-    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-    const [name, setName] = useState("");
-    const [description, setDescription] = useState("");
+    const [name, setName] = useState<string>("");
+    const [description, setDescription] = useState<string>("");
     const [priority, setPriority] = useState<Priority>("medium");
     const [status, setStatus] = useState<Status>("active");
-    const [color, setColor] = useState("#6366f1");
+    const [projectColor, setProjectColor] = useState(PROJECT_COLORS[0]);
     const [members, setMembers] = useState<Member[]>([]);
-    const [emailInput, setEmailInput] = useState("");
-    const [emailError, setEmailError] = useState("");
+    const [emailInput, setEmailInput] = useState<string>("");
+    const [emailError, setEmailError] = useState<string>("");
     const [columns, setColumns] = useState<ColumnConfig[]>(
         Object.values(COLUMNS_CONFIG),
     );
-    const [newColName, setNewColName] = useState("");
+    const [newColName, setNewColName] = useState<string>("");
     const [newColColor, setNewColColor] = useState(COLUMN_COLORS[3]);
     const [dragIdx, setDragIdx] = useState<number | null>(null);
     const dragOver = useRef<number | null>(null);
@@ -85,8 +72,10 @@ export default function NewProjectModal({
     const [newCatColor, setNewCatColor] = useState(COLUMN_COLORS[4]);
     const [errors, setErrors] = useState<{ name?: string }>({});
     const [labels, setLabels] = useState<Label[]>([]);
-    const [newLabelName, setNewLabelName] = useState("");
+    const [newLabelName, setNewLabelName] = useState<string>("");
     const [newLabelColor, setNewLabelColor] = useState(COLUMN_COLORS[5]);
+    const [iconPickerOpen, setIconPickerOpen] = useState<boolean>(false);
+    const [colorPickerOpen, setColorPickerOpen] = useState<boolean>(false);
 
     const inviteMember = () => {
         const email = emailInput.trim();
@@ -192,7 +181,7 @@ export default function NewProjectModal({
             icon,
             description,
             status,
-            color,
+            color: projectColor,
             members,
             owner: { name: "", avatar_url: "" },
             columns: [],
@@ -210,7 +199,7 @@ export default function NewProjectModal({
         setName("");
         setDescription("");
         setIcon("🚀");
-        setColor("#6366f1");
+        setProjectColor("#6366f1");
         setPriority("medium");
         setStatus("active");
         setMembers([]);
@@ -228,162 +217,228 @@ export default function NewProjectModal({
 
     return (
         <Dialog open={open} onOpenChange={handleClose}>
-            <DialogContent className="flex max-h-[92vh] w-full max-w-2xl flex-col gap-0 overflow-hidden rounded-md border border-border/70 p-0 shadow-2xl">
+            <DialogContent className="flex max-h-[92svh] w-full max-w-2xl flex-col gap-0 overflow-hidden rounded-md border border-border/70 p-0 shadow-2xl">
                 <DialogHeader className="flex-shrink-0 border-b border-border/60 px-6 pb-4 pt-6">
-                    <div className="flex items-center gap-3">
-                        <div className="relative">
-                            <button
-                                type="button"
-                                onClick={() => setShowEmojiPicker((v) => !v)}
-                                className="flex size-12 items-center justify-center rounded-md text-2xl ring-1 ring-border/60 transition-all hover:ring-bright-blue"
-                                style={{ backgroundColor: color + "22" }}
-                            >
-                                {icon}
-                            </button>
-                            {showEmojiPicker && (
-                                <div className="absolute left-0 top-14 z-50 w-56 rounded-md border border-border/60 bg-card p-3 shadow-xl">
-                                    <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                                        Icon
-                                    </p>
-                                    <div className="mb-3 flex flex-wrap gap-1">
-                                        {PROJECT_ICONS.map((e) => (
-                                            <button
-                                                key={e}
-                                                type="button"
-                                                onClick={() => {
-                                                    setIcon(e);
-                                                    setShowEmojiPicker(false);
-                                                }}
-                                                className={`flex size-7 items-center justify-center rounded-md text-base transition-colors hover:bg-muted ${icon === e ? "bg-muted ring-1 ring-bright-blue" : ""}`}
-                                            >
-                                                {e}
-                                            </button>
-                                        ))}
-                                    </div>
-                                    <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                                        Color
-                                    </p>
-                                    <ColorDotPicker
-                                        value={color}
-                                        onChange={setColor}
-                                        colors={PROJECT_COLORS}
-                                    />
-                                </div>
-                            )}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                            <DialogTitle className="mb-0.5 text-base font-semibold">
-                                New Project
-                            </DialogTitle>
-                            <p className="text-xs text-muted-foreground">
-                                Configure your project settings
-                            </p>
-                        </div>
+                    <div className="min-w-0 flex-1">
+                        <DialogTitle className="mb-0.5 font-semibold">
+                            New Project
+                        </DialogTitle>
+                        <p className="text-xs text-muted-foreground">
+                            Configure your project settings
+                        </p>
                     </div>
                 </DialogHeader>
-                <div className="flex-1 space-y-4 overflow-y-auto px-6 py-5">
-                    <Section
-                        icon={<Smile className="size-4" />}
-                        title="Basic Information"
-                        defaultOpen
-                    >
-                        <div className="space-y-3">
-                            <div>
-                                <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
-                                    Project name{" "}
-                                    <span className="text-red-500">*</span>
-                                </label>
-                                <Input
-                                    placeholder="e.g. Website Redesign"
-                                    value={name}
-                                    onChange={(e) => {
-                                        setName(e.target.value);
-                                        setErrors({});
+                <div className="flex-1 space-y-8 overflow-y-auto px-6 py-5">
+                    <div className="relative space-y-1">
+                        <h3 className="font-semibold">Project icon</h3>
+                        <div className="flex items-start gap-6">
+                            <div className="flex items-start gap-3">
+                                <button
+                                    onClick={() => {
+                                        setIconPickerOpen(!iconPickerOpen);
+                                        setColorPickerOpen(false);
                                     }}
-                                    className={`h-9 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue ${errors.name ? "border-red-400" : ""}`}
-                                />
-                                {errors.name && (
-                                    <p className="mt-1 text-xs text-red-500">
-                                        {errors.name}
-                                    </p>
-                                )}
-                            </div>
-                            <div>
-                                <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
-                                    Description
-                                </label>
-                                <Textarea
-                                    placeholder="What is this project about?"
-                                    value={description}
-                                    onChange={(e) =>
-                                        setDescription(e.target.value)
-                                    }
-                                    className="min-h-[72px] resize-none bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue"
-                                />
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
-                                        Priority
-                                    </label>
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {(
-                                            Object.keys(
-                                                PRIORITY_CONFIG,
-                                            ) as Priority[]
-                                        ).map((p) => (
-                                            <button
-                                                key={p}
-                                                type="button"
-                                                onClick={() => setPriority(p)}
-                                                className={cn(
-                                                    "rounded-md px-2.5 py-1 text-xs font-medium transition-all",
-                                                    PRIORITY_CONFIG[p].pill,
-                                                    priority === p
-                                                        ? "ring-1 ring-current"
-                                                        : "opacity-60 hover:opacity-100",
-                                                )}
-                                            >
-                                                {PRIORITY_CONFIG[p].label}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
-                                        Status
-                                    </label>
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {(
-                                            Object.keys(
-                                                STATUS_CONFIG,
-                                            ) as Status[]
-                                        ).map((s) => (
-                                            <button
-                                                key={s}
-                                                type="button"
-                                                onClick={() => setStatus(s)}
-                                                className={`flex items-center gap-1.5 rounded-md bg-muted/60 px-2.5 py-1 text-xs font-medium transition-all hover:bg-muted ${status === s ? "bg-muted ring-1 ring-border" : "opacity-60 hover:opacity-100"}`}
-                                            >
-                                                <span
-                                                    className={cn(
-                                                        "size-1.5 rounded-full",
-                                                        STATUS_CONFIG[s].dot,
-                                                    )}
-                                                />
-                                                {STATUS_CONFIG[s].label}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
+                                    className="relative flex size-14 items-center justify-center rounded-md border text-2xl transition-all hover:brightness-95"
+                                    style={{
+                                        background: `${projectColor}15`,
+                                        borderColor: `${projectColor}30`,
+                                    }}
+                                >
+                                    {icon}
+                                    <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-bright-blue">
+                                        <PencilSimpleIcon
+                                            weight="duotone"
+                                            size={9}
+                                            className="text-white"
+                                        />
+                                    </span>
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setColorPickerOpen(!colorPickerOpen);
+                                        setIconPickerOpen(false);
+                                    }}
+                                    className="relative flex size-14 items-center justify-center rounded-md border transition-all hover:brightness-95"
+                                    style={{
+                                        background: `${projectColor}20`,
+                                        borderColor: `${projectColor}40`,
+                                    }}
+                                >
+                                    <div
+                                        className="size-6 rounded-full shadow-sm"
+                                        style={{
+                                            background: projectColor,
+                                        }}
+                                    />
+                                    <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-bright-blue">
+                                        <PencilSimpleIcon
+                                            weight="duotone"
+                                            size={9}
+                                            className="text-white"
+                                        />
+                                    </span>
+                                </button>
                             </div>
                         </div>
-                    </Section>
-                    <Section
-                        icon={<Users className="size-4" />}
-                        title="Assignments"
-                        badge={members.length}
-                    >
+                        {iconPickerOpen && (
+                            <div className="flex flex-wrap gap-1.5 rounded-md border bg-gray-50 p-3">
+                                {PROJECT_ICONS.map((ic) => (
+                                    <button
+                                        key={ic}
+                                        onClick={() => {
+                                            setIcon(ic);
+                                            setIconPickerOpen(false);
+                                        }}
+                                        className={cn(
+                                            "flex size-9 items-center justify-center rounded-md text-xl transition-all hover:bg-white",
+                                            icon === ic
+                                                ? "bg-white ring-2 ring-bright-blue"
+                                                : "",
+                                        )}
+                                    >
+                                        {ic}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                        {colorPickerOpen && (
+                            <div className="rounded-md border bg-gray-50 p-3">
+                                <p className="mb-2.5 text-xs font-medium text-gray-500">
+                                    Select color
+                                </p>
+                                <div className="flex flex-wrap gap-2">
+                                    {PROJECT_COLORS.map((c) => (
+                                        <button
+                                            key={c}
+                                            onClick={() => {
+                                                setProjectColor(c);
+                                                setColorPickerOpen(false);
+                                            }}
+                                            className={cn(
+                                                "flex size-8 items-center justify-center rounded-full transition-all hover:brightness-90",
+                                                projectColor === c
+                                                    ? "ring-2 ring-offset-2"
+                                                    : "",
+                                            )}
+                                            style={{
+                                                background: c,
+                                                ...(projectColor === c
+                                                    ? {
+                                                          ringColor: c,
+                                                      }
+                                                    : {}),
+                                                outline:
+                                                    projectColor === c
+                                                        ? `2px solid ${c}`
+                                                        : "none",
+                                                outlineOffset:
+                                                    projectColor === c
+                                                        ? "2px"
+                                                        : "0",
+                                            }}
+                                        >
+                                            {projectColor === c && (
+                                                <CheckIcon
+                                                    weight="duotone"
+                                                    size={13}
+                                                    className="text-white"
+                                                />
+                                            )}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    <div>
+                        <label className="mb-2 block font-semibold">
+                            Project name <span className="text-red-500">*</span>
+                        </label>
+                        <Input
+                            placeholder="e.g. Website Redesign"
+                            value={name}
+                            onChange={(e) => {
+                                setName(e.target.value);
+                                setErrors({});
+                            }}
+                            className={`h-9 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue ${errors.name ? "border-red-400" : ""}`}
+                        />
+                        {errors.name && (
+                            <p className="mt-1 text-xs text-red-500">
+                                {errors.name}
+                            </p>
+                        )}
+                    </div>
+                    <div>
+                        <label className="mb-2 block font-semibold">
+                            Description
+                        </label>
+                        <Textarea
+                            placeholder="What is this project about?"
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            className="min-h-[72px] resize-none bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue"
+                        />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <label className="mb-2 block font-semibold">
+                                Priority
+                            </label>
+                            <div className="flex flex-wrap gap-1.5">
+                                {(
+                                    Object.keys(PRIORITY_CONFIG) as Priority[]
+                                ).map((p) => (
+                                    <button
+                                        key={p}
+                                        type="button"
+                                        onClick={() => setPriority(p)}
+                                        className={cn(
+                                            "rounded-md px-2.5 py-1 text-xs font-medium transition-all",
+                                            priority === p
+                                                ? "ring-1 ring-current"
+                                                : "opacity-60 hover:opacity-100",
+                                        )}
+                                        style={{
+                                            backgroundColor:
+                                                PRIORITY_CONFIG[p].color,
+                                            color: "#fff",
+                                        }}
+                                    >
+                                        {PRIORITY_CONFIG[p].label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        <div>
+                            <label className="mb-2 block font-semibold">
+                                Status
+                            </label>
+                            <div className="flex flex-wrap gap-1.5">
+                                {(Object.keys(STATUS_CONFIG) as Status[]).map(
+                                    (s) => (
+                                        <button
+                                            key={s}
+                                            type="button"
+                                            onClick={() => setStatus(s)}
+                                            className={`flex items-center gap-1.5 rounded-md bg-muted/60 px-2.5 py-1 text-xs font-medium transition-all hover:bg-muted ${status === s ? "bg-muted ring-1 ring-border" : "opacity-60 hover:opacity-100"}`}
+                                        >
+                                            <span
+                                                className="size-1.5 rounded-full"
+                                                style={{
+                                                    backgroundColor:
+                                                        STATUS_CONFIG[s].dot,
+                                                }}
+                                            />
+                                            {STATUS_CONFIG[s].label}
+                                        </button>
+                                    ),
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                    <div className="space-y-1">
+                        <h3 className="font-semibold">Assignments</h3>
                         <div className="space-y-3">
                             {members.length > 0 && (
                                 <div className="flex flex-wrap gap-2">
@@ -395,7 +450,8 @@ export default function NewProjectModal({
                                             <div
                                                 className="flex size-6 items-center justify-center rounded-full text-[10px] font-bold text-white"
                                                 style={{
-                                                    backgroundColor: color,
+                                                    backgroundColor:
+                                                        projectColor,
                                                 }}
                                             >
                                                 {getInitials(m.name, m.surname)}
@@ -453,7 +509,7 @@ export default function NewProjectModal({
                                     type="button"
                                     size="sm"
                                     onClick={inviteMember}
-                                    className="h-9 gap-1.5 bg-bright-blue text-white hover:bg-blue-600"
+                                    className="h-9 gap-1.5 bg-bright-blue text-white hover:bg-blue-600 [&_svg]:size-4"
                                 >
                                     <PlusIcon
                                         weight="duotone"
@@ -468,12 +524,9 @@ export default function NewProjectModal({
                                 </p>
                             )}
                         </div>
-                    </Section>
-                    <Section
-                        icon={<ColumnsIcon className="size-4" />}
-                        title="Board Columns"
-                        badge={columns.length}
-                    >
+                    </div>
+                    <div className="space-y-1">
+                        <h3 className="font-semibold">Board Columns</h3>
                         <div className="space-y-5">
                             <div className="space-y-1.5">
                                 {columns.map((col, i) => (
@@ -518,10 +571,7 @@ export default function NewProjectModal({
                                     </div>
                                 ))}
                             </div>
-                            <div className=" space-y-2">
-                                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                                    Add Column
-                                </p>
+                            <div className=" space-y-1">
                                 <ColorDotPicker
                                     value={newColColor}
                                     onChange={setNewColColor}
@@ -543,9 +593,8 @@ export default function NewProjectModal({
                                     <Button
                                         type="button"
                                         size="sm"
-                                        variant="outline"
                                         onClick={addColumn}
-                                        className="h-8 gap-1"
+                                        className="h-8 gap-1 bg-bright-blue text-white hover:bg-blue-600 [&_svg]:size-4"
                                     >
                                         <PlusIcon
                                             weight="duotone"
@@ -556,13 +605,9 @@ export default function NewProjectModal({
                                 </div>
                             </div>
                         </div>
-                    </Section>
-                    <Section
-                        icon={<Layers className="size-4" />}
-                        title="Categories"
-                        badge={categories.length}
-                        defaultOpen={false}
-                    >
+                    </div>
+                    <div className="space-y-1">
+                        <h3 className="font-semibold">Categories</h3>
                         <div className="space-y-3">
                             {categories.length > 0 && (
                                 <div className="flex flex-wrap gap-1.5">
@@ -582,10 +627,7 @@ export default function NewProjectModal({
                                     ))}
                                 </div>
                             )}
-                            <div className="space-y-2">
-                                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                                    Add Category
-                                </p>
+                            <div className="space-y-1">
                                 <ColorDotPicker
                                     value={newCatColor}
                                     onChange={setNewCatColor}
@@ -607,9 +649,8 @@ export default function NewProjectModal({
                                     <Button
                                         type="button"
                                         size="sm"
-                                        variant="outline"
                                         onClick={addCategory}
-                                        className="h-8 gap-1"
+                                        className="h-8 gap-1 bg-bright-blue text-white hover:bg-blue-600 [&_svg]:size-4"
                                     >
                                         <PlusIcon
                                             weight="duotone"
@@ -620,13 +661,9 @@ export default function NewProjectModal({
                                 </div>
                             </div>
                         </div>
-                    </Section>
-                    <Section
-                        icon={<Tag className="size-4" />}
-                        title="Labels"
-                        badge={labels.length}
-                        defaultOpen={false}
-                    >
+                    </div>
+                    <div className="space-y-1">
+                        <h3 className="font-semibold">Labels</h3>
                         <div className="space-y-3">
                             {labels.length > 0 && (
                                 <div className="flex flex-wrap gap-1.5">
@@ -646,10 +683,7 @@ export default function NewProjectModal({
                                     ))}
                                 </div>
                             )}
-                            <div className="space-y-2">
-                                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                                    Add Label
-                                </p>
+                            <div className="space-y-1">
                                 <ColorDotPicker
                                     value={newLabelColor}
                                     onChange={setNewLabelColor}
@@ -671,16 +705,19 @@ export default function NewProjectModal({
                                     <Button
                                         type="button"
                                         size="sm"
-                                        variant="outline"
                                         onClick={addLabel}
-                                        className="h-8 gap-1"
+                                        className="h-8 gap-1 bg-bright-blue text-white hover:bg-blue-600 [&_svg]:size-4"
                                     >
-                                        <Plus className="size-3.5" /> Add
+                                        <PlusIcon
+                                            weight="duotone"
+                                            className="size-4"
+                                        />{" "}
+                                        Add
                                     </Button>
                                 </div>
                             </div>
                         </div>
-                    </Section>
+                    </div>
                 </div>
                 <DialogFooter className="flex flex-shrink-0 items-center justify-between gap-3 border-t border-border/60 px-6 py-4">
                     <div className="flex gap-2">
@@ -697,7 +734,7 @@ export default function NewProjectModal({
                             type="button"
                             size="sm"
                             onClick={handleSubmit}
-                            className="h-9 gap-1.5 bg-bright-blue text-white hover:bg-blue-600"
+                            className="h-9 gap-1.5 bg-bright-blue text-white hover:bg-blue-600 [&_svg]:size-4"
                         >
                             <PlusIcon weight="duotone" className="size-4" />{" "}
                             Create Project
