@@ -319,7 +319,7 @@ export function InviteAssignmentModal({
                         </div>
                     )}
                 </div>
-                <div className="flex items-center justify-between border-t bg-gray-100 px-6 py-3">
+                <div className="flex items-center justify-between border-t px-6 py-3">
                     <p className="text-xs text-gray-500">
                         {selectedTab === "invite"
                             ? "Invites will be sent by email"
@@ -327,9 +327,9 @@ export function InviteAssignmentModal({
                     </p>
                     <div className="flex items-center gap-2">
                         <Button
-                            variant="ghost"
+                            variant="outline"
                             onClick={() => onOpenChange(false)}
-                            className="h-9 px-4 text-sm text-gray-500 hover:bg-gray-200"
+                            className="h-9 px-4 text-sm"
                         >
                             Cancel
                         </Button>
