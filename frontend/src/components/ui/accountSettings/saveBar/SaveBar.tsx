@@ -1,4 +1,4 @@
-import { Check, CircleAlert } from "lucide-react";
+import { CheckIcon, WarningIcon } from "@phosphor-icons/react";
 import { Button } from "../../shadcn/button";
 
 interface SaveBarProps {
@@ -11,7 +11,7 @@ export default function SaveBar({ dirty, onSave, onDiscard }: SaveBarProps) {
     if (!dirty) return null;
 
     return (
-        <div className="sticky bottom-0 -mx-6 mt-6 flex items-center justify-between gap-3 border-t bg-white/95 px-6 py-3 backdrop-blur">
+        <div className="absolute bottom-0 -mx-6 mt-6 flex w-full items-center justify-between gap-3 border-t bg-white/95 px-6 py-3 backdrop-blur">
             <p className="flex items-center gap-1.5 text-xs text-gray-500">
                 <WarningIcon
                     weight="duotone"
