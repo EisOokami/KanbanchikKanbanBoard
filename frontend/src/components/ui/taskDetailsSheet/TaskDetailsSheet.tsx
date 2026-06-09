@@ -19,7 +19,6 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/shadcn/dropdown-menu";
 import {
@@ -30,7 +29,7 @@ import {
 import { format, formatDistanceToNow } from "date-fns";
 import { cn, getInitials, toDueDate } from "@/libs/utils";
 import { commentsToActivity, dueDateMeta } from "@/libs/taskDetailsSheet";
-import FieldRow from "./fieldRow/FieldRow";
+import FieldRow from "../fieldRow/FieldRow";
 import {
     Category,
     Columns,
@@ -269,7 +268,7 @@ export function TaskDetailsSheet({
     };
 
     const pm = PRIORITY_CONFIG[task.priority];
-    const sm = COLUMNS_CONFIG[task.column];
+    const column = COLUMNS_CONFIG[task.column];
     const doneSubtasks = task.subtasks.filter((s) => s.is_done).length;
     const totalSubtasks = task.subtasks.length;
     const subtasksPct = totalSubtasks
@@ -291,12 +290,12 @@ export function TaskDetailsSheet({
                                 <DropdownMenuTrigger asChild>
                                     <button className="flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors hover:brightness-95">
                                         <span
-                                            className={cn(
-                                                "size-1.5 rounded-full",
-                                                sm.dot,
-                                            )}
+                                            className="size-1.5 rounded-full"
+                                            style={{
+                                                backgroundColor: column.color,
+                                            }}
                                         />
-                                        {sm.label}
+                                        {column.label}
                                         <CaretDownIcon
                                             weight="duotone"
                                             size={12}
@@ -321,10 +320,11 @@ export function TaskDetailsSheet({
                                             }}
                                         >
                                             <span
-                                                className={cn(
-                                                    "size-2 rounded-full",
-                                                    COLUMNS_CONFIG[s].dot,
-                                                )}
+                                                className="size-2 rounded-full"
+                                                style={{
+                                                    backgroundColor:
+                                                        COLUMNS_CONFIG[s].color,
+                                                }}
                                             />
                                             {COLUMNS_CONFIG[s].label}
                                             {task.column === s && (
@@ -468,12 +468,12 @@ export function TaskDetailsSheet({
                                             }
                                         }}
                                         rows={2}
-                                        className="resize-none rounded-none border-0 border-b bg-transparent px-0 text-xl font-bold leading-tight transition-colors focus-visible:border-bright-blue focus-visible:ring-0"
+                                        className="resize-none rounded-none border-0 border-b bg-transparent px-0 !text-xl font-bold leading-tight transition-colors focus-visible:border-bright-blue focus-visible:ring-0"
                                     />
                                 ) : (
                                     <h1
                                         onClick={() => setEditingTitle(true)}
-                                        className="group -mx-2 flex cursor-text items-start gap-2 rounded-md px-2 py-1 text-xl font-bold leading-tight transition-colors hover:bg-gray-50"
+                                        className="group -mx-2 flex cursor-text items-center gap-2 rounded-md px-2 py-1 text-xl font-bold leading-tight transition-colors hover:bg-gray-50"
                                     >
                                         <span className="flex-1">
                                             {task.title || (
@@ -697,18 +697,20 @@ export function TaskDetailsSheet({
                                     label="Categories"
                                 >
                                     <div className="flex flex-wrap items-center gap-1.5">
-                                        {task.categories.map((cat) => (
+                                        {task.categories.map((category) => (
                                             <span
-                                                key={cat.id}
-                                                className={cn(
-                                                    "flex cursor-pointer items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium",
-                                                    cat.pill,
-                                                )}
+                                                key={category.id}
+                                                className="flex cursor-pointer items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium capitalize"
+                                                style={{
+                                                    backgroundColor:
+                                                        category.color,
+                                                    color: "#fff",
+                                                }}
                                                 onClick={() =>
-                                                    toggleCategory(cat)
+                                                    toggleCategory(category)
                                                 }
                                             >
-                                                {cat.name}
+                                                {category.name}
                                                 <XIcon
                                                     weight="duotone"
                                                     size={14}
@@ -732,29 +734,40 @@ export function TaskDetailsSheet({
                                                 <div className="flex flex-wrap gap-1.5">
                                                     {Object.values(
                                                         MOCK_CATEGORIES,
-                                                    ).map((c) => {
+                                                    ).map((category) => {
                                                         const sel =
                                                             task.categories.some(
                                                                 (tc) =>
                                                                     tc.id ===
-                                                                    c.id,
+                                                                    category.id,
                                                             );
                                                         return (
                                                             <button
-                                                                key={c.id}
+                                                                key={
+                                                                    category.id
+                                                                }
                                                                 onClick={() =>
                                                                     toggleCategory(
-                                                                        c,
+                                                                        category,
                                                                     )
                                                                 }
                                                                 className={cn(
-                                                                    "rounded-md border px-2.5 py-1 text-xs font-medium transition-colors",
+                                                                    "rounded-md border px-2.5 py-1 text-xs font-medium capitalize transition-colors",
                                                                     sel
-                                                                        ? c.pill
+                                                                        ? ""
                                                                         : "border-gray-200 text-gray-600 hover:bg-gray-50",
                                                                 )}
+                                                                style={{
+                                                                    backgroundColor:
+                                                                        sel
+                                                                            ? category.color
+                                                                            : undefined,
+                                                                    color: sel
+                                                                        ? "#fff"
+                                                                        : undefined,
+                                                                }}
                                                             >
-                                                                {c.name}
+                                                                {category.name}
                                                             </button>
                                                         );
                                                     })}
@@ -797,7 +810,7 @@ export function TaskDetailsSheet({
                                             return (
                                                 <span
                                                     key={labelName}
-                                                    className="flex cursor-pointer items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium transition-colors hover:opacity-80"
+                                                    className="flex cursor-pointer items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium capitalize transition-colors hover:opacity-80"
                                                     style={{
                                                         borderColor:
                                                             meta?.color ??
@@ -944,7 +957,7 @@ export function TaskDetailsSheet({
                                         Subtasks
                                     </span>
                                     {totalSubtasks > 0 && (
-                                        <span className="text-xs text-gray-500">
+                                        <span className="ml-1 text-xs text-gray-500">
                                             {doneSubtasks}/{totalSubtasks}
                                         </span>
                                     )}
@@ -1036,7 +1049,7 @@ export function TaskDetailsSheet({
                                 <Button
                                     size="sm"
                                     onClick={addSubtask}
-                                    className="h-8 rounded-md border bg-bright-blue px-3 transition-colors hover:bg-blue-600"
+                                    className="h-8 rounded-md border bg-bright-blue px-3 transition-colors hover:bg-blue-600 [&_svg]:size-4"
                                 >
                                     <PlusIcon weight="duotone" size={16} />
                                 </Button>
@@ -1242,7 +1255,7 @@ export function TaskDetailsSheet({
                                             addComment();
                                     }}
                                     rows={3}
-                                    className="resize-none rounded-md bg-gray-50 text-xs placeholder:text-gray-300 focus-visible:ring-1 focus-visible:ring-[#0096FF]"
+                                    className="resize-none rounded-md bg-gray-50 text-xs placeholder:text-gray-300 focus-visible:ring-1 focus-visible:ring-bright-blue"
                                 />
                                 {newComment.trim() && (
                                     <div className="mt-2 flex items-center justify-between">
@@ -1278,46 +1291,22 @@ export function TaskDetailsSheet({
                         </div>
                     </div>
                 </ScrollArea>
-                <div className="flex shrink-0 items-center justify-between border-t bg-gray-50 px-6 py-3.5">
-                    <div className="flex items-center gap-2.5 text-xs text-gray-300">
-                        <span
-                            className={cn(
-                                "flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium",
-                                sm.pill,
-                            )}
-                        >
-                            <span
-                                className={cn("size-1.5 rounded-full", sm.dot)}
-                            />
-                            {sm.label}
-                        </span>
-                        {ddMeta && (
-                            <span
-                                className="flex items-center gap-1"
-                                style={{ color: ddMeta.color }}
-                            >
-                                <CalendarDays size={11} />
-                                {ddMeta.text}
-                            </span>
-                        )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Button
-                            variant="ghost"
-                            onClick={() => onOpenChange(false)}
-                            className="h-8 rounded-md px-4 text-sm hover:bg-gray-200"
-                        >
-                            Discard
-                        </Button>
-                        <Button
-                            onClick={handleSave}
-                            disabled={!task.title.trim()}
-                            className="h-8 gap-1.5 rounded-md bg-bright-blue px-4 text-xs font-semibold text-white hover:bg-blue-600 disabled:opacity-40"
-                        >
-                            <CheckIcon weight="duotone" size={16}  />
-                            Save
-                        </Button>
-                    </div>
+                <div className="flex shrink-0 items-center justify-end gap-2 border-t px-6 py-3.5">
+                    <Button
+                        variant="outline"
+                        onClick={() => onOpenChange(false)}
+                        className="h-8 rounded-md px-4 text-sm hover:bg-gray-200"
+                    >
+                        Discard
+                    </Button>
+                    <Button
+                        onClick={handleSave}
+                        disabled={!task.title.trim()}
+                        className="h-8 gap-1.5 rounded-md bg-bright-blue px-4 text-xs font-semibold text-white hover:bg-blue-600 disabled:opacity-40 [&_svg]:size-4"
+                    >
+                        <CheckIcon weight="duotone" size={16} />
+                        Save
+                    </Button>
                 </div>
             </SheetContent>
         </Sheet>
