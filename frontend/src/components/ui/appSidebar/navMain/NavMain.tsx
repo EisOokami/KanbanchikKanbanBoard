@@ -69,9 +69,9 @@ export default function NavMain() {
                             <CollapsibleTrigger asChild>
                                 <SidebarMenuButton
                                     tooltip={item.title}
-                                    className="group"
+                                    className="group transition-colors hover:!bg-gray-200 group-data-[collapsible=icon]:!p-1.5 [&>svg]:size-5"
                                 >
-                                    <item.icon className="size-4" />
+                                    <item.icon weight="duotone" />
                                     <span>{item.title}</span>
                                     {item.badge && (
                                         <SidebarMenuBadge>
@@ -88,7 +88,10 @@ export default function NavMain() {
                                 <SidebarMenuSub>
                                     {item.children.map((child) => (
                                         <SidebarMenuSubItem key={child.title}>
-                                            <SidebarMenuSubButton asChild>
+                                            <SidebarMenuSubButton
+                                                asChild
+                                                className="transition-colors hover:bg-gray-200"
+                                            >
                                                 <Link
                                                     href={child.url}
                                                     className="flex items-center gap-2"
@@ -115,16 +118,17 @@ export default function NavMain() {
                             asChild
                             tooltip={item.title}
                             isActive={item.url === pathname}
+                            className="border border-transparent transition-colors hover:bg-gray-200 hover:text-black data-[active=true]:border-gray-300 data-[active=true]:bg-gray-200 data-[active=true]:text-black group-data-[collapsible=icon]:!p-[5px]"
                         >
-                            <a href={item.url}>
-                                <item.icon className="size-4" />
+                            <Link href={item.url} className="[&>svg]:size-5">
+                                <item.icon weight="duotone" />
                                 <span>{item.title}</span>
                                 {item.badge && (
                                     <SidebarMenuBadge>
                                         {item.badge}
                                     </SidebarMenuBadge>
                                 )}
-                            </a>
+                            </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 ),
