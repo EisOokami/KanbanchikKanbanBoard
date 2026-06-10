@@ -130,28 +130,28 @@ export const INITIAL_TASKS: Task[] = [
         subtasks: [
             {
                 id: 1,
-                text: "Wireframes",
+                title: "Wireframes",
                 is_done: true,
                 created_at: new Date(),
                 position: 0,
             },
             {
                 id: 2,
-                text: "Prototype",
+                title: "Prototype",
                 is_done: true,
                 created_at: new Date(),
                 position: 1,
             },
             {
                 id: 3,
-                text: "User testing",
+                title: "User testing",
                 is_done: false,
                 created_at: new Date(),
                 position: 2,
             },
             {
                 id: 4,
-                text: "Handoff",
+                title: "Handoff",
                 is_done: false,
                 created_at: new Date(),
                 position: 3,
@@ -181,21 +181,21 @@ export const INITIAL_TASKS: Task[] = [
         subtasks: [
             {
                 id: 5,
-                text: "Reproduce locally",
+                title: "Reproduce locally",
                 is_done: true,
                 created_at: new Date(),
                 position: 0,
             },
             {
                 id: 6,
-                text: "Root cause",
+                title: "Root cause",
                 is_done: true,
                 created_at: new Date(),
                 position: 1,
             },
             {
                 id: 7,
-                text: "Fix & deploy",
+                title: "Fix & deploy",
                 is_done: false,
                 created_at: new Date(),
                 position: 2,
@@ -225,21 +225,21 @@ export const INITIAL_TASKS: Task[] = [
         subtasks: [
             {
                 id: 8,
-                text: "Token refresh",
+                title: "Token refresh",
                 is_done: false,
                 created_at: new Date(),
                 position: 0,
             },
             {
                 id: 9,
-                text: "Session expiry",
+                title: "Session expiry",
                 is_done: false,
                 created_at: new Date(),
                 position: 1,
             },
             {
                 id: 10,
-                text: "Concurrent logins",
+                title: "Concurrent logins",
                 is_done: false,
                 created_at: new Date(),
                 position: 2,
@@ -269,28 +269,28 @@ export const INITIAL_TASKS: Task[] = [
         subtasks: [
             {
                 id: 11,
-                text: "CSS variables",
+                title: "CSS variables",
                 is_done: true,
                 created_at: new Date(),
                 position: 0,
             },
             {
                 id: 12,
-                text: "Toggle UI",
+                title: "Toggle UI",
                 is_done: true,
                 created_at: new Date(),
                 position: 1,
             },
             {
                 id: 13,
-                text: "Persistence",
+                title: "Persistence",
                 is_done: true,
                 created_at: new Date(),
                 position: 2,
             },
             {
                 id: 14,
-                text: "Review",
+                title: "Review",
                 is_done: false,
                 created_at: new Date(),
                 position: 3,
@@ -320,21 +320,21 @@ export const INITIAL_TASKS: Task[] = [
         subtasks: [
             {
                 id: 15,
-                text: "Middleware setup",
+                title: "Middleware setup",
                 is_done: true,
                 created_at: new Date(),
                 position: 0,
             },
             {
                 id: 16,
-                text: "Redis integration",
+                title: "Redis integration",
                 is_done: false,
                 created_at: new Date(),
                 position: 1,
             },
             {
                 id: 17,
-                text: "Tests",
+                title: "Tests",
                 is_done: false,
                 created_at: new Date(),
                 position: 2,
@@ -364,28 +364,28 @@ export const INITIAL_TASKS: Task[] = [
         subtasks: [
             {
                 id: 18,
-                text: "KPI cards",
+                title: "KPI cards",
                 is_done: true,
                 created_at: new Date(),
                 position: 0,
             },
             {
                 id: 19,
-                text: "Charts",
+                title: "Charts",
                 is_done: true,
                 created_at: new Date(),
                 position: 1,
             },
             {
                 id: 20,
-                text: "Date picker",
+                title: "Date picker",
                 is_done: true,
                 created_at: new Date(),
                 position: 2,
             },
             {
                 id: 21,
-                text: "Export",
+                title: "Export",
                 is_done: false,
                 created_at: new Date(),
                 position: 3,
@@ -415,14 +415,14 @@ export const INITIAL_TASKS: Task[] = [
         subtasks: [
             {
                 id: 22,
-                text: "Headline review",
+                title: "Headline review",
                 is_done: false,
                 created_at: new Date(),
                 position: 0,
             },
             {
                 id: 23,
-                text: "Legal check",
+                title: "Legal check",
                 is_done: false,
                 created_at: new Date(),
                 position: 1,
@@ -452,21 +452,21 @@ export const INITIAL_TASKS: Task[] = [
         subtasks: [
             {
                 id: 24,
-                text: "Schema design",
+                title: "Schema design",
                 is_done: true,
                 created_at: new Date(),
                 position: 0,
             },
             {
                 id: 25,
-                text: "Resolver plan",
+                title: "Resolver plan",
                 is_done: false,
                 created_at: new Date(),
                 position: 1,
             },
             {
                 id: 26,
-                text: "Migration timeline",
+                title: "Migration timeline",
                 is_done: false,
                 created_at: new Date(),
                 position: 2,
@@ -496,14 +496,14 @@ export const INITIAL_TASKS: Task[] = [
         subtasks: [
             {
                 id: 27,
-                text: "Research",
+                title: "Research",
                 is_done: false,
                 created_at: new Date(),
                 position: 0,
             },
             {
                 id: 28,
-                text: "Wireframes",
+                title: "Wireframes",
                 is_done: false,
                 created_at: new Date(),
                 position: 1,
@@ -533,21 +533,21 @@ export const INITIAL_TASKS: Task[] = [
         subtasks: [
             {
                 id: 29,
-                text: "Inventory",
+                title: "Inventory",
                 is_done: true,
                 created_at: new Date(),
                 position: 0,
             },
             {
                 id: 30,
-                text: "Audit",
+                title: "Audit",
                 is_done: true,
                 created_at: new Date(),
                 position: 1,
             },
             {
                 id: 31,
-                text: "Recommendations",
+                title: "Recommendations",
                 is_done: true,
                 created_at: new Date(),
                 position: 2,
@@ -577,21 +577,21 @@ export const INITIAL_TASKS: Task[] = [
         subtasks: [
             {
                 id: 32,
-                text: "GitHub Actions",
+                title: "GitHub Actions",
                 is_done: true,
                 created_at: new Date(),
                 position: 0,
             },
             {
                 id: 33,
-                text: "Staging deploy",
+                title: "Staging deploy",
                 is_done: true,
                 created_at: new Date(),
                 position: 1,
             },
             {
                 id: 34,
-                text: "Notifications",
+                title: "Notifications",
                 is_done: true,
                 created_at: new Date(),
                 position: 2,
@@ -621,14 +621,14 @@ export const INITIAL_TASKS: Task[] = [
         subtasks: [
             {
                 id: 35,
-                text: "Setup experiment",
+                title: "Setup experiment",
                 is_done: true,
                 created_at: new Date(),
                 position: 0,
             },
             {
                 id: 36,
-                text: "Results analysis",
+                title: "Results analysis",
                 is_done: true,
                 created_at: new Date(),
                 position: 1,
@@ -658,21 +658,21 @@ export const INITIAL_TASKS: Task[] = [
         subtasks: [
             {
                 id: 37,
-                text: "Baseline metrics",
+                title: "Baseline metrics",
                 is_done: false,
                 created_at: new Date(),
                 position: 0,
             },
             {
                 id: 38,
-                text: "Profiling",
+                title: "Profiling",
                 is_done: false,
                 created_at: new Date(),
                 position: 1,
             },
             {
                 id: 39,
-                text: "Report",
+                title: "Report",
                 is_done: false,
                 created_at: new Date(),
                 position: 2,
@@ -702,7 +702,7 @@ export const INITIAL_TASKS: Task[] = [
         subtasks: [
             {
                 id: 40,
-                text: "HIG review",
+                title: "HIG review",
                 is_done: false,
                 created_at: new Date(),
                 position: 0,
@@ -732,21 +732,21 @@ export const INITIAL_TASKS: Task[] = [
         subtasks: [
             {
                 id: 41,
-                text: "Backlog grooming",
+                title: "Backlog grooming",
                 is_done: false,
                 created_at: new Date(),
                 position: 0,
             },
             {
                 id: 42,
-                text: "Estimation",
+                title: "Estimation",
                 is_done: false,
                 created_at: new Date(),
                 position: 1,
             },
             {
                 id: 43,
-                text: "Commitment",
+                title: "Commitment",
                 is_done: false,
                 created_at: new Date(),
                 position: 2,

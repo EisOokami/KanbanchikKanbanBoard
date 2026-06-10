@@ -131,7 +131,7 @@ export function TaskDetailsSheet({
         if (!newSubtaskText.trim()) return;
         const next: Subtask = {
             id: Date.now(),
-            text: newSubtaskText.trim(),
+            title: newSubtaskText.trim(),
             is_done: false,
             created_at: new Date(),
             position: task.subtasks.length,
@@ -1004,7 +1004,7 @@ export function TaskDetailsSheet({
                                             className="size-3.5 rounded border-gray-300 data-[state=checked]:border-bright-blue data-[state=checked]:bg-bright-blue"
                                         />
                                         <Input
-                                            value={item.text}
+                                            value={item.title}
                                             onChange={(e) =>
                                                 updateSubtaskText(
                                                     item.id,

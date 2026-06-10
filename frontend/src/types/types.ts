@@ -55,7 +55,7 @@ export interface Project extends ExtendedBase {
 }
 
 export interface Subtask extends Base {
-    text: string;
+    title: string;
     position: number;
     is_done: boolean;
 }

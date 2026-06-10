@@ -80,7 +80,7 @@ export function CreateTaskModal({
             ...form.subtasks,
             {
                 id: form.subtasks.length + 1,
-                text: newCheckItem.trim(),
+                title: newCheckItem.trim(),
                 position: form.subtasks.length,
                 is_done: false,
                 created_at: new Date(),
@@ -491,7 +491,7 @@ export function CreateTaskModal({
                                                             : "text-foreground",
                                                     )}
                                                 >
-                                                    {item.text}
+                                                    {item.title}
                                                 </span>
                                                 <button
                                                     type="button"
