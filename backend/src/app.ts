@@ -8,6 +8,7 @@ import cookieParser from "cookie-parser";
 import { xss } from "express-xss-sanitizer";
 import hostValidation from "host-validation";
 import projectsRoutes from "./routes/projects.routes";
+import tasksRoutes from "./routes/tasks.routes";
 import usersRoutes from "./routes/users.routes";
 import authRoutes from "./routes/auth.routes";
 
@@ -48,6 +49,7 @@ app.use(xss());
 app.use(cookieParser());
 
 app.use("/projects", projectsRoutes);
+app.use("/tasks", tasksRoutes);
 app.use("/users", usersRoutes);
 app.use("/auth", authRoutes);
 

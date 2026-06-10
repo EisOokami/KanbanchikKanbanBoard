@@ -127,3 +127,20 @@ export const createProjectSchema = z.object({
 export const updateProjectSchema = createProjectSchema.partial().extend({
     status: z.enum(["active", "paused", "completed", "archived"]).optional(),
 });
+
+export const createTaskSchema = z.object({
+    column_id: z.number().int().positive(),
+    title: z.string().min(1).max(255),
+    description: z.string().max(65535).nullable().optional(),
+    due_date: z.string().datetime().nullable().optional(),
+    start_date: z.string().datetime().nullable().optional(),
+    priority: z.enum(["low", "medium", "high", "critical"]).optional(),
+    show_progress: z.boolean().optional(),
+    category_ids: z.array(z.number().int().positive()).optional(),
+    assignee_ids: z.array(z.number().int().positive()).optional(),
+    label_ids: z.array(z.number().int().positive()).optional(),
+});
+
+export const updateTaskSchema = createTaskSchema.partial().extend({
+    position: z.number().int().nonnegative().optional(),
+});
