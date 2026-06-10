@@ -116,3 +116,14 @@ export const resetPasswordSchema = z.object({
         ),
     id: z.number("Invalid data").int("Invalid data").positive("Invalid data"),
 });
+
+export const createProjectSchema = z.object({
+    name: z.string().min(1).max(150),
+    icon: z.string().min(1).max(10),
+    color: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
+    description: z.string().max(65535).nullable().optional(),
+});
+
+export const updateProjectSchema = createProjectSchema.partial().extend({
+    status: z.enum(["active", "paused", "completed", "archived"]).optional(),
+});
