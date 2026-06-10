@@ -7,6 +7,7 @@ import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import { xss } from "express-xss-sanitizer";
 import hostValidation from "host-validation";
+import usersRoutes from "./routes/users.routes";
 import authRoutes from "./routes/auth.routes";
 
 dotenv.config();
@@ -45,6 +46,7 @@ app.use(limiter);
 app.use(xss());
 app.use(cookieParser());
 
+app.use("/users", usersRoutes);
 app.use("/auth", authRoutes);
 
 app.listen(port, () => {
