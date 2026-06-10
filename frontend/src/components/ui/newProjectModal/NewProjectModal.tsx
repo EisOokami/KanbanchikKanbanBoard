@@ -17,7 +17,7 @@ import {
     Category,
     ColumnConfig,
     Label,
-    Member,
+    User,
     Priority,
     Project,
     Status,
@@ -57,7 +57,7 @@ export default function NewProjectModal({
     const [priority, setPriority] = useState<Priority>("medium");
     const [status, setStatus] = useState<Status>("active");
     const [projectColor, setProjectColor] = useState(PROJECT_COLORS[0]);
-    const [members, setMembers] = useState<Member[]>([]);
+    const [members, setMembers] = useState<User[]>([]);
     const [emailInput, setEmailInput] = useState<string>("");
     const [emailError, setEmailError] = useState<string>("");
     const [columns, setColumns] = useState<ColumnConfig[]>(
@@ -100,6 +100,7 @@ export default function NewProjectModal({
                 color: "",
                 initials: "",
                 role: "member",
+                status: "pending",
             },
         ]);
         setEmailInput("");

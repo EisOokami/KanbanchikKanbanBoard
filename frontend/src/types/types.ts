@@ -30,7 +30,7 @@ export interface ExtendedBase extends Base {
     updated_at: string | Date | null;
 }
 
-export interface Member extends Omit<Base, "created_at"> {
+export interface User extends Omit<Base, "created_at"> {
     name: string;
     surname: string;
     email: string;
@@ -38,14 +38,14 @@ export interface Member extends Omit<Base, "created_at"> {
     role: Role;
     joined_at: string | Date;
     color: string;
-    // status: "active" | "pending"
+    status: "active" | "pending";
 }
 
 export interface Project extends ExtendedBase {
     name: string;
     description: string;
-    owner: Pick<Member, "name" | "avatar_url">;
-    members: Omit<Member, "email">[];
+    owner: Pick<User, "name" | "avatar_url">;
+    members: Omit<User, "email">[];
     status: Status;
     tasksTotal?: number;
     tasksDone?: number;
@@ -69,7 +69,7 @@ export interface Attachment extends Base {
 }
 
 export interface Comment extends ExtendedBase {
-    assignee: Omit<Member, "email">;
+    assignee: Omit<User, "email">;
     body: string;
 }
 
@@ -94,7 +94,7 @@ export interface Task extends ExtendedBase {
     column: Columns;
     labels: string[];
     categories: Category[];
-    assignees: Omit<Member, "email">[];
+    assignees: Omit<User, "email">[];
     subtasks: Subtask[];
     subtasksDone?: number;
     subtasksTotal?: number;
@@ -126,7 +126,7 @@ export interface FilterState {
     columns: string[];
     priorities: Priority[];
     projects?: Pick<Project, "name">[];
-    assignees?: Omit<Member, "email">[];
+    assignees?: Omit<User, "email">[];
     categories?: string[];
     overdue: boolean;
     progress?: [number, number];

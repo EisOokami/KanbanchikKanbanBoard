@@ -22,7 +22,7 @@ import {
 import { cn, getInitials } from "@/libs/utils";
 import { NavSection } from "@/types/projectSettingsDialog";
 import { NAV_ITEMS } from "@/constants/projectSettingsDialog";
-import { Category, ColumnConfig, Label, Member, Project } from "@/types/types";
+import { Category, ColumnConfig, Label, User, Project } from "@/types/types";
 import {
     COLUMN_COLORS,
     COLUMNS_CONFIG,
@@ -84,11 +84,11 @@ export function ProjectSettingsDialog({
         color: LABEL_PALETTE[0],
     });
     const [editingLabel, setEditingLabel] = useState<number | null>(null);
-    const [members, setMembers] = useState<Omit<Member, "email">[]>(
+    const [members, setMembers] = useState<Omit<User, "email">[]>(
         Object.values(MOCK_MEMBERS),
     );
     const [inviteEmail, setInviteEmail] = useState<string>("");
-    const [inviteRole, setInviteRole] = useState<Member["role"]>("member");
+    const [inviteRole, setInviteRole] = useState<User["role"]>("member");
 
     const addColumn = () => {
         if (!newColName.trim()) return;
@@ -151,7 +151,7 @@ export function ProjectSettingsDialog({
     const removeLabel = (id: number) =>
         setLabels((l) => l.filter((x) => x.id !== id));
 
-    const updateMemberRole = (id: number, role: Member["role"]) =>
+    const updateMemberRole = (id: number, role: User["role"]) =>
         setMembers((m) => m.map((x) => (x.id === id ? { ...x, role } : x)));
 
     const removeMember = (id: number) =>

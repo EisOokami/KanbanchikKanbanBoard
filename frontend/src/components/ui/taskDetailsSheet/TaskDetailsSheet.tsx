@@ -34,7 +34,7 @@ import {
     Category,
     Columns,
     Label,
-    Member,
+    User,
     Priority,
     Subtask,
     Task,
@@ -160,7 +160,7 @@ export function TaskDetailsSheet({
             task.subtasks.map((s) => (s.id === id ? { ...s, text } : s)),
         );
 
-    const toggleAssignee = (member: Omit<Member, "email">) => {
+    const toggleAssignee = (member: Omit<User, "email">) => {
         const exists = task.assignees.some((a) => a.id === member.id);
         update(
             "assignees",
@@ -205,7 +205,7 @@ export function TaskDetailsSheet({
         );
     };
 
-    const currentUser: Omit<Member, "email"> = Object.values(MOCK_MEMBERS)[0];
+    const currentUser: Omit<User, "email"> = Object.values(MOCK_MEMBERS)[0];
 
     const addComment = () => {
         if (!newComment.trim()) return;

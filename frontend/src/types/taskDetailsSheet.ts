@@ -1,9 +1,9 @@
-import { Member } from "./types";
+import { User } from "./types";
 
 export type ActivityComment = {
     id: number;
     type: "comment";
-    author: Omit<Member, "email">;
+    author: Omit<User, "email">;
     body: string;
     timestamp: Date;
 };
@@ -11,7 +11,7 @@ export type ActivityComment = {
 export type ActivityChange = {
     id: number;
     type: "change";
-    author: Omit<Member, "email">;
+    author: Omit<User, "email">;
     field: string;
     from: string;
     to: string;

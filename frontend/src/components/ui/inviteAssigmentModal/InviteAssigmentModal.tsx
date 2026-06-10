@@ -20,7 +20,7 @@ import { cn } from "@/libs/utils";
 import { Invite } from "@/types/inviteAssigmentModal";
 import RoleSelect from "./roleSelect/RoleSelect";
 import MemberRow from "./memberRow/MemberRow";
-import { Member, Role } from "@/types/types";
+import { User, Role } from "@/types/types";
 import { MOCK_MEMBERS } from "@/constants/constants";
 import {
     CheckIcon,
@@ -45,7 +45,7 @@ export function InviteAssignmentModal({
     open,
     onOpenChange,
 }: InviteAssignmentModalProps) {
-    const [members, setMembers] = useState<Omit<Member, "email">[]>(
+    const [members, setMembers] = useState<Omit<User, "email">[]>(
         Object.values(MOCK_MEMBERS),
     );
     const [invites, setInvites] = useState<Invite[]>([

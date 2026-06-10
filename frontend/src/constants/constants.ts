@@ -6,7 +6,7 @@ import {
     Columns,
     FilterState,
     Label,
-    Member,
+    User,
     Priority,
     PriorityConfig,
     Project,
@@ -15,7 +15,7 @@ import {
     Task,
 } from "@/types/types";
 
-export const MOCK_MEMBERS: Record<string, Omit<Member, "email">> = {
+export const MOCK_MEMBERS: Record<string, Omit<User, "email">> = {
     AK: {
         id: 101,
         name: "Alex",
@@ -24,6 +24,7 @@ export const MOCK_MEMBERS: Record<string, Omit<Member, "email">> = {
         role: "member",
         joined_at: new Date(),
         color: "#7C5CBF",
+        status: "active",
     },
     JS: {
         id: 102,
@@ -33,6 +34,7 @@ export const MOCK_MEMBERS: Record<string, Omit<Member, "email">> = {
         role: "member",
         joined_at: new Date(),
         color: "#2A9D8F",
+        status: "active",
     },
     KL: {
         id: 103,
@@ -42,6 +44,7 @@ export const MOCK_MEMBERS: Record<string, Omit<Member, "email">> = {
         role: "admin",
         joined_at: new Date(),
         color: "#E76F51",
+        status: "active",
     },
     NP: {
         id: 104,
@@ -51,6 +54,7 @@ export const MOCK_MEMBERS: Record<string, Omit<Member, "email">> = {
         role: "admin",
         joined_at: new Date(),
         color: "#264653",
+        status: "active",
     },
     MO: {
         id: 105,
@@ -60,6 +64,7 @@ export const MOCK_MEMBERS: Record<string, Omit<Member, "email">> = {
         role: "owner",
         joined_at: new Date(),
         color: "#C09A3A",
+        status: "active",
     },
 };
 
@@ -825,6 +830,7 @@ export const INITIAL_PROJECTS: Project[] = [
                 joined_at: new Date(),
                 role: "admin",
                 color: "#7C5CBF",
+                status: "active",
             },
             {
                 id: 2,
@@ -834,6 +840,7 @@ export const INITIAL_PROJECTS: Project[] = [
                 joined_at: new Date(),
                 role: "owner",
                 color: "#2A9D8F",
+                status: "active",
             },
             {
                 id: 3,
@@ -843,6 +850,7 @@ export const INITIAL_PROJECTS: Project[] = [
                 joined_at: new Date(),
                 role: "member",
                 color: "#E76F51",
+                status: "active",
             },
         ],
         columns: Object.values(COLUMNS_CONFIG),
@@ -869,6 +877,7 @@ export const INITIAL_PROJECTS: Project[] = [
                 joined_at: new Date(),
                 role: "owner",
                 color: "#7C5CBF",
+                status: "active",
             },
             {
                 id: 5,
@@ -878,6 +887,7 @@ export const INITIAL_PROJECTS: Project[] = [
                 joined_at: new Date(),
                 role: "member",
                 color: "#2A9D8F",
+                status: "active",
             },
         ],
         columns: Object.values(COLUMNS_CONFIG),
@@ -904,6 +914,7 @@ export const INITIAL_PROJECTS: Project[] = [
                 joined_at: new Date(),
                 role: "owner",
                 color: "#7C5CBF",
+                status: "active",
             },
         ],
         columns: Object.values(COLUMNS_CONFIG),
@@ -930,6 +941,7 @@ export const INITIAL_PROJECTS: Project[] = [
                 joined_at: new Date(),
                 role: "member",
                 color: "#E76F51",
+                status: "active",
             },
             {
                 id: 7,
@@ -939,6 +951,7 @@ export const INITIAL_PROJECTS: Project[] = [
                 joined_at: new Date(),
                 role: "member",
                 color: "#2A9D8F",
+                status: "active",
             },
             {
                 id: 8,
@@ -948,6 +961,7 @@ export const INITIAL_PROJECTS: Project[] = [
                 joined_at: new Date(),
                 role: "member",
                 color: "#7C5CBF",
+                status: "active",
             },
             {
                 id: 9,
@@ -957,6 +971,7 @@ export const INITIAL_PROJECTS: Project[] = [
                 joined_at: new Date(),
                 role: "owner",
                 color: "#264653",
+                status: "active",
             },
         ],
         columns: Object.values(COLUMNS_CONFIG),
@@ -983,6 +998,7 @@ export const INITIAL_PROJECTS: Project[] = [
                 joined_at: new Date(),
                 role: "viewer",
                 color: "#7C5CBF",
+                status: "active",
             },
             {
                 id: 6,
@@ -992,6 +1008,7 @@ export const INITIAL_PROJECTS: Project[] = [
                 joined_at: new Date(),
                 role: "owner",
                 color: "#C09A3A",
+                status: "active",
             },
         ],
         columns: Object.values(COLUMNS_CONFIG),
@@ -1018,6 +1035,7 @@ export const INITIAL_PROJECTS: Project[] = [
                 joined_at: new Date(),
                 role: "member",
                 color: "#C09A3A",
+                status: "active",
             },
             {
                 id: 5,
@@ -1027,6 +1045,7 @@ export const INITIAL_PROJECTS: Project[] = [
                 joined_at: new Date(),
                 role: "owner",
                 color: "#264653",
+                status: "active",
             },
         ],
         columns: Object.values(COLUMNS_CONFIG),
@@ -1096,7 +1115,7 @@ export const LABELS: Label[] = [
 export const ROLES: Role[] = ["admin", "member", "owner", "viewer"];
 
 export const ROLE_META: Record<
-    Member["role"],
+    User["role"],
     { label: string; color: string; bg: string; border: string }
 > = {
     owner: {

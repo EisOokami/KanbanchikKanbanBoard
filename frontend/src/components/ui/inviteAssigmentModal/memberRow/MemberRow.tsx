@@ -2,7 +2,7 @@
 
 import { Avatar, AvatarFallback } from "../../shadcn/avatar";
 import RoleSelect from "../roleSelect/RoleSelect";
-import { Member, Role } from "@/types/types";
+import { User, Role } from "@/types/types";
 import { getInitials } from "@/libs/utils";
 import { XIcon } from "@phosphor-icons/react";
 
@@ -11,7 +11,7 @@ export default function MemberRow({
     onRoleChange,
     onRemove,
 }: {
-    member: Omit<Member, "email">;
+    member: Omit<User, "email">;
     onRoleChange: (id: number, role: Role) => void;
     onRemove: (id: number) => void;
 }) {
