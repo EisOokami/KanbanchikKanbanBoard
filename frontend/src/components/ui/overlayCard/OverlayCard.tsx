@@ -7,7 +7,7 @@ import {
     AvatarFallback,
     AvatarImage,
 } from "@/components/ui/shadcn/avatar";
-import { cn, formatDate, getInitials, isOverdue } from "@/libs/utils";
+import { formatDate, getInitials, isOverdue } from "@/libs/utils";
 import {
     CalendarBlankIcon,
     ChatTeardropDotsIcon,
@@ -30,10 +30,11 @@ export default function OverlayCard({ card }: Readonly<OverlayCardProps>) {
             <div className="mb-2.5 flex items-center justify-between gap-2">
                 <div className="flex items-center gap-1">
                     <span
-                        className={cn(
-                            "rounded-md px-1.5 py-0.5 text-[10px] font-medium capitalize text-white",
-                            PRIORITY_CONFIG[card.priority].dot,
-                        )}
+                        className="rounded-md px-1.5 py-0.5 text-[10px] font-medium capitalize text-white"
+                        style={{
+                            backgroundColor:
+                                PRIORITY_CONFIG[card.priority].color,
+                        }}
                     >
                         {PRIORITY_CONFIG[card.priority]?.label}
                     </span>

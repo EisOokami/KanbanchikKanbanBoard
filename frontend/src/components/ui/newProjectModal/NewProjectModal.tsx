@@ -545,10 +545,10 @@ export default function NewProjectModal({
                                             className="size-3.5 flex-shrink-0 text-muted-foreground/50"
                                         />
                                         <span
-                                            className={cn(
-                                                "size-3 flex-shrink-0 rounded-full",
-                                                col.pill,
-                                            )}
+                                            className="size-3 flex-shrink-0 rounded-full text-white"
+                                            style={{
+                                                backgroundColor: col.color,
+                                            }}
                                         />
                                         <span className="flex-1 text-sm font-medium">
                                             {col.label}
