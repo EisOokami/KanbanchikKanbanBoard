@@ -1,14 +1,35 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import rateLimit from "express-rate-limit";
+import hpp from "hpp";
+import helmet from "helmet";
+import cookieParser from "cookie-parser";
+import { xss } from "express-xss-sanitizer";
+import hostValidation from "host-validation";
 
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3001;
 
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 200,
+    message: {
+        status: 429,
+        error: "Too many requests",
+        message: "Too many requests. Please try again in 15 minutes.",
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const hosts = process.env.HOSTS?.split(",");
 const corsUrls = process.env.CORS_URLS?.split(",");
 
+app.disable("x-powered-by");
+app.use(hostValidation({ hosts: hosts }));
 app.use(
     cors({
         origin: corsUrls,
@@ -17,6 +38,11 @@ app.use(
 );
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
+app.use(hpp());
+app.use(helmet());
+app.use(limiter);
+app.use(xss());
+app.use(cookieParser());
 
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`);
