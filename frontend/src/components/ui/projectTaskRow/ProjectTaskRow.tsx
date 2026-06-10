@@ -46,7 +46,7 @@ export default function ProjectTaskRow({
     const column = COLUMNS_CONFIG[task.column];
     const overdue = isOverdue(task.due_date, task.column);
     const progress = Math.round(
-        ((task.subtasksDone ?? 0) * 100) / (task.subtasksTotal ?? 1),
+        ((task.subtasks_done ?? 0) * 100) / (task.subtasks_total ?? 1),
     );
 
     return (
@@ -124,14 +124,14 @@ export default function ProjectTaskRow({
                 )}
             </td>
             <td className="w-24 py-3 pr-4">
-                {task.subtasksTotal && task.subtasksTotal > 0 && (
+                {task.subtasks_total && task.subtasks_total > 0 && (
                     <div className="flex items-center gap-2">
                         <Progress
                             value={progress}
                             className="h-1 w-12 [&>*]:bg-bright-blue"
                         />
                         <span className="text-[10px] text-gray-400">
-                            {task.subtasksDone ?? 0}/{task.subtasksTotal ?? 0}
+                            {task.subtasks_done ?? 0}/{task.subtasks_total ?? 0}
                         </span>
                     </div>
                 )}

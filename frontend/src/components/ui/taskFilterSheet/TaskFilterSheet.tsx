@@ -339,7 +339,7 @@ export function TaskFilterSheet({
                     <FilterSection
                         title="Due Date"
                         icon={<CalendarBlankIcon weight="duotone" size={16} />}
-                        count={filters.dateRange?.from ? 1 : undefined}
+                        count={filters.date_range?.from ? 1 : undefined}
                     >
                         <div className="space-y-2 pt-1">
                             <div className="flex flex-wrap gap-2">
@@ -350,7 +350,7 @@ export function TaskFilterSheet({
                                     },
                                     {
                                         label: "Due soon",
-                                        key: "dueSoon" as const,
+                                        key: "due_soon" as const,
                                     },
                                 ].map(({ label, key }) => (
                                     <button
@@ -385,13 +385,13 @@ export function TaskFilterSheet({
                                     <button
                                         className="flex w-full items-center gap-2 rounded-md border px-3 py-2.5 text-sm transition-colors hover:bg-gray-50"
                                         style={{
-                                            background: filters.dateRange?.from
+                                            background: filters.date_range?.from
                                                 ? "#EDE9FD"
                                                 : "#F9FAFB",
-                                            border: filters.dateRange?.from
+                                            border: filters.date_range?.from
                                                 ? "1px solid #D3CBF8"
                                                 : "1px solid #E5E7EB",
-                                            color: filters.dateRange?.from
+                                            color: filters.date_range?.from
                                                 ? "#0096FF"
                                                 : "#6b7280",
                                         }}
@@ -400,26 +400,26 @@ export function TaskFilterSheet({
                                             weight="duotone"
                                             size={16}
                                             style={{
-                                                color: filters.dateRange?.from
+                                                color: filters.date_range?.from
                                                     ? "#0096FF"
                                                     : "#6b7280",
                                             }}
                                         />
-                                        {filters.dateRange?.from
-                                            ? filters.dateRange.to
-                                                ? `${format(filters.dateRange.from, "MMM d")} → ${format(filters.dateRange.to, "MMM d")}`
+                                        {filters.date_range?.from
+                                            ? filters.date_range.to
+                                                ? `${format(filters.date_range.from, "MMM d")} → ${format(filters.date_range.to, "MMM d")}`
                                                 : format(
-                                                      filters.dateRange.from,
+                                                      filters.date_range.from,
                                                       "MMM d, yyyy",
                                                   )
                                             : "Select date range"}
-                                        {filters.dateRange?.from && (
+                                        {filters.date_range?.from && (
                                             <span
                                                 className="ml-auto"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     update({
-                                                        dateRange: undefined,
+                                                        date_range: undefined,
                                                     });
                                                 }}
                                             >
@@ -434,9 +434,9 @@ export function TaskFilterSheet({
                                 <PopoverContent className="rounded-md border bg-white p-0 shadow-sm">
                                     <Calendar
                                         mode="range"
-                                        selected={filters.dateRange}
+                                        selected={filters.date_range}
                                         onSelect={(r) => {
-                                            update({ dateRange: r });
+                                            update({ date_range: r });
                                             if (r?.from && r?.to)
                                                 setCalOpen(false);
                                         }}
@@ -500,12 +500,12 @@ export function TaskFilterSheet({
                         </p>
                         {[
                             {
-                                key: "hasAttachment" as const,
+                                key: "has_attachment" as const,
                                 label: "Attachment",
                                 Icon: PaperclipIcon,
                             },
                             {
-                                key: "hasSubtasks" as const,
+                                key: "has_subtasks" as const,
                                 label: "Subtasks",
                                 Icon: CheckSquareIcon,
                             },

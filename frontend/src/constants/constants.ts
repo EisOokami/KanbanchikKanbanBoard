@@ -159,9 +159,9 @@ export const INITIAL_TASKS: Task[] = [
         ],
         attachments: [],
         comments: [],
-        subtasksDone: 10,
-        subtasksTotal: 20,
-        showProgress: true,
+        subtasks_done: 10,
+        subtasks_total: 20,
+        show_progress: true,
     },
     {
         id: 2,
@@ -203,9 +203,9 @@ export const INITIAL_TASKS: Task[] = [
         ],
         attachments: [],
         comments: [],
-        subtasksDone: 10,
-        subtasksTotal: 20,
-        showProgress: false,
+        subtasks_done: 10,
+        subtasks_total: 20,
+        show_progress: false,
     },
     {
         id: 3,
@@ -247,9 +247,9 @@ export const INITIAL_TASKS: Task[] = [
         ],
         attachments: [],
         comments: [],
-        subtasksDone: 10,
-        subtasksTotal: 20,
-        showProgress: false,
+        subtasks_done: 10,
+        subtasks_total: 20,
+        show_progress: false,
     },
     {
         id: 4,
@@ -298,9 +298,9 @@ export const INITIAL_TASKS: Task[] = [
         ],
         attachments: [],
         comments: [],
-        subtasksDone: 10,
-        subtasksTotal: 20,
-        showProgress: false,
+        subtasks_done: 10,
+        subtasks_total: 20,
+        show_progress: false,
     },
     {
         id: 5,
@@ -342,9 +342,9 @@ export const INITIAL_TASKS: Task[] = [
         ],
         attachments: [],
         comments: [],
-        subtasksDone: 10,
-        subtasksTotal: 20,
-        showProgress: false,
+        subtasks_done: 10,
+        subtasks_total: 20,
+        show_progress: false,
     },
     {
         id: 6,
@@ -393,9 +393,9 @@ export const INITIAL_TASKS: Task[] = [
         ],
         attachments: [],
         comments: [],
-        subtasksDone: 10,
-        subtasksTotal: 20,
-        showProgress: true,
+        subtasks_done: 10,
+        subtasks_total: 20,
+        show_progress: true,
     },
     {
         id: 7,
@@ -430,9 +430,9 @@ export const INITIAL_TASKS: Task[] = [
         ],
         attachments: [],
         comments: [],
-        subtasksDone: 10,
-        subtasksTotal: 20,
-        showProgress: false,
+        subtasks_done: 10,
+        subtasks_total: 20,
+        show_progress: false,
     },
     {
         id: 8,
@@ -474,9 +474,9 @@ export const INITIAL_TASKS: Task[] = [
         ],
         attachments: [],
         comments: [],
-        subtasksDone: 10,
-        subtasksTotal: 20,
-        showProgress: false,
+        subtasks_done: 10,
+        subtasks_total: 20,
+        show_progress: false,
     },
     {
         id: 9,
@@ -511,9 +511,9 @@ export const INITIAL_TASKS: Task[] = [
         ],
         attachments: [],
         comments: [],
-        subtasksDone: 10,
-        subtasksTotal: 20,
-        showProgress: false,
+        subtasks_done: 10,
+        subtasks_total: 20,
+        show_progress: false,
     },
     {
         id: 10,
@@ -555,9 +555,9 @@ export const INITIAL_TASKS: Task[] = [
         ],
         attachments: [],
         comments: [],
-        subtasksDone: 10,
-        subtasksTotal: 20,
-        showProgress: false,
+        subtasks_done: 10,
+        subtasks_total: 20,
+        show_progress: false,
     },
     {
         id: 11,
@@ -599,9 +599,9 @@ export const INITIAL_TASKS: Task[] = [
         ],
         attachments: [],
         comments: [],
-        subtasksDone: 10,
-        subtasksTotal: 20,
-        showProgress: true,
+        subtasks_done: 10,
+        subtasks_total: 20,
+        show_progress: true,
     },
     {
         id: 12,
@@ -636,9 +636,9 @@ export const INITIAL_TASKS: Task[] = [
         ],
         attachments: [],
         comments: [],
-        subtasksDone: 10,
-        subtasksTotal: 20,
-        showProgress: false,
+        subtasks_done: 10,
+        subtasks_total: 20,
+        show_progress: false,
     },
     {
         id: 13,
@@ -680,9 +680,9 @@ export const INITIAL_TASKS: Task[] = [
         ],
         attachments: [],
         comments: [],
-        subtasksDone: 10,
-        subtasksTotal: 20,
-        showProgress: true,
+        subtasks_done: 10,
+        subtasks_total: 20,
+        show_progress: true,
     },
     {
         id: 14,
@@ -710,9 +710,9 @@ export const INITIAL_TASKS: Task[] = [
         ],
         attachments: [],
         comments: [],
-        subtasksDone: 10,
-        subtasksTotal: 20,
-        showProgress: false,
+        subtasks_done: 10,
+        subtasks_total: 20,
+        show_progress: false,
     },
     {
         id: 15,
@@ -754,9 +754,9 @@ export const INITIAL_TASKS: Task[] = [
         ],
         attachments: [],
         comments: [],
-        subtasksDone: 10,
-        subtasksTotal: 20,
-        showProgress: true,
+        subtasks_done: 10,
+        subtasks_total: 20,
+        show_progress: true,
     },
 ];
 
@@ -819,8 +819,8 @@ export const INITIAL_PROJECTS: Project[] = [
         description:
             "Complete overhaul of the corporate site with new branding and UX improvements.",
         status: "active",
-        tasksTotal: 47,
-        tasksDone: 32,
+        tasks_total: 47,
+        tasks_done: 32,
         members: [
             {
                 id: 1,
@@ -866,8 +866,8 @@ export const INITIAL_PROJECTS: Project[] = [
         description:
             "New feature set for iOS & Android: push notifications, dark mode, offline sync.",
         status: "active",
-        tasksTotal: 93,
-        tasksDone: 31,
+        tasks_total: 93,
+        tasks_done: 31,
         members: [
             {
                 id: 4,
@@ -903,8 +903,8 @@ export const INITIAL_PROJECTS: Project[] = [
         description:
             "ETL pipeline refactoring and migration to cloud-native architecture.",
         status: "paused",
-        tasksTotal: 28,
-        tasksDone: 15,
+        tasks_total: 28,
+        tasks_done: 15,
         members: [
             {
                 id: 6,
@@ -930,8 +930,8 @@ export const INITIAL_PROJECTS: Project[] = [
         description:
             "Build a unified component library with Storybook docs for all product teams.",
         status: "active",
-        tasksTotal: 64,
-        tasksDone: 52,
+        tasks_total: 64,
+        tasks_done: 52,
         members: [
             {
                 id: 1,
@@ -987,8 +987,8 @@ export const INITIAL_PROJECTS: Project[] = [
         description:
             "OAuth 2.0 + SSO integration, MFA support and session management.",
         status: "completed",
-        tasksTotal: 19,
-        tasksDone: 19,
+        tasks_total: 19,
+        tasks_done: 19,
         members: [
             {
                 id: 4,
@@ -1024,8 +1024,8 @@ export const INITIAL_PROJECTS: Project[] = [
         description:
             "Real-time metrics and reporting dashboard for product and marketing teams.",
         status: "active",
-        tasksTotal: 38,
-        tasksDone: 8,
+        tasks_total: 38,
+        tasks_done: 8,
         members: [
             {
                 id: 2,
@@ -1091,10 +1091,10 @@ export const DEFAULT_FILTER: FilterState = {
     assignees: [],
     categories: [],
     overdue: false,
-    dateRange: undefined,
-    dueSoon: false,
-    hasAttachment: false,
-    hasSubtasks: false,
+    date_range: undefined,
+    due_soon: false,
+    has_attachment: false,
+    has_subtasks: false,
     progress: [0, 100],
 };
 

@@ -120,7 +120,7 @@ export default function KanbanCard({
             <p className="line-clamp-1 text-xs text-gray-500">
                 {card.description}
             </p>
-            {!card.showProgress && (
+            {!card.show_progress && (
                 <div className="my-2 flex items-center gap-0.5 text-gray-400">
                     <CalendarBlankIcon weight="duotone" className="size-4" />
                     <span
@@ -132,7 +132,7 @@ export default function KanbanCard({
                     </span>
                 </div>
             )}
-            {card.showProgress && subtasksTotal > 0 && (
+            {card.show_progress && subtasksTotal > 0 && (
                 <div className="my-3">
                     <div className="mb-1 flex items-center justify-between">
                         <div className="flex items-center gap-0.5 text-gray-400">
@@ -209,7 +209,7 @@ export default function KanbanCard({
                             </span>
                         </div>
                     )}
-                    {!card.showProgress && subtasksTotal > 0 && (
+                    {!card.show_progress && subtasksTotal > 0 && (
                         <div className="flex items-center gap-0.5 text-gray-400">
                             <CheckSquareIcon
                                 weight="duotone"

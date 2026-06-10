@@ -47,8 +47,8 @@ export interface Project extends ExtendedBase {
     owner: Pick<User, "name" | "avatar_url">;
     members: Omit<User, "email">[];
     status: Status;
-    tasksTotal?: number;
-    tasksDone?: number;
+    tasks_total?: number;
+    tasks_done?: number;
     icon: string;
     color: string;
     columns: (ColumnConfig & Column)[];
@@ -96,9 +96,9 @@ export interface Task extends ExtendedBase {
     categories: Category[];
     assignees: Omit<User, "email">[];
     subtasks: Subtask[];
-    subtasksDone?: number;
-    subtasksTotal?: number;
-    showProgress: boolean;
+    subtasks_done?: number;
+    subtasks_total?: number;
+    show_progress: boolean;
     attachments: Attachment[];
     comments: Comment[];
 }
@@ -130,8 +130,8 @@ export interface FilterState {
     categories?: string[];
     overdue: boolean;
     progress?: [number, number];
-    hasAttachment?: boolean;
-    hasSubtasks?: boolean;
-    dueSoon?: boolean;
-    dateRange?: DateRange | undefined;
+    has_attachment?: boolean;
+    has_subtasks?: boolean;
+    due_soon?: boolean;
+    date_range?: DateRange | undefined;
 }
