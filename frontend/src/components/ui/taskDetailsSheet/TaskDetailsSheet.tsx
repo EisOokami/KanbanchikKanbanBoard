@@ -1,7 +1,12 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
-import { Sheet, SheetContent, SheetHeader } from "@/components/ui/shadcn/sheet";
+import { useState, useRef, useCallback, useEffect } from "react";
+import {
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+} from "@/components/ui/shadcn/sheet";
 import { Button } from "@/components/ui/shadcn/button";
 import { Input } from "@/components/ui/shadcn/input";
 import { Textarea } from "@/components/ui/shadcn/textarea";
@@ -27,26 +32,19 @@ import {
     TooltipTrigger,
 } from "@/components/ui/shadcn/tooltip";
 import { format, formatDistanceToNow } from "date-fns";
-import { cn, getInitials, toDueDate } from "@/libs/utils";
-import { commentsToActivity, dueDateMeta } from "@/libs/taskDetailsSheet";
+import { cn, getInitials, toDate } from "@/libs/utils";
+import { commentsToActivity, dateMeta } from "@/libs/taskDetailsSheet";
 import FieldRow from "../fieldRow/FieldRow";
 import {
     Category,
-    Columns,
     Label,
     User,
     Priority,
     Subtask,
     Task,
+    Project,
 } from "@/types/types";
-import {
-    COLUMNS_CONFIG,
-    INITIAL_TASKS,
-    LABELS,
-    MOCK_CATEGORIES,
-    MOCK_MEMBERS,
-    PRIORITY_CONFIG,
-} from "@/constants/constants";
+import { MOCK_MEMBERS, PRIORITY_CONFIG } from "@/constants/constants";
 import {
     ActivityChange,
     ActivityComment,
@@ -78,7 +76,8 @@ import {
 interface TaskDetailsSheetProps {
     open: boolean;
     onOpenChange: (v: boolean) => void;
-    task?: Task;
+    selectedTask: Task;
+    projectData: Project;
     onSave?: (task: Task) => void;
     onDelete?: (id: number) => void;
 }
@@ -86,31 +85,37 @@ interface TaskDetailsSheetProps {
 export function TaskDetailsSheet({
     open,
     onOpenChange,
-    task: initialTask = INITIAL_TASKS[0],
+    selectedTask,
+    projectData,
     onSave,
     onDelete,
 }: TaskDetailsSheetProps) {
-    const [task, setTask] = useState<Task>(initialTask);
-    const [editingTitle, setEditingTitle] = useState(false);
-    const [editingDesc, setEditingDesc] = useState(false);
-    const [calOpen, setCalOpen] = useState(false);
-    const [assigneeOpen, setAssigneeOpen] = useState(false);
-    const [catOpen, setCatOpen] = useState(false);
-    const [labelOpen, setLabelOpen] = useState(false);
-    const [newSubtaskText, setNewSubtaskText] = useState("");
-    const [newComment, setNewComment] = useState("");
-    const [linkCopied, setLinkCopied] = useState(false);
+    const [task, setTask] = useState<Task>(selectedTask);
+    const [editingTitle, setEditingTitle] = useState<boolean>(false);
+    const [editingDesc, setEditingDesc] = useState<boolean>(false);
+    const [calOpen, setCalOpen] = useState<boolean>(false);
+    const [memberOpen, setmemberOpen] = useState<boolean>(false);
+    const [catOpen, setCatOpen] = useState<boolean>(false);
+    const [labelOpen, setLabelOpen] = useState<boolean>(false);
+    const [newSubtaskText, setNewSubtaskText] = useState<string>("");
+    const [newComment, setNewComment] = useState<string>("");
+    const [linkCopied, setLinkCopied] = useState<boolean>(false);
     const [activity, setActivity] = useState<ActivityEntry[]>(() =>
-        commentsToActivity(initialTask.comments),
+        commentsToActivity(selectedTask.comments),
     );
     const fileInputRef = useRef<HTMLInputElement>(null);
     const titleRef = useRef<HTMLTextAreaElement>(null);
+
+    useEffect(() => {
+        setTask(selectedTask);
+    }, [selectedTask]);
 
     const update = useCallback(
         <K extends keyof Task>(key: K, value: Task[K]) =>
             setTask((t) => ({ ...t, [key]: value })),
         [],
     );
+
     const pushChange = useCallback(
         (field: string, from: string, to: string) => {
             const entry: ActivityChange = {
@@ -160,16 +165,16 @@ export function TaskDetailsSheet({
             task.subtasks.map((s) => (s.id === id ? { ...s, text } : s)),
         );
 
-    const toggleAssignee = (member: Omit<User, "email">) => {
-        const exists = task.assignees.some((a) => a.id === member.id);
+    const togglemember = (member: Omit<User, "email">) => {
+        const exists = task.members.some((a) => a.id === member.id);
         update(
-            "assignees",
+            "members",
             exists
-                ? task.assignees.filter((a) => a.id !== member.id)
-                : [...task.assignees, member],
+                ? task.members.filter((a) => a.id !== member.id)
+                : [...task.members, member],
         );
         pushChange(
-            "assignee",
+            "member",
             exists ? `${member.name} ${member.surname}` : "—",
             exists ? "—" : `${member.name} ${member.surname}`,
         );
@@ -190,18 +195,20 @@ export function TaskDetailsSheet({
         );
     };
 
-    const toggleLabel = (label: Label) => {
-        const exists = task.labels.includes(label.name);
+    const toggleLabel = (labelValue: Label) => {
+        const exists = task.labels.some((label) => label.id === labelValue.id);
+
         update(
             "labels",
             exists
-                ? task.labels.filter((l) => l !== label.name)
-                : [...task.labels, label.name],
+                ? task.labels.filter((label) => label.id !== labelValue.id)
+                : [...task.labels, labelValue],
         );
+
         pushChange(
             "label",
-            exists ? label.name : "—",
-            exists ? "—" : label.name,
+            exists ? labelValue.name : "—",
+            exists ? "—" : labelValue.name,
         );
     };
 
@@ -220,7 +227,7 @@ export function TaskDetailsSheet({
             ...task.comments,
             {
                 id: entry.id,
-                assignee: currentUser,
+                member: currentUser,
                 body: entry.body,
                 created_at: entry.timestamp,
                 updated_at: null,
@@ -251,8 +258,10 @@ export function TaskDetailsSheet({
             task.attachments.filter((a) => a.id !== id),
         );
 
-    const dueDate = toDueDate(task.due_date);
-    const ddMeta = dueDateMeta(dueDate);
+    const dueDate = toDate(task.due_date);
+    const startDate = toDate(task.start_date);
+    const dueDateMeta = dateMeta(dueDate);
+    const startDateMeta = dateMeta(startDate);
 
     const handleCopyLink = () => {
         navigator.clipboard
@@ -268,14 +277,13 @@ export function TaskDetailsSheet({
     };
 
     const pm = PRIORITY_CONFIG[task.priority];
-    const column = COLUMNS_CONFIG[task.column];
     const doneSubtasks = task.subtasks.filter((s) => s.is_done).length;
     const totalSubtasks = task.subtasks.length;
     const subtasksPct = totalSubtasks
         ? Math.round((doneSubtasks / totalSubtasks) * 100)
         : 0;
 
-    const createdAt = toDueDate(task.created_at) ?? new Date();
+    const createdAt = toDate(task.created_at) ?? new Date();
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
@@ -283,19 +291,14 @@ export function TaskDetailsSheet({
                 side="right"
                 className="flex min-w-[620px] max-w-[100vw] flex-col gap-0 bg-white p-0 outline-none [&>button:first-of-type]:hidden"
             >
+                <SheetTitle className="hidden"></SheetTitle>
                 <SheetHeader className="shrink-0 px-6 py-3">
                     <div className="flex items-center justify-between gap-3">
                         <div className="flex flex-wrap items-center gap-2">
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <button className="flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors hover:brightness-95">
-                                        <span
-                                            className="size-1.5 rounded-full"
-                                            style={{
-                                                backgroundColor: column.color,
-                                            }}
-                                        />
-                                        {column.label}
+                                        {task.column.name}
                                         <CaretDownIcon
                                             weight="duotone"
                                             size={12}
@@ -303,31 +306,21 @@ export function TaskDetailsSheet({
                                     </button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent>
-                                    {(
-                                        Object.keys(COLUMNS_CONFIG) as Columns[]
-                                    ).map((s) => (
+                                    {projectData.columns.map((column) => (
                                         <DropdownMenuItem
-                                            key={s}
+                                            key={column.id}
                                             className="cursor-pointer gap-2 text-sm"
                                             onClick={() => {
                                                 pushChange(
                                                     "status",
-                                                    COLUMNS_CONFIG[task.column]
-                                                        .label,
-                                                    COLUMNS_CONFIG[s].label,
+                                                    task.column.name,
+                                                    column.name,
                                                 );
-                                                update("column", s);
+                                                update("column", column);
                                             }}
                                         >
-                                            <span
-                                                className="size-2 rounded-full"
-                                                style={{
-                                                    backgroundColor:
-                                                        COLUMNS_CONFIG[s].color,
-                                                }}
-                                            />
-                                            {COLUMNS_CONFIG[s].label}
-                                            {task.column === s && (
+                                            {column.name}
+                                            {task.column.id === column.id && (
                                                 <CheckIcon
                                                     weight="duotone"
                                                     size={12}
@@ -498,6 +491,84 @@ export function TaskDetailsSheet({
                                             size={16}
                                         />
                                     }
+                                    label="Start date"
+                                >
+                                    <Popover
+                                        open={calOpen}
+                                        onOpenChange={setCalOpen}
+                                    >
+                                        <PopoverTrigger asChild>
+                                            <button className="-mx-2 flex items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-gray-50">
+                                                {startDateMeta ? (
+                                                    <span
+                                                        className="flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-sm font-medium"
+                                                        style={{
+                                                            background:
+                                                                startDateMeta.bg,
+                                                            color: startDateMeta.color,
+                                                            border: `1px solid ${startDateMeta.border}`,
+                                                        }}
+                                                    >
+                                                        <CalendarIcon
+                                                            weight="duotone"
+                                                            size={14}
+                                                        />
+                                                        {startDateMeta.text !==
+                                                            "Overdue" &&
+                                                        startDateMeta.text !==
+                                                            "Today" &&
+                                                        startDateMeta.text !==
+                                                            "Tomorrow"
+                                                            ? startDateMeta.text
+                                                            : `${startDateMeta.text} · ${format(startDate!, "MMM d")}`}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-sm text-gray-300">
+                                                        No start date
+                                                    </span>
+                                                )}
+                                                {startDate && (
+                                                    <XIcon
+                                                        weight="duotone"
+                                                        size={14}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            update(
+                                                                "start_date",
+                                                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                                                undefined as any,
+                                                            );
+                                                        }}
+                                                        className="text-gray-500 transition-colors hover:text-red-400"
+                                                    />
+                                                )}
+                                            </button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="p-0">
+                                            <Calendar
+                                                mode="single"
+                                                selected={
+                                                    startDate ?? undefined
+                                                }
+                                                onSelect={(d) => {
+                                                    update(
+                                                        "start_date",
+                                                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                                        d ?? (undefined as any),
+                                                    );
+                                                    setCalOpen(false);
+                                                }}
+                                            />
+                                        </PopoverContent>
+                                    </Popover>
+                                </FieldRow>
+                                <FieldRow
+                                    icon={
+                                        <CalendarBlankIcon
+                                            weight="duotone"
+                                            size={16}
+                                        />
+                                    }
                                     label="Due date"
                                 >
                                     <Popover
@@ -506,28 +577,28 @@ export function TaskDetailsSheet({
                                     >
                                         <PopoverTrigger asChild>
                                             <button className="-mx-2 flex items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-gray-50">
-                                                {ddMeta ? (
+                                                {dueDateMeta ? (
                                                     <span
                                                         className="flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-sm font-medium"
                                                         style={{
                                                             background:
-                                                                ddMeta.bg,
-                                                            color: ddMeta.color,
-                                                            border: `1px solid ${ddMeta.border}`,
+                                                                dueDateMeta.bg,
+                                                            color: dueDateMeta.color,
+                                                            border: `1px solid ${dueDateMeta.border}`,
                                                         }}
                                                     >
                                                         <CalendarIcon
                                                             weight="duotone"
                                                             size={14}
                                                         />
-                                                        {ddMeta.text !==
+                                                        {dueDateMeta.text !==
                                                             "Overdue" &&
-                                                        ddMeta.text !==
+                                                        dueDateMeta.text !==
                                                             "Today" &&
-                                                        ddMeta.text !==
+                                                        dueDateMeta.text !==
                                                             "Tomorrow"
-                                                            ? ddMeta.text
-                                                            : `${ddMeta.text} · ${format(dueDate!, "MMM d")}`}
+                                                            ? dueDateMeta.text
+                                                            : `${dueDateMeta.text} · ${format(dueDate!, "MMM d")}`}
                                                     </span>
                                                 ) : (
                                                     <span className="text-sm text-gray-300">
@@ -574,10 +645,10 @@ export function TaskDetailsSheet({
                                             size={16}
                                         />
                                     }
-                                    label="Assignees"
+                                    label="members"
                                 >
                                     <div className="flex flex-wrap items-center gap-2">
-                                        {task.assignees.map((m) => (
+                                        {task.members.map((m) => (
                                             <Tooltip key={m.id}>
                                                 <TooltipTrigger asChild>
                                                     <div className="group/av relative">
@@ -597,9 +668,7 @@ export function TaskDetailsSheet({
                                                         </Avatar>
                                                         <button
                                                             onClick={() =>
-                                                                toggleAssignee(
-                                                                    m,
-                                                                )
+                                                                togglemember(m)
                                                             }
                                                             className="absolute -right-0.5 -top-0.5 hidden size-3.5 items-center justify-center rounded-full bg-red-500 group-hover/av:flex"
                                                         >
@@ -617,8 +686,8 @@ export function TaskDetailsSheet({
                                             </Tooltip>
                                         ))}
                                         <Popover
-                                            open={assigneeOpen}
-                                            onOpenChange={setAssigneeOpen}
+                                            open={memberOpen}
+                                            onOpenChange={setmemberOpen}
                                         >
                                             <PopoverTrigger asChild>
                                                 <button className="flex size-7 items-center justify-center rounded-full border border-dashed transition-colors hover:border-bright-blue hover:bg-bright-blue/5">
@@ -634,7 +703,7 @@ export function TaskDetailsSheet({
                                                     MOCK_MEMBERS,
                                                 ).map((m) => {
                                                     const sel =
-                                                        task.assignees.some(
+                                                        task.members.some(
                                                             (a) =>
                                                                 a.id === m.id,
                                                         );
@@ -642,9 +711,7 @@ export function TaskDetailsSheet({
                                                         <button
                                                             key={m.id}
                                                             onClick={() =>
-                                                                toggleAssignee(
-                                                                    m,
-                                                                )
+                                                                togglemember(m)
                                                             }
                                                             className={cn(
                                                                 "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
@@ -683,9 +750,9 @@ export function TaskDetailsSheet({
                                                 })}
                                             </PopoverContent>
                                         </Popover>
-                                        {task.assignees.length === 0 && (
+                                        {task.members.length === 0 && (
                                             <span className="text-sm text-gray-300">
-                                                No assignees
+                                                No members
                                             </span>
                                         )}
                                     </div>
@@ -732,45 +799,50 @@ export function TaskDetailsSheet({
                                             </PopoverTrigger>
                                             <PopoverContent className="w-52 p-2">
                                                 <div className="flex flex-wrap gap-1.5">
-                                                    {Object.values(
-                                                        MOCK_CATEGORIES,
-                                                    ).map((category) => {
-                                                        const sel =
-                                                            task.categories.some(
-                                                                (tc) =>
-                                                                    tc.id ===
-                                                                    category.id,
-                                                            );
-                                                        return (
-                                                            <button
-                                                                key={
-                                                                    category.id
-                                                                }
-                                                                onClick={() =>
-                                                                    toggleCategory(
-                                                                        category,
-                                                                    )
-                                                                }
-                                                                className={cn(
-                                                                    "rounded-md border px-2.5 py-1 text-xs font-medium capitalize transition-colors",
-                                                                    sel
-                                                                        ? ""
-                                                                        : "border-gray-200 text-gray-600 hover:bg-gray-50",
-                                                                )}
-                                                                style={{
-                                                                    backgroundColor:
-                                                                        sel
-                                                                            ? category.color
+                                                    {projectData.categories.map(
+                                                        (category) => {
+                                                            const selectedCategory =
+                                                                task.categories.some(
+                                                                    (
+                                                                        taskCategory,
+                                                                    ) =>
+                                                                        taskCategory.id ===
+                                                                        category.id,
+                                                                );
+
+                                                            return (
+                                                                <button
+                                                                    key={
+                                                                        category.id
+                                                                    }
+                                                                    onClick={() =>
+                                                                        toggleCategory(
+                                                                            category,
+                                                                        )
+                                                                    }
+                                                                    className={cn(
+                                                                        "rounded-md border px-2.5 py-1 text-xs font-medium capitalize transition-colors",
+                                                                        selectedCategory
+                                                                            ? ""
+                                                                            : "border-gray-200 text-gray-600 hover:bg-gray-50",
+                                                                    )}
+                                                                    style={{
+                                                                        backgroundColor:
+                                                                            selectedCategory
+                                                                                ? category.color
+                                                                                : undefined,
+                                                                        color: selectedCategory
+                                                                            ? "#fff"
                                                                             : undefined,
-                                                                    color: sel
-                                                                        ? "#fff"
-                                                                        : undefined,
-                                                                }}
-                                                            >
-                                                                {category.name}
-                                                            </button>
-                                                        );
-                                                    })}
+                                                                    }}
+                                                                >
+                                                                    {
+                                                                        category.name
+                                                                    }
+                                                                </button>
+                                                            );
+                                                        },
+                                                    )}
                                                 </div>
                                             </PopoverContent>
                                         </Popover>
@@ -803,31 +875,38 @@ export function TaskDetailsSheet({
                                     label="Labels"
                                 >
                                     <div className="flex flex-wrap items-center gap-1.5">
-                                        {task.labels.map((labelName) => {
-                                            const meta = LABELS.find(
-                                                (l) => l.name === labelName,
-                                            );
+                                        {task.labels.map((label) => {
+                                            const selectedLabel =
+                                                projectData.labels.find(
+                                                    (projectLabel) =>
+                                                        projectLabel.id ===
+                                                        label.id,
+                                                );
+
                                             return (
                                                 <span
-                                                    key={labelName}
+                                                    key={label.id}
                                                     className="flex cursor-pointer items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium capitalize transition-colors hover:opacity-80"
                                                     style={{
                                                         borderColor:
-                                                            meta?.color ??
+                                                            selectedLabel?.color ??
                                                             "#d1d5db",
                                                         color:
-                                                            meta?.color ??
+                                                            selectedLabel?.color ??
                                                             "#6b7280",
-                                                        background: meta
-                                                            ? `${meta.color}18`
-                                                            : "#f9fafb",
+                                                        background:
+                                                            selectedLabel
+                                                                ? `${selectedLabel.color}18`
+                                                                : "#f9fafb",
                                                     }}
                                                     onClick={() =>
-                                                        meta &&
-                                                        toggleLabel(meta)
+                                                        selectedLabel &&
+                                                        toggleLabel(
+                                                            selectedLabel,
+                                                        )
                                                     }
                                                 >
-                                                    {labelName}
+                                                    {label.name}
                                                     <XIcon
                                                         weight="duotone"
                                                         size={14}
@@ -850,43 +929,54 @@ export function TaskDetailsSheet({
                                             </PopoverTrigger>
                                             <PopoverContent className="w-48 p-2">
                                                 <div className="flex flex-col gap-0.5">
-                                                    {LABELS.map((l) => {
-                                                        const sel =
-                                                            task.labels.includes(
-                                                                l.name,
-                                                            );
-                                                        return (
-                                                            <button
-                                                                key={l.id}
-                                                                onClick={() =>
-                                                                    toggleLabel(
-                                                                        l,
-                                                                    )
-                                                                }
-                                                                className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-xs transition-colors hover:bg-gray-50"
-                                                            >
-                                                                <span
-                                                                    className="size-2 shrink-0 rounded-full"
-                                                                    style={{
-                                                                        background:
-                                                                            l.color,
-                                                                    }}
-                                                                />
-                                                                <span className="flex-1 text-left font-medium text-gray-700">
-                                                                    {l.name}
-                                                                </span>
-                                                                {sel && (
-                                                                    <CheckIcon
-                                                                        weight="duotone"
-                                                                        size={
-                                                                            16
-                                                                        }
-                                                                        className="text-bright-blue"
+                                                    {projectData.labels.map(
+                                                        (label) => {
+                                                            const selectedLabel =
+                                                                task.labels.some(
+                                                                    (
+                                                                        taskLabel,
+                                                                    ) =>
+                                                                        taskLabel.id ===
+                                                                        label.id,
+                                                                );
+
+                                                            return (
+                                                                <button
+                                                                    key={
+                                                                        label.id
+                                                                    }
+                                                                    onClick={() =>
+                                                                        toggleLabel(
+                                                                            label,
+                                                                        )
+                                                                    }
+                                                                    className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-xs transition-colors hover:bg-gray-50"
+                                                                >
+                                                                    <span
+                                                                        className="size-2 shrink-0 rounded-full"
+                                                                        style={{
+                                                                            background:
+                                                                                label.color,
+                                                                        }}
                                                                     />
-                                                                )}
-                                                            </button>
-                                                        );
-                                                    })}
+                                                                    <span className="flex-1 text-left font-medium text-gray-700">
+                                                                        {
+                                                                            label.name
+                                                                        }
+                                                                    </span>
+                                                                    {selectedLabel && (
+                                                                        <CheckIcon
+                                                                            weight="duotone"
+                                                                            size={
+                                                                                16
+                                                                            }
+                                                                            className="text-bright-blue"
+                                                                        />
+                                                                    )}
+                                                                </button>
+                                                            );
+                                                        },
+                                                    )}
                                                 </div>
                                             </PopoverContent>
                                         </Popover>
@@ -1150,78 +1240,79 @@ export function TaskDetailsSheet({
                         </div>
                         <div>
                             {activity.map((entry) => (
-                                <div key={entry.id} className="mb-3">
-                                    <div className="flex items-start gap-3">
-                                        <Avatar className="mt-0.5 size-7 shrink-0">
-                                            <AvatarFallback
-                                                className="text-[10px] font-bold text-white"
-                                                style={{
-                                                    background:
-                                                        entry.author.color,
-                                                }}
-                                            >
-                                                {getInitials(
-                                                    entry.author.name,
-                                                    entry.author.surname,
-                                                )}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                        <div className="min-w-0 flex-1">
-                                            <div className="flex flex-wrap items-center gap-1.5">
-                                                <span className="text-xs font-semibold">
-                                                    {entry.author.name}{" "}
-                                                    {entry.author.surname}
-                                                </span>
-                                                <span className="ml-auto text-xs text-gray-300">
-                                                    {formatDistanceToNow(
-                                                        entry.timestamp,
-                                                        {
-                                                            addSuffix: true,
-                                                        },
+                                    <div key={entry.id} className="mb-3">
+                                        <div className="flex items-start gap-3">
+                                            <Avatar className="mt-0.5 size-7 shrink-0">
+                                                <AvatarFallback
+                                                    className="text-[10px] font-bold text-white"
+                                                    style={{
+                                                        background:
+                                                            entry.author.color,
+                                                    }}
+                                                >
+                                                    {getInitials(
+                                                        entry.author.name,
+                                                        entry.author.surname,
                                                     )}
-                                                </span>
-                                            </div>
-                                            {entry.type === "change" && (
-                                                <p className="mt-0.5 text-xs text-gray-500">
-                                                    changed{" "}
-                                                    <span className="font-medium text-gray-700">
-                                                        {entry.field}
-                                                    </span>{" "}
-                                                    <span
-                                                        className="mx-0.5 rounded px-1.5 py-0.5 line-through"
-                                                        style={{
-                                                            background:
-                                                                "#FEF0EF",
-                                                            color: "#D93025",
-                                                        }}
-                                                    >
-                                                        {entry.from}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex flex-wrap items-center gap-1.5">
+                                                    <span className="text-xs font-semibold">
+                                                        {entry.author.name}{" "}
+                                                        {entry.author.surname}
                                                     </span>
-                                                    <span className="text-gray-400">
-                                                        →
+                                                    <span className="ml-auto text-xs text-gray-300">
+                                                        {formatDistanceToNow(
+                                                            entry.timestamp,
+                                                            {
+                                                                addSuffix: true,
+                                                            },
+                                                        )}
                                                     </span>
-                                                    <span
-                                                        className="mx-0.5 rounded px-1.5 py-0.5"
-                                                        style={{
-                                                            background:
-                                                                "#EEFAF2",
-                                                            color: "#1E7E3A",
-                                                        }}
-                                                    >
-                                                        {entry.to}
-                                                    </span>
-                                                </p>
-                                            )}
-                                            {entry.type === "comment" && (
-                                                <div className="mt-1.5 rounded-md rounded-tl-sm border px-3 py-2.5 text-sm leading-relaxed text-gray-700">
-                                                    {entry.body}
                                                 </div>
-                                            )}
+                                                {entry.type === "change" && (
+                                                    <p className="mt-0.5 text-xs text-gray-500">
+                                                        changed{" "}
+                                                        <span className="font-medium text-gray-700">
+                                                            {entry.field}
+                                                        </span>{" "}
+                                                        <span
+                                                            className="mx-0.5 rounded px-1.5 py-0.5 line-through"
+                                                            style={{
+                                                                background:
+                                                                    "#FEF0EF",
+                                                                color: "#D93025",
+                                                            }}
+                                                        >
+                                                            {entry.from}
+                                                        </span>
+                                                        <span className="text-gray-400">
+                                                            →
+                                                        </span>
+                                                        <span
+                                                            className="mx-0.5 rounded px-1.5 py-0.5"
+                                                            style={{
+                                                                background:
+                                                                    "#EEFAF2",
+                                                                color: "#1E7E3A",
+                                                            }}
+                                                        >
+                                                            {entry.to}
+                                                        </span>
+                                                    </p>
+                                                )}
+                                                {entry.type === "comment" && (
+                                                    <div className="mt-1.5 rounded-md rounded-tl-sm border px-3 py-2.5 text-sm leading-relaxed text-gray-700">
+                                                        {entry.body}
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
+                                        <Separator className="mt-3" />
                                     </div>
-                                    <Separator className="mt-3" />
-                                </div>
-                            ))}
+                                );
+                            )}
                             {activity.length === 0 && (
                                 <p className="py-2 text-xs text-gray-300">
                                     No activity yet.

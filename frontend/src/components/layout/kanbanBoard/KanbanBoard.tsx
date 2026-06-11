@@ -382,11 +382,15 @@ export default function KanbanBoard({
                 columnsData={columns}
                 projectData={projectData}
             />
-            <TaskDetailsSheet
-                open={showTaskDetails}
-                onOpenChange={handleshowTaskDetails}
-                onSave={(updated) => console.log(updated)}
-            />
+            {selectedTask && (
+                <TaskDetailsSheet
+                    open={showTaskDetails}
+                    onOpenChange={handleshowTaskDetails}
+                    onSave={(updated) => console.log(updated)}
+                    selectedTask={selectedTask}
+                    projectData={projectData}
+                />
+            )}
             <CreateTaskModal
                 open={showCreateTask}
                 onOpenChange={handleshowCreateTask}
