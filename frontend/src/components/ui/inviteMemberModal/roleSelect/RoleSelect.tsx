@@ -31,26 +31,17 @@ export default function RoleSelect({
                 <SelectValue />
             </SelectTrigger>
             <SelectContent>
-                {/* {(
-                    Object.entries(ROLE_META) as [
-                        Role,
-                        (typeof ROLE_META)[Role],
-                    ][]
-                ).map(([key, m]) => ( */}
-                {ROLES.map((role) => (
-                    <SelectItem
-                        key={role}
-                        value={role}
-                        className="cursor-pointer text-sm font-medium capitalize"
-                    >
-                        <span
-                        // style={{ color: m.color }}
+                {ROLES.map((role) =>
+                    role !== "owner" ? (
+                        <SelectItem
+                            key={role}
+                            value={role}
+                            className="rounded-md text-sm font-medium capitalize"
                         >
-                            {/* {m.label} */}
-                            {role}
-                        </span>
-                    </SelectItem>
-                ))}
+                            <span>{role}</span>
+                        </SelectItem>
+                    ) : null,
+                )}
             </SelectContent>
         </Select>
     );

@@ -24,7 +24,7 @@ import {
     AvatarImage,
 } from "@/components/ui/shadcn/avatar";
 import { ButtonGroup } from "@/components/ui/shadcn/button-group";
-import { InviteAssignmentModal } from "@/components/ui/inviteAssigmentModal/InviteAssigmentModal";
+import { InviteMemberModal } from "@/components/ui/inviteMemberModal/InviteMemberModal";
 import { TaskFilterSheet } from "@/components/ui/taskFilterSheet/TaskFilterSheet";
 import { ProjectSettingsDialog } from "@/components/ui/projectSettingsDialog/ProjectSettingsDialog";
 import { ProjectListView } from "../projectListView/ProjectListView";
@@ -363,9 +363,10 @@ export default function KanbanBoard({
                     />
                 )}
             </main>
-            <InviteAssignmentModal
+            <InviteMemberModal
                 open={showInvite}
                 onOpenChange={() => setshowInvite(!showInvite)}
+                membersData={projectData.members}
             />
             <TaskFilterSheet
                 open={showFilters}

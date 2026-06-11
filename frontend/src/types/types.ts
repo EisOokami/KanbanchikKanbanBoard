@@ -71,7 +71,7 @@ export interface Attachment extends Base {
 }
 
 export interface Comment extends ExtendedBase {
-    assignee: Omit<User, "email">;
+    member: Omit<User, "email">;
     body: string;
 }
 
@@ -93,16 +93,17 @@ export interface Task extends ExtendedBase {
     due_date: string | Date;
     start_date: string | Date;
     priority: Priority;
-    column: Columns;
-    labels: string[];
+    column: Column;
+    labels: Label[];
     categories: Category[];
-    assignees: Omit<User, "email">[];
+    members: Omit<User, "email">[];
     subtasks: Subtask[];
     subtasks_done?: number;
     subtasks_total?: number;
     show_progress: boolean;
     attachments: Attachment[];
     comments: Comment[];
+    project: Pick<Project, "id" | "name" | "color" | "icon">;
 }
 
 export interface Column extends ExtendedBase {
@@ -128,7 +129,7 @@ export interface FilterState {
     columns: string[];
     priorities: Priority[];
     projects?: Pick<Project, "name">[];
-    assignees?: Omit<User, "email">[];
+    members?: Omit<User, "email">[];
     categories?: string[];
     overdue: boolean;
     progress?: [number, number];
@@ -136,4 +137,9 @@ export interface FilterState {
     has_subtasks?: boolean;
     due_soon?: boolean;
     date_range?: DateRange | undefined;
+}
+
+export interface FilterOptions {
+    statuses: Pick<Column, "id" | "name">[];
+    projects: Pick<Project, "id" | "name" | "color">[];
 }

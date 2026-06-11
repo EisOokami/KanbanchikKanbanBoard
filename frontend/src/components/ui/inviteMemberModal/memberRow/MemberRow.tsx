@@ -46,30 +46,25 @@ export default function MemberRow({
                 </div>
                 {/* <p className="truncate text-xs text-gray-500">{member.email}</p> */}
             </div>
-            <div className="flex items-center gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
-                <RoleSelect
-                    value={member.role}
-                    onChange={(r) => onRoleChange(member.id, r)}
-                    compact
-                />
-                <button
-                    onClick={() => onRemove(member.id)}
-                    className="flex size-8 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-red-50 hover:text-red-500"
-                >
-                    <XIcon weight="duotone" size={14} />
-                </button>
-            </div>
-            <div className="group-hover:hidden">
-                <span
-                    className="rounded-md border px-2 py-0.5 text-xs font-medium capitalize"
-                    // style={{
-                    //     color: ROLE_META[member.role].color,
-                    // }}
-                >
-                    {/* {ROLE_META[member.role].label} */}
+            {member.role !== "owner" ? (
+                <div className="flex items-center gap-1.5">
+                    <RoleSelect
+                        value={member.role}
+                        onChange={(r) => onRoleChange(member.id, r)}
+                        compact
+                    />
+                    <button
+                        onClick={() => onRemove(member.id)}
+                        className="flex size-8 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-red-50 hover:text-red-500"
+                    >
+                        <XIcon weight="duotone" size={14} />
+                    </button>
+                </div>
+            ) : (
+                <span className="rounded-md border px-3 py-1.5 text-xs font-medium capitalize">
                     {member.role}
                 </span>
-            </div>
+            )}
         </div>
     );
 }

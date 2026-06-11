@@ -21,7 +21,6 @@ import { Invite } from "@/types/inviteAssigmentModal";
 import RoleSelect from "./roleSelect/RoleSelect";
 import MemberRow from "./memberRow/MemberRow";
 import { User, Role } from "@/types/types";
-import { MOCK_MEMBERS } from "@/constants/constants";
 import {
     CheckIcon,
     CopyIcon,
@@ -35,19 +34,18 @@ import {
     XIcon,
 } from "@phosphor-icons/react";
 
-interface InviteAssignmentModalProps {
+interface InviteMemberModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    taskTitle?: string;
+    membersData: Omit<User, "email">[];
 }
 
-export function InviteAssignmentModal({
+export function InviteMemberModal({
     open,
     onOpenChange,
-}: InviteAssignmentModalProps) {
-    const [members, setMembers] = useState<Omit<User, "email">[]>(
-        Object.values(MOCK_MEMBERS),
-    );
+    membersData,
+}: InviteMemberModalProps) {
+    const [members, setMembers] = useState<Omit<User, "email">[]>(membersData);
     const [invites, setInvites] = useState<Invite[]>([
         { email: "", role: "viewer" },
     ]);
@@ -275,7 +273,7 @@ export function InviteAssignmentModal({
                                     </div>
                                 ) : (
                                     <div className="flex flex-col items-center gap-2 py-10">
-                                        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-gray-100">
+                                        <div className="flex size-10 items-center justify-center rounded-md bg-gray-100">
                                             <UsersIcon
                                                 weight="duotone"
                                                 size={18}
@@ -323,7 +321,7 @@ export function InviteAssignmentModal({
                     <p className="text-xs text-gray-500">
                         {selectedTab === "invite"
                             ? "Invites will be sent by email"
-                            : `${members.length} member${members.length !== 1 ? "s" : ""} on this task`}
+                            : `${members.length} member${members.length !== 1 ? "s" : ""} on this project`}
                     </p>
                     <div className="flex items-center gap-2">
                         <Button
