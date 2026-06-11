@@ -21,7 +21,7 @@ import {
 } from "../shadcn/alert-dialog";
 import { Task } from "@/types/types";
 import { Progress } from "../shadcn/progress";
-import { COLUMNS_CONFIG, PRIORITY_CONFIG } from "@/constants/constants";
+import { PRIORITY_CONFIG } from "@/constants/constants";
 import {
     CalendarBlankIcon,
     ChatTeardropDotsIcon,
@@ -34,23 +34,25 @@ import {
 interface TaskRowProps {
     task: Task;
     onDelete: (id: number) => void;
-    projectName: string;
+    onOpenDetails: () => void;
 }
 
 export default function TaskRow({
     task,
     onDelete,
-    projectName,
+    onOpenDetails,
 }: Readonly<TaskRowProps>) {
     const priority = PRIORITY_CONFIG[task.priority];
-    const column = COLUMNS_CONFIG[task.column];
-    const overdue = isOverdue(task.due_date, task.column);
+    const overdue = isOverdue(task.due_date, task.column.name);
     const progress = Math.round(
         ((task.subtasks_done ?? 0) * 100) / (task.subtasks_total ?? 1),
     );
 
     return (
-        <tr className="group cursor-pointer border-b transition-colors duration-100">
+        <tr
+            className="group cursor-pointer border-b transition-colors duration-100"
+            onClick={onOpenDetails}
+        >
             <td className="w-24 py-3 pl-8 pr-2">
                 <span className="font-mono text-xs font-medium text-gray-400">
                     {task.id}
@@ -62,12 +64,13 @@ export default function TaskRow({
                 </span>
                 {task.labels.length > 0 && (
                     <div className="mt-1 flex gap-1">
-                        {task.labels.slice(0, 2).map((l) => (
+                        {task.labels.slice(0, 2).map((label) => (
                             <span
-                                key={l}
-                                className="rounded-md bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium capitalize text-gray-500"
+                                key={label.id}
+                                className="rounded-md px-1.5 py-0.5 text-[10px] font-medium capitalize text-white"
+                                style={{ backgroundColor: label.color }}
                             >
-                                {l}
+                                {label.name}
                             </span>
                         ))}
                         {task.labels.length > 2 && (
@@ -75,63 +78,82 @@ export default function TaskRow({
                                 +{task.labels.length - 2}
                             </span>
                         )}
-                        {task.categories.length > 0 && (
-                            <span className="rounded-md bg-gray-200 px-1.5 py-0.5 text-[10px] font-medium capitalize text-gray-600">
-                                {task.categories
-                                    .map((category) => category.name)
-                                    .join(", ")}
+                        {task.categories.slice(0, 2).map((category) => (
+                            <span
+                                key={category.id}
+                                className="rounded-md px-1.5 py-0.5 text-[10px] font-medium capitalize text-white"
+                                style={{ backgroundColor: category.color }}
+                            >
+                                {category.name}
+                            </span>
+                        ))}
+                        {task.categories.length > 2 && (
+                            <span className="text-[10px] text-gray-400">
+                                +{task.categories.length - 2}
                             </span>
                         )}
                     </div>
                 )}
             </td>
             <td className="w-36 py-3 pr-4">
-                <span
-                    className="inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-medium text-white"
-                    style={{ backgroundColor: column.color }}
-                >
-                    {column.label}
+                <span className="inline-flex rounded-md border px-2 py-1 text-xs font-medium">
+                    {task.column.name}
                 </span>
             </td>
             <td className="w-28 py-3 pr-4">
                 <span
-                    className="inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-medium text-white"
+                    className="inline-flex rounded-md border px-2 py-1 text-xs font-medium text-white"
                     style={{ backgroundColor: priority.color }}
                 >
                     {priority.label}
                 </span>
             </td>
             <td className="w-36 py-3 pr-4">
-                <span className="inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-medium">
-                    {projectName}
-                </span>
+                <div className="flex items-center gap-1">
+                    <div
+                        className="grid size-5 place-content-center rounded-md"
+                        style={{
+                            backgroundColor: task.project.color + "33",
+                        }}
+                    >
+                        <span className="text-[10px]">{task.project.icon}</span>
+                    </div>
+                    <span className="text-xs font-medium">
+                        {task.project.name}
+                    </span>
+                </div>
             </td>
             <td className="w-28 py-3 pr-4">
                 <div className="flex -space-x-1.5">
-                    {task.assignees.slice(0, 3).map((assignee) => (
-                        <Tooltip key={assignee.id}>
+                    {task.members.slice(0, 3).map((member) => (
+                        <Tooltip key={member.id}>
                             <TooltipTrigger asChild>
-                                <Avatar className="size-6 ring-2 ring-white">
+                                <Avatar className="size-6">
                                     <AvatarImage
-                                        src={assignee.avatar_url}
-                                        alt={assignee.name}
+                                        src={member.avatar_url}
+                                        alt={member.name}
                                     />
-                                    <AvatarFallback className="text-[9px] font-medium">
+                                    <AvatarFallback
+                                        className="text-[9px] font-medium text-white"
+                                        style={{
+                                            backgroundColor: member.color,
+                                        }}
+                                    >
                                         {getInitials(
-                                            assignee.name,
-                                            assignee.surname,
+                                            member.name,
+                                            member.surname,
                                         )}
                                     </AvatarFallback>
                                 </Avatar>
                             </TooltipTrigger>
                             <TooltipContent>
-                                {assignee.name} {assignee.surname}
+                                {member.name} {member.surname}
                             </TooltipContent>
                         </Tooltip>
                     ))}
-                    {task.assignees.length > 3 && (
+                    {task.members.length > 3 && (
                         <div className="z-10 flex size-6 items-center justify-center rounded-full bg-gray-200 text-[9px] font-bold text-gray-500 ring-2 ring-white">
-                            +{task.assignees.length - 3}
+                            +{task.members.length - 3}
                         </div>
                     )}
                 </div>
@@ -157,7 +179,7 @@ export default function TaskRow({
                 )}
             </td>
             <td className="w-24 py-3 pr-4">
-                {task.subtasks_total && task.subtasks_total > 0 && (
+                {task.subtasks_total && task.subtasks_total > 0 ? (
                     <div className="flex items-center gap-2">
                         <Progress
                             value={progress}
@@ -167,7 +189,7 @@ export default function TaskRow({
                             {task.subtasks_done ?? 0}/{task.subtasks_total ?? 0}
                         </span>
                     </div>
-                )}
+                ) : null}
             </td>
             <td className="w-24 py-3 pr-4">
                 <div className="flex items-center gap-2.5 text-gray-400">

@@ -1,6 +1,6 @@
 "use server";
 
-import {  Project, Task } from "@/types/types";
+import { FilterOptions, Project, Task } from "@/types/types";
 
 const baseUrl = process.env.NEXT_PUBLIC_DB_URL;
 
@@ -83,3 +83,20 @@ export async function getTasksData(): Promise<Task[]> {
     return fetchedData;
 }
 
+export async function getTaskFilterOptionsData(): Promise<FilterOptions> {
+    const url = new URL("/tasks/filter-options", baseUrl);
+
+    const fetchedData = await fetchData(url.href);
+
+    if (fetchedData.status === "error" && fetchedData.details) {
+        throw new Error(
+            JSON.stringify({
+                error: fetchedData.details,
+                status: fetchedData.status,
+                description: fetchedData.message,
+            }),
+        );
+    }
+
+    return fetchedData;
+}

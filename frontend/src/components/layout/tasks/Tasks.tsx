@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/shadcn/button";
 import { Input } from "@/components/ui/shadcn/input";
 import {
@@ -17,20 +17,15 @@ import SortIcon from "@/components/ui/sortIcon/SortIcon";
 import FilterChip from "@/components/ui/filterChip/FilterChip";
 import TaskRow from "@/components/ui/taskRow/TaskRow";
 import {
-    Columns,
+    FilterOptions,
     FilterState,
     Priority,
+    Project,
     SortDir,
     SortField,
     Task,
 } from "@/types/types";
-import {
-    COLUMNS_CONFIG,
-    DEFAULT_FILTER,
-    INITIAL_PROJECTS,
-    INITIAL_TASKS,
-    PRIORITY_CONFIG,
-} from "@/constants/constants";
+import { DEFAULT_FILTER, PRIORITY_CONFIG } from "@/constants/constants";
 import { cn, isOverdue } from "@/libs/utils";
 import {
     CalendarBlankIcon,
@@ -49,6 +44,7 @@ import {
     UsersIcon,
     XIcon,
 } from "@phosphor-icons/react";
+import { getProjectData } from "@/data/loaders";
 
 function TH({
     label,
@@ -85,13 +81,36 @@ function TH({
     );
 }
 
-export default function Tasks() {
-    const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
+interface TasksProps {
+    tasksData: Task[];
+    taskFilterOptionsData: FilterOptions;
+}
+
+export default function Tasks({
+    tasksData,
+    taskFilterOptionsData,
+}: Readonly<TasksProps>) {
+    const [tasks, setTasks] = useState<Task[]>(tasksData);
     const [filter, setFilter] = useState<FilterState>(DEFAULT_FILTER);
     const [sortField, setSortField] = useState<SortField>("priority");
     const [sortDir, setSortDir] = useState<SortDir>("asc");
     const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+    const [projectData, setProjectData] = useState<Project | null>(null);
     const [showNewTaskModal, setShowNewTaskModal] = useState<boolean>(false);
+    const [showTaskDetailsSheet, setShowTaskDetailsSheet] =
+        useState<boolean>(false);
+
+    useEffect(() => {
+        if (!selectedTask) {
+            return;
+        }
+
+        (async () => {
+            const project = await getProjectData(selectedTask.project.id);
+
+            setProjectData(project);
+        })();
+    }, [selectedTask]);
 
     // const filtered = useMemo(() => {
     //     let list = [...tasks];
@@ -110,8 +129,8 @@ export default function Tasks() {
     //         list = list.filter((t) => filter.priority.includes(t.priority));
     //     if (filter.project.length)
     //         list = list.filter((t) => filter.project.includes(t.project));
-    //     if (filter.assignee.length)
-    //         list = list.filter((t) => filter.assignee.includes(t.assignees));
+    //     if (filter.member.length)
+    //         list = list.filter((t) => filter.member.includes(t.members));
     //     if (filter.overdue)
     //         list = list.filter((t) => isOverdue(t.due_date, t.status));
 
@@ -135,9 +154,9 @@ export default function Tasks() {
     //                 av = a.project;
     //                 bv = b.project;
     //                 break;
-    //             case "assignee":
-    //                 av = a.assignee;
-    //                 bv = b.assignee;
+    //             case "member":
+    //                 av = a.member;
+    //                 bv = b.member;
     //                 break;
     //             default:
     //                 av = a.title;
@@ -207,11 +226,15 @@ export default function Tasks() {
         setShowNewTaskModal(!showNewTaskModal);
     };
 
+    const handleShowTaskDetailsSheet = () => {
+        setShowTaskDetailsSheet(!showTaskDetailsSheet);
+    };
+
     const setF = <K extends keyof FilterState>(key: K, val: FilterState[K]) =>
         setFilter((f) => ({ ...f, [key]: val }));
 
     const toggleArrFilter = <T extends string>(
-        key: "columns" | "priorities" | "projects" | "assignees",
+        key: "columns" | "priorities" | "projects" | "members",
         val: T,
     ) => {
         const arr = filter[key] as T[];
@@ -225,13 +248,13 @@ export default function Tasks() {
     };
 
     const projectFilter = filter.projects ?? [];
-    const assigneesFilter = filter.assignees ?? [];
+    const membersFilter = filter.members ?? [];
 
     const activeFilterCount =
         filter.columns.length +
         filter.priorities.length +
         projectFilter.length +
-        assigneesFilter.length +
+        membersFilter.length +
         (filter.overdue ? 1 : 0);
 
     const clearFilters = () => setFilter(DEFAULT_FILTER);
@@ -239,10 +262,11 @@ export default function Tasks() {
     const stats = useMemo(
         () => ({
             total: tasks.length,
-            todo: tasks.filter((t) => t.column === "todo").length,
-            inProgress: tasks.filter((t) => t.column === "in_progress").length,
-            done: tasks.filter((t) => t.column === "done").length,
-            overdue: tasks.filter((t) => isOverdue(t.due_date, t.column))
+            todo: tasks.filter((t) => t.column.name === "todo").length,
+            inProgress: tasks.filter((t) => t.column.name === "in_progress")
+                .length,
+            done: tasks.filter((t) => t.column.name === "done").length,
+            overdue: tasks.filter((t) => isOverdue(t.due_date, t.column.name))
                 .length,
         }),
         [tasks],
@@ -303,28 +327,27 @@ export default function Tasks() {
                                         Filter by column
                                     </DropdownMenuLabel>
                                     <DropdownMenuSeparator />
-                                    {(
-                                        Object.keys(COLUMNS_CONFIG) as Columns[]
-                                    ).map((s) => (
-                                        <DropdownMenuCheckboxItem
-                                            key={s}
-                                            checked={filter.columns.includes(s)}
-                                            onCheckedChange={() =>
-                                                toggleArrFilter("columns", s)
-                                            }
-                                            className="text-xs"
-                                        >
-                                            <span
-                                                className="inline-flex items-center gap-1.5 rounded-md border px-1.5 py-0.5 text-xs text-white"
-                                                style={{
-                                                    backgroundColor:
-                                                        COLUMNS_CONFIG[s].color,
-                                                }}
+                                    {taskFilterOptionsData.statuses.map(
+                                        (status) => (
+                                            <DropdownMenuCheckboxItem
+                                                key={status.id}
+                                                checked={filter.columns.includes(
+                                                    status.name,
+                                                )}
+                                                onCheckedChange={() =>
+                                                    toggleArrFilter(
+                                                        "columns",
+                                                        status.name,
+                                                    )
+                                                }
+                                                className="text-xs"
                                             >
-                                                {COLUMNS_CONFIG[s].label}
-                                            </span>
-                                        </DropdownMenuCheckboxItem>
-                                    ))}
+                                                <span className="inline-flex items-center gap-1.5 rounded-md border px-1.5 py-0.5 text-xs">
+                                                    {status.name}
+                                                </span>
+                                            </DropdownMenuCheckboxItem>
+                                        ),
+                                    )}
                                 </DropdownMenuContent>
                             </DropdownMenu>
                             <DropdownMenu>
@@ -400,32 +423,34 @@ export default function Tasks() {
                                                 Filter by project
                                             </DropdownMenuLabel>
                                             <DropdownMenuSeparator />
-                                            {INITIAL_PROJECTS.map((project) => (
-                                                <DropdownMenuCheckboxItem
-                                                    key={project.id}
-                                                    checked={projectFilter.includes(
-                                                        project,
-                                                    )}
-                                                    onCheckedChange={() =>
-                                                        toggleArrFilter(
-                                                            "projects",
-                                                            project.name,
-                                                        )
-                                                    }
-                                                    className="gap-2 text-xs"
-                                                >
-                                                    <span className="flex items-center gap-2">
-                                                        <span
-                                                            className="size-2 rounded-full"
-                                                            style={{
-                                                                background:
-                                                                    project.color,
-                                                            }}
-                                                        />
-                                                        {project.name}
-                                                    </span>
-                                                </DropdownMenuCheckboxItem>
-                                            ))}
+                                            {taskFilterOptionsData.projects.map(
+                                                (project) => (
+                                                    <DropdownMenuCheckboxItem
+                                                        key={project.id}
+                                                        // checked={projectFilter.includes(
+                                                        //     ,
+                                                        // )}
+                                                        onCheckedChange={() =>
+                                                            toggleArrFilter(
+                                                                "projects",
+                                                                project.name,
+                                                            )
+                                                        }
+                                                        className="gap-2 text-xs"
+                                                    >
+                                                        <span className="flex items-center gap-2">
+                                                            <span
+                                                                className="size-2 rounded-full"
+                                                                style={{
+                                                                    background:
+                                                                        project.color,
+                                                                }}
+                                                            />
+                                                            {project.name}
+                                                        </span>
+                                                    </DropdownMenuCheckboxItem>
+                                                ),
+                                            )}
                                         </DropdownMenuContent>
                                     </>
                                 )}
@@ -508,14 +533,12 @@ export default function Tasks() {
                         </header>
                         {activeFilterCount > 0 && (
                             <div className="flex flex-wrap gap-1.5 border-b bg-white px-8 py-2">
-                                {filter.columns.map((s) => (
+                                {filter.columns.map((status) => (
                                     <FilterChip
-                                        key={s}
-                                        label={
-                                            COLUMNS_CONFIG[s as Columns].label
-                                        }
+                                        key={status}
+                                        label={status}
                                         onRemove={() =>
-                                            toggleArrFilter("columns", s)
+                                            toggleArrFilter("columns", status)
                                         }
                                     />
                                 ))}
@@ -601,8 +624,8 @@ export default function Tasks() {
                                     Icon={LayoutIcon}
                                 />
                                 <TH
-                                    label="Assignees"
-                                    field="assignees"
+                                    label="members"
+                                    field="members"
                                     className="w-28"
                                     sortField={sortField}
                                     sortDir={sortDir}
@@ -674,21 +697,29 @@ export default function Tasks() {
                                     key={task.id}
                                     task={task}
                                     onDelete={deleteTask}
-                                    projectName={INITIAL_PROJECTS[0].name}
+                                    onOpenDetails={() => {
+                                        setSelectedTask(task);
+                                        handleShowTaskDetailsSheet();
+                                    }}
                                 />
                             ))}
                         </tbody>
                     </table>
                 </div>
             </div>
-            <TaskDetailsSheet
-                open={!!selectedTask}
-                onOpenChange={() => setSelectedTask(null)}
-                onSave={(updated) => console.log(updated)}
-            />
+            {selectedTask && projectData && (
+                <TaskDetailsSheet
+                    open={showTaskDetailsSheet}
+                    onOpenChange={handleShowTaskDetailsSheet}
+                    onSave={(updated) => console.log(updated)}
+                    selectedTask={selectedTask}
+                    projectData={projectData}
+                />
+            )}
             <CreateTaskModal
                 open={showNewTaskModal}
                 onOpenChange={handleShowNewTaskModal}
+                showProjectSelect
             />
         </>
     );
