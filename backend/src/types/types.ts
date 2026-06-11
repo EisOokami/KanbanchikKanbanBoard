@@ -123,3 +123,8 @@ export interface Column extends ExtendedBase {
 export interface IGetUserRequest extends Request {
     user?: any;
 }
+
+export interface FilterOptions {
+    statuses: Pick<Column, "id" | "name">[];
+    projects: Pick<Project, "id" | "name" | "color">[];
+}

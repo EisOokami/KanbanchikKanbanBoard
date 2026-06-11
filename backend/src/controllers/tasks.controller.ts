@@ -6,8 +6,10 @@ import type {
     Category,
     Column,
     Comment,
+    FilterOptions,
     IGetUserRequest,
     Label,
+    Project,
     Subtask,
     Task,
     User,
@@ -42,19 +44,23 @@ export const getTasks = async (req: IGetUserRequest, res: Response) => {
                 t.show_progress,
                 t.created_at,
                 t.updated_at,
-                u.name as creator_name,
-                u.surname as creator_surname,
-                u.avatar_url as creator_avatar,
+                c.id as column_id,
                 c.name as column_name,
+                c.position as column_position,
+                c.wip_limit as column_wip_limit,
                 p.id as project_id,
-                p.name as project_name
+                p.name as project_name,
+                p.icon as project_icon,
+                p.color as project_color
             FROM tasks t
             JOIN columns c ON t.column_id = c.id
             JOIN projects p ON c.project_id = p.id
             JOIN users u ON t.creator_id = u.id
-            WHERE p.id IN (
-                SELECT project_id FROM project_members WHERE user_id = ?
-            ) OR p.owner_id = ?
+            WHERE (
+                p.id IN (
+                    SELECT project_id FROM project_members WHERE user_id = ?
+                ) OR p.owner_id = ?
+            )
         `;
 
         const params: any[] = [userId, userId];
@@ -75,10 +81,15 @@ export const getTasks = async (req: IGetUserRequest, res: Response) => {
 
         const enrichedTasks = await Promise.all(
             tasks.map(async (task) => {
-                const [assignees] = await pool.execute<User[]>(
+                const [members] = await pool.execute<User[]>(
                     `
-                        SELECT u.id, u.name, u.surname, u.avatar_url, u.color
-                        FROM task_assignees ta
+                        SELECT
+                            u.id,
+                            u.name,
+                            u.surname,
+                            u.avatar_url,
+                            u.color
+                        FROM task_members ta
                         JOIN users u ON ta.user_id = u.id
                         WHERE ta.task_id = ?
                     `,
@@ -107,7 +118,7 @@ export const getTasks = async (req: IGetUserRequest, res: Response) => {
 
                 const [subtasks] = await pool.execute<Subtask[]>(
                     `
-                        SELECT id, title, position, created_at
+                        SELECT id, title, position, is_done, created_at
                         FROM subtasks
                         WHERE task_id = ?
                         ORDER BY position ASC
@@ -115,12 +126,106 @@ export const getTasks = async (req: IGetUserRequest, res: Response) => {
                     [task.id],
                 );
 
+                const [comments] = await pool.execute<any[]>(
+                    `
+                        SELECT
+                            c.id,
+                            c.body,
+                            c.created_at,
+                            c.updated_at,
+                            u.id as user_id,
+                            u.name,
+                            u.surname,
+                            u.avatar_url,
+                            u.color
+                        FROM comments c
+                        JOIN users u ON c.user_id = u.id
+                        WHERE c.task_id = ?
+                        ORDER BY c.created_at ASC
+                    `,
+                    [task.id],
+                );
+
+                const [attachments] = await pool.execute<any[]>(
+                    `
+                        SELECT
+                            a.id,
+                            a.filename,
+                            a.file_url,
+                            a.mime_type,
+                            a.size_bytes,
+                            a.created_at,
+                            u.id as uploader_id,
+                            u.name as uploader_name,
+                            u.surname as uploader_surname,
+                            u.avatar_url as uploader_avatar
+                        FROM attachments a
+                        JOIN users u ON a.uploader_id = u.id
+                        WHERE a.task_id = ?
+                        ORDER BY a.created_at DESC
+                    `,
+                    [task.id],
+                );
+
+                const subtasksTotal = subtasks.length;
+                const subtasksDone = subtasks.filter((s) => s.is_done).length;
+
                 return {
-                    ...task,
-                    assignees,
+                    id: task.id,
+                    created_at: task.created_at,
+                    updated_at: task.updated_at,
+                    title: task.title,
+                    description: task.description,
+                    position: task.position,
+                    due_date: task.due_date,
+                    start_date: task.start_date,
+                    priority: task.priority,
+                    show_progress: task.show_progress === true,
+                    project: {
+                        id: task.project_id,
+                        name: task.project_name,
+                        icon: task.project_icon,
+                        color: task.project_color,
+                    },
+                    members,
                     labels,
                     categories,
                     subtasks,
+                    attachments: attachments.map((a) => ({
+                        id: a.id,
+                        filename: a.filename,
+                        file_url: a.file_url,
+                        mime_type: a.mime_type,
+                        size_bytes: a.size_bytes,
+                        created_at: a.created_at,
+                        uploader: {
+                            id: a.uploader_id,
+                            name: a.uploader_name,
+                            surname: a.uploader_surname,
+                            avatar_url: a.uploader_avatar,
+                        },
+                    })),
+                    column: {
+                        id: task.column_id,
+                        name: task.column_name,
+                        position: task.column_position,
+                        wip_limit: task.column_wip_limit,
+                    },
+                    comments: comments.map((c) => ({
+                        id: c.id,
+                        body: c.body,
+                        created_at: c.created_at,
+                        updated_at: c.updated_at,
+                        member: {
+                            id: c.user_id,
+                            name: c.name,
+                            surname: c.surname,
+                            avatar_url: c.avatar_url,
+                            color: c.color,
+                        },
+                    })),
+                    subtasks_total: subtasksTotal,
+                    subtasks_done: subtasksDone,
                 };
             }),
         );
@@ -176,7 +281,9 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
                     u.email as creator_email,
                     c.name as column_name,
                     p.id as project_id,
-                    p.name as project_name
+                    p.name as project_name,
+                    p.icon as project_icon,
+                    p.color as project_color
                 FROM tasks t
                 JOIN columns c ON t.column_id = c.id
                 JOIN projects p ON c.project_id = p.id
@@ -201,10 +308,19 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
 
         const task = tasks[0];
 
-        const [assignees] = await pool.execute<User[]>(
+        if (!task) {
+            res.status(404).json({
+                status: "error",
+                message: "Task not found",
+            });
+
+            return;
+        }
+
+        const [members] = await pool.execute<User[]>(
             `
                 SELECT u.id, u.name, u.surname, u.avatar_url, u.color, u.email
-                FROM task_assignees ta
+                FROM task_members ta
                 JOIN users u ON ta.user_id = u.id
                 WHERE ta.task_id = ?
             `,
@@ -223,7 +339,7 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
 
         const [categories] = await pool.execute<Category[]>(
             `
-                SELECT c.id, c.name, c.color, c.description
+                SELECT c.id, c.name, c.color
                 FROM task_categories tc
                 JOIN categories c ON tc.category_id = c.id
                 WHERE tc.task_id = ?
@@ -233,7 +349,7 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
 
         const [subtasks] = await pool.execute<Subtask[]>(
             `
-                SELECT id, title, position, created_at
+                SELECT id, title, position, is_done, created_at
                 FROM subtasks
                 WHERE task_id = ?
                 ORDER BY position ASC
@@ -261,13 +377,24 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
             [id],
         );
 
+        const subtasksTotal = subtasks.length;
+        const subtasksDone = subtasks.filter((s) => s.is_done).length;
+
         res.status(200).json({
             ...task,
-            assignees,
+            project: {
+                id: task.project_id,
+                name: task.project_name,
+                icon: task.project_icon,
+                color: task.project_color,
+            },
+            members,
             labels,
             categories,
             subtasks,
             comments,
+            subtasks_total: subtasksTotal,
+            subtasks_done: subtasksDone,
         });
     } catch (error) {
         console.error(error);
@@ -373,14 +500,11 @@ export const createTask = async (req: IGetUserRequest, res: Response) => {
             }
         }
 
-        if (
-            validatedData.assignee_ids &&
-            validatedData.assignee_ids.length > 0
-        ) {
-            for (const assigneeId of validatedData.assignee_ids) {
+        if (validatedData.member_ids && validatedData.member_ids.length > 0) {
+            for (const memberId of validatedData.member_ids) {
                 await pool.execute<ResultSetHeader>(
-                    `INSERT INTO task_assignees (task_id, user_id) VALUES (?, ?)`,
-                    [taskId, assigneeId],
+                    `INSERT INTO task_members (task_id, user_id) VALUES (?, ?)`,
+                    [taskId, memberId],
                 );
             }
         }
@@ -576,16 +700,16 @@ export const updateTask = async (req: IGetUserRequest, res: Response) => {
             }
         }
 
-        if (validatedData.assignee_ids) {
+        if (validatedData.member_ids) {
             await pool.execute<ResultSetHeader>(
-                `DELETE FROM task_assignees WHERE task_id = ?`,
+                `DELETE FROM task_members WHERE task_id = ?`,
                 [id],
             );
 
-            for (const assigneeId of validatedData.assignee_ids) {
+            for (const memberId of validatedData.member_ids) {
                 await pool.execute<ResultSetHeader>(
-                    `INSERT INTO task_assignees (task_id, user_id) VALUES (?, ?)`,
-                    [id, assigneeId],
+                    `INSERT INTO task_members (task_id, user_id) VALUES (?, ?)`,
+                    [id, memberId],
                 );
             }
         }
@@ -719,5 +843,79 @@ export const deleteTask = async (req: IGetUserRequest, res: Response) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ status: "error", message: "Database error" });
+    }
+};
+
+export const getTaskFilterOptions = async (
+    req: IGetUserRequest,
+    res: Response,
+) => {
+    try {
+        // const userId = req.user.id;
+        const userId = 1;
+
+        if (!userId) {
+            res.status(401).json({
+                status: "error",
+                message: "Unauthorized",
+            });
+
+            return;
+        }
+
+        const [statuses] = await pool.execute<
+            (Pick<Column, "id" | "name"> & RowDataPacket)[]
+        >(
+            `
+                SELECT
+                    c.id,
+                    c.name
+                FROM columns c
+                JOIN projects p ON c.project_id = p.id
+                WHERE p.id IN (
+                    SELECT project_id FROM project_members WHERE user_id = ?
+                ) OR p.owner_id = ?
+                GROUP BY c.name
+                ORDER BY c.position ASC
+            `,
+            [userId, userId],
+        );
+
+        const [projects] = await pool.execute<
+            (Pick<Project, "id" | "name" | "color"> & RowDataPacket)[]
+        >(
+            `
+                SELECT DISTINCT
+                    p.id,
+                    p.name,
+                    p.color
+                FROM projects p
+                WHERE p.id IN (
+                    SELECT project_id FROM project_members WHERE user_id = ?
+                ) OR p.owner_id = ?
+                ORDER BY p.name ASC
+            `,
+            [userId, userId],
+        );
+
+        const filterOptions: FilterOptions = {
+            statuses: statuses.map((status) => ({
+                id: status.id,
+                name: status.name,
+            })),
+            projects: projects.map((project) => ({
+                id: project.id,
+                name: project.name,
+                color: project.color,
+            })),
+        };
+
+        res.status(200).json(filterOptions);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            status: "error",
+            message: "Database error",
+        });
     }
 };

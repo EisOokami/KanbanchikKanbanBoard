@@ -3,24 +3,32 @@ import {
     createTask,
     deleteTask,
     getTaskById,
+    getTaskFilterOptions,
     getTasks,
     updateTask,
 } from "../controllers/tasks.controller";
 import { authenticateToken } from "../middleware/auth.middleware";
+import { validateData } from "../middleware/validation.middleware";
 import {
     createTaskSchema,
     updateTaskSchema,
     validateIdSchema,
 } from "../validation/validation";
-import { validateData } from "../middleware/validation.middleware";
 
 const router = Router();
 
-router.get("/", authenticateToken, getTasks);
+router.get(
+    "/",
+    authenticateToken,
+    getTasks,
+);
+router.get(
+    "/filter-options",
+    getTaskFilterOptions,
+);
 router.get(
     "/:id",
     authenticateToken,
-    validateData(validateIdSchema),
     getTaskById,
 );
 router.post("/", authenticateToken, validateData(createTaskSchema), createTask);
