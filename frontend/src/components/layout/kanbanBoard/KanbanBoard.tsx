@@ -288,11 +288,11 @@ export default function KanbanBoard({
             </header>
             <main
                 className={
-                    selectedMode === "kanban" ? "h-[calc(100svh-187px)]" : ""
+                    selectedMode === "kanban" ? "h-[calc(100svh-155px)]" : ""
                 }
             >
                 {selectedMode === "kanban" && (
-                    <div className="w-full overflow-x-auto p-8">
+                    <div className="h-full w-full overflow-x-auto p-8">
                         <DndContext
                             sensors={sensors}
                             collisionDetection={closestCorners}

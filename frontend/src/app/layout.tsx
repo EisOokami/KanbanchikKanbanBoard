@@ -38,7 +38,7 @@ export default async function RootLayout({
                     <AccountSettingsProvider>
                         <AppSidebar projectsData={projectsData} />
                         <TooltipProvider>
-                            <div className="my-3 mr-3 max-h-[calc(100svh-1.5rem)] w-full rounded-xl border">
+                            <div className="my-3 mr-3 max-h-[calc(100svh-1.5rem)] w-full overflow-hidden rounded-xl border">
                                 {children}
                             </div>
                         </TooltipProvider>
