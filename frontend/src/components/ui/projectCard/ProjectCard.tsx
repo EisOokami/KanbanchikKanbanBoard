@@ -22,7 +22,7 @@ import { ProjectSettingsDialog } from "../projectSettingsDialog/ProjectSettingsD
 import { useState } from "react";
 import { Project } from "@/types/types";
 import { STATUS_CONFIG } from "@/constants/constants";
-import { getInitials } from "@/libs/utils";
+import { convertToSlug, getInitials } from "@/libs/utils";
 import {
     ArchiveIcon,
     CheckSquareIcon,
@@ -57,14 +57,17 @@ export default function ProjectCard({
 
     return (
         <>
-            <Link href="/board" className="grid">
+            <Link
+                href={`/board/${convertToSlug(project.name)}?id=${project.id}`}
+                className="grid"
+            >
                 <Card className="group relative flex flex-col overflow-hidden border border-border/60 bg-card shadow-sm transition-shadow duration-200 hover:shadow-md">
                     <CardHeader className="flex-row items-start justify-between gap-2 px-3 pb-0 pt-3">
                         <div className="flex min-w-0 items-center gap-3">
                             <div
                                 className="mt-0.5 flex size-9 flex-shrink-0 items-center justify-center rounded-lg font-bold text-white"
                                 style={{
-                                    background: project.color + "22",
+                                    background: project.color + "30",
                                     color: project.color,
                                 }}
                             >
@@ -198,6 +201,8 @@ export default function ProjectCard({
             <ProjectSettingsDialog
                 open={showProjectSettings}
                 onOpenChange={handleShopProjectSettings}
+                projectData={project}
+                columnsData={project.columns}
             />
         </>
     );

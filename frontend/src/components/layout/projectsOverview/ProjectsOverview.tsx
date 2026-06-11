@@ -9,7 +9,7 @@ import NewProjectModal from "@/components/ui/newProjectModal/NewProjectModal";
 import { FilterStatus, ViewMode } from "@/types/projectsOverview";
 import { FILTER_OPTIONS } from "@/constants/projectsOverview";
 import { Project } from "@/types/types";
-import { INITIAL_PROJECTS, STATUS_CONFIG } from "@/constants/constants";
+import { STATUS_CONFIG } from "@/constants/constants";
 import {
     GridFourIcon,
     MagnifyingGlassIcon,
@@ -17,20 +17,19 @@ import {
     RowsIcon,
 } from "@phosphor-icons/react";
 
-export default function ProjectsOverview() {
-    const [projects, setProjects] = useState<Project[]>(INITIAL_PROJECTS);
+interface ProjectsOverviewProps {
+    projectsData: Project[];
+}
+
+export default function ProjectsOverview({
+    projectsData,
+}: Readonly<ProjectsOverviewProps>) {
+    const [projects, setProjects] = useState<Project[]>(projectsData);
     const [search, setSearch] = useState<string>("");
     const [view, setView] = useState<ViewMode>("grid");
     const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
     const [showNewProjectModal, setShowNewProjectModal] =
         useState<boolean>(false);
-
-    // const handleStar = (id: number) =>
-    //     setProjects((prevState) =>
-    //         prevState.map((p) =>
-    //             p.id === id ? { ...p, starred: !p.starred } : p,
-    //         ),
-    //     );
 
     const handleDelete = (id: number) =>
         setProjects((prevState) => prevState.filter((p) => p.id !== id));
@@ -48,7 +47,6 @@ export default function ProjectsOverview() {
     //     return matchSearch && matchStatus;
     // });
 
-    // const starredProjects = filtered.filter((p) => p.starred);
     // const otherProjects = filtered.filter((p) => !p.starred);
 
     return (
@@ -122,30 +120,6 @@ export default function ProjectsOverview() {
                         </div>
                     </div>
                 </div>
-                {/* {starredProjects.length > 0 && (
-                    <section className="space-y-3">
-                        <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                            <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                            Starred
-                        </h2>
-                        <div
-                            className={
-                                view === "grid"
-                                    ? "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
-                                    : "flex flex-col gap-3"
-                            }
-                        >
-                            {starredProjects.map((p) => (
-                                <ProjectCard
-                                    key={p.id}
-                                    project={p}
-                                    onStar={handleStar}
-                                    onDelete={handleDelete}
-                                />
-                            ))}
-                        </div>
-                    </section>
-                )} */}
                 <section className="space-y-3">
                     <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                         {filterStatus === "all"
@@ -201,7 +175,6 @@ export default function ProjectsOverview() {
                                 <ProjectCard
                                     key={p.id}
                                     project={p}
-                                    // onStar={handleStar}
                                     onDelete={handleDelete}
                                 />
                             ))}
