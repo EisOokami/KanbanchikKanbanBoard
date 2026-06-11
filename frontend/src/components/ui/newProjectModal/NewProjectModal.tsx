@@ -439,7 +439,7 @@ export default function NewProjectModal({
                         </div>
                     </div>
                     <div className="space-y-1">
-                        <h3 className="font-semibold">Assignments</h3>
+                        <h3 className="font-semibold">Members</h3>
                         <div className="space-y-3">
                             {members.length > 0 && (
                                 <div className="flex flex-wrap gap-2">
