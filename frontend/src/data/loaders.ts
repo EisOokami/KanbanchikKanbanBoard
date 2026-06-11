@@ -44,3 +44,23 @@ export async function getProjectsData(): Promise<Project[]> {
 
     return fetchedData;
 }
+
+export async function getProjectData(
+    projectId: number | string,
+): Promise<Project> {
+    const url = new URL(`/projects/${projectId}`, baseUrl);
+
+    const fetchedData = await fetchData(url.href);
+
+    if (fetchedData.error) {
+        throw new Error(
+            JSON.stringify({
+                error: fetchedData.error,
+                status: fetchedData.status,
+                description: fetchedData.message,
+            }),
+        );
+    }
+
+    return fetchedData;
+}

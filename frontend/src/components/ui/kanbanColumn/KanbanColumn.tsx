@@ -7,22 +7,22 @@ import {
 } from "@dnd-kit/sortable";
 import { useRef } from "react";
 import KanbanCard from "../kanbanCard/KanbanCard";
-import { Column, ColumnConfig } from "@/types/types";
+import { Column, Task } from "@/types/types";
 import { PlusIcon } from "@phosphor-icons/react";
 
 interface KanbanColumnProps {
-    column: ColumnConfig & Column;
-    onDeleteCard: () => void;
-    onOpenDetails: () => void;
-    isOpenCreateTask: boolean;
+    column: Column;
+    onDeleteTask: () => void;
+    onOpenDetails: (task: Task) => void;
+    showCreateTask: boolean;
     onOpenCreateTask: () => void;
 }
 
 export default function KanbanColumn({
     column,
-    onDeleteCard,
+    onDeleteTask,
     onOpenDetails,
-    isOpenCreateTask,
+    showCreateTask,
     onOpenCreateTask,
 }: Readonly<KanbanColumnProps>) {
     const inputRef = useRef<HTMLInputElement | null>(null);
@@ -75,13 +75,13 @@ export default function KanbanColumn({
                             <KanbanCard
                                 key={task.id}
                                 card={task}
-                                onDelete={onDeleteCard}
+                                onDelete={onDeleteTask}
                                 onOpenDetails={onOpenDetails}
                             />
                         ))}
                     </div>
                 </SortableContext>
-                {column.tasks.length === 0 && !isOpenCreateTask && (
+                {column.tasks.length === 0 && !showCreateTask && (
                     <div className="flex flex-col items-center py-8 text-gray-400">
                         <div className="mb-2 flex size-8 items-center justify-center rounded-lg border border-dashed border-gray-300">
                             <PlusIcon weight="duotone" className="size-4" />
