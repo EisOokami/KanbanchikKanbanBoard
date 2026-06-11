@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import {
     DndContext,
     DragOverlay,
@@ -343,7 +343,16 @@ export default function KanbanBoard({
                         </DndContext>
                     </div>
                 )}
-                {selectedMode === "list" && <ProjectListView />}
+                {selectedMode === "list" && (
+                    <ProjectListView
+                        columns={columns}
+                        setColumns={setColumns}
+                        onOpenDetails={(task: Task) => {
+                            handleshowTaskDetails();
+                            setSelectedTask(task);
+                        }}
+                    />
+                )}
                 {selectedMode === "calendar" && <ProjectCalendarView />}
             </main>
             <InviteAssignmentModal
