@@ -12,7 +12,7 @@ import {
     DragOverEvent,
     DragStartEvent,
 } from "@dnd-kit/core";
-import OverlayCard from "@/components/ui/overlayCard/OverlayCard";
+import OverlayTask from "@/components/ui/overlayTask/OverlayTask";
 import KanbanColumn from "@/components/ui/kanbanColumn/KanbanColumn";
 import { Column, FilterState, Project, Task } from "@/types/types";
 import { Button } from "@/components/ui/shadcn/button";
@@ -321,8 +321,8 @@ export default function KanbanBoard({
                                     easing: "ease-out",
                                 }}
                             >
-                                {activeCard ? (
-                                    <OverlayCard card={activeCard} />
+                                {activeTask ? (
+                                    <OverlayTask task={activeTask} />
                                 ) : null}
                             </DragOverlay>
                         </DndContext>
