@@ -395,6 +395,7 @@ export default function KanbanBoard({
                 open={showCreateTask}
                 onOpenChange={handleshowCreateTask}
                 onSubmit={(data) => console.log(data)}
+                projectData={projectData}
             />
         </div>
     );
