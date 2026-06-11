@@ -6,7 +6,7 @@ import {
     verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { useRef } from "react";
-import KanbanCard from "../kanbanCard/KanbanCard";
+import KanbanTask from "../kanbanTask/KanbanTask";
 import { Column, Task } from "@/types/types";
 import { PlusIcon } from "@phosphor-icons/react";
 
@@ -72,9 +72,9 @@ export default function KanbanColumn({
                         className="flex min-h-[40px] flex-col gap-2"
                     >
                         {column.tasks.map((task) => (
-                            <KanbanCard
+                            <KanbanTask
                                 key={task.id}
-                                card={task}
+                                task={task}
                                 onDelete={onDeleteTask}
                                 onOpenDetails={onOpenDetails}
                             />
