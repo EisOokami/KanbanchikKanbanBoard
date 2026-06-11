@@ -5,8 +5,7 @@ export function countActive(filters: FilterState): number {
     if (filters.search) n++;
     if (filters.priorities.length) n += filters.priorities.length;
     if (filters.columns.length) n += filters.columns.length;
-    if (filters.assignees && filters.assignees.length)
-        n += filters.assignees.length;
+    if (filters.members && filters.members.length) n += filters.members.length;
     if (filters.categories && filters.categories.length)
         n += filters.categories.length;
     if (filters.dateRange?.from) n++;

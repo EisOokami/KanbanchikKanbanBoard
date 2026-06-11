@@ -2,7 +2,7 @@ import { ActivityEntry } from "@/types/taskDetailsSheet";
 import { Task } from "@/types/types";
 import { format, isPast, isToday, isTomorrow } from "date-fns";
 
-export function dueDateMeta(
+export function dateMeta(
     date: Date | null | undefined,
 ): { text: string; color: string; bg: string; border: string } | null {
     if (!date) return null;
@@ -41,7 +41,7 @@ export function commentsToActivity(
     return comments.map((c) => ({
         id: c.id,
         type: "comment" as const,
-        author: c.assignee,
+        author: c.member,
         body: c.body,
         timestamp:
             c.created_at instanceof Date

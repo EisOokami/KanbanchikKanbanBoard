@@ -1,4 +1,3 @@
-import { Columns } from "@/types/types";
 import { clsx, type ClassValue } from "clsx";
 import { isPast, isToday, isTomorrow } from "date-fns";
 import { twMerge } from "tailwind-merge";
@@ -24,7 +23,7 @@ export function getFirstDayOfMonth(year: number, month: number): number {
     return new Date(year, month, 1).getDay();
 }
 
-export function toDueDate(v: string | Date | undefined | null): Date | null {
+export function toDate(v: string | Date | undefined | null): Date | null {
     if (!v) return null;
     return v instanceof Date ? v : new Date(v);
 }
@@ -35,7 +34,7 @@ export function getInitials(name: string, surname: string) {
 
 export function isOverdue(
     dueDate: string | Date | undefined,
-    status: Columns,
+    status: string,
 ): boolean {
     if (!dueDate || status === "done") return false;
     return isPast(dueDate) && !isToday(dueDate);
@@ -49,4 +48,16 @@ export function formatDate(date: string | Date): string {
         month: "short",
         day: "numeric",
     });
+}
+
+export function convertToSlug(text: string): string {
+    return text
+        .toString()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, "-")
+        .replace(/[^\w-]+/g, "")
+        .replace(/--+/g, "-");
 }

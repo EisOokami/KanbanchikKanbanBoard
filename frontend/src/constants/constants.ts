@@ -125,7 +125,7 @@ export const INITIAL_TASKS: Task[] = [
         created_at: dt(-10),
         updated_at: null,
         labels: ["ux", "research"],
-        assignees: [MOCK_MEMBERS.AK],
+        members: [MOCK_MEMBERS.AK],
         categories: [MOCK_CATEGORIES.backend],
         subtasks: [
             {
@@ -177,7 +177,7 @@ export const INITIAL_TASKS: Task[] = [
         updated_at: dt(-1),
         categories: [MOCK_CATEGORIES.backend],
         labels: ["bug", "urgent"],
-        assignees: [MOCK_MEMBERS.JS],
+        members: [MOCK_MEMBERS.JS],
         subtasks: [
             {
                 id: 5,
@@ -221,7 +221,7 @@ export const INITIAL_TASKS: Task[] = [
         updated_at: null,
         categories: [MOCK_CATEGORIES.backend],
         labels: ["testing"],
-        assignees: [MOCK_MEMBERS.JS],
+        members: [MOCK_MEMBERS.JS],
         subtasks: [
             {
                 id: 8,
@@ -265,7 +265,7 @@ export const INITIAL_TASKS: Task[] = [
         updated_at: null,
         categories: [MOCK_CATEGORIES.design],
         labels: ["feature", "a11y"],
-        assignees: [MOCK_MEMBERS.AK],
+        members: [MOCK_MEMBERS.AK],
         subtasks: [
             {
                 id: 11,
@@ -316,7 +316,7 @@ export const INITIAL_TASKS: Task[] = [
         updated_at: null,
         categories: [MOCK_CATEGORIES.backend],
         labels: ["security"],
-        assignees: [MOCK_MEMBERS.KL],
+        members: [MOCK_MEMBERS.KL],
         subtasks: [
             {
                 id: 15,
@@ -360,7 +360,7 @@ export const INITIAL_TASKS: Task[] = [
         updated_at: null,
         categories: [MOCK_CATEGORIES.analytics],
         labels: ["feature"],
-        assignees: [MOCK_MEMBERS.NP],
+        members: [MOCK_MEMBERS.NP],
         subtasks: [
             {
                 id: 18,
@@ -411,7 +411,7 @@ export const INITIAL_TASKS: Task[] = [
         updated_at: null,
         categories: [MOCK_CATEGORIES.marketing],
         labels: ["content", "review"],
-        assignees: [MOCK_MEMBERS.MO],
+        members: [MOCK_MEMBERS.MO],
         subtasks: [
             {
                 id: 22,
@@ -448,7 +448,7 @@ export const INITIAL_TASKS: Task[] = [
         updated_at: null,
         categories: [MOCK_CATEGORIES.backend],
         labels: ["architecture"],
-        assignees: [MOCK_MEMBERS.JS],
+        members: [MOCK_MEMBERS.JS],
         subtasks: [
             {
                 id: 24,
@@ -492,7 +492,7 @@ export const INITIAL_TASKS: Task[] = [
         updated_at: null,
         categories: [MOCK_CATEGORIES.mobile],
         labels: ["ux", "mobile"],
-        assignees: [MOCK_MEMBERS.MO],
+        members: [MOCK_MEMBERS.MO],
         subtasks: [
             {
                 id: 27,
@@ -529,7 +529,7 @@ export const INITIAL_TASKS: Task[] = [
         updated_at: dt(-3),
         categories: [MOCK_CATEGORIES.design],
         labels: ["tokens", "a11y"],
-        assignees: [MOCK_MEMBERS.AK],
+        members: [MOCK_MEMBERS.AK],
         subtasks: [
             {
                 id: 29,
@@ -573,7 +573,7 @@ export const INITIAL_TASKS: Task[] = [
         updated_at: dt(-7),
         categories: [MOCK_CATEGORIES.backend],
         labels: ["devops"],
-        assignees: [MOCK_MEMBERS.KL],
+        members: [MOCK_MEMBERS.KL],
         subtasks: [
             {
                 id: 32,
@@ -617,7 +617,7 @@ export const INITIAL_TASKS: Task[] = [
         updated_at: dt(-5),
         categories: [MOCK_CATEGORIES.marketing],
         labels: ["email", "experiment"],
-        assignees: [MOCK_MEMBERS.NP],
+        members: [MOCK_MEMBERS.NP],
         subtasks: [
             {
                 id: 35,
@@ -654,7 +654,7 @@ export const INITIAL_TASKS: Task[] = [
         updated_at: null,
         categories: [MOCK_CATEGORIES.analytics],
         labels: ["performance"],
-        assignees: [MOCK_MEMBERS.NP],
+        members: [MOCK_MEMBERS.NP],
         subtasks: [
             {
                 id: 37,
@@ -698,7 +698,7 @@ export const INITIAL_TASKS: Task[] = [
         updated_at: null,
         categories: [MOCK_CATEGORIES.mobile],
         labels: ["mobile", "audit"],
-        assignees: [MOCK_MEMBERS.MO],
+        members: [MOCK_MEMBERS.MO],
         subtasks: [
             {
                 id: 40,
@@ -728,7 +728,7 @@ export const INITIAL_TASKS: Task[] = [
         updated_at: null,
         categories: [MOCK_CATEGORIES.design],
         labels: ["planning"],
-        assignees: [MOCK_MEMBERS.KL],
+        members: [MOCK_MEMBERS.KL],
         subtasks: [
             {
                 id: 41,
@@ -1088,7 +1088,7 @@ export const DEFAULT_FILTER: FilterState = {
     columns: [],
     priorities: [],
     projects: [],
-    assignees: [],
+    members: [],
     categories: [],
     overdue: false,
     date_range: undefined,
@@ -1125,7 +1125,7 @@ export const ROLE_META: Record<
         border: "#D3CBF8",
     },
     admin: {
-        label: "Owner",
+        label: "Admin",
         color: "#91A211",
         bg: "#EDE3FA",
         border: "#AEDF7F",
