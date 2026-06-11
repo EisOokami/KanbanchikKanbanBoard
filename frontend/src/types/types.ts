@@ -12,13 +12,6 @@ export interface PriorityConfig {
 export type Status = "active" | "paused" | "completed" | "archived";
 export type Columns = "todo" | "in_progress" | "in_review" | "done";
 
-export interface ColumnConfig {
-    id: number;
-    label: string;
-    order?: number;
-    color?: string;
-}
-
 export type Role = "owner" | "admin" | "member" | "viewer";
 
 export interface Base {
