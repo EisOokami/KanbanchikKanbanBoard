@@ -119,7 +119,7 @@ export type SortField =
     | "priority"
     | "dueDate"
     | "progress"
-    | "assignees"
+    | "members"
     | "category"
     | "project";
 export type SortDir = "asc" | "desc";

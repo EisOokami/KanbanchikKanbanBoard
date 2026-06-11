@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Separator } from "@/components/ui/shadcn/separator";
 import { CreateTaskModal } from "@/components/ui/createTaskModal/CreateTaskModal";
 import {
@@ -13,16 +13,11 @@ import {
 import MiniCalendar from "@/components/ui/miniCalendar/MiniCalendar";
 import DayCell from "@/components/ui/dayCell/DayCell";
 import DaySidebar from "@/components/ui/daySidebar/DaySidebar";
-import { Task } from "@/types/types";
-import {
-    INITIAL_TASKS,
-    MOCK_CATEGORIES,
-    MONTHS,
-    WEEKDAYS,
-} from "@/constants/constants";
-import { taskDateStr } from "@/libs/calendar";
+import { Project, Task } from "@/types/types";
+import { MONTHS, WEEKDAYS } from "@/constants/constants";
 import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
-import { Progress } from "@/components/ui/shadcn/progress";
+import { TaskDetailsSheet } from "@/components/ui/taskDetailsSheet/TaskDetailsSheet";
+import { getProjectData } from "@/data/loaders";
 
 interface GridCell {
     day: number;
@@ -31,23 +26,35 @@ interface GridCell {
 }
 
 interface CalendarProps {
-    initialTasks?: Task[];
+    tasksData: Task[];
 }
 
-const MAX_LANES = 3;
-
-export default function Calendar({
-    initialTasks = INITIAL_TASKS,
-}: CalendarProps) {
+export default function Calendar({ tasksData }: CalendarProps) {
     const now = new Date();
     const [year, setYear] = useState<number>(now.getFullYear());
     const [month, setMonth] = useState<number>(now.getMonth());
     const [selectedDate, setSelected] = useState<string>(todayStr());
-    const [filterCategoryId, setFilterCategoryId] = useState<number | null>(
-        null,
-    );
-    const [addOpen, setAddOpen] = useState<boolean>(false);
+    // const [filterCategoryId, setFilterCategoryId] = useState<number | null>(
+    //     null,
+    // );
+    const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+    const [projectData, setProjectData] = useState<Project | null>(null);
+    const [showNewTaskModal, setShowNewTaskModal] = useState<boolean>(false);
+    const [showTaskDetailsSheet, setShowTaskDetailsSheet] =
+        useState<boolean>(false);
     const [showGantt, setShowGantt] = useState<boolean>(false);
+
+    useEffect(() => {
+        if (!selectedTask) {
+            return;
+        }
+
+        (async () => {
+            const project = await getProjectData(selectedTask.project.id);
+
+            setProjectData(project);
+        })();
+    }, [selectedTask]);
 
     const prevMonth = (): void => {
         if (month === 0) {
@@ -55,51 +62,79 @@ export default function Calendar({
             setYear((y) => y - 1);
         } else setMonth((m) => m - 1);
     };
+
     const nextMonth = (): void => {
         if (month === 11) {
             setMonth(0);
             setYear((y) => y + 1);
         } else setMonth((m) => m + 1);
     };
+
     const goToday = (): void => {
         setYear(now.getFullYear());
         setMonth(now.getMonth());
         setSelected(todayStr());
     };
 
-    const filtered: Task[] = useMemo(
-        () =>
-            filterCategoryId === null
-                ? initialTasks
-                : initialTasks.filter((t) =>
-                      t.categories.some((c) => c.id === filterCategoryId),
-                  ),
-        [initialTasks, filterCategoryId],
-    );
+    const handleShowNewTaskModal = () => {
+        setShowNewTaskModal(!showNewTaskModal);
+    };
 
-    const tasksByDate: Record<string, Task[]> = useMemo(() => {
+    const handleShowTaskDetailsSheet = () => {
+        setShowTaskDetailsSheet(!showTaskDetailsSheet);
+    };
+
+    // const filtered: Task[] = useMemo(
+    //     () =>
+    //         filterCategoryId === null
+    //             ? tasksData
+    //             : tasksData.filter((t) =>
+    //                   t.categories.some((c) => c.id === filterCategoryId),
+    //               ),
+    //     [tasksData, filterCategoryId],
+    // );
+
+    const tasksByDate = useMemo(() => {
         const map: Record<string, Task[]> = {};
-        filtered.forEach((t) => {
-            if (!t.start_date || !t.due_date) return;
-            const start = new Date(t.start_date);
-            const end = new Date(t.due_date);
 
-            for (
-                let d = new Date(start);
-                d <= end;
-                d.setDate(d.getDate() + 1)
-            ) {
+        tasksData.forEach((t) => {
+            if (!t.start_date || !t.due_date) return;
+
+            if (showGantt) {
+                const start = new Date(t.start_date);
+                const end = new Date(t.due_date);
+
+                for (
+                    let d = new Date(start);
+                    d <= end;
+                    d.setDate(d.getDate() + 1)
+                ) {
+                    const ds = toDateStr(
+                        d.getFullYear(),
+                        d.getMonth(),
+                        d.getDate(),
+                    );
+
+                    if (!map[ds]) map[ds] = [];
+
+                    map[ds].push(t);
+                }
+            } else {
+                const end = new Date(t.due_date);
                 const ds = toDateStr(
-                    d.getFullYear(),
-                    d.getMonth(),
-                    d.getDate(),
+                    end.getFullYear(),
+                    end.getMonth(),
+                    end.getDate(),
                 );
+
                 if (!map[ds]) map[ds] = [];
+
                 map[ds].push(t);
             }
         });
+
         return map;
-    }, [filtered]);
+    }, [tasksData, showGantt]);
 
     const taskDates: Set<string> = useMemo(
         () => new Set(Object.keys(tasksByDate)),
@@ -122,6 +157,7 @@ export default function Calendar({
             isOtherMonth: true,
         });
     }
+
     for (let d = 1; d <= daysInMonth; d++) {
         cells.push({
             day: d,
@@ -129,6 +165,7 @@ export default function Calendar({
             isOtherMonth: false,
         });
     }
+
     for (let d = 1; cells.length < 42; d++) {
         const m2 = month === 11 ? 0 : month + 1;
         const y2 = month === 11 ? year + 1 : year;
@@ -141,12 +178,14 @@ export default function Calendar({
 
     const taskLanes: Record<number, number> = useMemo(() => {
         const lanes: Record<number, number> = {};
-        const sorted = [...filtered]
+        // const sorted = [...filtered]
+        const sorted = [...tasksData]
             .filter((t) => t.start_date && t.due_date)
             .sort((a, b) => {
                 const startDiff =
                     new Date(a.start_date).getTime() -
                     new Date(b.start_date).getTime();
+
                 if (startDiff !== 0) return startDiff;
 
                 return (
@@ -160,8 +199,8 @@ export default function Calendar({
         sorted.forEach((task) => {
             const start = new Date(task.start_date).getTime();
             const end = new Date(task.due_date).getTime();
-
             const occupiedLanes = new Set<number>();
+
             sorted.forEach((other) => {
                 if (other.id === task.id || lanes[other.id] === undefined)
                     return;
@@ -174,36 +213,38 @@ export default function Calendar({
             });
 
             let lane = 0;
+
             while (occupiedLanes.has(lane)) lane++;
+
             lanes[task.id] = lane;
         });
 
         return lanes;
-    }, [filtered]);
+    }, [tasksData]);
 
-    const monthStr = `${year}-${String(month + 1).padStart(2, "0")}`;
-    const monthTasks = initialTasks.filter((t) => {
-        const ds = taskDateStr(t);
-        return ds?.startsWith(monthStr) ?? false;
-    });
-    const doneCnt = monthTasks.filter((t) => t.column === "done").length;
-    const progress = monthTasks.length
-        ? Math.round((doneCnt / monthTasks.length) * 100)
-        : 0;
+    // const monthStr = `${year}-${String(month + 1).padStart(2, "0")}`;
+    // const monthTasks = tasksData.filter((t) => {
+    //     const ds = taskDateStr(t);
+    //     return ds?.startsWith(monthStr) ?? false;
+    // });
+    // const doneCnt = monthTasks.filter((t) => t.column === "done").length;
+    // const progress = monthTasks.length
+    //     ? Math.round((doneCnt / monthTasks.length) * 100)
+    //     : 0;
 
-    const statRows = [
-        {
-            label: "Total tasks",
-            value: monthTasks.length,
-            color: "text-gray-700",
-        },
-        { label: "Completed", value: doneCnt, color: "text-emerald-600" },
-        {
-            label: "Remaining",
-            value: monthTasks.length - doneCnt,
-            color: "text-bright-blue",
-        },
-    ];
+    // const statRows = [
+    //     {
+    //         label: "Total tasks",
+    //         value: monthTasks.length,
+    //         color: "text-gray-700",
+    //     },
+    //     { label: "Completed", value: doneCnt, color: "text-emerald-600" },
+    //     {
+    //         label: "Remaining",
+    //         value: monthTasks.length - doneCnt,
+    //         color: "text-bright-blue",
+    //     },
+    // ];
 
     return (
         <>
@@ -217,7 +258,7 @@ export default function Calendar({
                         eventDates={taskDates}
                     />
                     <Separator />
-                    <div className="space-y-3 px-4 py-4">
+                    {/* <div className="space-y-3 px-4 py-4">
                         <p className="text-sm font-semibold">This Month</p>
                         <div className="space-y-2">
                             {statRows.map(({ label, value, color }) => (
@@ -251,8 +292,8 @@ export default function Calendar({
                                 </div>
                             )}
                         </div>
-                    </div>
-                    <Separator />
+                    </div> */}
+                    {/* <Separator />
                     <div className="flex-1 px-4 py-4">
                         <p className="mb-3 text-sm font-semibold">Categories</p>
                         <div className="space-y-0.5">
@@ -293,7 +334,7 @@ export default function Calendar({
                                 </button>
                             ))}
                         </div>
-                    </div>
+                    </div> */}
                 </div>
                 <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
                     <div className="flex flex-shrink-0 items-center gap-3 border-b px-5 py-3">
@@ -378,14 +419,11 @@ export default function Calendar({
                                             }
                                             isOtherMonth={cell.isOtherMonth}
                                             onClick={setSelected}
-                                            onTaskClick={(task) =>
-                                                setSelected(
-                                                    task.start_date.toString(),
-                                                )
+                                            onTaskClick={() =>
+                                                setSelected(cell.dateStr)
                                             }
                                             showGantt={showGantt}
                                             taskLanes={taskLanes}
-                                            maxLanes={MAX_LANES}
                                         />
                                     ))}
                                 </div>
@@ -394,15 +432,30 @@ export default function Calendar({
                         <DaySidebar
                             dateStr={selectedDate}
                             tasks={tasksByDate[selectedDate] ?? []}
+                            onOpenCreate={handleShowNewTaskModal}
+                            onOpenDetails={(task: Task) => {
+                                setSelectedTask(task);
+                                handleShowTaskDetailsSheet();
+                            }}
                         />
                     </div>
                 </div>
             </div>
             <CreateTaskModal
-                open={addOpen}
-                onOpenChange={() => setAddOpen(!addOpen)}
+                open={showNewTaskModal}
+                onOpenChange={handleShowNewTaskModal}
                 onSubmit={(data) => console.log(data)}
+                showProjectSelect
             />
+            {selectedTask && projectData && (
+                <TaskDetailsSheet
+                    open={showTaskDetailsSheet}
+                    onOpenChange={handleShowTaskDetailsSheet}
+                    onSave={(updated) => console.log(updated)}
+                    selectedTask={selectedTask}
+                    projectData={projectData}
+                />
+            )}
         </>
     );
 }

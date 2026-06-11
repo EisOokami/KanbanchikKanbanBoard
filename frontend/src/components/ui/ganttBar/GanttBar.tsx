@@ -8,7 +8,7 @@ interface GanttBarProps {
     isStartDay: boolean;
     isEndDay: boolean;
     isToday: boolean;
-    onClick: (task: Task) => void;
+    onClick: () => void;
 }
 
 export default function GanttBar({
@@ -19,17 +19,15 @@ export default function GanttBar({
     onClick,
 }: GanttBarProps) {
     const baseColor = task.categories[0]?.color || "#6366f1";
-    const isDone = task.column === "done";
 
     return (
         <div
             onClick={(e) => {
                 e.stopPropagation();
-                onClick(task);
+                onClick();
             }}
             className={cn(
                 "relative h-5 cursor-pointer transition-all hover:brightness-110",
-                isDone ? "opacity-50" : "opacity-90 hover:opacity-100",
             )}
             style={{
                 background: `${baseColor}CC`,
@@ -49,7 +47,7 @@ export default function GanttBar({
                     {isStartDay ? task.title : ""}
                 </span>
             </div>
-            {isToday && !isDone && (
+            {isToday && (
                 <div className="absolute right-0 top-0 h-full w-0.5 bg-white/50" />
             )}
         </div>

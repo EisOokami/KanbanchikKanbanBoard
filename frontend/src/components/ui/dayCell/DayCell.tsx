@@ -1,6 +1,9 @@
+"use client";
+
 import EventChip from "../eventChip/EventChip";
 import GanttBar from "../ganttBar/GanttBar";
 import { Task } from "@/types/types";
+import { toDateStr } from "@/libs/utils";
 
 const LANE_HEIGHT = 20;
 const LANE_GAP = 2;
@@ -14,7 +17,7 @@ interface DayCellProps {
     isSelected: boolean;
     isOtherMonth: boolean;
     onClick: (dateStr: string) => void;
-    onTaskClick: (task: Task) => void;
+    onTaskClick: () => void;
     showGantt: boolean;
     taskLanes?: Record<number, number>;
     maxLanes?: number;
@@ -35,8 +38,6 @@ export default function DayCell({
 }: DayCellProps) {
     const visible = tasks.slice(0, 3);
     const overflow = tasks.length - 3;
-    const dateObj = new Date(dateStr);
-
     const ganttCellHeight =
         DATE_HEADER_HEIGHT + maxLanes * (LANE_HEIGHT + LANE_GAP) + 8;
 
@@ -47,7 +48,7 @@ export default function DayCell({
             className={[
                 "cursor-pointer border-b border-r transition-colors",
                 showGantt
-                    ? "relative overflow-visible" // overflow-visible — ключово для з'єднання барів!
+                    ? "relative overflow-visible"
                     : "flex min-h-[110px] flex-col gap-1 p-2",
                 isOtherMonth ? "bg-gray-50/50" : "bg-white hover:bg-blue-50/25",
                 isSelected
@@ -61,7 +62,7 @@ export default function DayCell({
             >
                 <span
                     className={[
-                        "flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold transition-colors",
+                        "flex size-6 items-center justify-center rounded-full text-xs font-bold transition-colors",
                         isToday
                             ? "bg-bright-blue text-white"
                             : isOtherMonth
@@ -84,17 +85,29 @@ export default function DayCell({
                 >
                     {tasks.map((task) => {
                         if (!task.start_date || !task.due_date) return null;
-                        const taskStart = new Date(task.start_date);
-                        const taskEnd = new Date(task.due_date);
-                        if (dateObj < taskStart || dateObj > taskEnd)
+
+                        const taskStartDate = new Date(task.start_date);
+                        const taskEndDate = new Date(task.due_date);
+
+                        const taskStartStr = toDateStr(
+                            taskStartDate.getFullYear(),
+                            taskStartDate.getMonth(),
+                            taskStartDate.getDate(),
+                        );
+                        const taskEndStr = toDateStr(
+                            taskEndDate.getFullYear(),
+                            taskEndDate.getMonth(),
+                            taskEndDate.getDate(),
+                        );
+
+                        if (dateStr < taskStartStr || dateStr > taskEndStr)
                             return null;
 
                         const lane = taskLanes[task.id] ?? 0;
                         if (lane >= maxLanes) return null;
 
-                        const isStartDay =
-                            dateStr === task.start_date.toString();
-                        const isEndDay = dateStr === task.due_date.toString();
+                        const isStartDay = dateStr === taskStartStr;
+                        const isEndDay = dateStr === taskEndStr;
 
                         return (
                             <div

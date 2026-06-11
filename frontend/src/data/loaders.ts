@@ -1,6 +1,6 @@
 "use server";
 
-import {  Project, } from "@/types/types";
+import {  Project, Task } from "@/types/types";
 
 const baseUrl = process.env.NEXT_PUBLIC_DB_URL;
 
@@ -64,3 +64,22 @@ export async function getProjectData(
 
     return fetchedData;
 }
+
+export async function getTasksData(): Promise<Task[]> {
+    const url = new URL("/tasks", baseUrl);
+
+    const fetchedData = await fetchData(url.href);
+
+    if (fetchedData.status === "error" && fetchedData.details) {
+        throw new Error(
+            JSON.stringify({
+                error: fetchedData.details,
+                status: fetchedData.status,
+                description: fetchedData.message,
+            }),
+        );
+    }
+
+    return fetchedData;
+}
+
