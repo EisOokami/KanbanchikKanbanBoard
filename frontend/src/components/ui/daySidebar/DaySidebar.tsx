@@ -1,37 +1,58 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "@/components/ui/shadcn/button";
 import { ScrollArea } from "@/components/ui/shadcn/scroll-area";
 import { cn, todayStr } from "@/libs/utils";
-import { CreateTaskModal } from "@/components/ui/createTaskModal/CreateTaskModal";
-import { TaskDetailsSheet } from "@/components/ui/taskDetailsSheet/TaskDetailsSheet";
 import SidebarEventCard from "@/components/ui/sidebarEventCard/SidebarEventCard";
-import { Task } from "@/types/types";
-import { COLUMNS_CONFIG } from "@/constants/constants";
+import { Column, Project, Task } from "@/types/types";
 import { CalendarCheckIcon, PlusIcon } from "@phosphor-icons/react";
 
 interface DaySidebarProps {
     dateStr: string;
     tasks: Task[];
+    columns?: Column[];
+    onOpenCreate: () => void;
+    onOpenDetails: (task: Task) => void;
 }
 
-export default function DaySidebar({ dateStr, tasks }: DaySidebarProps) {
-    const [addOpen, setAddOpen] = useState(false);
-    const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-
-    const date = new Date(dateStr + "T00:00:00");
+export default function DaySidebar({
+    dateStr,
+    tasks,
+    columns,
+    onOpenCreate,
+    onOpenDetails,
+}: DaySidebarProps) {
+    const date = new Date(dateStr);
     const isToday = dateStr === todayStr();
 
-    const grouped = (
-        Object.keys(COLUMNS_CONFIG) as (keyof typeof COLUMNS_CONFIG)[]
-    )
-        .map((key) => ({
-            key,
-            cfg: COLUMNS_CONFIG[key],
-            tasks: tasks.filter((t) => t.column === key),
-        }))
-        .filter((g) => g.tasks.length > 0);
+    const groupedColumns = columns
+        ? columns
+              .map((column) => ({
+                  ...column,
+                  tasks: tasks.filter((task) => task.column.id === column.id),
+              }))
+              .filter((g) => g.tasks.length > 0)
+        : null;
+
+    const groupedProjects = !columns
+        ? tasks.reduce(
+              (accumulator, task) => {
+                  const projectId = task.project.id;
+
+                  if (!accumulator[projectId]) {
+                      accumulator[projectId] = {
+                          project: task.project,
+                          tasks: [],
+                      };
+                  }
+
+                  accumulator[projectId].tasks.push(task);
+
+                  return accumulator;
+              },
+              {} as Record<number, { project: Project; tasks: Task[] }>,
+          )
+        : null;
 
     return (
         <>
@@ -62,7 +83,7 @@ export default function DaySidebar({ dateStr, tasks }: DaySidebarProps) {
                 </div>
                 <div className="border-b px-4 py-3">
                     <Button
-                        onClick={() => setAddOpen(true)}
+                        onClick={onOpenCreate}
                         size="sm"
                         className="h-8 w-full gap-1.5 bg-bright-blue text-xs hover:bg-blue-600"
                     >
@@ -85,52 +106,77 @@ export default function DaySidebar({ dateStr, tasks }: DaySidebarProps) {
                                     Press &quot;Add Task&quot; to get started
                                 </p>
                             </div>
-                        ) : (
-                            grouped.map(({ key, cfg, tasks: group }) => (
-                                <div key={key}>
-                                    <div
-                                        className="mb-2 flex items-center gap-1.5 rounded-md px-1.5 py-0.5"
-                                        style={{
-                                            color: cfg.color,
-                                        }}
-                                    >
+                        ) : groupedColumns ? (
+                            groupedColumns.map((column) => (
+                                <div key={column.id}>
+                                    <div className="mb-2 flex items-center gap-1.5 rounded-md px-1.5 py-0.5">
                                         <span className="text-xs font-bold uppercase tracking-wider">
-                                            {cfg.label}
+                                            {column.name}
                                         </span>
                                         <span className="ml-1 text-[10px] opacity-60">
-                                            ({group.length})
+                                            ({column.tasks.length})
                                         </span>
                                     </div>
                                     <div className="space-y-2">
-                                        {group.map((task) => (
+                                        {column.tasks.map((task) => (
                                             <SidebarEventCard
                                                 key={task.id}
                                                 task={task}
                                                 onOpen={() =>
-                                                    setSelectedTask(task)
+                                                    onOpenDetails(task)
                                                 }
                                             />
                                         ))}
                                     </div>
                                 </div>
                             ))
+                        ) : groupedProjects ? (
+                            Object.values(groupedProjects).map((group) => (
+                                <div key={group.project.id}>
+                                    <div className="mb-2 flex items-center gap-1.5 rounded-md px-1.5 py-0.5">
+                                        <div
+                                            className="grid size-6 place-content-center rounded-md"
+                                            style={{
+                                                backgroundColor:
+                                                    group.project.color + "33",
+                                            }}
+                                        >
+                                            <span className="text-xs">
+                                                {group.project.icon}
+                                            </span>
+                                        </div>
+                                        <span className="text-xs font-bold uppercase tracking-wider">
+                                            {group.project.name}
+                                        </span>
+                                        <span className="ml-1 text-[10px] opacity-60">
+                                            ({group.tasks.length})
+                                        </span>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {group.tasks.map((task) => (
+                                            <SidebarEventCard
+                                                key={task.id}
+                                                task={task}
+                                                onOpen={() =>
+                                                    onOpenDetails(task)
+                                                }
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            tasks.map((task) => (
+                                <SidebarEventCard
+                                    key={task.id}
+                                    task={task}
+                                    onOpen={() => onOpenDetails(task)}
+                                />
+                            ))
                         )}
                     </div>
                 </ScrollArea>
             </div>
-            <CreateTaskModal
-                open={addOpen}
-                onOpenChange={() => setAddOpen((v) => !v)}
-                onSubmit={(data) => console.log(data)}
-            />
-            <TaskDetailsSheet
-                open={selectedTask !== null}
-                onOpenChange={(v) => {
-                    if (!v) setSelectedTask(null);
-                }}
-                task={selectedTask ?? undefined}
-                onSave={(updated) => console.log(updated)}
-            />
         </>
     );
 }

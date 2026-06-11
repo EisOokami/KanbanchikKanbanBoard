@@ -12,13 +12,8 @@ import {
 import MiniCalendar from "@/components/ui/miniCalendar/MiniCalendar";
 import DayCell from "@/components/ui/dayCell/DayCell";
 import DaySidebar from "@/components/ui/daySidebar/DaySidebar";
-import { Task } from "@/types/types";
-import {
-    INITIAL_TASKS,
-    MOCK_CATEGORIES,
-    MONTHS,
-    WEEKDAYS,
-} from "@/constants/constants";
+import { Column, Task } from "@/types/types";
+import { MONTHS, WEEKDAYS } from "@/constants/constants";
 import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
 
 interface GridCell {
@@ -28,22 +23,19 @@ interface GridCell {
 }
 
 interface ProjectCalendarViewProps {
-    initialTasks?: Task[];
+    columns: Column[];
+    onOpenDetails: (task: Task) => void;
 }
 
-const MAX_LANES = 3;
-
 export default function ProjectCalendarView({
-    initialTasks = INITIAL_TASKS,
+    columns,
+    onOpenDetails,
 }: ProjectCalendarViewProps) {
     const now = new Date();
-    const [year, setYear] = useState(now.getFullYear());
-    const [month, setMonth] = useState(now.getMonth());
-    const [selectedDate, setSelected] = useState(todayStr());
-    const [filterCategoryId, setFilterCategoryId] = useState<number | null>(
-        null,
-    );
-    const [showGantt, setShowGantt] = useState(true);
+    const [year, setYear] = useState<number>(now.getFullYear());
+    const [month, setMonth] = useState<number>(now.getMonth());
+    const [selectedDate, setSelected] = useState<string>(todayStr());
+    const [showGantt, setShowGantt] = useState<boolean>(true);
 
     const prevMonth = () => {
         if (month === 0) {
@@ -51,31 +43,28 @@ export default function ProjectCalendarView({
             setYear((y) => y - 1);
         } else setMonth((m) => m - 1);
     };
+
     const nextMonth = () => {
         if (month === 11) {
             setMonth(0);
             setYear((y) => y + 1);
         } else setMonth((m) => m + 1);
     };
+
     const goToday = () => {
         setYear(now.getFullYear());
         setMonth(now.getMonth());
         setSelected(todayStr());
     };
 
-    const filtered = useMemo(
-        () =>
-            filterCategoryId === null
-                ? initialTasks
-                : initialTasks.filter((t) =>
-                      t.categories.some((c) => c.id === filterCategoryId),
-                  ),
-        [initialTasks, filterCategoryId],
+    const allTasks = useMemo(
+        () => columns.flatMap((col) => col.tasks),
+        [columns],
     );
 
     const tasksByDate = useMemo(() => {
         const map: Record<string, Task[]> = {};
-        filtered.forEach((t) => {
+        allTasks.forEach((t) => {
             if (!t.start_date || !t.due_date) return;
             if (showGantt) {
                 const start = new Date(t.start_date);
@@ -105,7 +94,7 @@ export default function ProjectCalendarView({
             }
         });
         return map;
-    }, [filtered, showGantt]);
+    }, [allTasks, showGantt]);
 
     const taskDates = useMemo(
         () => new Set(Object.keys(tasksByDate)),
@@ -115,13 +104,15 @@ export default function ProjectCalendarView({
     const taskLanes = useMemo(() => {
         const lanes: Record<number, number> = {};
 
-        const sorted = [...filtered]
+        const sorted = [...allTasks]
             .filter((t) => t.start_date && t.due_date)
             .sort((a, b) => {
                 const diff =
                     new Date(a.start_date).getTime() -
                     new Date(b.start_date).getTime();
+
                 if (diff !== 0) return diff;
+
                 return (
                     new Date(b.due_date).getTime() -
                     new Date(b.start_date).getTime() -
@@ -133,8 +124,8 @@ export default function ProjectCalendarView({
         sorted.forEach((task) => {
             const start = new Date(task.start_date).getTime();
             const end = new Date(task.due_date).getTime();
-
             const occupiedLanes = new Set<number>();
+
             sorted.forEach((other) => {
                 if (other.id === task.id || lanes[other.id] === undefined)
                     return;
@@ -145,12 +136,14 @@ export default function ProjectCalendarView({
             });
 
             let lane = 0;
+
             while (occupiedLanes.has(lane)) lane++;
+
             lanes[task.id] = lane;
         });
 
         return lanes;
-    }, [filtered]);
+    }, [allTasks]);
 
     const daysInMonth = getDaysInMonth(year, month);
     const firstDay = getFirstDayOfMonth(year, month);
@@ -190,7 +183,7 @@ export default function ProjectCalendarView({
     const monthStr = `${year}-${String(month + 1).padStart(2, "0")}`;
     const monthTasks = useMemo(
         () =>
-            initialTasks.filter((t) => {
+            allTasks.filter((t) => {
                 if (!t.due_date) return false;
                 const d = new Date(t.due_date);
                 return toDateStr(
@@ -199,9 +192,14 @@ export default function ProjectCalendarView({
                     d.getDate(),
                 ).startsWith(monthStr);
             }),
-        [initialTasks, monthStr],
+        [allTasks, monthStr],
     );
-    const doneCnt = monthTasks.filter((t) => t.column === "done").length;
+
+    const doneColumn = columns.find((col) => col.name === "done");
+    const doneCnt = monthTasks.filter((t) =>
+        doneColumn ? doneColumn.tasks.some((dt) => dt.id === t.id) : false,
+    ).length;
+
     const progress = monthTasks.length
         ? Math.round((doneCnt / monthTasks.length) * 100)
         : 0;
@@ -265,50 +263,6 @@ export default function ProjectCalendarView({
                                 </div>
                             </div>
                         )}
-                    </div>
-                </div>
-                <Separator />
-                <div className="flex-1 px-4 py-4">
-                    <p className="mb-3 text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                        Categories
-                    </p>
-                    <div className="space-y-0.5">
-                        <button
-                            onClick={() => setFilterCategoryId(null)}
-                            className={cn(
-                                "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs transition-colors",
-                                filterCategoryId === null
-                                    ? "bg-gray-100 font-semibold text-gray-700"
-                                    : "text-gray-500 hover:bg-gray-50",
-                            )}
-                        >
-                            <span className="size-2 rounded-full bg-gray-300" />
-                            All categories
-                        </button>
-                        {Object.values(MOCK_CATEGORIES).map((cat) => (
-                            <button
-                                key={cat.id}
-                                onClick={() =>
-                                    setFilterCategoryId(
-                                        filterCategoryId === cat.id
-                                            ? null
-                                            : cat.id,
-                                    )
-                                }
-                                className={cn(
-                                    "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs transition-colors",
-                                    filterCategoryId === cat.id
-                                        ? "bg-gray-100 font-semibold text-gray-700"
-                                        : "text-gray-500 hover:bg-gray-50",
-                                )}
-                            >
-                                <span
-                                    className="size-2 flex-shrink-0 rounded-full"
-                                    style={{ background: cat.color }}
-                                />
-                                <span className="truncate">{cat.name}</span>
-                            </button>
-                        ))}
                     </div>
                 </div>
             </div>
@@ -389,14 +343,11 @@ export default function ProjectCalendarView({
                                         }
                                         isOtherMonth={cell.isOtherMonth}
                                         onClick={setSelected}
-                                        onTaskClick={(task) =>
-                                            setSelected(
-                                                task.start_date.toString(),
-                                            )
+                                        onTaskClick={() =>
+                                            setSelected(cell.dateStr)
                                         }
                                         showGantt={showGantt}
                                         taskLanes={taskLanes}
-                                        maxLanes={MAX_LANES}
                                     />
                                 ))}
                             </div>
@@ -405,6 +356,8 @@ export default function ProjectCalendarView({
                     <DaySidebar
                         dateStr={selectedDate}
                         tasks={tasksByDate[selectedDate] ?? []}
+                        columns={columns}
+                        onOpenDetails={onOpenDetails}
                     />
                 </div>
             </div>

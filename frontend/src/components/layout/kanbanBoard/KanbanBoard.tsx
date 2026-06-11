@@ -353,7 +353,15 @@ export default function KanbanBoard({
                         }}
                     />
                 )}
-                {selectedMode === "calendar" && <ProjectCalendarView />}
+                {selectedMode === "calendar" && (
+                    <ProjectCalendarView
+                        columns={columns}
+                        onOpenDetails={(task: Task) => {
+                            handleshowTaskDetails();
+                            setSelectedTask(task);
+                        }}
+                    />
+                )}
             </main>
             <InviteAssignmentModal
                 open={showInvite}
