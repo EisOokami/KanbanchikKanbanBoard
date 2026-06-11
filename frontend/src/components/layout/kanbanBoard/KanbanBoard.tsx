@@ -379,6 +379,8 @@ export default function KanbanBoard({
                 open={showSettings}
                 onOpenChange={() => setshowSettings(!showSettings)}
                 onSave={(data) => console.log(data)}
+                columnsData={columns}
+                projectData={projectData}
             />
             <TaskDetailsSheet
                 open={showTaskDetails}

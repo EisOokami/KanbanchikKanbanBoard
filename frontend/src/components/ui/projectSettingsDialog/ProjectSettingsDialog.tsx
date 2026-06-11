@@ -1,7 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Dialog, DialogContent } from "@/components/ui/shadcn/dialog";
+import {
+    Dialog,
+    DialogContent,
+    DialogTitle,
+} from "@/components/ui/shadcn/dialog";
 import { Button } from "@/components/ui/shadcn/button";
 import { Input } from "@/components/ui/shadcn/input";
 import { Textarea } from "@/components/ui/shadcn/textarea";
@@ -22,14 +26,9 @@ import {
 import { cn, getInitials } from "@/libs/utils";
 import { NavSection } from "@/types/projectSettingsDialog";
 import { NAV_ITEMS } from "@/constants/projectSettingsDialog";
-import { Category, ColumnConfig, Label, User, Project } from "@/types/types";
+import { Category, Label, User, Project, Column } from "@/types/types";
 import {
-    COLUMN_COLORS,
-    COLUMNS_CONFIG,
     LABEL_PALETTE,
-    LABELS,
-    MOCK_CATEGORIES,
-    MOCK_MEMBERS,
     PROJECT_COLORS,
     PROJECT_ICONS,
     ROLE_META,
@@ -51,74 +50,78 @@ interface ProjectSettingsDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onSave?: (data: Project) => void;
+    columnsData: Column[];
+    projectData: Project;
 }
 
 export function ProjectSettingsDialog({
     open,
     onOpenChange,
     onSave,
+    columnsData,
+    projectData,
 }: ProjectSettingsDialogProps) {
     const [activeSection, setActiveSection] = useState<NavSection>("general");
-    const [title, setTitle] = useState<string>("Product Redesign");
+    const [title, setTitle] = useState<string>(projectData.name);
     const [description, setDescription] = useState<string>(
-        "Redesigning the core product experience for Q3 launch. Covers UX research, visual design, and front-end implementation.",
+        projectData.description,
     );
-    const [icon, setIcon] = useState<string>("🚀");
-    const [projectColor, setProjectColor] = useState<string>(PROJECT_COLORS[0]);
-    const [isArchived, setIsArchived] = useState<boolean>(false);
+    const [projectIcon, setProjectIcon] = useState<string>(projectData.icon);
+    const [projectColor, setProjectColor] = useState<string>(projectData.color);
+    const [isArchived, setIsArchived] = useState<boolean>(
+        projectData.status === "archived",
+    );
     const [iconPickerOpen, setIconPickerOpen] = useState<boolean>(false);
     const [colorPickerOpen, setColorPickerOpen] = useState<boolean>(false);
-    const [columns, setColumns] = useState<ColumnConfig[]>(
-        Object.values(COLUMNS_CONFIG),
-    );
-    const [newColName, setNewColName] = useState<string>("");
-    const [newColColor, setNewColColor] = useState(COLUMN_COLORS[0]);
-    const [editingCol, setEditingCol] = useState<number | null>(null);
+    const [columns, setColumns] = useState<Column[]>(columnsData);
+    const [newColumnName, setNewColumnName] = useState<string>("");
+    // const [newColColor, setNewColColor] = useState(COLUMN_COLORS[0]);
+    const [editingColumn, setEditingColumn] = useState<number | null>(null);
     const [categories, setCategories] = useState<Category[]>(
-        Object.values(MOCK_CATEGORIES),
+        projectData.categories,
     );
-    const [newCatName, setNewCatName] = useState<string>("");
-    const [labels, setLabels] = useState<Label[]>(LABELS);
+    const [newCategoryName, setNewCategoryName] = useState<string>("");
+    const [labels, setLabels] = useState<Label[]>(projectData.labels);
     const [newLabel, setNewLabel] = useState({
         name: "",
         color: LABEL_PALETTE[0],
     });
     const [editingLabel, setEditingLabel] = useState<number | null>(null);
     const [members, setMembers] = useState<Omit<User, "email">[]>(
-        Object.values(MOCK_MEMBERS),
+        projectData.members,
     );
     const [inviteEmail, setInviteEmail] = useState<string>("");
     const [inviteRole, setInviteRole] = useState<User["role"]>("member");
 
     const addColumn = () => {
-        if (!newColName.trim()) return;
-        setColumns((column) => [
-            ...column,
-            {
-                id: columns.length + 1,
-                dot: `bg-[${newColColor}]/50`,
-                label: newColName.trim(),
-                pill: `bg-[${newColColor}]/5 text-[${newColColor}]/50 border-[${newColColor}]/20`,
-                order: columns.length + 1,
-            },
-        ]);
-        setNewColName("");
-        setNewColColor(COLUMN_COLORS[0]);
+        if (!newColumnName.trim()) return;
+        // setColumns((column) => [
+        //     ...column,
+        //     {
+        //         id: columns.length + 1,
+        //         dot: `bg-[${newColColor}]/50`,
+        //         label: newColumnName.trim(),
+        //         pill: `bg-[${newColColor}]/5 text-[${newColColor}]/50 border-[${newColColor}]/20`,
+        //         order: columns.length + 1,
+        //     },
+        // ]);
+        setNewColumnName("");
+        // setNewColColor(COLUMN_COLORS[0]);
     };
 
-    const updateColumn = (id: number, patch: Partial<ColumnConfig>) =>
+    const updateColumn = (id: number, patch: Partial<Column>) =>
         setColumns((c) => c.map((x) => (x.id === id ? { ...x, ...patch } : x)));
 
     const removeColumn = (id: number) =>
         setColumns((c) => c.filter((x) => x.id !== id));
 
     const addCategory = () => {
-        if (!newCatName.trim()) return;
+        if (!newCategoryName.trim()) return;
         setCategories((category) => [
             ...category,
             {
                 id: categories.length + 1,
-                name: newCatName.trim(),
+                name: newCategoryName.trim(),
                 description: "",
                 color: "",
                 created_at: new Date(),
@@ -126,7 +129,7 @@ export function ProjectSettingsDialog({
                 pill: "",
             },
         ]);
-        setNewCatName("");
+        setNewCategoryName("");
     };
 
     const removeCategory = (id: number) =>
@@ -163,25 +166,26 @@ export function ProjectSettingsDialog({
     };
 
     const handleSave = () => {
-        onSave?.({
-            id: new Date().getTime(),
-            name: title,
-            description,
-            icon,
-            members,
-            color: projectColor,
-            created_at: new Date(),
-            owner: { name: "", avatar_url: "" },
-            status: "active",
-            columns: [],
-            updated_at: null,
-        });
+        // onSave?.({
+        //     id: new Date().getTime(),
+        //     name: title,
+        //     description,
+        //     icon,
+        //     members,
+        //     color: projectColor,
+        //     created_at: new Date(),
+        //     owner: { name: "", avatar_url: "" },
+        //     status: "active",
+        //     columns: [],
+        //     updated_at: null,
+        // });
         onOpenChange(false);
     };
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="flex h-[88vh] max-h-[680px] w-[95vw] max-w-[780px] flex-col gap-0 overflow-hidden rounded-md border bg-white p-0 shadow-xl [&>button:last-child]:hidden">
+                <DialogTitle className="hidden"></DialogTitle>
                 <div className="flex flex-1 overflow-hidden">
                     <nav className="flex w-48 shrink-0 flex-col gap-0.5 border-r px-2 py-3">
                         {NAV_ITEMS.map((item) => {
@@ -240,7 +244,7 @@ export function ProjectSettingsDialog({
                                                         borderColor: `${projectColor}30`,
                                                     }}
                                                 >
-                                                    {icon}
+                                                    {projectIcon}
                                                     <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-bright-blue">
                                                         <PencilSimpleIcon
                                                             weight="duotone"
@@ -284,23 +288,23 @@ export function ProjectSettingsDialog({
                                     </div>
                                     {iconPickerOpen && (
                                         <div className="flex flex-wrap gap-1.5 rounded-md border bg-gray-50 p-3">
-                                            {PROJECT_ICONS.map((ic) => (
+                                            {PROJECT_ICONS.map((icon) => (
                                                 <button
-                                                    key={ic}
+                                                    key={icon}
                                                     onClick={() => {
-                                                        setIcon(ic);
+                                                        setProjectIcon(icon);
                                                         setIconPickerOpen(
                                                             false,
                                                         );
                                                     }}
                                                     className={cn(
                                                         "flex size-9 items-center justify-center rounded-md text-xl transition-all hover:bg-white",
-                                                        icon === ic
+                                                        icon === projectIcon
                                                             ? "bg-white ring-2 ring-bright-blue"
                                                             : "",
                                                     )}
                                                 >
-                                                    {ic}
+                                                    {icon}
                                                 </button>
                                             ))}
                                         </div>
@@ -311,43 +315,47 @@ export function ProjectSettingsDialog({
                                                 Select color
                                             </p>
                                             <div className="flex flex-wrap gap-2">
-                                                {PROJECT_COLORS.map((c) => (
+                                                {PROJECT_COLORS.map((color) => (
                                                     <button
-                                                        key={c}
+                                                        key={color}
                                                         onClick={() => {
-                                                            setProjectColor(c);
+                                                            setProjectColor(
+                                                                color,
+                                                            );
                                                             setColorPickerOpen(
                                                                 false,
                                                             );
                                                         }}
                                                         className={cn(
                                                             "flex size-8 items-center justify-center rounded-full transition-all hover:brightness-90",
-                                                            projectColor === c
+                                                            projectColor ===
+                                                                color
                                                                 ? "ring-2 ring-offset-2"
                                                                 : "",
                                                         )}
                                                         style={{
-                                                            background: c,
+                                                            background: color,
                                                             ...(projectColor ===
-                                                            c
+                                                            color
                                                                 ? {
                                                                       ringColor:
-                                                                          c,
+                                                                          color,
                                                                   }
                                                                 : {}),
                                                             outline:
                                                                 projectColor ===
-                                                                c
-                                                                    ? `2px solid ${c}`
+                                                                color
+                                                                    ? `2px solid ${color}`
                                                                     : "none",
                                                             outlineOffset:
                                                                 projectColor ===
-                                                                c
+                                                                color
                                                                     ? "2px"
                                                                     : "0",
                                                         }}
                                                     >
-                                                        {projectColor === c && (
+                                                        {projectColor ===
+                                                            color && (
                                                             <CheckIcon
                                                                 weight="duotone"
                                                                 size={13}
@@ -444,9 +452,9 @@ export function ProjectSettingsDialog({
                                     <h3 className="font-semibold">Columns</h3>
                                     <div className="space-y-4">
                                         <div className="space-y-2">
-                                            {columns.map((col) => (
+                                            {columns.map((column) => (
                                                 <div
-                                                    key={col.id}
+                                                    key={column.id}
                                                     className="flex items-center gap-3 rounded-md border px-3 py-2.5 transition-colors hover:bg-gray-50"
                                                 >
                                                     <DotsSixVerticalIcon
@@ -454,29 +462,30 @@ export function ProjectSettingsDialog({
                                                         size={14}
                                                         className="cursor-grab text-gray-500"
                                                     />
-                                                    {editingCol === col.id ? (
+                                                    {editingColumn ===
+                                                    column.id ? (
                                                         <Input
                                                             autoFocus
-                                                            value={col.label}
+                                                            value={column.name}
                                                             onChange={(e) =>
                                                                 updateColumn(
-                                                                    col.id,
+                                                                    column.id,
                                                                     {
-                                                                        label: e
+                                                                        name: e
                                                                             .target
                                                                             .value,
                                                                     },
                                                                 )
                                                             }
                                                             onBlur={() =>
-                                                                setEditingCol(
+                                                                setEditingColumn(
                                                                     null,
                                                                 )
                                                             }
                                                             onKeyDown={(e) =>
                                                                 e.key ===
                                                                     "Enter" &&
-                                                                setEditingCol(
+                                                                setEditingColumn(
                                                                     null,
                                                                 )
                                                             }
@@ -484,11 +493,11 @@ export function ProjectSettingsDialog({
                                                         />
                                                     ) : (
                                                         <span className="flex-1 text-sm font-medium">
-                                                            {col.label}
+                                                            {column.name}
                                                         </span>
                                                     )}
                                                     <div className="flex items-center gap-1">
-                                                        {COLUMN_COLORS.slice(
+                                                        {/* {COLUMN_COLORS.slice(
                                                             0,
                                                             4,
                                                         ).map((c) => (
@@ -514,31 +523,31 @@ export function ProjectSettingsDialog({
                                                                         c,
                                                                 }}
                                                             />
-                                                        ))}
+                                                        ))} */}
                                                         <button
                                                             onClick={() =>
-                                                                setEditingCol(
-                                                                    col.id,
+                                                                setEditingColumn(
+                                                                    column.id,
                                                                 )
                                                             }
-                                                            className="ml-1 flex size-6 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-100"
+                                                            className="ml-1 flex size-7 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-100"
                                                         >
                                                             <PencilSimpleIcon
                                                                 weight="duotone"
-                                                                size={11}
+                                                                size={16}
                                                             />
                                                         </button>
                                                         <button
                                                             onClick={() =>
                                                                 removeColumn(
-                                                                    col.id,
+                                                                    column.id,
                                                                 )
                                                             }
-                                                            className="flex size-6 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-red-50 hover:text-red-400"
+                                                            className="flex size-7 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-red-50 hover:text-red-400"
                                                         >
                                                             <TrashSimpleIcon
                                                                 weight="duotone"
-                                                                size={11}
+                                                                size={16}
                                                             />
                                                         </button>
                                                     </div>
@@ -546,7 +555,7 @@ export function ProjectSettingsDialog({
                                             ))}
                                         </div>
                                         <div className="flex items-center gap-2 rounded-md border p-3">
-                                            <div className="flex gap-1.5">
+                                            {/* <div className="flex gap-1.5">
                                                 {COLUMN_COLORS.map((c) => (
                                                     <button
                                                         key={c}
@@ -564,12 +573,12 @@ export function ProjectSettingsDialog({
                                                         }}
                                                     />
                                                 ))}
-                                            </div>
+                                            </div> */}
                                             <Input
                                                 placeholder="Column name…"
-                                                value={newColName}
+                                                value={newColumnName}
                                                 onChange={(e) =>
-                                                    setNewColName(
+                                                    setNewColumnName(
                                                         e.target.value,
                                                     )
                                                 }
@@ -582,7 +591,7 @@ export function ProjectSettingsDialog({
                                             <Button
                                                 size="sm"
                                                 onClick={addColumn}
-                                                disabled={!newColName.trim()}
+                                                disabled={!newColumnName.trim()}
                                                 className="h-8 rounded-md bg-bright-blue px-3 text-[12px] text-white hover:bg-blue-600 disabled:opacity-40"
                                             >
                                                 <PlusIcon
@@ -634,9 +643,9 @@ export function ProjectSettingsDialog({
                                             />
                                             <Input
                                                 placeholder="New category…"
-                                                value={newCatName}
+                                                value={newCategoryName}
                                                 onChange={(e) =>
-                                                    setNewCatName(
+                                                    setNewCategoryName(
                                                         e.target.value,
                                                     )
                                                 }
@@ -649,7 +658,9 @@ export function ProjectSettingsDialog({
                                             <Button
                                                 size="sm"
                                                 onClick={addCategory}
-                                                disabled={!newCatName.trim()}
+                                                disabled={
+                                                    !newCategoryName.trim()
+                                                }
                                                 className="h-8 rounded-md bg-bright-blue px-3 text-xs text-white hover:bg-blue-600 disabled:opacity-40"
                                             >
                                                 <PlusIcon
@@ -868,24 +879,24 @@ export function ProjectSettingsDialog({
                                                         "member",
                                                         "viewer",
                                                     ] as const
-                                                ).map((r) => (
+                                                ).map((role) => (
                                                     <button
-                                                        key={r}
+                                                        key={role}
                                                         onClick={() =>
-                                                            setInviteRole(r)
+                                                            setInviteRole(role)
                                                         }
                                                         className="rounded-md border px-2 py-1 text-xs font-medium transition-all"
                                                         style={
-                                                            inviteRole === r
+                                                            inviteRole === role
                                                                 ? {
                                                                       background:
                                                                           ROLE_META[
-                                                                              r
+                                                                              role
                                                                           ].bg,
                                                                       color: ROLE_META[
-                                                                          r
+                                                                          role
                                                                       ].color,
-                                                                      border: `1px solid ${ROLE_META[r].border}`,
+                                                                      border: `1px solid ${ROLE_META[role].border}`,
                                                                   }
                                                                 : {
                                                                       background:
@@ -895,7 +906,7 @@ export function ProjectSettingsDialog({
                                                                   }
                                                         }
                                                     >
-                                                        {ROLE_META[r].label}
+                                                        {ROLE_META[role].label}
                                                     </button>
                                                 ))}
                                             </div>
@@ -909,22 +920,28 @@ export function ProjectSettingsDialog({
                                             </Button>
                                         </div>
                                         <div className="space-y-1.5">
-                                            {members.map((m) => (
+                                            {members.map((member) => (
                                                 <div
-                                                    key={m.id}
+                                                    key={member.id}
                                                     className="flex items-center gap-3 rounded-md border px-3 py-2.5 transition-colors hover:bg-gray-50"
                                                 >
-                                                    <Avatar className="size-8 shrink-0 ring-2 ring-white">
-                                                        <AvatarFallback className="text-xs font-bold text-white">
+                                                    <Avatar className="size-8 shrink-0">
+                                                        <AvatarFallback
+                                                            className="text-xs font-bold text-white"
+                                                            style={{
+                                                                backgroundColor:
+                                                                    member.color,
+                                                            }}
+                                                        >
                                                             {getInitials(
-                                                                m.name,
-                                                                m.surname,
+                                                                member.name,
+                                                                member.surname,
                                                             )}
                                                         </AvatarFallback>
                                                     </Avatar>
                                                     <div className="min-w-0 flex-1">
                                                         <p className="truncate text-sm font-medium">
-                                                            {m.name}
+                                                            {member.name}
                                                         </p>
                                                     </div>
                                                     <div className="flex shrink-0 gap-1">
@@ -935,49 +952,50 @@ export function ProjectSettingsDialog({
                                                                 "member",
                                                                 "viewer",
                                                             ] as const
-                                                        ).map((r) => {
+                                                        ).map((role) => {
                                                             if (
-                                                                r === "owner" &&
-                                                                m.role !==
+                                                                role ===
+                                                                    "owner" &&
+                                                                member.role !==
                                                                     "owner"
                                                             )
                                                                 return null;
                                                             return (
                                                                 <button
-                                                                    key={r}
+                                                                    key={role}
                                                                     onClick={() =>
-                                                                        m.role !==
+                                                                        member.role !==
                                                                             "owner" &&
                                                                         updateMemberRole(
-                                                                            m.id,
-                                                                            r,
+                                                                            member.id,
+                                                                            role,
                                                                         )
                                                                     }
                                                                     disabled={
-                                                                        m.role ===
+                                                                        member.role ===
                                                                         "owner"
                                                                     }
                                                                     className={cn(
                                                                         "rounded-md border px-2 py-0.5 text-xs font-medium transition-all",
-                                                                        m.role ===
-                                                                            r
+                                                                        member.role ===
+                                                                            role
                                                                             ? ""
                                                                             : "bg-gray-100",
                                                                     )}
                                                                     style={
-                                                                        m.role ===
-                                                                        r
+                                                                        member.role ===
+                                                                        role
                                                                             ? {
                                                                                   background:
                                                                                       ROLE_META[
-                                                                                          r
+                                                                                          role
                                                                                       ]
                                                                                           .bg,
                                                                                   color: ROLE_META[
-                                                                                      r
+                                                                                      role
                                                                                   ]
                                                                                       .color,
-                                                                                  border: `1px solid ${ROLE_META[r].border}`,
+                                                                                  border: `1px solid ${ROLE_META[role].border}`,
                                                                               }
                                                                             : {
                                                                                   background:
@@ -989,18 +1007,19 @@ export function ProjectSettingsDialog({
                                                                 >
                                                                     {
                                                                         ROLE_META[
-                                                                            r
+                                                                            role
                                                                         ].label
                                                                     }
                                                                 </button>
                                                             );
                                                         })}
                                                     </div>
-                                                    {m.role !== "owner" && (
+                                                    {member.role !==
+                                                        "owner" && (
                                                         <button
                                                             onClick={() =>
                                                                 removeMember(
-                                                                    m.id,
+                                                                    member.id,
                                                                 )
                                                             }
                                                             className="flex size-7 shrink-0 items-center justify-center rounded-md text-gray-500 transition-all hover:bg-red-100 hover:text-red-500"
