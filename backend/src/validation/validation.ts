@@ -137,7 +137,7 @@ export const createTaskSchema = z.object({
     priority: z.enum(["low", "medium", "high", "critical"]).optional(),
     show_progress: z.boolean().optional(),
     category_ids: z.array(z.number().int().positive()).optional(),
-    assignee_ids: z.array(z.number().int().positive()).optional(),
+    member_ids: z.array(z.number().int().positive()).optional(),
     label_ids: z.array(z.number().int().positive()).optional(),
 });
 

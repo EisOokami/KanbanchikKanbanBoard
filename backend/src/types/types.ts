@@ -54,11 +54,13 @@ export interface Project extends ExtendedBase {
     owner: Pick<User, "name" | "avatar_url">;
     members: Omit<User, "email">[];
     status: Status;
+    categories: Category[];
+    labels: Label[];
     tasks_total?: number;
     tasks_done?: number;
     icon: string;
     color: string;
-    columns: (ColumnConfig & Column)[];
+    columns?: (ColumnConfig & Column)[];
 }
 
 export interface Subtask extends Base {
@@ -76,7 +78,7 @@ export interface Attachment extends Base {
 }
 
 export interface Comment extends ExtendedBase {
-    assignee: Omit<User, "email">;
+    member: Omit<User, "email">;
     body: string;
 }
 
@@ -101,13 +103,14 @@ export interface Task extends ExtendedBase {
     column: Columns;
     labels: string[];
     categories: Category[];
-    assignees: Omit<User, "email">[];
+    members: Omit<User, "email">[];
     subtasks: Subtask[];
     subtasks_done?: number;
     subtasks_total?: number;
     show_progress: boolean;
     attachments: Attachment[];
     comments: Comment[];
+    project: Pick<Project, "id" | "name" | "color" | "icon">;
 }
 
 export interface Column extends ExtendedBase {

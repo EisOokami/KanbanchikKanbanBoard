@@ -1,13 +1,16 @@
 import { pool } from "../db/pool";
 import type { Request, Response } from "express";
-import type { ResultSetHeader } from "mysql2";
+import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import { ZodError } from "zod";
 import type {
     Category,
     Column,
+    Comment,
     IGetUserRequest,
     Label,
     Project,
+    Subtask,
+    Task,
     User,
 } from "../types/types";
 import {
@@ -39,24 +42,138 @@ export const getProjects = async (req: IGetUserRequest, res: Response) => {
                     p.description, 
                     p.status,
                     p.created_at,
-                    p.updated_at,
-                    COUNT(DISTINCT pm.user_id) as member_count,
-                    COUNT(DISTINCT c.id) as column_count,
-                    COUNT(DISTINCT t.id) as task_count
+                    p.updated_at
                 FROM projects p
-                LEFT JOIN project_members pm ON p.id = pm.project_id
-                LEFT JOIN columns c ON p.id = c.project_id
-                LEFT JOIN tasks t ON c.id = t.column_id
                 WHERE p.id IN (
                     SELECT project_id FROM project_members WHERE user_id = ?
                 ) OR p.owner_id = ?
-                GROUP BY p.id
                 ORDER BY p.updated_at DESC
             `,
             [userId, userId],
         );
 
-        res.status(200).json(projects);
+        const enrichedProjects = await Promise.all(
+            projects.map(async (project) => {
+                const [owner] = await pool.execute<User[]>(
+                    `
+                        SELECT id, name, avatar_url
+                        FROM users
+                        WHERE id = ?
+                    `,
+                    [project.owner_id],
+                );
+
+                const [members] = await pool.execute<User[]>(
+                    `
+                        SELECT 
+                            u.id,
+                            u.name,
+                            u.surname,
+                            u.avatar_url,
+                            u.color,
+                            pm.role,
+                            pm.status,
+                            pm.joined_at
+                        FROM project_members pm
+                        JOIN users u ON pm.user_id = u.id
+                        WHERE pm.project_id = ?
+                        ORDER BY pm.joined_at ASC
+                    `,
+                    [project.id],
+                );
+
+                const [columns] = await pool.execute<Column[]>(
+                    `
+                        SELECT 
+                            c.id,
+                            c.name,
+                            c.position,
+                            c.wip_limit,
+                            c.created_at,
+                            c.updated_at
+                        FROM columns c
+                        WHERE c.project_id = ?
+                        ORDER BY c.position ASC
+                    `,
+                    [project.id],
+                );
+
+                const [categories] = await pool.execute<Category[]>(
+                    `
+                SELECT id, name, color, created_at, updated_at
+                FROM categories
+                WHERE project_id = ?
+                ORDER BY name ASC
+            `,
+                    [project.id],
+                );
+
+                const [labels] = await pool.execute<Label[]>(
+                    `
+                SELECT id, name, color
+                FROM labels
+                WHERE project_id = ?
+                ORDER BY name ASC
+            `,
+                    [project.id],
+                );
+
+                const [taskStats] = await pool.execute<
+                    ({ total: number; done: boolean } & RowDataPacket)[]
+                >(
+                    `
+                        SELECT 
+                            COUNT(t.id) as total,
+                            SUM(CASE WHEN c.name = 'Done' THEN 1 ELSE 0 END) as done
+                        FROM tasks t
+                        JOIN columns c ON t.column_id = c.id
+                        WHERE c.project_id = ?
+                    `,
+                    [project.id],
+                );
+
+                return {
+                    id: project.id,
+                    name: project.name,
+                    description: project.description,
+                    icon: project.icon,
+                    color: project.color,
+                    status: project.status,
+                    created_at: project.created_at,
+                    updated_at: project.updated_at,
+                    owner:
+                        owner.length && owner[0]
+                            ? {
+                                  name: owner[0].name,
+                                  avatar_url: owner[0].avatar_url,
+                              }
+                            : null,
+                    members: members.map((member) => ({
+                        id: member.id,
+                        name: member.name,
+                        surname: member.surname,
+                        avatar_url: member.avatar_url,
+                        color: member.color,
+                        role: member.role,
+                        status: member.status,
+                        joined_at: member.joined_at,
+                    })),
+                    categories,
+                    labels,
+                    columns,
+                    tasks_total:
+                        taskStats.length && taskStats[0]
+                            ? taskStats[0].total
+                            : 0,
+                    tasks_done:
+                        taskStats.length && taskStats[0]
+                            ? taskStats[0].done
+                            : 0,
+                };
+            }),
+        );
+
+        res.status(200).json(enrichedProjects);
     } catch (error) {
         console.error(error);
         res.status(500).json({ status: "error", message: "Database error" });
@@ -138,7 +255,7 @@ export const getProjectById = async (req: IGetUserRequest, res: Response) => {
 
         const [categories] = await pool.execute<Category[]>(
             `
-                SELECT id, name, description, color, created_at, updated_at
+                SELECT id, name, color, created_at, updated_at
                 FROM categories
                 WHERE project_id = ?
                 ORDER BY name ASC
@@ -159,15 +276,14 @@ export const getProjectById = async (req: IGetUserRequest, res: Response) => {
         const [members] = await pool.execute<User[]>(
             `
                 SELECT 
-                    pm.user_id,
-                    pm.role,
-                    pm.status,
-                    pm.joined_at,
+                    u.id,
                     u.name,
                     u.surname,
-                    u.email,
                     u.avatar_url,
-                    u.color
+                    u.color,
+                    pm.role,
+                    pm.status,
+                    pm.joined_at
                 FROM project_members pm
                 JOIN users u ON pm.user_id = u.id
                 WHERE pm.project_id = ?
@@ -185,13 +301,218 @@ export const getProjectById = async (req: IGetUserRequest, res: Response) => {
             [project.owner_id],
         );
 
+        const enrichedColumns = await Promise.all(
+            columns.map(async (column) => {
+                const [tasks] = await pool.execute<Task[]>(
+                    `
+                        SELECT
+                            t.id,
+                            t.column_id,
+                            t.creator_id,
+                            t.title,
+                            t.description,
+                            t.position,
+                            t.due_date,
+                            t.start_date,
+                            t.priority,
+                            t.show_progress,
+                            t.created_at,
+                            t.updated_at,
+                            c.name as column_name
+                        FROM tasks t
+                        JOIN columns c ON t.column_id = c.id
+                        WHERE t.column_id = ?
+                        ORDER BY t.position ASC
+                    `,
+                    [column.id],
+                );
+
+                const enrichedTasks = await Promise.all(
+                    tasks.map(async (task) => {
+                        const [members] = await pool.execute<User[]>(
+                            `
+                                SELECT
+                                    u.id,
+                                    u.name,
+                                    u.surname,
+                                    u.avatar_url,
+                                    u.color
+                                FROM task_members ta
+                                JOIN users u ON ta.user_id = u.id
+                                WHERE ta.task_id = ?
+                            `,
+                            [task.id],
+                        );
+
+                        const [taskLabels] = await pool.execute<Label[]>(
+                            `
+                                SELECT l.id, l.name, l.color
+                                FROM task_labels tl
+                                JOIN labels l ON tl.label_id = l.id
+                                WHERE tl.task_id = ?
+                            `,
+                            [task.id],
+                        );
+
+                        const [taskCategories] = await pool.execute<Category[]>(
+                            `
+                                SELECT c.id, c.name, c.color
+                                FROM task_categories tc
+                                JOIN categories c ON tc.category_id = c.id
+                                WHERE tc.task_id = ?
+                            `,
+                            [task.id],
+                        );
+
+                        const [subtasks] = await pool.execute<Subtask[]>(
+                            `
+                                SELECT id, title, position, is_done, created_at
+                                FROM subtasks
+                                WHERE task_id = ?
+                                ORDER BY position ASC
+                            `,
+                            [task.id],
+                        );
+
+                        const [comments] = await pool.execute<Comment[]>(
+                            `
+                                SELECT
+                                    c.id,
+                                    c.body,
+                                    c.created_at,
+                                    c.updated_at,
+                                    u.id as user_id,
+                                    u.name,
+                                    u.surname,
+                                    u.avatar_url,
+                                    u.color
+                                FROM comments c
+                                JOIN users u ON c.user_id = u.id
+                                WHERE c.task_id = ?
+                                ORDER BY c.created_at ASC
+                            `,
+                            [task.id],
+                        );
+
+                        const [attachments] = await pool.execute<any[]>(
+                            `
+                                SELECT
+                                    a.id,
+                                    a.filename,
+                                    a.file_url,
+                                    a.mime_type,
+                                    a.size_bytes,
+                                    a.created_at,
+                                    u.id as uploader_id,
+                                    u.name as uploader_name,
+                                    u.surname as uploader_surname,
+                                    u.avatar_url as uploader_avatar
+                                FROM attachments a
+                                JOIN users u ON a.uploader_id = u.id
+                                WHERE a.task_id = ?
+                                ORDER BY a.created_at DESC
+                            `,
+                            [task.id],
+                        );
+
+                        const subtasksTotal = subtasks.length;
+                        const subtasksDone = subtasks.filter(
+                            (s) => s.is_done,
+                        ).length;
+
+                        return {
+                            id: task.id,
+                            title: task.title,
+                            description: task.description,
+                            position: task.position,
+                            due_date: task.due_date,
+                            start_date: task.start_date,
+                            priority: task.priority,
+                            show_progress: task.show_progress,
+                            created_at: task.created_at,
+                            updated_at: task.updated_at,
+                            column: {
+                                id: task.column_id,
+                                name: task.column_name,
+                            },
+                            members,
+                            labels: taskLabels,
+                            categories: taskCategories,
+                            subtasks,
+                            comments: comments.map((comment) => ({
+                                id: comment.id,
+                                member: {
+                                    id: comment.user_id,
+                                    name: comment.name,
+                                    surname: comment.surname,
+                                    avatar_url: comment.avatar_url,
+                                    color: comment.color,
+                                },
+                                body: comment.body,
+                                created_at: comment.created_at,
+                                updated_at: comment.updated_at,
+                            })),
+                            attachments,
+                            subtasks_total: subtasksTotal,
+                            subtasks_done: subtasksDone,
+                        };
+                    }),
+                );
+
+                return {
+                    ...column,
+                    tasks: enrichedTasks,
+                };
+            }),
+        );
+
+        const [taskStats] = await pool.execute<
+            ({ total: number; done: boolean } & RowDataPacket)[]
+        >(
+            `
+                SELECT
+                    COUNT(t.id) as total,
+                    SUM(CASE WHEN c.name = 'Done' THEN 1 ELSE 0 END) as done
+                FROM tasks t
+                JOIN columns c ON t.column_id = c.id
+                WHERE c.project_id = ?
+            `,
+            [id],
+        );
+
         res.status(200).json({
-            ...project,
-            owner: ownerData || null,
-            members,
-            columns,
+            id: project.id,
+            name: project.name,
+            description: project.description,
+            icon: project.icon,
+            color: project.color,
+            status: project.status,
+            created_at: project.created_at,
+            updated_at: project.updated_at,
+            owner:
+                ownerData.length && ownerData[0]
+                    ? {
+                          name: ownerData[0].name,
+                          avatar_url: ownerData[0].avatar_url,
+                      }
+                    : null,
+            members: members.map((member) => ({
+                id: member.id,
+                name: member.name,
+                surname: member.surname,
+                avatar_url: member.avatar_url,
+                color: member.color,
+                role: member.role,
+                status: member.status,
+                joined_at: member.joined_at,
+            })),
+            columns: enrichedColumns,
             categories,
             labels,
+            tasks_total:
+                taskStats.length && taskStats[0] ? taskStats[0].total : 0,
+            tasks_done:
+                taskStats.length && taskStats[0] ? taskStats[0].done : 0,
         });
     } catch (error) {
         console.error(error);
