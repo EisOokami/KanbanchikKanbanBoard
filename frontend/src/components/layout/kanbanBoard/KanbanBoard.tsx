@@ -67,89 +67,104 @@ export default function KanbanBoard({
     >("kanban");
 
     const sensors = useSensors(
-        useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+        useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     );
-
-    const findColumnByTaskId = (taskId: number) =>
-        columns.find((col) => col.tasks.some((t) => t.id === taskId));
 
     const handleDragStart = (event: DragStartEvent) => {
         const { active } = event;
-        const col = findColumnByTaskId(active.id as number);
-        const task = col?.tasks.find((t) => t.id === active.id);
-        setActiveCard(task ?? null);
+
+        const task = columns
+            .flatMap((col) => col.tasks)
+            .find((t) => t.id === active.id);
+
+        setActiveTask(task || null);
     };
 
     const handleDragOver = (event: DragOverEvent) => {
         const { active, over } = event;
-        if (!over || active.id === over.id) return;
 
-        const activeColIdx = columns.findIndex((col) =>
-            col.tasks.some((t) => t.id === active.id),
+        if (!over) return;
+
+        const activeId = active.id;
+        const overId = over.id;
+
+        if (activeId === overId) return;
+
+        const activeColumn = columns.find((col) =>
+            col.tasks.some((t) => t.id === activeId),
         );
-        if (activeColIdx === -1) return;
-
-        const overColIdx = columns.findIndex(
+        const overColumn = columns.find(
             (col) =>
-                col.id === over.id || col.tasks.some((t) => t.id === over.id),
+                col.id === overId || col.tasks.some((t) => t.id === overId),
         );
-        if (overColIdx === -1 || activeColIdx === overColIdx) return;
 
-        setColumns((prev) => {
-            const next = prev.map((col) => ({ ...col, tasks: [...col.tasks] }));
-            const task = next[activeColIdx].tasks.find(
-                (t) => t.id === active.id,
-            )!;
-            next[activeColIdx].tasks = next[activeColIdx].tasks.filter(
-                (t) => t.id !== active.id,
-            );
+        if (!activeColumn || !overColumn) return;
 
-            const overTaskIdx = next[overColIdx].tasks.findIndex(
-                (t) => t.id === over.id,
-            );
-            if (overTaskIdx === -1) {
-                next[overColIdx].tasks.push(task);
-            } else {
-                next[overColIdx].tasks.splice(overTaskIdx, 0, task);
-            }
-            return next;
-        });
-    };
-
-    const handleDragEnd = (event: DragEndEvent) => {
-        const { active, over } = event;
-        setActiveCard(null);
-        if (!over || active.id === over.id) return;
-
-        const activeColIdx = columns.findIndex((col) =>
-            col.tasks.some((t) => t.id === active.id),
-        );
-        if (activeColIdx === -1) return;
-
-        const overColIdx = columns.findIndex(
-            (col) =>
-                col.id === over.id || col.tasks.some((t) => t.id === over.id),
-        );
-        if (overColIdx === -1) return;
-
-        if (activeColIdx === overColIdx) {
+        if (activeColumn.id !== overColumn.id) {
             setColumns((prev) => {
-                const next = prev.map((col) => ({
-                    ...col,
-                    tasks: [...col.tasks],
-                }));
-                const col = next[activeColIdx];
-                const oldIdx = col.tasks.findIndex((t) => t.id === active.id);
-                const newIdx = col.tasks.findIndex((t) => t.id === over.id);
-                if (oldIdx !== -1 && newIdx !== -1) {
-                    col.tasks = arrayMove(col.tasks, oldIdx, newIdx);
-                }
-                return next;
+                const activeItems = activeColumn.tasks;
+                const overItems = overColumn.tasks;
+
+                const activeIndex = activeItems.findIndex(
+                    (t) => t.id === activeId,
+                );
+                const overIndex = overItems.findIndex((t) => t.id === overId);
+
+                const activeTask = activeItems[activeIndex];
+
+                const newActiveItems = activeItems.filter(
+                    (t) => t.id !== activeId,
+                );
+
+                const newOverItems = [...overItems];
+                const insertIndex =
+                    overId === overColumn.id
+                        ? newOverItems.length
+                        : overIndex >= 0
+                          ? overIndex
+                          : newOverItems.length;
+
+                newOverItems.splice(insertIndex, 0, activeTask);
+
+                return prev.map((col) => {
+                    if (col.id === activeColumn.id) {
+                        return { ...col, tasks: newActiveItems };
+                    }
+                    if (col.id === overColumn.id) {
+                        return { ...col, tasks: newOverItems };
+                    }
+                    return col;
+                });
+            });
+        } else {
+            setColumns((prev) => {
+                const column = prev.find((c) => c.id === activeColumn.id);
+                if (!column) return prev;
+
+                const oldIndex = column.tasks.findIndex(
+                    (t) => t.id === activeId,
+                );
+                const newIndex = column.tasks.findIndex((t) => t.id === overId);
+
+                return prev.map((col) => {
+                    if (col.id === column.id) {
+                        return {
+                            ...col,
+                            tasks: arrayMove(col.tasks, oldIndex, newIndex),
+                        };
+                    }
+                    return col;
+                });
             });
         }
     };
 
-    const handleDeleteCard = () => {};
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const handleDragEnd = (event: DragEndEvent) => {
+        setActiveTask(null);
+    };
+
+    const handleDeleteTask = () => {};
 
     const handleChangeMode = (mode: "kanban" | "list" | "calendar") =>
         setSelectedMode(mode);
