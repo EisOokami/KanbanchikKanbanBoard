@@ -46,12 +46,14 @@ export interface Project extends ExtendedBase {
     description: string;
     owner: Pick<User, "name" | "avatar_url">;
     members: Omit<User, "email">[];
+    categories: Category[];
+    labels: Label[];
     status: Status;
     tasks_total?: number;
     tasks_done?: number;
     icon: string;
     color: string;
-    columns: (ColumnConfig & Column)[];
+    columns: Column[];
 }
 
 export interface Subtask extends Base {

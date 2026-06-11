@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/shadcn/tooltip";
 import { SidebarProvider } from "@/components/ui/shadcn/sidebar";
 import AppSidebar from "@/components/ui/appSidebar/AppSidebar";
 import AccountSettingsProvider from "@/context/AccountSettingsProvider";
+import { getProjectsData } from "@/data/loaders";
 
 const montserrat = Montserrat({
     variable: "--font-montserrat",
@@ -18,11 +19,13 @@ export const metadata: Metadata = {
     description: "",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
     children,
 }: Readonly<{
     children: React.ReactNode;
 }>) {
+    const projectsData = await getProjectsData();
+
     return (
         <html lang="en">
             <body
@@ -33,7 +36,7 @@ export default function RootLayout({
             >
                 <SidebarProvider>
                     <AccountSettingsProvider>
-                        <AppSidebar />
+                        <AppSidebar projectsData={projectsData} />
                         <TooltipProvider>
                             <div className="my-3 mr-3 max-h-[calc(100svh-1.5rem)] w-full rounded-xl border">
                                 {children}

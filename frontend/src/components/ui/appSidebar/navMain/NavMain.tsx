@@ -24,6 +24,7 @@ import {
     KanbanIcon,
     SquaresFourIcon,
 } from "@phosphor-icons/react";
+import { Project } from "@/types/types";
 
 const navMain = [
     {
@@ -35,18 +36,16 @@ const navMain = [
         title: "My Boards",
         icon: KanbanIcon,
         url: "/board",
-        badge: "3",
-        children: [
-            { title: "Design System", url: "/board", color: "#6366f1" },
-            { title: "Marketing Q2", url: "/board", color: "#f59e0b" },
-            { title: "Backend API", url: "/board", color: "#10b981" },
-        ],
     },
-    { title: "Tasks", icon: ClipboardTextIcon, url: "/tasks", badge: "12" },
+    { title: "Tasks", icon: ClipboardTextIcon, url: "/tasks" },
     { title: "Calendar", icon: CalendarDotsIcon, url: "/calendar" },
 ];
 
-export default function NavMain() {
+interface NavMainProps {
+    projectsData: Project[];
+}
+
+export default function NavMain({ projectsData }: Readonly<NavMainProps>) {
     const [openItems, setOpenItems] = useState<{ [key: string]: boolean }>({
         "My Boards": true,
     });
@@ -58,7 +57,7 @@ export default function NavMain() {
     return (
         <SidebarMenu>
             {navMain.map((item) =>
-                item.children ? (
+                item.url === "/board" ? (
                     <Collapsible
                         key={item.title}
                         open={!!openItems[item.title]}
@@ -73,9 +72,9 @@ export default function NavMain() {
                                 >
                                     <item.icon weight="duotone" />
                                     <span>{item.title}</span>
-                                    {item.badge && (
+                                    {projectsData.length && (
                                         <SidebarMenuBadge>
-                                            {item.badge}
+                                            {projectsData.length}
                                         </SidebarMenuBadge>
                                     )}
                                     <CaretRightIcon
@@ -86,24 +85,26 @@ export default function NavMain() {
                             </CollapsibleTrigger>
                             <CollapsibleContent>
                                 <SidebarMenuSub>
-                                    {item.children.map((child) => (
-                                        <SidebarMenuSubItem key={child.title}>
+                                    {projectsData.map((project) => (
+                                        <SidebarMenuSubItem key={project.id}>
                                             <SidebarMenuSubButton
                                                 asChild
                                                 className="transition-colors hover:bg-gray-200"
                                             >
                                                 <Link
-                                                    href={child.url}
+                                                    href={`${item.url}/${project.name}?id=${project.id}`}
                                                     className="flex items-center gap-2"
                                                 >
                                                     <span
                                                         className="size-2 flex-shrink-0 rounded-full"
                                                         style={{
                                                             background:
-                                                                child.color,
+                                                                project.color,
                                                         }}
                                                     />
-                                                    {child.title}
+                                                    <span className="line-clamp-1 break-all">
+                                                        {project.name}
+                                                    </span>
                                                 </Link>
                                             </SidebarMenuSubButton>
                                         </SidebarMenuSubItem>
@@ -123,11 +124,6 @@ export default function NavMain() {
                             <Link href={item.url} className="[&>svg]:size-5">
                                 <item.icon weight="duotone" />
                                 <span>{item.title}</span>
-                                {item.badge && (
-                                    <SidebarMenuBadge>
-                                        {item.badge}
-                                    </SidebarMenuBadge>
-                                )}
                             </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
