@@ -373,6 +373,7 @@ export default function KanbanBoard({
                 onOpenChange={() => setshowFilters(!showFilters)}
                 filters={filters}
                 onFiltersChange={setFilters}
+                projectData={projectData}
             />
             <ProjectSettingsDialog
                 open={showSettings}

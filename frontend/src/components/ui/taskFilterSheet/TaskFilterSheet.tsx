@@ -23,14 +23,8 @@ import { format } from "date-fns";
 import { countActive } from "@/libs/taskFilterSheet";
 import FilterSection from "./filterSection/FilterSection";
 import Chip from "./chip/Chip";
-import { FilterState, Priority } from "@/types/types";
-import {
-    COLUMNS_CONFIG,
-    DEFAULT_FILTER,
-    MOCK_CATEGORIES,
-    MOCK_MEMBERS,
-    PRIORITY_CONFIG,
-} from "@/constants/constants";
+import { FilterState, Priority, Project } from "@/types/types";
+import { DEFAULT_FILTER, PRIORITY_CONFIG } from "@/constants/constants";
 import { cn, getInitials } from "@/libs/utils";
 import {
     ArrowCounterClockwiseIcon,
@@ -50,6 +44,7 @@ import {
 interface TaskFilterSheetProps {
     open: boolean;
     onOpenChange: (v: boolean) => void;
+    projectData: Project;
     filters?: FilterState;
     onFiltersChange?: (f: FilterState) => void;
 }
@@ -57,6 +52,7 @@ interface TaskFilterSheetProps {
 export function TaskFilterSheet({
     open,
     onOpenChange,
+    projectData,
     filters: externalFilters,
     onFiltersChange,
 }: TaskFilterSheetProps) {
@@ -73,7 +69,7 @@ export function TaskFilterSheet({
     };
 
     const toggle = <
-        K extends "priorities" | "columns" | "assignees" | "categories",
+        K extends "priorities" | "columns" | "members" | "categories",
     >(
         key: K,
         value: string,
@@ -94,8 +90,8 @@ export function TaskFilterSheet({
     };
 
     const activeCount = countActive(filters);
-    const filteredMembers = Object.values(MOCK_MEMBERS).filter((m) =>
-        m.name.toLowerCase().includes(memberSearch.toLowerCase()),
+    const filteredMembers = projectData.members.filter((member) =>
+        member.name.toLowerCase().includes(memberSearch.toLowerCase()),
     );
 
     return (
@@ -181,20 +177,20 @@ export function TaskFilterSheet({
                         count={filters.columns.length || undefined}
                     >
                         <div className="space-y-1.5 pt-1">
-                            {Object.values(COLUMNS_CONFIG).map((column) => {
+                            {projectData.columns.map((column) => {
                                 const active = filters.columns.includes(
-                                    column.label,
+                                    column.name,
                                 );
 
                                 return (
                                     <label
-                                        key={column.label}
+                                        key={column.id}
                                         className={`flex cursor-pointer items-center gap-3 rounded-md border px-3 py-2 transition-colors hover:bg-gray-50 ${active ? "border-bright-blue" : "border-transparent"}`}
                                     >
                                         <Checkbox
                                             checked={active}
                                             onCheckedChange={() =>
-                                                toggle("columns", column.label)
+                                                toggle("columns", column.name)
                                             }
                                             className="rounded data-[state=checked]:border-bright-blue data-[state=checked]:bg-bright-blue"
                                         />
@@ -203,17 +199,11 @@ export function TaskFilterSheet({
                                                 className={cn(
                                                     "text-sm",
                                                     active
-                                                        ? column.label
-                                                              .split(" ")
-                                                              .filter((label) =>
-                                                                  label.includes(
-                                                                      "text-",
-                                                                  ),
-                                                              )[0]
+                                                        ? "text-bright-blue"
                                                         : "text-gray-500",
                                                 )}
                                             >
-                                                {column.label}
+                                                {column.name}
                                             </span>
                                         </div>
                                     </label>
@@ -222,12 +212,12 @@ export function TaskFilterSheet({
                         </div>
                     </FilterSection>
                     <Separator />
-                    {filters.assignees && (
+                    {filters.members && (
                         <>
                             <FilterSection
-                                title="Assignees"
+                                title="Members"
                                 icon={<UsersIcon weight="duotone" size={16} />}
-                                count={filters.assignees.length || undefined}
+                                count={filters.members.length || undefined}
                             >
                                 <div className="space-y-1 pt-1">
                                     <div className="relative mb-2">
@@ -246,9 +236,8 @@ export function TaskFilterSheet({
                                         />
                                     </div>
                                     {filteredMembers.map((m) => {
-                                        const active = filters.assignees?.some(
-                                            (assignee) =>
-                                                assignee.name === m.name,
+                                        const active = filters.members?.some(
+                                            (member) => member.name === m.name,
                                         );
 
                                         return (
@@ -260,7 +249,7 @@ export function TaskFilterSheet({
                                                     checked={active}
                                                     onCheckedChange={() =>
                                                         toggle(
-                                                            "assignees",
+                                                            "members",
                                                             m.id.toString(),
                                                         )
                                                     }
@@ -305,29 +294,29 @@ export function TaskFilterSheet({
                                 count={filters.categories.length || undefined}
                             >
                                 <div className="flex flex-wrap gap-2 pt-1">
-                                    {Object.values(MOCK_CATEGORIES).map(
-                                        (mockCategory) => (
+                                    {projectData.categories.map(
+                                        (projectCategory) => (
                                             <Chip
-                                                key={mockCategory.id}
-                                                bgColor={mockCategory.color}
+                                                key={projectCategory.id}
+                                                bgColor={projectCategory.color}
                                                 textColor="#fff"
                                                 active={
                                                     filters.categories
                                                         ? filters.categories.some(
                                                               (category) =>
                                                                   category ===
-                                                                  mockCategory.name,
+                                                                  projectCategory.name,
                                                           )
                                                         : false
                                                 }
                                                 onClick={() =>
                                                     toggle(
                                                         "categories",
-                                                        mockCategory.name,
+                                                        projectCategory.name,
                                                     )
                                                 }
                                             >
-                                                {mockCategory.name}
+                                                {projectCategory.name}
                                             </Chip>
                                         ),
                                     )}
