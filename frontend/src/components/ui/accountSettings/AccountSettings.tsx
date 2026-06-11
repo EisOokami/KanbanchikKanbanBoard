@@ -1,7 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Dialog, DialogContent } from "@/components/ui/shadcn/dialog";
+import {
+    Dialog,
+    DialogContent,
+    DialogTitle,
+} from "@/components/ui/shadcn/dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/shadcn/avatar";
 import { ScrollArea } from "@/components/ui/shadcn/scroll-area";
 import { SectionId } from "@/types/accountSettings";
@@ -43,6 +47,7 @@ export default function AccountSettingsModal({
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="flex h-[88vh] max-h-[680px] w-[95vw] max-w-[860px] flex-col gap-0 overflow-hidden rounded-md border bg-white p-0 shadow-xl [&>button:last-child]:hidden">
+                <DialogTitle className="hidden"></DialogTitle>
                 <div className="flex flex-1 overflow-hidden">
                     <nav className="flex w-48 shrink-0 flex-col border-r">
                         <div className="flex-1 space-y-0 overflow-y-auto px-2 py-3">
