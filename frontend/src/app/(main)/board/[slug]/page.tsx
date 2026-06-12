@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import KanbanBoard from "@/components/layout/kanbanBoard/KanbanBoard";
 import { getProjectData } from "@/data/loaders";
 
@@ -11,7 +12,7 @@ export default async function BoardPage({
     const { id } = await searchParams;
 
     if (typeof id !== "string") {
-        return;
+        redirect("/overview");
     }
 
     const projectData = await getProjectData(id);
