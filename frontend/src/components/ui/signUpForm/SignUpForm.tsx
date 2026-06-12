@@ -1,0 +1,169 @@
+"use client";
+
+import { useActionState } from "react";
+import Link from "next/link";
+import { Info, Loader2 } from "lucide-react";
+import { registerAction } from "@/data/actions";
+import { IBaseAction } from "@/types/actions";
+
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/shadcn/card";
+import { Label } from "@/components/ui/shadcn/label";
+import { Input } from "@/components/ui/shadcn/input";
+import { Button } from "@/components/ui/shadcn/button";
+import { ZodErrors } from "@/components/ui/zodErrors/ZodErrors";
+import { DetailsErrors } from "@/components/ui/detailsErrors/DetailsErrors";
+import { PasswordInput } from "@/components/ui/shadcn/password-input";
+
+const INITIAL_STATE: IBaseAction = {
+    zodErrors: null,
+    error: null,
+    status: null,
+    details: null,
+    message: null,
+    formData: null,
+};
+
+export default function SignUpForm() {
+    const [formState, formAction, isPending] = useActionState(
+        registerAction,
+        INITIAL_STATE,
+    );
+
+    return (
+        <Card className="z-50 mx-auto w-full max-w-sm">
+            <CardHeader className="pb-5">
+                <CardTitle className="text-2xl">Registration</CardTitle>
+                <CardDescription>
+                    Create a new account to get started.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <form action={formAction} className="grid gap-4">
+                    <div className="grid gap-2">
+                        <Label htmlFor="name">Name</Label>
+                        <Input
+                            id="name"
+                            name="name"
+                            placeholder="Smith"
+                            className={
+                                formState?.zodErrors?.name
+                                    ? "border-red-500"
+                                    : ""
+                            }
+                            defaultValue={
+                                formState?.formData?.get("name")?.toString() ??
+                                undefined
+                            }
+                            autoComplete="name"
+                        />
+                        <ZodErrors error={formState?.zodErrors?.name} />
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="surname">Surname</Label>
+                        <Input
+                            id="surname"
+                            name="surname"
+                            placeholder="Winston"
+                            className={
+                                formState?.zodErrors?.surname
+                                    ? "border-red-500"
+                                    : ""
+                            }
+                            defaultValue={
+                                formState?.formData
+                                    ?.get("surname")
+                                    ?.toString() ?? undefined
+                            }
+                            autoComplete="surname"
+                        />
+                        <ZodErrors error={formState?.zodErrors?.surname} />
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="email">Email</Label>
+                        <Input
+                            id="email"
+                            name="email"
+                            type="email"
+                            placeholder="name@example.com"
+                            className={
+                                formState?.zodErrors?.email
+                                    ? "border-red-500"
+                                    : ""
+                            }
+                            defaultValue={
+                                formState?.formData?.get("email")?.toString() ??
+                                undefined
+                            }
+                            autoComplete="email"
+                        />
+                        <ZodErrors error={formState?.zodErrors?.email} />
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="password">Password</Label>
+                        <PasswordInput
+                            id="password"
+                            name="password"
+                            className={
+                                formState?.zodErrors?.password
+                                    ? "border-red-500"
+                                    : ""
+                            }
+                            defaultValue={
+                                formState?.formData
+                                    ?.get("password")
+                                    ?.toString() ?? undefined
+                            }
+                            autoComplete="current-password"
+                        />
+                        <ZodErrors error={formState?.zodErrors?.password} />
+                    </div>
+                    {formState?.message && (
+                        <div
+                            className={`flex items-center gap-2 rounded-md text-sm ${formState?.status === "error" ? "text-red-500" : formState?.status === "success" ? "text-green-500" : "text-yellow-300"}`}
+                        >
+                            <Info className="h-4 w-4" />
+                            <p>{formState?.message}</p>
+                        </div>
+                    )}
+                    {formState?.details &&
+                        formState?.details?.length &&
+                        formState.details.map((error) => (
+                            <DetailsErrors
+                                key={error.message + error.field}
+                                error={error}
+                            />
+                        ))}
+                    <Button
+                        type="submit"
+                        className="mt-3 w-full bg-bright-blue text-white hover:bg-blue-600"
+                        disabled={isPending}
+                    >
+                        {isPending ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Create an account...
+                            </>
+                        ) : (
+                            "Sign up"
+                        )}
+                    </Button>
+                </form>
+            </CardContent>
+            <CardFooter className="flex justify-center">
+                <p className="text-sm text-muted-foreground">
+                    Already have an account?{" "}
+                    <Link href="/signIn" className="text-primary underline">
+                        Sign in
+                    </Link>
+                </p>
+            </CardFooter>
+        </Card>
+    );
+}
