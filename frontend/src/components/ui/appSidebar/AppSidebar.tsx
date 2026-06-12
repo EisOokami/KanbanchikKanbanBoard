@@ -14,14 +14,16 @@ import NavMain from "./navMain/NavMain";
 import Image from "next/image";
 import AccountSettingsModal from "../accountSettings/AccountSettings";
 import { useAccountSettingsContext } from "@/hooks/useAccountSettingsContext";
-import { Project } from "@/types/types";
+import { Project, UserData } from "@/types/types";
 
 interface AppSidebarProps {
     projectsData: Project[];
+    userData: UserData;
 }
 
 export default function AppSidebar({
     projectsData,
+    userData,
 }: Readonly<AppSidebarProps>) {
     const { showAccountSettings, handleShowAccountSettings } =
         useAccountSettingsContext();
@@ -57,7 +59,7 @@ export default function AppSidebar({
                     </SidebarGroup>
                 </SidebarContent>
                 <SidebarFooter className="border-t bg-gray-100">
-                    <UserFooter />
+                    <UserFooter userData={userData} />
                 </SidebarFooter>
                 <SidebarRail />
             </Sidebar>
