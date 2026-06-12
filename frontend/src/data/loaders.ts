@@ -1,23 +1,26 @@
 "use server";
 
-import { FilterOptions, Project, Task } from "@/types/types";
+import { FilterOptions, Project, Task, UserData } from "@/types/types";
+import { getAccessToken, getRefreshToken } from "./getToken";
 
-const baseUrl = process.env.NEXT_PUBLIC_DB_URL;
+const baseUrl = process.env.DB_URL;
 
-async function fetchData(url: string) {
-    // const accessToken = await getAccessToken();
+async function fetchData(url: string, options?: RequestInit) {
+    const accessToken = await getAccessToken();
+    const refreshToken = await getRefreshToken();
 
     const headers = {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
-            // Authorization: `Bearer ${accessToken}`,
+            Authorization: `Bearer ${accessToken}`,
+            Cookie: `refreshToken=${refreshToken}`,
         },
+        ...options,
     };
 
     try {
-        // const response = await fetch(url, accessToken ? headers : {});
-        const response = await fetch(url, headers);
+        const response = await fetch(url, accessToken ? headers : {});
 
         const data = await response.json();
         return data;
@@ -25,6 +28,36 @@ async function fetchData(url: string) {
         console.error("Error fetching data:", error);
         throw error;
     }
+}
+
+export async function getUserData(): Promise<UserData> {
+    const url = new URL("/users/me", baseUrl);
+
+    const fetchedData = await fetchData(url.href, { cache: "no-store" });
+
+    if (fetchedData.status === "error") {
+        return {
+            status: fetchedData.status,
+            message: fetchedData.message,
+            data: null,
+        };
+    }
+
+    return {
+        status: fetchedData.status,
+        message: fetchedData.message,
+        data: {
+            id: fetchedData.user.id,
+            name: fetchedData.user.name,
+            surname: fetchedData.user.surname,
+            email: fetchedData.user.email,
+            avatar_url: fetchedData.user.avatar_url,
+            role: fetchedData.user.role,
+            joined_at: fetchedData.user.joined_at,
+            color: fetchedData.user.color,
+            status: fetchedData.user.status,
+        },
+    };
 }
 
 export async function getProjectsData(): Promise<Project[]> {

@@ -136,3 +136,9 @@ export interface FilterOptions {
     statuses: Pick<Column, "id" | "name">[];
     projects: Pick<Project, "id" | "name" | "color">[];
 }
+
+export interface UserData {
+    status: "success" | "error";
+    message: string;
+    data: User | null;
+}
