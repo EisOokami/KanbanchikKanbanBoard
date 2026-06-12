@@ -32,9 +32,11 @@ export async function createRefreshToken(
         .sign(refreshSecret);
 
     const [result] = await pool.execute<ResultSetHeader>(
-        `INSERT INTO refresh_tokens (id, user_id, token)
-     VALUES (?, ?, ?)`,
-        [jti, userId, token],
+        `
+            INSERT INTO refresh_tokens (id, user_id)
+            VALUES (?, ?)
+        `,
+        [jti, userId],
     );
 
     if (result.affectedRows === 0) {
@@ -45,10 +47,9 @@ export async function createRefreshToken(
 }
 
 export async function revokeAllUserTokens(userId: string | number) {
-    await pool.execute<ResultSetHeader>(
-        `UPDATE refresh_tokens SET revoked = true WHERE user_id = ?`,
-        [userId],
-    );
+    await pool.execute(`DELETE FROM refresh_tokens WHERE user_id = ?`, [
+        userId,
+    ]);
 }
 
 export async function verifyAccessToken(token: string | Uint8Array) {
