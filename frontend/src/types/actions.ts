@@ -49,6 +49,18 @@ export interface ResetPasswordZodErrors extends BaseZodErrors {
     token?: string[];
 }
 
+export interface CreateProjectZodErrors extends BaseZodErrors {
+    icon?: string[];
+    color?: string[];
+    name?: string[];
+    description?: string[];
+    status?: string[];
+    members?: string[];
+    columns?: string[];
+    categories?: string[];
+    labels?: string[];
+}
+
 export interface UpdateProjectZodErrors extends BaseZodErrors {
     id?: string[];
     icon?: string[];

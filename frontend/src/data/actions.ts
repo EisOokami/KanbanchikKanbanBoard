@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { mutateData } from "./mutateData";
 import {
+    CreateProjectAction,
     ForgotPasswordAction,
     LoginAction,
     RegisterAction,
@@ -498,6 +499,123 @@ const columnSchema = z.object({
     position: z.number().int().min(0),
     wip_limit: z.number().int().max(100).optional(),
 });
+
+const createProjectSchema = z.object({
+    icon: z.string().trim().min(1, "Invalid emoji").max(10, "Invalid emoji"),
+    color: z
+        .string()
+        .trim()
+        .length(7, { message: "Color must be a valid HEX value" })
+        .regex(/^#[0-9A-Fa-f]{6}$/, {
+            message: "Color must be a valid HEX value",
+        }),
+    name: z
+        .string()
+        .trim()
+        .min(1, "Name must be at least 1 characters")
+        .max(150, "Name must be less than 150 characters"),
+    description: z
+        .string()
+        .trim()
+        .max(500, "Description must be less than 500 characters long")
+        .nullable()
+        .optional(),
+    status: z.enum(["active", "paused", "completed", "archived"], {
+        message: "Invalid project status",
+    }),
+    labels: z.array(namedColorSchema).min(1, "At least one label is required"),
+    categories: z
+        .array(namedColorSchema)
+        .min(1, "At least one category is required"),
+    members: z.array(
+        z
+            .email("Invalid email")
+            .trim()
+            .toLowerCase()
+            .min(1, "Email is required")
+            .max(255, "Email must be less than 255 characters long"),
+    ),
+    columns: z.array(columnSchema).min(1, "At least one column is required"),
+});
+
+export async function createProjectAction(
+    data: {
+        labels: Omit<Label, "id">[];
+        columns: Omit<Column, "tasks" | "updated_at" | "created_at" | "id">[];
+        categories: Omit<Category, "updated_at" | "created_at" | "id">[];
+        members: string[];
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    prevState: any,
+    formData: FormData,
+): Promise<CreateProjectAction | undefined> {
+    const validatedFields = createProjectSchema.safeParse({
+        icon: formData.get("icon"),
+        color: formData.get("color"),
+        name: formData.get("name"),
+        description: formData.get("description"),
+        status: formData.get("status"),
+        members: data.members,
+        columns: data.columns,
+        categories: data.categories,
+        labels: data.labels,
+    });
+
+    if (!validatedFields.success) {
+        return {
+            formData,
+            zodErrors: z.flattenError(validatedFields.error).fieldErrors,
+            error: null,
+            status: null,
+            details: null,
+            message: null,
+        };
+    }
+
+    const responseData = await mutateData(
+        "POST",
+        "/projects",
+        validatedFields.data,
+    );
+
+    if (!responseData) {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: null,
+            details: null,
+            message: "Ops! Something went wrong. Please try again.",
+        };
+    }
+
+    if (
+        "message" in responseData &&
+        "status" in responseData &&
+        responseData.message &&
+        responseData.status !== "success"
+    ) {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: responseData.status,
+            details: null,
+            message: responseData.message,
+        };
+    }
+
+    if ("error" in responseData && responseData.error) {
+        return {
+            formData,
+            zodErrors: null,
+            error: responseData.error,
+            status: null,
+            details: responseData.details,
+            message: null,
+        };
+    }
+}
 
 const memberSchema = z.object({
     id: z.number().int().positive(),
