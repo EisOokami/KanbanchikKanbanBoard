@@ -33,6 +33,7 @@ import { TaskDetailsSheet } from "@/components/ui/taskDetailsSheet/TaskDetailsSh
 import { DEFAULT_FILTER } from "@/constants/constants";
 import {
     CalendarDotsIcon,
+    ClipboardTextIcon,
     FunnelIcon,
     GearSixIcon,
     KanbanIcon,
@@ -196,6 +197,8 @@ export default function KanbanBoard({
     //     [tasks],
     // );
 
+    const hasTasks = columns.some((col) => col.tasks.length > 0);
+
     return (
         <div className="h-full w-full overflow-y-auto rounded-xl bg-white">
             <header className="sticky top-0 z-10 grid gap-5 border-b bg-white px-8 py-4">
@@ -303,64 +306,101 @@ export default function KanbanBoard({
             </header>
             <main
                 className={
-                    selectedMode === "kanban" ? "h-[calc(100svh-155px)]" : ""
+                    selectedMode === "kanban" || !hasTasks
+                        ? "h-[calc(100svh-155px)]"
+                        : ""
                 }
             >
-                {selectedMode === "kanban" && (
-                    <div className="h-full w-full overflow-x-auto p-8">
-                        <DndContext
-                            sensors={sensors}
-                            collisionDetection={closestCorners}
-                            onDragStart={handleDragStart}
-                            onDragOver={handleDragOver}
-                            onDragEnd={handleDragEnd}
-                        >
-                            <div className="flex w-max items-start gap-4 pb-8">
-                                {columns.map((column) => (
-                                    <KanbanColumn
-                                        key={column.id}
-                                        column={column}
-                                        onDeleteTask={handleDeleteTask}
-                                        showCreateTask={showCreateTask}
-                                        onOpenCreateTask={handleshowCreateTask}
-                                        onOpenDetails={(task: Task) => {
-                                            handleshowTaskDetails();
-                                            setSelectedTask(task);
-                                        }}
-                                    />
-                                ))}
+                {!hasTasks ? (
+                    <div className="flex h-full flex-1 items-center justify-center px-6">
+                        <div className="flex max-w-md flex-col items-center text-center">
+                            <div className="mb-5 flex size-20 items-center justify-center rounded-2xl bg-gray-100">
+                                <ClipboardTextIcon
+                                    weight="duotone"
+                                    className="size-10 text-gray-400"
+                                />
                             </div>
-                            <DragOverlay
-                                dropAnimation={{
-                                    duration: 160,
-                                    easing: "ease-out",
-                                }}
-                            >
-                                {activeTask ? (
-                                    <OverlayTask task={activeTask} />
-                                ) : null}
-                            </DragOverlay>
-                        </DndContext>
+                            <h2 className="text-xl font-semibold text-gray-900">
+                                No tasks yet
+                            </h2>
+                            <p className="mt-2 text-sm leading-relaxed text-gray-500">
+                                Start by creating your first task, inviting
+                                teammates, or importing existing work into this
+                                project.
+                            </p>
+                            <div className="mt-6 flex items-center gap-3">
+                                <Button
+                                    className="gap-1.5 bg-bright-blue px-4 py-2 text-sm hover:bg-blue-600"
+                                    onClick={handleShowCreateTask}
+                                >
+                                    <PlusIcon
+                                        weight="duotone"
+                                        className="size-3.5"
+                                    />{" "}
+                                    Create task
+                                </Button>
+                            </div>
+                        </div>
                     </div>
-                )}
-                {selectedMode === "list" && (
-                    <ProjectListView
-                        columns={columns}
-                        setColumns={setColumns}
-                        onOpenDetails={(task: Task) => {
-                            handleshowTaskDetails();
-                            setSelectedTask(task);
-                        }}
-                    />
-                )}
-                {selectedMode === "calendar" && (
-                    <ProjectCalendarView
-                        columns={columns}
-                        onOpenDetails={(task: Task) => {
-                            handleshowTaskDetails();
-                            setSelectedTask(task);
-                        }}
-                    />
+                ) : (
+                    <>
+                        {selectedMode === "kanban" && (
+                            <div className="h-full w-full overflow-x-auto p-8">
+                                <DndContext
+                                    sensors={sensors}
+                                    collisionDetection={closestCorners}
+                                    onDragStart={handleDragStart}
+                                    onDragOver={handleDragOver}
+                                    onDragEnd={handleDragEnd}
+                                >
+                                    <div className="flex w-max items-start gap-4 pb-8">
+                                        {columns.map((column) => (
+                                            <KanbanColumn
+                                                key={column.id}
+                                                column={column}
+                                                onDeleteTask={handleDeleteTask}
+                                                showCreateTask={showCreateTask}
+                                                onOpenCreateTask={handleshowCreateTask}
+                                                onOpenDetails={(task: Task) => {
+                                                    handleshowTaskDetails();
+                                                    setSelectedTask(task);
+                                                }}
+                                            />
+                                        ))}
+                                    </div>
+                                    <DragOverlay
+                                        dropAnimation={{
+                                            duration: 160,
+                                            easing: "ease-out",
+                                        }}
+                                    >
+                                        {activeTask ? (
+                                            <OverlayTask task={activeTask} />
+                                        ) : null}
+                                    </DragOverlay>
+                                </DndContext>
+                            </div>
+                        )}
+                        {selectedMode === "list" && (
+                            <ProjectListView
+                                columns={columns}
+                                setColumns={setColumns}
+                                onOpenDetails={(task: Task) => {
+                                    handleshowTaskDetails();
+                                    setSelectedTask(task);
+                                }}
+                            />
+                        )}
+                        {selectedMode === "calendar" && (
+                            <ProjectCalendarView
+                                columns={columns}
+                                onOpenDetails={(task: Task) => {
+                                    handleshowTaskDetails();
+                                    setSelectedTask(task);
+                                }}
+                            />
+                        )}
+                    </>
                 )}
             </main>
             <InviteMemberModal
