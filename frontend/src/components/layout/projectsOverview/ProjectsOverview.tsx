@@ -6,10 +6,8 @@ import { Card, CardContent } from "@/components/ui/shadcn/card";
 import { Input } from "@/components/ui/shadcn/input";
 import ProjectCard from "@/components/ui/projectCard/ProjectCard";
 import NewProjectModal from "@/components/ui/newProjectModal/NewProjectModal";
-import { FilterStatus, ViewMode } from "@/types/projectsOverview";
-import { FILTER_OPTIONS } from "@/constants/projectsOverview";
+import { ViewMode } from "@/types/projectsOverview";
 import { Project } from "@/types/types";
-import { STATUS_CONFIG } from "@/constants/constants";
 import {
     GridFourIcon,
     MagnifyingGlassIcon,
@@ -27,7 +25,6 @@ export default function ProjectsOverview({
     const [projects, setProjects] = useState<Project[]>(projectsData);
     const [search, setSearch] = useState<string>("");
     const [view, setView] = useState<ViewMode>("grid");
-    const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
     const [showNewProjectModal, setShowNewProjectModal] =
         useState<boolean>(false);
 
@@ -37,17 +34,6 @@ export default function ProjectsOverview({
     const handleShowNewProjectModal = () => {
         setShowNewProjectModal(!showNewProjectModal);
     };
-
-    // const filtered = projects.filter((p) => {
-    //     const matchSearch =
-    //         p.name.toLowerCase().includes(search.toLowerCase()) ||
-    //         p.description.toLowerCase().includes(search.toLowerCase());
-    //     const matchStatus = filterStatus === "all" || p.status === filterStatus;
-
-    //     return matchSearch && matchStatus;
-    // });
-
-    // const otherProjects = filtered.filter((p) => !p.starred);
 
     return (
         <div className="h-full overflow-y-auto rounded-xl bg-white">
@@ -78,21 +64,6 @@ export default function ProjectsOverview({
                         />
                     </div>
                     <div className="flex items-center gap-2">
-                        <div className="flex gap-1 rounded-md bg-muted/60 p-1">
-                            {FILTER_OPTIONS.map((o) => (
-                                <button
-                                    key={o.value}
-                                    onClick={() => setFilterStatus(o.value)}
-                                    className={`h-7 rounded-md px-3 py-1 text-xs font-medium transition-colors ${
-                                        filterStatus === o.value
-                                            ? "bg-background text-foreground shadow-sm"
-                                            : "text-muted-foreground hover:text-foreground"
-                                    }`}
-                                >
-                                    {o.label}
-                                </button>
-                            ))}
-                        </div>
                         <div className="flex gap-0.5 rounded-md bg-muted/60 p-1">
                             {(["grid", "list"] as ViewMode[]).map((v) => (
                                 <button
@@ -122,14 +93,11 @@ export default function ProjectsOverview({
                 </div>
                 <section className="space-y-3">
                     <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                        {filterStatus === "all"
-                            ? "All Projects"
-                            : STATUS_CONFIG[filterStatus].label}
+                        All Projects
                         <span className="ml-2 font-normal normal-case tracking-normal text-muted-foreground/60">
-                            {/* ({otherProjects.length}) */}({projects.length})
+                            ({projects.length})
                         </span>
                     </h2>
-                    {/* {otherProjects.length === 0 ? ( */}
                     {projects.length === 0 ? (
                         <Card className="border-dashed border-border/60">
                             <CardContent className="flex flex-col items-center justify-center gap-3 py-16 text-center">
@@ -170,7 +138,6 @@ export default function ProjectsOverview({
                                     : "flex flex-col gap-3"
                             }
                         >
-                            {/* {otherProjects.map((p) => ( */}
                             {projects.map((p) => (
                                 <ProjectCard
                                     key={p.id}
