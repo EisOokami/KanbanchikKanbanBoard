@@ -54,7 +54,8 @@ export default function KanbanTask({
 
     const overdue = isOverdue(task.due_date, task.column.name);
     const progress = Math.round(
-        ((task.subtasks_done ?? 0) * 100) / (task.subtasks_total ?? 1),
+        ((task.subtasks_done ? task.subtasks_done : 0) * 100) /
+            (task.subtasks_total ? task.subtasks_total : 1),
     );
 
     return (
@@ -157,7 +158,8 @@ export default function KanbanTask({
                                 className="size-3"
                             />
                             <span className="text-[10px]">
-                                {task.subtasks_done ?? 0}/{task.subtasks_total}
+                                {task.subtasks_done ? task.subtasks_done : 0}/
+                                {task.subtasks_total}
                             </span>
                         </div>
                         <div className="flex items-center gap-0.5 text-gray-400">
@@ -247,8 +249,10 @@ export default function KanbanTask({
                                     className="size-4"
                                 />
                                 <span className="text-xs">
-                                    {task.subtasks_done ?? 0}/
-                                    {task.subtasks_total}
+                                    {task.subtasks_done
+                                        ? task.subtasks_done
+                                        : 0}
+                                    /{task.subtasks_total}
                                 </span>
                             </div>
                         )}

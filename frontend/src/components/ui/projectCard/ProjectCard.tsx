@@ -190,8 +190,14 @@ export default function ProjectCard({
                                     className="size-3.5 flex-shrink-0"
                                 />
                                 <span>
-                                    {project.tasks_done ?? 0}/
-                                    {project.tasks_total ?? 0} tasks
+                                    {project.tasks_done
+                                        ? project.tasks_done
+                                        : 0}
+                                    /
+                                    {project.tasks_total
+                                        ? project.tasks_total
+                                        : 0}{" "}
+                                    tasks
                                 </span>
                             </div>
                         </div>
