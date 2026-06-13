@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import { Info, Loader2 } from "lucide-react";
 import { forgotPasswordAction } from "@/data/actions";
-import { IBaseAction } from "@/types/actions";
+import { BaseAction } from "@/types/actions";
 
 import {
     Card,
@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/shadcn/button";
 import { ZodErrors } from "@/components/ui/zodErrors/ZodErrors";
 import { DetailsErrors } from "@/components/ui/detailsErrors/DetailsErrors";
 
-const INITIAL_STATE: IBaseAction = {
+const INITIAL_STATE: BaseAction = {
     zodErrors: null,
     status: null,
     error: null,

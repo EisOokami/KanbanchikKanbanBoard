@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Info, Loader2 } from "lucide-react";
 import { resetPasswordAction } from "@/data/actions";
-import { IBaseAction } from "@/types/actions";
+import { BaseAction } from "@/types/actions";
 
 import {
     Card,
@@ -19,7 +19,7 @@ import { ZodErrors } from "@/components/ui/zodErrors/ZodErrors";
 import { DetailsErrors } from "@/components/ui/detailsErrors/DetailsErrors";
 import { PasswordInput } from "../shadcn/password-input";
 
-const INITIAL_STATE: IBaseAction = {
+const INITIAL_STATE: BaseAction = {
     zodErrors: null,
     status: null,
     error: null,

@@ -5,10 +5,11 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { mutateData } from "./mutateData";
 import {
-    IForgotPasswordAction,
-    ILoginAction,
-    IRegisterAction,
-    IResetPasswordAction,
+    ForgotPasswordAction,
+    LoginAction,
+    RegisterAction,
+    ResetPasswordAction,
+    UpdateProjectAction,
 } from "@/types/actions";
 import {
     forgotPasswordService,
@@ -16,6 +17,14 @@ import {
     registerService,
     resetPasswordService,
 } from "./service";
+import {
+    Attachment,
+    Category,
+    Column,
+    Label,
+    Subtask,
+    User,
+} from "@/types/types";
 
 const accessTokenConfig = {
     maxAge: 15 * 60,
@@ -57,7 +66,7 @@ export async function loginAction(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     prevState: any,
     formData: FormData,
-): Promise<ILoginAction | undefined> {
+): Promise<LoginAction | undefined> {
     const validatedFields = loginSchema.safeParse({
         email: formData.get("email"),
         password: formData.get("password"),
@@ -165,7 +174,7 @@ export async function registerAction(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     prevState: any,
     formData: FormData,
-): Promise<IRegisterAction | undefined> {
+): Promise<RegisterAction | undefined> {
     const validatedFields = registerSchema.safeParse({
         name: formData.get("name"),
         surname: formData.get("surname"),
@@ -276,7 +285,7 @@ export async function forgotPasswordAction(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     prevState: any,
     formData: FormData,
-): Promise<IForgotPasswordAction | undefined> {
+): Promise<ForgotPasswordAction | undefined> {
     const validatedFields = forgotPasswordSchema.safeParse({
         email: formData.get("email"),
     });
@@ -385,7 +394,7 @@ export async function resetPasswordAction(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     prevState: any,
     formData: FormData,
-): Promise<IResetPasswordAction | undefined> {
+): Promise<ResetPasswordAction | undefined> {
     const validatedFields = resetPasswordSchema.safeParse({
         newPassword: formData.get("newPassword"),
         confirmPassword: formData.get("confirmPassword"),

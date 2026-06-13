@@ -1,8 +1,8 @@
 import { TriangleAlert } from "lucide-react";
-import { IDetailsError } from "@/interfaces/actions";
+import { DetailsError } from "@/interfaces/actions";
 
 interface DetailsErrorsProps {
-    error: IDetailsError | null | undefined;
+    error: DetailsError | null | undefined;
 }
 
 export function DetailsErrors({ error }: Readonly<DetailsErrorsProps>) {
