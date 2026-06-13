@@ -47,7 +47,8 @@ export default function ProjectCard({
     const visibleMembers = project.members.slice(0, 3);
     const extraMembers = project.members.length - 3;
     const progress = Math.round(
-        ((project.tasks_done ?? 0) * 100) / (project.tasks_total ?? 1),
+        ((project.tasks_done ? project.tasks_done : 0) * 100) /
+            (project.tasks_total ? project.tasks_total : 1),
     );
 
     const handleShopProjectSettings = () => {
