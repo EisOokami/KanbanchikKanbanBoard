@@ -88,7 +88,7 @@ export interface Category extends ExtendedBase {
     color: string;
 }
 
-export interface Label extends SimpleBase {
+export interface Label extends ExtendedBase {
     name: string;
     color: string;
 }

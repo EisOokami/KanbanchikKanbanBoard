@@ -16,7 +16,9 @@ import type {
 import {
     createProjectSchema,
     updateProjectSchema,
+    validateIdSchema,
 } from "../validation/validation";
+import { transporter } from "../utils/email";
 
 export const getProjects = async (req: IGetUserRequest, res: Response) => {
     try {
@@ -162,11 +164,11 @@ export const getProjects = async (req: IGetUserRequest, res: Response) => {
                     labels,
                     columns,
                     tasks_total:
-                        taskStats.length && taskStats[0]
+                        taskStats.length && taskStats[0] && taskStats[0].total
                             ? taskStats[0].total
                             : 0,
                     tasks_done:
-                        taskStats.length && taskStats[0]
+                        taskStats.length && taskStats[0] && taskStats[0].done
                             ? taskStats[0].done
                             : 0,
                 };
@@ -182,6 +184,8 @@ export const getProjects = async (req: IGetUserRequest, res: Response) => {
 
 export const getProjectById = async (req: IGetUserRequest, res: Response) => {
     try {
+        validateIdSchema.parse(req.params);
+
         const { id } = req.params;
         const userId = req.user.id;
 
@@ -538,7 +542,7 @@ export const createProject = async (req: IGetUserRequest, res: Response) => {
         const [result] = await pool.execute<ResultSetHeader>(
             `
                 INSERT INTO projects (owner_id, name, icon, color, description, status)
-                VALUES (?, ?, ?, ?, ?, 'active')
+                VALUES (?, ?, ?, ?, ?, ?)
             `,
             [
                 userId,
@@ -546,6 +550,7 @@ export const createProject = async (req: IGetUserRequest, res: Response) => {
                 validatedData.icon,
                 validatedData.color,
                 validatedData.description || null,
+                validatedData.status,
             ],
         );
 
@@ -568,22 +573,91 @@ export const createProject = async (req: IGetUserRequest, res: Response) => {
             [projectId, userId],
         );
 
-        const defaultColumns = [
-            { name: "To Do", position: 0, wip_limit: 10 },
-            { name: "In Progress", position: 1, wip_limit: 10 },
-            { name: "In Review", position: 2, wip_limit: 10 },
-            { name: "Done", position: 3, wip_limit: null },
-        ];
+        validatedData.columns.forEach(async (column) => {
+            if (column.wip_limit) {
+                await pool.execute<ResultSetHeader>(
+                    `
+                        INSERT INTO columns (project_id, name, position, wip_limit)
+                        VALUES (?, ?, ?, ?)
+                    `,
+                    [projectId, column.name, column.position, column.wip_limit],
+                );
+            }
+        });
 
-        for (const col of defaultColumns) {
+        validatedData.labels.forEach(async (label) => {
             await pool.execute<ResultSetHeader>(
                 `
-                    INSERT INTO columns (project_id, name, position, wip_limit)
-                    VALUES (?, ?, ?, ?)
+                    INSERT INTO labels (project_id, name, color)
+                    VALUES (?, ?, ?)
                 `,
-                [projectId, col.name, col.position, col.wip_limit],
+                [projectId, label.name, label.color],
             );
-        }
+        });
+
+        validatedData.categories.forEach(async (category) => {
+            await pool.execute<ResultSetHeader>(
+                `
+                    INSERT INTO categories (project_id, name, color)
+                    VALUES (?, ?, ?)
+                `,
+                [projectId, category.name, category.color],
+            );
+        });
+
+        validatedData.members.forEach((email) => {
+            const [username, domain] = email.split("@");
+
+            const mailOptions = {
+                from: process.env.EMAIL_USER,
+                to: email,
+                subject: `Invitation to join ${validatedData.name}`,
+                html: `
+                    <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+                        <h2>You have been invited to a Kanban project</h2>
+                        <p>Hello ${username},</p>
+                        <p>
+                            You have been invited to join the project 
+                            <strong>${validatedData.name}</strong>.
+                        </p>
+                        <p>
+                            Open the platform to view tasks, collaborate with your team,
+                            and manage the workflow.
+                        </p>
+                        <a 
+                            href="${process.env.WEB_URL}/board/${validatedData.name}?id=${projectId}"
+                            style="
+                                display: inline-block;
+                                padding: 12px 20px;
+                                background-color: #4f46e5;
+                                color: white;
+                                text-decoration: none;
+                                border-radius: 8px;
+                                margin-top: 10px;
+                            "
+                        >
+                            Open Project
+                        </a>
+                        <p style="margin-top: 20px;">
+                            If you believe this invitation was sent by mistake,
+                            you can ignore this email.
+                        </p>
+                    </div>
+                `,
+            };
+
+            transporter.sendMail(mailOptions, (error, info) => {
+                if (error) {
+                    console.error(error);
+                    res.status(500).send({
+                        status: "error",
+                        message: "Error sending email",
+                    });
+                } else {
+                    console.log(`Email sent: ${info.response}`);
+                }
+            });
+        });
 
         const [newProject] = await pool.execute<Project[]>(
             `
@@ -631,8 +705,10 @@ export const createProject = async (req: IGetUserRequest, res: Response) => {
 
 export const updateProject = async (req: IGetUserRequest, res: Response) => {
     try {
+        validateIdSchema.parse(req.params);
+
         const { id } = req.params;
-        const userId = req.user.id;
+        const userId = +req.user.id;
 
         if (!id) {
             res.status(400).json({
@@ -653,7 +729,7 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
         }
 
         const [projects] = await pool.execute<Project[]>(
-            `SELECT owner_id FROM projects WHERE id = ?`,
+            `SELECT id, name, owner_id FROM projects WHERE id = ?`,
             [id],
         );
 
@@ -691,11 +767,6 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
         const updateFields: string[] = [];
         const updateValues: any[] = [];
 
-        if (validatedData.name) {
-            updateFields.push("name = ?");
-            updateValues.push(validatedData.name);
-        }
-
         if (validatedData.icon) {
             updateFields.push("icon = ?");
             updateValues.push(validatedData.icon);
@@ -704,6 +775,11 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
         if (validatedData.color) {
             updateFields.push("color = ?");
             updateValues.push(validatedData.color);
+        }
+
+        if (validatedData.name) {
+            updateFields.push("name = ?");
+            updateValues.push(validatedData.name);
         }
 
         if (validatedData.description) {
@@ -745,14 +821,164 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
+        if (validatedData.columns.length) {
+            validatedData.columns.forEach(async (column) => {
+                if (column.id) {
+                    await pool.execute<ResultSetHeader>(
+                        `
+                        UPDATE columns 
+                        SET name = ?, position = ?, updated_at = CURRENT_TIMESTAMP
+                        WHERE id = ?
+                        `,
+                        [column.name, column.position, column.id],
+                    );
+                }
+            });
+        }
+
+        if (validatedData.labels.length) {
+            validatedData.labels.forEach(async (label) => {
+                if (label.id) {
+                    await pool.execute<ResultSetHeader>(
+                        `
+                            UPDATE labels 
+                            SET name = ?, color = ?, updated_at = CURRENT_TIMESTAMP
+                            WHERE id = ?
+                        `,
+                        [label.name, label.color, label.id],
+                    );
+                }
+            });
+        }
+
+        if (validatedData.categories) {
+            validatedData.categories.forEach(async (category) => {
+                if (category.id) {
+                    await pool.execute<ResultSetHeader>(
+                        `
+                            UPDATE categories 
+                            SET name = ?, color = ?, updated_at = CURRENT_TIMESTAMP
+                            WHERE id = ?
+                        `,
+                        [category.name, category.color, category.id],
+                    );
+                }
+            });
+        }
+
+        if (validatedData.members.length) {
+            validatedData.members.forEach(async (member) => {
+                await pool.execute<ResultSetHeader>(
+                    `
+                        UPDATE project_members 
+                        SET role = ?
+                        WHERE user_id = ? AND project_id = ?
+                    `,
+                    [member.role, member.id, project.id],
+                );
+            });
+        }
+
+        if (validatedData.newColumns.length) {
+            validatedData.newColumns.forEach(async (column) => {
+                await pool.execute<ResultSetHeader>(
+                    `
+                        INSERT INTO columns (project_id, name, position)
+                        VALUES (?, ?, ?)
+                    `,
+                    [project.id, column.name, column.position],
+                );
+            });
+        }
+
+        if (validatedData.newLabels.length) {
+            validatedData.newLabels.forEach(async (label) => {
+                await pool.execute<ResultSetHeader>(
+                    `
+                        INSERT INTO labels (project_id, name, color)
+                        VALUES (?, ?, ?)
+                    `,
+                    [project.id, label.name, label.color],
+                );
+            });
+        }
+
+        if (validatedData.newCategories.length) {
+            validatedData.newCategories.forEach(async (category) => {
+                await pool.execute<ResultSetHeader>(
+                    `
+                        INSERT INTO categories (project_id, name, color)
+                        VALUES (?, ?, ?)
+                    `,
+                    [project.id, category.name, category.color],
+                );
+            });
+        }
+
+        if (validatedData.emails.length) {
+            validatedData.emails.forEach((email) => {
+                const [username, domain] = email.split("@");
+
+                const mailOptions = {
+                    from: process.env.EMAIL_USER,
+                    to: email,
+                    subject: `Invitation to join ${validatedData.name}`,
+                    html: `
+                        <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+                            <h2>You have been invited to a Kanban project</h2>
+                            <p>Hello ${username},</p>
+                            <p>
+                                You have been invited to join the project 
+                                <strong>${validatedData.name}</strong>.
+                            </p>
+                            <p>
+                                Open the platform to view tasks, collaborate with your team,
+                                and manage the workflow.
+                            </p>
+                            <a 
+                                href="${process.env.WEB_URL}/board/${validatedData.name}?id=${project.id}"
+                                style="
+                                    display: inline-block;
+                                    padding: 12px 20px;
+                                    background-color: #4f46e5;
+                                    color: white;
+                                    text-decoration: none;
+                                    border-radius: 8px;
+                                    margin-top: 10px;
+                                "
+                            >
+                                Open Project
+                            </a>
+                            <p style="margin-top: 20px;">
+                                If you believe this invitation was sent by mistake,
+                                you can ignore this email.
+                            </p>
+                        </div>
+                    `,
+                };
+
+                transporter.sendMail(mailOptions, (error, info) => {
+                    if (error) {
+                        console.error(error);
+                        res.status(500).send({
+                            status: "error",
+                            message: "Error sending email",
+                        });
+                    } else {
+                        console.log(`Email sent: ${info.response}`);
+                    }
+                });
+            });
+        }
+
         const [updatedProject] = await pool.execute<Project[]>(
             `
                 SELECT 
                     id, 
                     owner_id,
-                    name, 
                     icon, 
                     color, 
+                    name, 
                     description, 
                     status,
                     created_at,
@@ -791,8 +1017,10 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
 
 export const deleteProject = async (req: IGetUserRequest, res: Response) => {
     try {
+        validateIdSchema.parse(req.params);
+
         const { id } = req.params;
-        const userId = req.user.id;
+        const userId = +req.user.id;
 
         if (!id) {
             res.status(400).json({

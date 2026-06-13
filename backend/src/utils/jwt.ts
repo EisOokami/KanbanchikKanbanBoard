@@ -8,7 +8,6 @@ import type { ResultSetHeader } from "mysql2";
 dotenv.config();
 
 const accessSecret = new TextEncoder().encode(process.env.JWT_ACCESS_SECRET);
-
 const refreshSecret = new TextEncoder().encode(process.env.JWT_REFRESH_SECRET);
 
 export async function createAccessToken(payload: JWTPayload) {
