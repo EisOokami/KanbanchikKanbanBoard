@@ -24,7 +24,6 @@ import { Project } from "@/types/types";
 import { STATUS_CONFIG } from "@/constants/constants";
 import { convertToSlug, getInitials } from "@/libs/utils";
 import {
-    ArchiveIcon,
     CheckSquareIcon,
     DotsThreeOutlineIcon,
     PencilSimpleIcon,
@@ -116,13 +115,6 @@ export default function ProjectCard({
                                             className="size-4"
                                         />{" "}
                                         Edit
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem>
-                                        <ArchiveIcon
-                                            weight="duotone"
-                                            className="size-4"
-                                        />{" "}
-                                        Archive
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
                                         className="text-destructive focus:text-destructive"
