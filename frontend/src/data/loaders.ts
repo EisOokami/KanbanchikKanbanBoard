@@ -2,6 +2,7 @@
 
 import { FilterOptions, Project, Task, UserData } from "@/types/types";
 import { getAccessToken, getRefreshToken } from "./getToken";
+import { fetchWithRefresh } from "./fetchWithRefresh";
 
 const baseUrl = process.env.DB_URL;
 
@@ -9,18 +10,13 @@ async function fetchData(url: string, options?: RequestInit) {
     const accessToken = await getAccessToken();
     const refreshToken = await getRefreshToken();
 
-    const headers = {
-        method: "GET",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-            Cookie: `refreshToken=${refreshToken}`,
-        },
-        ...options,
-    };
-
     try {
-        const response = await fetch(url, accessToken ? headers : {});
+        const response = await fetchWithRefresh(
+            url,
+            accessToken,
+            refreshToken,
+            options,
+        );
 
         const data = await response.json();
         return data;
@@ -42,6 +38,8 @@ export async function getUserData(): Promise<UserData> {
             data: null,
         };
     }
+
+    console.log(fetchedData);
 
     return {
         status: fetchedData.status,

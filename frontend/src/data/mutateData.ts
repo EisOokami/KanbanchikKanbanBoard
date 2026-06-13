@@ -1,6 +1,7 @@
 "use server";
 
 import { getAccessToken, getRefreshToken } from "./getToken";
+import { fetchWithRefresh } from "./fetchWithRefresh";
 
 const baseUrl = process.env.NEXT_PUBLIC_DB_URL;
 
@@ -23,21 +24,20 @@ export async function mutateData(
     const accessToken = await getAccessToken();
     const refreshToken = await getRefreshToken();
 
-    if (!accessToken) throw new Error("No auth token found");
-    if (!refreshToken) throw new Error("No auth token found");
+    if (!accessToken || !refreshToken) throw new Error("No auth token found");
 
     const url = new URL(path, baseUrl);
 
     try {
-        const response = await fetch(url, {
-            method: method,
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${accessToken}`,
-                Cookie: `refreshToken=${refreshToken}`,
+        const response = await fetchWithRefresh(
+            url,
+            accessToken,
+            refreshToken,
+            {
+                method,
+                ...(payload && { body: JSON.stringify({ ...payload }) }),
             },
-            body: JSON.stringify({ ...payload }),
-        });
+        );
 
         if (method === "DELETE") {
             return {
