@@ -72,3 +72,7 @@ export interface IForgotPasswordAction extends IBaseAction {
 export interface IResetPasswordAction extends IBaseAction {
     zodErrors: IResetPasswordZodErrors | null;
 }
+
+export interface UpdateProjectAction extends BaseAction {
+    zodErrors: UpdateProjectZodErrors | null;
+}

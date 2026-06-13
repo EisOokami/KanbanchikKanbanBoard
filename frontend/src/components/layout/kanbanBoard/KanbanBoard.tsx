@@ -26,7 +26,7 @@ import {
 import { ButtonGroup } from "@/components/ui/shadcn/button-group";
 import { InviteMemberModal } from "@/components/ui/inviteMemberModal/InviteMemberModal";
 import { TaskFilterSheet } from "@/components/ui/taskFilterSheet/TaskFilterSheet";
-import { ProjectSettingsDialog } from "@/components/ui/projectSettingsDialog/ProjectSettingsDialog";
+import { ProjectSettingsModal } from "@/components/ui/projectSettingsModal/ProjectSettingsModal";
 import { ProjectListView } from "../projectListView/ProjectListView";
 import ProjectCalendarView from "../projectCalendarView/ProjectCalendarView";
 import { TaskDetailsSheet } from "@/components/ui/taskDetailsSheet/TaskDetailsSheet";
@@ -415,10 +415,9 @@ export default function KanbanBoard({
                 onFiltersChange={setFilters}
                 projectData={projectData}
             />
-            <ProjectSettingsDialog
+            <ProjectSettingsModal
                 open={showSettings}
                 onOpenChange={() => setshowSettings(!showSettings)}
-                onSave={(data) => console.log(data)}
                 columnsData={columns}
                 projectData={projectData}
             />

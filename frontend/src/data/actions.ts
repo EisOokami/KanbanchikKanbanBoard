@@ -464,3 +464,206 @@ export async function resetPasswordAction(
         redirect("/overview");
     }
 }
+
+const namedColorSchema = z.object({
+    id: z.number().int().positive().optional(),
+    name: z
+        .string()
+        .min(1, "Name is required")
+        .max(150, "Name must be less than 255 characters long"),
+    color: z
+        .string()
+        .trim()
+        .length(7, { message: "Color must be a valid HEX value" })
+        .regex(/^#[0-9A-Fa-f]{6}$/, {
+            message: "Color must be a valid HEX value",
+        }),
+});
+
+const columnSchema = z.object({
+    id: z.number().int().positive().optional(),
+    name: z
+        .string()
+        .min(1, "Name is required")
+        .max(150, "Name must be less than 255 characters long"),
+    position: z.number().int().min(0),
+    wip_limit: z.number().int().max(100).optional(),
+});
+
+const memberSchema = z.object({
+    id: z.number().int().positive(),
+    name: z
+        .string()
+        .trim()
+        .min(1, "Name must be at least 1 characters")
+        .max(100, "Name must be less than 100 characters"),
+    surname: z
+        .string()
+        .trim()
+        .min(1, "Surname must be at least 1 characters")
+        .max(100, "Surname must be less than 100 characters"),
+    avatar_url: z
+        .url({ message: "Invalid avatar URL" })
+        .max(500, { message: "Avatar URL must be less than 500 characters" })
+        .nullable()
+        .optional(),
+    role: z.enum(["owner", "admin", "member", "viewer"], {
+        message: "Invalid member role",
+    }),
+    joined_at: z.iso
+        .datetime({ message: "Invalid datetime format" })
+        .optional(),
+    color: z
+        .string()
+        .trim()
+        .length(7, { message: "Color must be a valid HEX value" })
+        .regex(/^#[0-9A-Fa-f]{6}$/, {
+            message: "Color must be a valid HEX value",
+        }),
+    status: z.enum(["active", "pending"], {
+        message: "Invalid member status",
+    }),
+});
+
+const updateProjectSchema = z.object({
+    id: z
+        .string()
+        .regex(/^\d+$/)
+        .transform(Number)
+        .refine((value) => Number.isSafeInteger(value), {
+            message: "ID is too lcarge a numerical value",
+        }),
+    icon: z.string().trim().min(1, "Invalid emoji").max(10, "Invalid emoji"),
+    color: z
+        .string()
+        .trim()
+        .length(7, { message: "Color must be a valid HEX value" })
+        .regex(/^#[0-9A-Fa-f]{6}$/, {
+            message: "Color must be a valid HEX value",
+        }),
+    name: z
+        .string()
+        .trim()
+        .min(1, "Name must be at least 1 characters")
+        .max(150, "Name must be less than 150 characters"),
+    description: z
+        .string()
+        .trim()
+        .max(500, "Description must be less than 500 characters long")
+        .nullable()
+        .optional(),
+    status: z.enum(["active", "paused", "completed", "archived"], {
+        message: "Invalid project status",
+    }),
+    labels: z.array(namedColorSchema).min(1, "At least one label is required"),
+    newLabels: z.array(namedColorSchema),
+    categories: z
+        .array(namedColorSchema)
+        .min(1, "At least one category is required"),
+    newCategories: z.array(namedColorSchema),
+    emails: z.array(
+        z
+            .email("Invalid email")
+            .trim()
+            .toLowerCase()
+            .min(1, "Email is required")
+            .max(255, "Email must be less than 255 characters long"),
+    ),
+    columns: z.array(columnSchema).min(1, "At least one column is required"),
+    newColumns: z.array(columnSchema),
+    members: z.array(memberSchema).min(1, "At least one member is required"),
+});
+
+export async function updateProjectAction(
+    data: {
+        labels: Label[];
+        newLabels: Omit<Label, "updated_at" | "created_at">[];
+        columns: Omit<Column, "tasks">[];
+        newColumns: Omit<
+            Column,
+            "tasks" | "updated_at" | "created_at" | "wip_limit"
+        >[];
+        categories: Omit<
+            Category,
+            "updated_at" | "updated_at" | "created_at" | "id"
+        >[];
+        newCategories: Omit<Category, "updated_at" | "created_at">[];
+        members: Omit<User, "email">[];
+        emails: string[];
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    prevState: any,
+    formData: FormData,
+): Promise<UpdateProjectAction | undefined> {
+    const validatedFields = updateProjectSchema.safeParse({
+        id: formData.get("id"),
+        icon: formData.get("icon"),
+        color: formData.get("color"),
+        name: formData.get("name"),
+        description: formData.get("description"),
+        status: formData.get("status"),
+        members: data.members,
+        columns: data.columns,
+        newColumns: data.newColumns,
+        categories: data.categories,
+        newCategories: data.newCategories,
+        labels: data.labels,
+        newLabels: data.newLabels,
+        emails: data.emails,
+    });
+
+    if (!validatedFields.success) {
+        return {
+            formData,
+            zodErrors: z.flattenError(validatedFields.error).fieldErrors,
+            error: null,
+            status: null,
+            details: null,
+            message: null,
+        };
+    }
+
+    const responseData = await mutateData(
+        "PUT",
+        `/projects/${validatedFields.data.id}`,
+        validatedFields.data,
+    );
+
+    if (!responseData) {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: null,
+            details: null,
+            message: "Ops! Something went wrong. Please try again.",
+        };
+    }
+
+    if (
+        "message" in responseData &&
+        "status" in responseData &&
+        responseData.message &&
+        responseData.status !== "success"
+    ) {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: responseData.status,
+            details: null,
+            message: responseData.message,
+        };
+    }
+
+    if ("error" in responseData && responseData.error) {
+        return {
+            formData,
+            zodErrors: null,
+            error: responseData.error,
+            status: null,
+            details: responseData.details,
+            message: null,
+        };
+    }
+}

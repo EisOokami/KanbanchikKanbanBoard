@@ -70,11 +70,10 @@ export interface Comment extends ExtendedBase {
 
 export interface Category extends ExtendedBase {
     name: string;
-    description: string;
     color: string;
 }
 
-export interface Label extends Omit<Base, "created_at"> {
+export interface Label extends ExtendedBase {
     name: string;
     color: string;
 }

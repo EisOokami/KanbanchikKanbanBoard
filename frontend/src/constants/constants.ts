@@ -1159,7 +1159,7 @@ export const PROJECT_ICONS = [
     "💎",
 ];
 
-export const LABEL_PALETTE = [
+export const PALETTE = [
     "#D93025",
     "#C9620A",
     "#1A6BBF",
