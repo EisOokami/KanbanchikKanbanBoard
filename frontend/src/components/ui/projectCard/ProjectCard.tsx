@@ -18,7 +18,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/shadcn/dropdown-menu";
-import { ProjectSettingsDialog } from "../projectSettingsDialog/ProjectSettingsDialog";
+import { ProjectSettingsModal } from "../projectSettingsModal/ProjectSettingsModal";
 import { useState } from "react";
 import { Project } from "@/types/types";
 import { STATUS_CONFIG } from "@/constants/constants";
@@ -204,7 +204,7 @@ export default function ProjectCard({
                     </CardFooter>
                 </Card>
             </Link>
-            <ProjectSettingsDialog
+            <ProjectSettingsModal
                 open={showProjectSettings}
                 onOpenChange={handleShopProjectSettings}
                 projectData={project}
