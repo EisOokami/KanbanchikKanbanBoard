@@ -794,3 +794,44 @@ export async function updateProjectAction(
         };
     }
 }
+
+export async function deleteProjectAction(
+    projectId: number,
+): Promise<{ ok: boolean; message: string } | undefined> {
+    const responseData = await mutateData("DELETE", `/projects/${projectId}`);
+
+    if (!responseData) {
+        console.error("Ops! Something went wrong. Please try again.");
+
+        return {
+            ok: false,
+            message: "Ops! Something went wrong. Please try again or later",
+        };
+    }
+
+    if (
+        "message" in responseData &&
+        "status" in responseData &&
+        responseData.message &&
+        responseData.status
+    ) {
+        return {
+            ok: responseData.status === "error" ? false : true,
+            message: responseData.message,
+        };
+    }
+
+    if ("error" in responseData && responseData.error) {
+        console.error(responseData.error);
+
+        return {
+            ok: false,
+            message: "Failed to delete a project",
+        };
+    }
+
+    return {
+        ok: true,
+        message: "Project delete",
+    };
+}

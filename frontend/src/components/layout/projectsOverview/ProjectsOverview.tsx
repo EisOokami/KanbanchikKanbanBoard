@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/shadcn/button";
 import { Card, CardContent } from "@/components/ui/shadcn/card";
 import { Input } from "@/components/ui/shadcn/input";
@@ -14,6 +14,7 @@ import {
     PlusIcon,
     RowsIcon,
 } from "@phosphor-icons/react";
+import { deleteProjectAction } from "@/data/actions";
 
 interface ProjectsOverviewProps {
     projectsData: Project[];
@@ -22,14 +23,14 @@ interface ProjectsOverviewProps {
 export default function ProjectsOverview({
     projectsData,
 }: Readonly<ProjectsOverviewProps>) {
-    const [projects, setProjects] = useState<Project[]>(projectsData);
     const [search, setSearch] = useState<string>("");
     const [view, setView] = useState<ViewMode>("grid");
     const [showNewProjectModal, setShowNewProjectModal] =
         useState<boolean>(false);
 
-    const handleDelete = (id: number) =>
-        setProjects((prevState) => prevState.filter((p) => p.id !== id));
+    const handleDelete = useCallback(async (id: number) => {
+        await deleteProjectAction(id);
+    }, []);
 
     const handleShowNewProjectModal = () => {
         setShowNewProjectModal(!showNewProjectModal);
@@ -95,10 +96,10 @@ export default function ProjectsOverview({
                     <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                         All Projects
                         <span className="ml-2 font-normal normal-case tracking-normal text-muted-foreground/60">
-                            ({projects.length})
+                            ({projectsData.length})
                         </span>
                     </h2>
-                    {projects.length === 0 ? (
+                    {projectsData.length === 0 ? (
                         <Card className="border-dashed border-border/60">
                             <CardContent className="flex flex-col items-center justify-center gap-3 py-16 text-center">
                                 <div className="flex size-12 items-center justify-center rounded-md bg-muted">
@@ -138,7 +139,7 @@ export default function ProjectsOverview({
                                     : "flex flex-col gap-3"
                             }
                         >
-                            {projects.map((p) => (
+                            {projectsData.map((p) => (
                                 <ProjectCard
                                     key={p.id}
                                     project={p}
@@ -152,7 +153,6 @@ export default function ProjectsOverview({
             <NewProjectModal
                 open={showNewProjectModal}
                 onClose={handleShowNewProjectModal}
-                onSubmit={(data) => console.log(data)}
             />
         </div>
     );
