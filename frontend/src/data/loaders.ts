@@ -39,8 +39,6 @@ export async function getUserData(): Promise<UserData> {
         };
     }
 
-    console.log(fetchedData);
-
     return {
         status: fetchedData.status,
         message: fetchedData.message,

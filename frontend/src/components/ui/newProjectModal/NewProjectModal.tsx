@@ -135,11 +135,6 @@ export default function NewProjectModal({
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
 
-        console.log("===============================");
-        console.log(active);
-        console.log(over);
-        console.log("===============================");
-
         if (!over || active.id === over.id) {
             return;
         }
