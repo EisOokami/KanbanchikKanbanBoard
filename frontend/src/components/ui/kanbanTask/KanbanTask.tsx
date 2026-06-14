@@ -162,31 +162,35 @@ export default function KanbanTask({
                                 {task.subtasks_total}
                             </span>
                         </div>
-                        <div className="flex items-center gap-0.5 text-gray-400">
-                            <CalendarBlankIcon
-                                weight="duotone"
-                                className="size-3"
-                            />
-                            {task.start_date && (
-                                <>
-                                    <span className="text-[10px]">
-                                        {formatDate(task.start_date)}
-                                    </span>
-                                    <span>-</span>
-                                </>
-                            )}
-                            <span
-                                className={`text-[10px] 
+                        {task.start_date || task.due_date ? (
+                            <div className="flex items-center gap-0.5 text-gray-400">
+                                <CalendarBlankIcon
+                                    weight="duotone"
+                                    className="size-3"
+                                />
+                                {task.start_date && (
+                                    <>
+                                        <span className="text-[10px]">
+                                            {formatDate(task.start_date)}
+                                        </span>
+                                        <span>-</span>
+                                    </>
+                                )}
+                                {task.due_date && (
+                                    <span
+                                        className={`text-[10px] 
                                     ${
                                         overdue
                                             ? "text-rose-500"
                                             : "text-gray-400"
                                     }
-                                    `}
-                            >
-                                {formatDate(task.due_date)}
-                            </span>
-                        </div>
+                                `}
+                                    >
+                                        {formatDate(task.due_date)}
+                                    </span>
+                                )}
+                            </div>
+                        ) : null}
                     </div>
                     <Progress
                         value={progress}
@@ -196,7 +200,7 @@ export default function KanbanTask({
             ) : null}
             <div className="flex items-center justify-between gap-2 border-t pt-2">
                 <div className="flex items-center gap-2">
-                    {task.members.length > 0 && (
+                    {task.members.length ? (
                         <div className="flex -space-x-1.5">
                             {task.members.slice(0, 2).map((member) => (
                                 <Avatar key={member.id} className="size-6">
@@ -215,10 +219,10 @@ export default function KanbanTask({
                                 </Avatar>
                             ))}
                         </div>
-                    )}
+                    ) : null}
                 </div>
                 <div className="flex items-center gap-2">
-                    {task.attachments.length > 0 && (
+                    {task.attachments.length ? (
                         <div className="flex items-center gap-0.5 text-gray-400">
                             <PaperclipIcon
                                 weight="duotone"
@@ -228,8 +232,8 @@ export default function KanbanTask({
                                 {task.attachments.length}
                             </span>
                         </div>
-                    )}
-                    {task.comments.length > 0 && (
+                    ) : null}
+                    {task.comments.length ? (
                         <div className="flex items-center gap-0.5 text-gray-400">
                             <ChatTeardropDotsIcon
                                 weight="duotone"
@@ -239,23 +243,21 @@ export default function KanbanTask({
                                 {task.comments.length}
                             </span>
                         </div>
-                    )}
+                    ) : null}
                     {!task.show_progress &&
-                        task.subtasks_total &&
-                        task.subtasks_total > 0 && (
-                            <div className="flex items-center gap-0.5 text-gray-400">
-                                <CheckSquareIcon
-                                    weight="duotone"
-                                    className="size-4"
-                                />
-                                <span className="text-xs">
-                                    {task.subtasks_done
-                                        ? task.subtasks_done
-                                        : 0}
-                                    /{task.subtasks_total}
-                                </span>
-                            </div>
-                        )}
+                    task.subtasks_total &&
+                    task.subtasks_total > 0 ? (
+                        <div className="flex items-center gap-0.5 text-gray-400">
+                            <CheckSquareIcon
+                                weight="duotone"
+                                className="size-4"
+                            />
+                            <span className="text-xs">
+                                {task.subtasks_done ? task.subtasks_done : 0}/
+                                {task.subtasks_total}
+                            </span>
+                        </div>
+                    ) : null}
                 </div>
             </div>
         </div>
