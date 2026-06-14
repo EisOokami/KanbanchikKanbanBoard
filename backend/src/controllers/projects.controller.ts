@@ -830,7 +830,7 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
-        if (validatedData.columns.length) {
+        if (validatedData.columns && validatedData.columns.length) {
             validatedData.columns.forEach(async (column) => {
                 if (column.id) {
                     await pool.execute<ResultSetHeader>(
@@ -845,7 +845,7 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
             });
         }
 
-        if (validatedData.labels.length) {
+        if (validatedData.labels && validatedData.labels.length) {
             validatedData.labels.forEach(async (label) => {
                 if (label.id) {
                     await pool.execute<ResultSetHeader>(
@@ -860,7 +860,7 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
             });
         }
 
-        if (validatedData.categories) {
+        if (validatedData.categories && validatedData.categories.length) {
             validatedData.categories.forEach(async (category) => {
                 if (category.id) {
                     await pool.execute<ResultSetHeader>(
@@ -875,7 +875,7 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
             });
         }
 
-        if (validatedData.members.length) {
+        if (validatedData.members && validatedData.members.length) {
             validatedData.members.forEach(async (member) => {
                 await pool.execute<ResultSetHeader>(
                     `
@@ -888,7 +888,7 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
             });
         }
 
-        if (validatedData.newColumns.length) {
+        if (validatedData.newColumns && validatedData.newColumns.length) {
             validatedData.newColumns.forEach(async (column) => {
                 await pool.execute<ResultSetHeader>(
                     `
@@ -900,7 +900,7 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
             });
         }
 
-        if (validatedData.newLabels.length) {
+        if (validatedData.newLabels && validatedData.newLabels.length) {
             validatedData.newLabels.forEach(async (label) => {
                 await pool.execute<ResultSetHeader>(
                     `
@@ -912,7 +912,7 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
             });
         }
 
-        if (validatedData.newCategories.length) {
+        if (validatedData.newCategories && validatedData.newCategories.length) {
             validatedData.newCategories.forEach(async (category) => {
                 await pool.execute<ResultSetHeader>(
                     `
@@ -924,7 +924,7 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
             });
         }
 
-        if (validatedData.emails.length) {
+        if (validatedData.emails && validatedData.emails.length) {
             validatedData.emails.forEach((email) => {
                 const [username, domain] = email.split("@");
 
