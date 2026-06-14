@@ -87,6 +87,22 @@ export interface CreateTaskZodErrors extends BaseZodErrors {
     attachments?: string[];
 }
 
+export interface UpdateTaskZodErrors extends BaseZodErrors {
+    title?: string[];
+    description?: string[];
+    startDate?: string[];
+    dueDate?: string[];
+    priority?: string[];
+    members?: string[];
+    categories?: string[];
+    subtasks?: string[];
+    newSubtasks?: string[];
+    attachments?: string[];
+    newAttachments?: string[];
+    comments?: string[];
+    newComments?: string[];
+}
+
 export interface LoginAction extends BaseAction {
     zodErrors: LoginZodErrors | null;
 }
@@ -121,4 +137,8 @@ export interface UpdateProjectAction extends BaseAction {
 
 export interface CreateTaskAction extends BaseAction {
     zodErrors: CreateTaskZodErrors | null;
+}
+
+export interface UpdateTaskAction extends BaseAction {
+    zodErrors: UpdateTaskZodErrors | null;
 }

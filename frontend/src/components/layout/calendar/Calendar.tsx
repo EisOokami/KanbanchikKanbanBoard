@@ -450,7 +450,6 @@ export default function Calendar({ tasksData }: CalendarProps) {
                 <TaskDetailsSheet
                     open={showTaskDetailsSheet}
                     onOpenChange={handleShowTaskDetailsSheet}
-                    onSave={(updated) => console.log(updated)}
                     selectedTask={selectedTask}
                     projectData={projectData}
                 />

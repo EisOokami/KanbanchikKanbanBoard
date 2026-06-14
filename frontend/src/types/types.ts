@@ -151,3 +151,15 @@ export interface CreateTaskFormData {
     labels: Label[];
     newLabels: Omit<Label, "created_at" | "updated_at">[];
 }
+
+export interface UpdateTaskFormData {
+    categories: Category[];
+    members: Omit<User, "email">[];
+    subtasks: Omit<Subtask, "created_at">[];
+    newSubtasks: Omit<Subtask, "created_at">[];
+    attachments: Attachment[];
+    newAttachments: Attachment[];
+    labels: Label[];
+    comments: Comment[];
+    newComments: Omit<Comment, "created_at" | "updated_at">[];
+}

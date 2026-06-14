@@ -711,7 +711,6 @@ export default function Tasks({
                 <TaskDetailsSheet
                     open={showTaskDetailsSheet}
                     onOpenChange={handleShowTaskDetailsSheet}
-                    onSave={(updated) => console.log(updated)}
                     selectedTask={selectedTask}
                     projectData={projectData}
                 />

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import KanbanBoard from "@/components/layout/kanbanBoard/KanbanBoard";
-import { getProjectData } from "@/data/loaders";
+import { getProjectData, getUserData } from "@/data/loaders";
 
 interface BoardPageProps {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -15,7 +15,13 @@ export default async function BoardPage({
         redirect("/overview");
     }
 
+    const userData = await getUserData();
+
+    if (!userData.data) {
+        redirect("/signIn");
+    }
+
     const projectData = await getProjectData(id);
 
-    return <KanbanBoard projectData={projectData} />;
+    return <KanbanBoard userData={userData.data} projectData={projectData} />;
 }

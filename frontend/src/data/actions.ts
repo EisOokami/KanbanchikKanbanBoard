@@ -12,6 +12,7 @@ import {
     RegisterAction,
     ResetPasswordAction,
     UpdateProjectAction,
+    UpdateTaskAction,
 } from "@/types/actions";
 import {
     forgotPasswordService,
@@ -995,6 +996,143 @@ export async function createTaskAction(
     const responseData = await mutateData(
         "POST",
         "/tasks",
+        validatedFields.data,
+    );
+
+    if (!responseData) {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: null,
+            details: null,
+            message: "Ops! Something went wrong. Please try again.",
+        };
+    }
+
+    if (
+        "message" in responseData &&
+        "status" in responseData &&
+        responseData.message &&
+        responseData.status !== "success"
+    ) {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: responseData.status,
+            details: null,
+            message: responseData.message,
+        };
+    }
+
+    if ("error" in responseData && responseData.error) {
+        return {
+            formData,
+            zodErrors: null,
+            error: responseData.error,
+            status: null,
+            details: responseData.details,
+            message: null,
+        };
+    }
+}
+
+const updateTaskSchema = z.object({
+    title: z
+        .string()
+        .trim()
+        .min(1, "Title must be at least 1 characters")
+        .max(255, "Title must be less than 255 characters"),
+    description: z
+        .string()
+        .trim()
+        .max(500, "Description must be less than 500 characters long")
+        .nullable()
+        .optional(),
+    priority: z.enum(["low", "medium", "high", "critical"], {
+        message: "Invalid task priority",
+    }),
+    dueDate: z.preprocess(
+        (value) => (value === "" ? undefined : value),
+        z.iso.date().nullable().optional(),
+    ),
+    startDate: z.preprocess(
+        (value) => (value === "" ? undefined : value),
+        z.iso.date().nullable().optional(),
+    ),
+    showProgress: z.stringbool(),
+    taskId: z
+        .string()
+        .regex(/^\d+$/, "Select a project")
+        .transform(Number)
+        .refine((value) => Number.isSafeInteger(value), {
+            message: "ID is too large a numerical value",
+        }),
+    columnId: z
+        .string()
+        .regex(/^\d+$/, "Select a column")
+        .transform(Number)
+        .refine((value) => Number.isSafeInteger(value), {
+            message: "ID is too large a numerical value",
+        }),
+    categories: z
+        .array(namedColorSchema)
+        .min(1, "At least one category is required"),
+    members: z.array(memberSchema).min(1, "At least one member is required"),
+    labels: z.array(namedColorSchema).min(1, "At least one label is required"),
+    // attachments: z.array(attachmentSchema),
+    // newAttachments: z.array(attachmentSchema),
+    subtasks: z.array(subtaskSchema),
+    newSubtasks: z.array(subtaskSchema),
+});
+
+export async function updateTaskAction(
+    data: {
+        categories: Category[];
+        members: Omit<User, "email">[];
+        subtasks: Omit<Subtask, "created_at">[];
+        newSubtasks: Omit<Subtask, "created_at">[];
+        attachments: Attachment[];
+        newAttachments: Attachment[];
+        labels: Label[];
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    prevState: any,
+    formData: FormData,
+): Promise<UpdateTaskAction | undefined> {
+    const validatedFields = updateTaskSchema.safeParse({
+        title: formData.get("title"),
+        description: formData.get("description"),
+        startDate: formData.get("start-date"),
+        dueDate: formData.get("due-date"),
+        priority: formData.get("priority"),
+        taskId: formData.get("task-id"),
+        columnId: formData.get("column-id"),
+        showProgress: formData.get("show-progress"),
+        members: data.members,
+        categories: data.categories,
+        subtasks: data.subtasks,
+        newSubtasks: data.newSubtasks,
+        // attachments: data.attachments,
+        // newAttachments: data.newAttachments,
+        labels: data.labels,
+    });
+
+    if (!validatedFields.success) {
+        return {
+            formData,
+            zodErrors: z.flattenError(validatedFields.error).fieldErrors,
+            error: null,
+            status: null,
+            details: null,
+            message: null,
+        };
+    }
+
+    const responseData = await mutateData(
+        "PUT",
+        `/tasks/${validatedFields.data.taskId}`,
         validatedFields.data,
     );
 

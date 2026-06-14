@@ -14,7 +14,7 @@ import {
 } from "@dnd-kit/core";
 import OverlayTask from "@/components/ui/overlayTask/OverlayTask";
 import KanbanColumn from "@/components/ui/kanbanColumn/KanbanColumn";
-import { Column, FilterState, Project, Task } from "@/types/types";
+import { Column, FilterState, Project, Task, User } from "@/types/types";
 import { Button } from "@/components/ui/shadcn/button";
 import {
     Avatar,
@@ -46,10 +46,12 @@ import { arrayMove } from "@dnd-kit/sortable";
 import { getInitials } from "@/libs/utils";
 
 interface KanbanBoardProps {
+    userData: User;
     projectData: Project;
 }
 
 export default function KanbanBoard({
+    userData,
     projectData,
 }: Readonly<KanbanBoardProps>) {
     const [columns, setColumns] = useState<Column[]>(
@@ -60,8 +62,7 @@ export default function KanbanBoard({
     const [showInvite, setshowInvite] = useState<boolean>(false);
     const [showFilters, setshowFilters] = useState<boolean>(false);
     const [showSettings, setshowSettings] = useState<boolean>(false);
-    const [showTaskDetails, setshowTaskDetails] = useState<boolean>(false);
-    const [showCreateTask, setshowCreateTask] = useState<boolean>(false);
+    const [showTaskDetails, setShowTaskDetails] = useState<boolean>(false);
     const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTER);
     const [selectedMode, setSelectedMode] = useState<
         "kanban" | "list" | "calendar"
@@ -181,8 +182,8 @@ export default function KanbanBoard({
         }));
     };
 
-    const handleshowTaskDetails = useCallback(() => {
-        setshowTaskDetails(!showTaskDetails);
+    const handleShowTaskDetails = useCallback(() => {
+        setShowTaskDetails(!showTaskDetails);
     }, [showTaskDetails]);
 
     const viewModes = [
@@ -373,7 +374,7 @@ export default function KanbanBoard({
                                                     handleToggleCreateTask
                                                 }
                                                 onOpenDetails={(task: Task) => {
-                                                    handleshowTaskDetails();
+                                                    handleShowTaskDetails();
                                                     setSelectedTask(task);
                                                 }}
                                             />
@@ -397,7 +398,7 @@ export default function KanbanBoard({
                                 columns={columns}
                                 setColumns={setColumns}
                                 onOpenDetails={(task: Task) => {
-                                    handleshowTaskDetails();
+                                    handleShowTaskDetails();
                                     setSelectedTask(task);
                                 }}
                             />
@@ -406,7 +407,7 @@ export default function KanbanBoard({
                             <ProjectCalendarView
                                 columns={columns}
                                 onOpenDetails={(task: Task) => {
-                                    handleshowTaskDetails();
+                                    handleShowTaskDetails();
                                     setSelectedTask(task);
                                 }}
                             />
@@ -435,10 +436,10 @@ export default function KanbanBoard({
             {selectedTask && (
                 <TaskDetailsSheet
                     open={showTaskDetails}
-                    onOpenChange={handleshowTaskDetails}
-                    onSave={(updated) => console.log(updated)}
+                    onOpenChange={handleShowTaskDetails}
                     selectedTask={selectedTask}
                     projectData={projectData}
+                    userData={userData}
                 />
             )}
             <CreateTaskModal
