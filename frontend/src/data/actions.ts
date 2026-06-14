@@ -660,7 +660,7 @@ const updateProjectSchema = z.object({
         .regex(/^\d+$/)
         .transform(Number)
         .refine((value) => Number.isSafeInteger(value), {
-            message: "ID is too lcarge a numerical value",
+            message: "ID is too large a numerical value",
         }),
     icon: z.string().trim().min(1, "Invalid emoji").max(10, "Invalid emoji"),
     color: z
