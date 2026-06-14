@@ -28,7 +28,7 @@ import { Progress } from "../shadcn/progress";
 
 interface KanbanTaskProps {
     task: Task;
-    onDelete: () => void;
+    onDelete: (id: number) => void;
     onOpenDetails: (task: Task) => void;
 }
 
@@ -110,7 +110,7 @@ export default function KanbanTask({
                             className="cursor-pointer gap-2 text-xs text-red-400 focus:bg-red-500/10 focus:text-red-400"
                             onClick={(e) => {
                                 e.stopPropagation();
-                                onDelete();
+                                onDelete(task.id);
                             }}
                         >
                             <TrashIcon weight="duotone" className="size-3" />{" "}

@@ -12,7 +12,7 @@ import { PlusIcon } from "@phosphor-icons/react";
 
 interface KanbanColumnProps {
     column: Column;
-    onDeleteTask: () => void;
+    onDeleteTask: (id: number) => void;
     onOpenDetails: (task: Task) => void;
     showCreateTask: boolean;
     onOpenCreateTask: (columnId?: number) => void;

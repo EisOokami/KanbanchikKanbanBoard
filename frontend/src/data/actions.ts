@@ -1174,3 +1174,44 @@ export async function updateTaskAction(
         };
     }
 }
+
+export async function deleteTaskAction(
+    taskId: number,
+): Promise<{ ok: boolean; message: string } | undefined> {
+    const responseData = await mutateData("DELETE", `/tasks/${taskId}`);
+
+    if (!responseData) {
+        console.error("Ops! Something went wrong. Please try again.");
+
+        return {
+            ok: false,
+            message: "Ops! Something went wrong. Please try again or later",
+        };
+    }
+
+    if (
+        "message" in responseData &&
+        "status" in responseData &&
+        responseData.message &&
+        responseData.status
+    ) {
+        return {
+            ok: responseData.status === "error" ? false : true,
+            message: responseData.message,
+        };
+    }
+
+    if ("error" in responseData && responseData.error) {
+        console.error(responseData.error);
+
+        return {
+            ok: false,
+            message: "Failed to delete a task",
+        };
+    }
+
+    return {
+        ok: true,
+        message: "Task delete",
+    };
+}

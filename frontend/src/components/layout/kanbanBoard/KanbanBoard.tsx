@@ -44,6 +44,7 @@ import {
 import { CreateTaskModal } from "@/components/ui/createTaskModal/CreateTaskModal";
 import { arrayMove } from "@dnd-kit/sortable";
 import { getInitials } from "@/libs/utils";
+import { deleteTaskAction } from "@/data/actions";
 
 interface KanbanBoardProps {
     userData: User;
@@ -170,7 +171,9 @@ export default function KanbanBoard({
         setActiveTask(null);
     };
 
-    const handleDeleteTask = () => {};
+    const handleDeleteTask = useCallback(async (id: number) => {
+        await deleteTaskAction(id);
+    }, []);
 
     const handleChangeMode = (mode: "kanban" | "list" | "calendar") =>
         setSelectedMode(mode);
