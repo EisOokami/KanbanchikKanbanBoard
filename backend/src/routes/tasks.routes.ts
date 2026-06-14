@@ -17,27 +17,16 @@ import {
 
 const router = Router();
 
-router.get(
-    "/",
-    authenticateToken,
-    getTasks,
-);
-router.get(
-    "/filter-options",
-    getTaskFilterOptions,
-);
-router.get(
-    "/:id",
-    authenticateToken,
-    getTaskById,
-);
+router.get("/", authenticateToken, getTasks);
+router.get("/filter-options", authenticateToken, getTaskFilterOptions);
+router.get("/:id", authenticateToken, getTaskById);
 router.post("/", authenticateToken, validateData(createTaskSchema), createTask);
-router.put("/", authenticateToken, validateData(updateTaskSchema), updateTask);
-router.delete(
+router.put(
     "/:id",
     authenticateToken,
-    validateData(validateIdSchema),
-    deleteTask,
+    validateData(updateTaskSchema),
+    updateTask,
 );
+router.delete("/:id", authenticateToken, deleteTask);
 
 export default router;

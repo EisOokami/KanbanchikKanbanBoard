@@ -14,7 +14,11 @@ import type {
     Task,
     User,
 } from "../types/types";
-import { createTaskSchema, updateTaskSchema } from "../validation/validation";
+import {
+    createTaskSchema,
+    updateTaskSchema,
+    validateIdSchema,
+} from "../validation/validation";
 
 export const getTasks = async (req: IGetUserRequest, res: Response) => {
     try {
@@ -83,15 +87,21 @@ export const getTasks = async (req: IGetUserRequest, res: Response) => {
             tasks.map(async (task) => {
                 const [members] = await pool.execute<User[]>(
                     `
-                        SELECT
+                        SELECT 
                             u.id,
                             u.name,
                             u.surname,
                             u.avatar_url,
-                            u.color
-                        FROM task_members ta
-                        JOIN users u ON ta.user_id = u.id
-                        WHERE ta.task_id = ?
+                            u.color,
+                            pm.role,
+                            pm.status,
+                            pm.joined_at
+                        FROM task_members tm
+                        JOIN users u ON tm.user_id = u.id
+                        JOIN tasks t ON tm.task_id = t.id
+                        JOIN columns c ON t.column_id = c.id
+                        JOIN project_members pm ON c.project_id = pm.project_id
+                        WHERE tm.task_id = ?
                     `,
                     [task.id],
                 );
@@ -319,10 +329,21 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
 
         const [members] = await pool.execute<User[]>(
             `
-                SELECT u.id, u.name, u.surname, u.avatar_url, u.color, u.email
-                FROM task_members ta
-                JOIN users u ON ta.user_id = u.id
-                WHERE ta.task_id = ?
+                SELECT 
+                    u.id,
+                    u.name,
+                    u.surname,
+                    u.avatar_url,
+                    u.color,
+                    pm.role,
+                    pm.status,
+                    pm.joined_at
+                FROM task_members tm
+                JOIN users u ON tm.user_id = u.id
+                JOIN tasks t ON tm.task_id = t.id
+                JOIN columns c ON t.column_id = c.id
+                JOIN project_members pm ON c.project_id = pm.project_id
+                WHERE tm.task_id = ?
             `,
             [id],
         );
@@ -417,21 +438,49 @@ export const createTask = async (req: IGetUserRequest, res: Response) => {
 
         const validatedData = createTaskSchema.parse(req.body);
 
+        const [projects] = await pool.execute<Project[]>(
+            `
+                SELECT id, owner_id
+                FROM projects
+                WHERE id = ? AND (
+                    id IN (
+                        SELECT project_id FROM project_members WHERE user_id = ?
+                    ) OR owner_id = ?
+                )
+            `,
+            [validatedData.projectId, userId, userId],
+        );
+
+        if (!projects || !projects.length) {
+            res.status(403).json({
+                status: "error",
+                message: "Access denied or project not found",
+            });
+
+            return;
+        }
+
         const [columns] = await pool.execute<Column[]>(
             `
                 SELECT c.id, p.id as project_id
                 FROM columns c
                 JOIN projects p ON c.project_id = p.id
-                WHERE c.id = ? AND (
+                WHERE c.id = ? AND p.id = ? AND c.project_id = ? AND (
                     p.id IN (
                         SELECT project_id FROM project_members WHERE user_id = ?
                     ) OR p.owner_id = ?
                 )
             `,
-            [validatedData.column_id, userId, userId],
+            [
+                validatedData.columnId,
+                validatedData.projectId,
+                validatedData.projectId,
+                userId,
+                userId,
+            ],
         );
 
-        if (!columns.length) {
+        if (!columns || !columns.length) {
             res.status(403).json({
                 status: "error",
                 message: "Access denied or column not found",
@@ -443,7 +492,7 @@ export const createTask = async (req: IGetUserRequest, res: Response) => {
         const [rows] = await pool.execute<
             ({ max_pos: number } & RowDataPacket)[]
         >(`SELECT MAX(position) as max_pos FROM tasks WHERE column_id = ?`, [
-            validatedData.column_id,
+            validatedData.columnId,
         ]);
 
         const maxPosition = rows[0];
@@ -474,48 +523,95 @@ export const createTask = async (req: IGetUserRequest, res: Response) => {
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             `,
             [
-                validatedData.column_id,
+                validatedData.columnId,
                 userId,
                 validatedData.title,
                 validatedData.description || null,
                 position,
-                validatedData.due_date || null,
-                validatedData.start_date || null,
-                validatedData.priority || "medium",
-                validatedData.show_progress ? 1 : 0,
+                validatedData.dueDate || null,
+                validatedData.startDate || null,
+                validatedData.priority,
+                validatedData.showProgress ? 1 : 0,
             ],
         );
 
         const taskId = result.insertId;
 
-        if (
-            validatedData.category_ids &&
-            validatedData.category_ids.length > 0
-        ) {
-            for (const categoryId of validatedData.category_ids) {
+        if (validatedData.newCategories && validatedData.newCategories.length) {
+            validatedData.newCategories.forEach(async (category) => {
+                const [categoriesResult] = await pool.execute<ResultSetHeader>(
+                    `
+                        INSERT INTO categories (project_id, name, color)
+                        VALUES (?, ?, ?)
+                    `,
+                    [validatedData.projectId, category.name, category.color],
+                );
+
                 await pool.execute<ResultSetHeader>(
                     `INSERT INTO task_categories (task_id, category_id) VALUES (?, ?)`,
-                    [taskId, categoryId],
+                    [taskId, categoriesResult.insertId],
                 );
-            }
+            });
         }
 
-        if (validatedData.member_ids && validatedData.member_ids.length > 0) {
-            for (const memberId of validatedData.member_ids) {
-                await pool.execute<ResultSetHeader>(
-                    `INSERT INTO task_members (task_id, user_id) VALUES (?, ?)`,
-                    [taskId, memberId],
+        if (validatedData.newLabels && validatedData.newLabels.length) {
+            validatedData.newLabels.forEach(async (label) => {
+                const [labelsResult] = await pool.execute<ResultSetHeader>(
+                    `
+                        INSERT INTO labels (project_id, name, color)
+                        VALUES (?, ?, ?)
+                    `,
+                    [validatedData.projectId, label.name, label.color],
                 );
-            }
-        }
 
-        if (validatedData.label_ids && validatedData.label_ids.length > 0) {
-            for (const labelId of validatedData.label_ids) {
                 await pool.execute<ResultSetHeader>(
                     `INSERT INTO task_labels (task_id, label_id) VALUES (?, ?)`,
-                    [taskId, labelId],
+                    [taskId, labelsResult.insertId],
                 );
-            }
+            });
+        }
+
+        if (validatedData.subtasks && validatedData.subtasks.length) {
+            validatedData.subtasks.forEach(async (subtask) => {
+                await pool.execute<ResultSetHeader>(
+                    `
+                        INSERT INTO subtasks (task_id, title, position, is_done)
+                        VALUES (?, ?, ?, ?)
+                    `,
+                    [taskId, subtask.title, subtask.position, subtask.is_done],
+                );
+            });
+        }
+
+        if (validatedData.categories && validatedData.categories.length) {
+            validatedData.categories.forEach(async (category) => {
+                if (category.id) {
+                    await pool.execute<ResultSetHeader>(
+                        `INSERT INTO task_categories (task_id, category_id) VALUES (?, ?)`,
+                        [taskId, category.id],
+                    );
+                }
+            });
+        }
+
+        if (validatedData.members && validatedData.members.length) {
+            validatedData.members.forEach(async (member) => {
+                await pool.execute<ResultSetHeader>(
+                    `INSERT INTO task_members (task_id, user_id) VALUES (?, ?)`,
+                    [taskId, member.id],
+                );
+            });
+        }
+
+        if (validatedData.labels && validatedData.labels.length) {
+            validatedData.labels.forEach(async (label) => {
+                if (label.id) {
+                    await pool.execute<ResultSetHeader>(
+                        `INSERT INTO task_labels (task_id, label_id) VALUES (?, ?)`,
+                        [taskId, label.id],
+                    );
+                }
+            });
         }
 
         const [newTasks] = await pool.execute<Task[]>(
@@ -567,22 +663,24 @@ export const createTask = async (req: IGetUserRequest, res: Response) => {
 
 export const updateTask = async (req: IGetUserRequest, res: Response) => {
     try {
+        validateIdSchema.parse(req.params);
+
         const { id } = req.params;
         const userId = req.user.id;
-
-        if (!id) {
-            res.status(400).json({
-                status: "error",
-                message: "Invalid task ID",
-            });
-
-            return;
-        }
 
         if (!userId) {
             res.status(401).json({
                 status: "error",
                 message: "Unauthorized",
+            });
+
+            return;
+        }
+
+        if (!id) {
+            res.status(400).json({
+                status: "error",
+                message: "Invalid task ID",
             });
 
             return;
@@ -622,40 +720,37 @@ export const updateTask = async (req: IGetUserRequest, res: Response) => {
             updateValues.push(validatedData.title);
         }
 
-        if (validatedData.description) {
-            updateFields.push("description = ?");
-            updateValues.push(validatedData.description);
-        }
-
-        if (validatedData.position) {
-            updateFields.push("position = ?");
-            updateValues.push(validatedData.position);
-        }
-
-        if (validatedData.due_date) {
-            updateFields.push("due_date = ?");
-            updateValues.push(validatedData.due_date);
-        }
-
-        if (validatedData.start_date) {
-            updateFields.push("start_date = ?");
-            updateValues.push(validatedData.start_date);
-        }
-
         if (validatedData.priority) {
             updateFields.push("priority = ?");
             updateValues.push(validatedData.priority);
         }
 
-        if (validatedData.show_progress) {
+        if (typeof validatedData.showProgress === "boolean") {
             updateFields.push("show_progress = ?");
-            updateValues.push(validatedData.show_progress ? 1 : 0);
+            updateValues.push(validatedData.showProgress ? 1 : 0);
         }
 
-        if (validatedData.column_id) {
+        if (validatedData.columnId) {
             updateFields.push("column_id = ?");
-            updateValues.push(validatedData.column_id);
+            updateValues.push(validatedData.columnId);
         }
+
+        updateFields.push("due_date = ?");
+        updateValues.push(
+            typeof validatedData.dueDate === "undefined"
+                ? null
+                : validatedData.dueDate,
+        );
+
+        updateFields.push("start_date = ?");
+        updateValues.push(
+            typeof validatedData.startDate === "undefined"
+                ? null
+                : validatedData.startDate,
+        );
+
+        updateFields.push("description = ?");
+        updateValues.push(validatedData.description);
 
         if (!updateFields.length) {
             res.status(400).json({
@@ -686,46 +781,79 @@ export const updateTask = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
-        if (validatedData.category_ids) {
+        if (validatedData.categories && validatedData.categories.length) {
             await pool.execute<ResultSetHeader>(
                 `DELETE FROM task_categories WHERE task_id = ?`,
                 [id],
             );
 
-            for (const categoryId of validatedData.category_ids) {
-                await pool.execute<ResultSetHeader>(
-                    `INSERT INTO task_categories (task_id, category_id) VALUES (?, ?)`,
-                    [id, categoryId],
-                );
-            }
+            validatedData.categories.forEach(async (category) => {
+                if (category.id) {
+                    await pool.execute<ResultSetHeader>(
+                        `INSERT INTO task_categories (task_id, category_id) VALUES (?, ?)`,
+                        [id, category.id],
+                    );
+                }
+            });
         }
 
-        if (validatedData.member_ids) {
+        if (validatedData.members && validatedData.members.length) {
             await pool.execute<ResultSetHeader>(
                 `DELETE FROM task_members WHERE task_id = ?`,
                 [id],
             );
 
-            for (const memberId of validatedData.member_ids) {
+            validatedData.members.forEach(async (member) => {
                 await pool.execute<ResultSetHeader>(
                     `INSERT INTO task_members (task_id, user_id) VALUES (?, ?)`,
-                    [id, memberId],
+                    [id, member.id],
                 );
-            }
+            });
         }
 
-        if (validatedData.label_ids) {
+        if (validatedData.labels && validatedData.labels.length) {
             await pool.execute<ResultSetHeader>(
                 `DELETE FROM task_labels WHERE task_id = ?`,
                 [id],
             );
 
-            for (const labelId of validatedData.label_ids) {
+            validatedData.labels.forEach(async (label) => {
+                if (label.id) {
+                    await pool.execute<ResultSetHeader>(
+                        `INSERT INTO task_labels (task_id, label_id) VALUES (?, ?)`,
+                        [id, label.id],
+                    );
+                }
+            });
+        }
+
+        if (validatedData.subtasks && validatedData.subtasks.length) {
+            await pool.execute<ResultSetHeader>(
+                `DELETE FROM subtasks WHERE task_id = ?`,
+                [id],
+            );
+
+            validatedData.subtasks.forEach(async (subtask) => {
                 await pool.execute<ResultSetHeader>(
-                    `INSERT INTO task_labels (task_id, label_id) VALUES (?, ?)`,
-                    [id, labelId],
+                    `
+                        INSERT INTO subtasks (task_id, title, position, is_done) 
+                        VALUES (?, ?, ?, ?)
+                    `,
+                    [id, subtask.title, subtask.position, subtask.is_done],
                 );
-            }
+            });
+        }
+
+        if (validatedData.subtasks && validatedData.subtasks.length) {
+            validatedData.newSubtasks.forEach(async (subtask) => {
+                await pool.execute<ResultSetHeader>(
+                    `
+                        INSERT INTO subtasks (task_id, title, position, is_done)
+                        VALUES (?, ?, ?, ?)
+                    `,
+                    [id, subtask.title, subtask.position, subtask.is_done],
+                );
+            });
         }
 
         const [updatedTasks] = await pool.execute<Task[]>(
@@ -777,22 +905,24 @@ export const updateTask = async (req: IGetUserRequest, res: Response) => {
 
 export const deleteTask = async (req: IGetUserRequest, res: Response) => {
     try {
+        validateIdSchema.parse(req.params);
+
         const { id } = req.params;
         const userId = req.user.id;
-
-        if (!id) {
-            res.status(400).json({
-                status: "error",
-                message: "Invalid task ID",
-            });
-
-            return;
-        }
 
         if (!userId) {
             res.status(401).json({
                 status: "error",
                 message: "Unauthorized",
+            });
+
+            return;
+        }
+
+        if (!id) {
+            res.status(400).json({
+                status: "error",
+                message: "Invalid task ID",
             });
 
             return;
@@ -851,8 +981,7 @@ export const getTaskFilterOptions = async (
     res: Response,
 ) => {
     try {
-        // const userId = req.user.id;
-        const userId = 1;
+        const userId = req.user.id;
 
         if (!userId) {
             res.status(401).json({

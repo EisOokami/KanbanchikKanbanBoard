@@ -281,23 +281,168 @@ export const updateProjectSchema = z.object({
     members: z.array(memberSchema).min(1, "At least one member is required"),
 });
 
-export const createTaskSchema = z.object({
-    column_id: z.number().int().positive(),
-    title: z.string().min(1).max(255),
+const attachmentSchema = z.object({
+    filename: z
+        .string({
+            error: "Filename is required",
+        })
+        .trim()
+        .min(1, "Filename cannot be empty")
+        .max(255, "Filename must be less than 255 characters"),
+    file_url: z
+        .url("File URL must be a valid URL")
+        .trim()
+        .max(500, "File URL must be less than 500 characters"),
+    mime_type: z
+        .string()
+        .trim()
+        .max(100, "MIME type must be less than 100 characters")
+        .nullable()
+        .optional(),
+    size_bytes: z
+        .number()
+        .int("File size must be an integer")
+        .min(0, "File size cannot be negative")
+        .nullable()
+        .optional(),
+});
+
+const subtaskSchema = z.object({
+    title: z
+        .string({
+            error: "Title is required",
+        })
+        .trim()
+        .min(1, "Title cannot be empty")
+        .max(150, "Title must be less than 150 characters"),
+    position: z
+        .number()
+        .int("Position must be an integer")
+        .min(0, "Position cannot be negative")
+        .max(255, "Position must be less than 255")
+        .default(0),
+    is_done: z.boolean(),
+    // is_done: z
+    //     .union([
+    //         z.boolean(),
+    //         z.literal(0),
+    //         z.literal(1),
+    //     ])
+    //     .transform((value) => Boolean(value)),
+});
+
+export const createTaskSchema = z
+    .object({
+        title: z
+            .string()
+            .trim()
+            .min(1, "Title must be at least 1 characters")
+            .max(255, "Title must be less than 255 characters"),
+        description: z
+            .string()
+            .trim()
+            .max(500, "Description must be less than 500 characters long")
+            .nullable()
+            .optional(),
+        priority: z.enum(["low", "medium", "high", "critical"], {
+            message: "Invalid task priority",
+        }),
+        dueDate: z.preprocess(
+            (value) => (value === "" ? undefined : value),
+            z.iso.date().nullable().optional(),
+        ),
+        startDate: z.preprocess(
+            (value) => (value === "" ? undefined : value),
+            z.iso.date().nullable().optional(),
+        ),
+        showProgress: z.boolean(),
+        projectId: z
+            .number()
+            .positive()
+            .int("Project ID must be an integer")
+            .refine((value) => Number.isSafeInteger(value), {
+                message: "ID is too large a numerical value",
+            }),
+        columnId: z
+            .number()
+            .positive()
+            .int("Column ID must be an integer")
+            .refine((value) => Number.isSafeInteger(value), {
+                message: "ID is too large a numerical value",
+            }),
+        categories: z.array(namedColorSchema),
+        newCategories: z.array(namedColorSchema),
+        members: z
+            .array(memberSchema)
+            .min(1, "At least one member is required"),
+        labels: z.array(namedColorSchema),
+        newLabels: z.array(namedColorSchema),
+        // attachments: z.array(attachmentSchema),
+        subtasks: z.array(subtaskSchema),
+    })
+    .superRefine((data, ctx) => {
+        if (!data.categories.length && !data.newCategories.length) {
+            ctx.addIssue({
+                code: "custom",
+                message: "At least one category (existing or new) is required",
+                path: ["categories"],
+            });
+        }
+
+        if (!data.labels.length && !data.newLabels.length) {
+            ctx.addIssue({
+                code: "custom",
+                message: "At least one label (existing or new) is required",
+                path: ["labels"],
+            });
+        }
+    });
+
+export const updateTaskSchema = z.object({
+    title: z
+        .string()
+        .trim()
+        .min(1, "Title must be at least 1 characters")
+        .max(255, "Title must be less than 255 characters"),
     description: z
         .string()
+        .trim()
         .max(500, "Description must be less than 500 characters long")
         .nullable()
         .optional(),
-    due_date: z.string().datetime().nullable().optional(),
-    start_date: z.string().datetime().nullable().optional(),
-    priority: z.enum(["low", "medium", "high", "critical"]).optional(),
-    show_progress: z.boolean().optional(),
-    category_ids: z.array(z.number().int().positive()).optional(),
-    member_ids: z.array(z.number().int().positive()).optional(),
-    label_ids: z.array(z.number().int().positive()).optional(),
-});
-
-export const updateTaskSchema = createTaskSchema.partial().extend({
-    position: z.number().int().nonnegative().optional(),
+    priority: z.enum(["low", "medium", "high", "critical"], {
+        message: "Invalid task priority",
+    }),
+    dueDate: z.preprocess(
+        (value) => (value === "" ? undefined : value),
+        z.iso.date().nullable().optional(),
+    ),
+    startDate: z.preprocess(
+        (value) => (value === "" ? undefined : value),
+        z.iso.date().nullable().optional(),
+    ),
+    showProgress: z.boolean(),
+    taskId: z
+        .number()
+        .positive()
+        .int("Task ID must be an integer")
+        .refine((value) => Number.isSafeInteger(value), {
+            message: "ID is too large a numerical value",
+        }),
+    columnId: z
+        .number()
+        .positive()
+        .int("Column ID must be an integer")
+        .refine((value) => Number.isSafeInteger(value), {
+            message: "ID is too large a numerical value",
+        }),
+    categories: z
+        .array(namedColorSchema)
+        .min(1, "At least one category is required"),
+    members: z.array(memberSchema).min(1, "At least one member is required"),
+    labels: z.array(namedColorSchema).min(1, "At least one label is required"),
+    // attachments: z.array(attachmentSchema),
+    // newAttachments: z.array(attachmentSchema),
+    subtasks: z.array(subtaskSchema),
+    newSubtasks: z.array(subtaskSchema),
 });
