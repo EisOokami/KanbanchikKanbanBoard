@@ -160,7 +160,6 @@ export default function NewProjectModal({
                 id: categories.length + 1,
                 name: newCatName.trim(),
                 color: newCatColor,
-                pill: "",
                 created_at: new Date(),
                 description: "",
                 updated_at: null,
@@ -362,8 +361,8 @@ export default function NewProjectModal({
                                 <span className="text-red-500">*</span>
                             </label>
                             <Input
-                                placeholder="e.g. Website Redesign"
                                 name="name"
+                                placeholder="e.g. Website Redesign"
                                 defaultValue={
                                     formState?.formData
                                         ?.get("name")
