@@ -15,7 +15,7 @@ interface KanbanColumnProps {
     onDeleteTask: () => void;
     onOpenDetails: (task: Task) => void;
     showCreateTask: boolean;
-    onOpenCreateTask: () => void;
+    onOpenCreateTask: (columnId?: number) => void;
 }
 
 export default function KanbanColumn({
@@ -30,7 +30,7 @@ export default function KanbanColumn({
     const { setNodeRef, isOver } = useDroppable({ id: column.id });
 
     const startAdding = () => {
-        onOpenCreateTask();
+        onOpenCreateTask(column.id);
         setTimeout(() => inputRef.current?.focus(), 50);
     };
 

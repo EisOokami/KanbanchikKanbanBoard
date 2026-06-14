@@ -6,26 +6,22 @@ export default function Chip({
     label,
     color,
     onRemove,
+    isPending,
 }: {
     label: string;
     color: string;
     onRemove?: () => void;
+    isPending: boolean;
 }) {
     return (
-        <span
-            className="inline-flex items-center gap-1 rounded-md px-2.5 py-0.5 text-sm font-medium capitalize"
-            style={{ backgroundColor: color + "22", color }}
+        <button
+            onClick={onRemove}
+            className="inline-flex items-center gap-1 rounded-md border border-border/60 px-2.5 py-0.5 text-sm font-medium capitalize text-white transition-colors hover:bg-muted/40"
+            style={{ backgroundColor: color }}
+            disabled={isPending}
         >
             {label}
-            {onRemove && (
-                <button
-                    type="button"
-                    onClick={onRemove}
-                    className="ml-0.5 opacity-60 transition-opacity hover:opacity-100"
-                >
-                    <XIcon weight="duotone" className="size-3" />
-                </button>
-            )}
-        </span>
+            {onRemove && <XIcon weight="duotone" className="size-4" />}
+        </button>
     );
 }

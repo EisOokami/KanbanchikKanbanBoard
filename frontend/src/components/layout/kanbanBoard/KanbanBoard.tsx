@@ -66,6 +66,10 @@ export default function KanbanBoard({
     const [selectedMode, setSelectedMode] = useState<
         "kanban" | "list" | "calendar"
     >("kanban");
+    const [createTaskState, setCreateTaskState] = useState<{
+        isOpen: boolean;
+        columnId: number | undefined;
+    }>({ isOpen: false, columnId: undefined });
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -170,8 +174,11 @@ export default function KanbanBoard({
     const handleChangeMode = (mode: "kanban" | "list" | "calendar") =>
         setSelectedMode(mode);
 
-    const handleshowCreateTask = () => {
-        setshowCreateTask(!showCreateTask);
+    const handleToggleCreateTask = (columnId?: number) => {
+        setCreateTaskState((prevState) => ({
+            isOpen: !prevState.isOpen,
+            columnId,
+        }));
     };
 
     const handleshowTaskDetails = useCallback(() => {
@@ -296,7 +303,7 @@ export default function KanbanBoard({
                         </Button>
                         <Button
                             className="gap-1.5 bg-bright-blue px-3 text-xs hover:bg-blue-600"
-                            onClick={handleshowCreateTask}
+                            onClick={() => handleToggleCreateTask()}
                         >
                             <PlusIcon weight="duotone" className="size-3.5" />{" "}
                             New Task
@@ -331,7 +338,7 @@ export default function KanbanBoard({
                             <div className="mt-6 flex items-center gap-3">
                                 <Button
                                     className="gap-1.5 bg-bright-blue px-4 py-2 text-sm hover:bg-blue-600"
-                                    onClick={handleShowCreateTask}
+                                    onClick={() => handleToggleCreateTask()}
                                 >
                                     <PlusIcon
                                         weight="duotone"
@@ -359,8 +366,12 @@ export default function KanbanBoard({
                                                 key={column.id}
                                                 column={column}
                                                 onDeleteTask={handleDeleteTask}
-                                                showCreateTask={showCreateTask}
-                                                onOpenCreateTask={handleshowCreateTask}
+                                                showCreateTask={
+                                                    createTaskState.isOpen
+                                                }
+                                                onOpenCreateTask={
+                                                    handleToggleCreateTask
+                                                }
                                                 onOpenDetails={(task: Task) => {
                                                     handleshowTaskDetails();
                                                     setSelectedTask(task);
@@ -431,10 +442,10 @@ export default function KanbanBoard({
                 />
             )}
             <CreateTaskModal
-                open={showCreateTask}
-                onOpenChange={handleshowCreateTask}
-                onSubmit={(data) => console.log(data)}
+                open={createTaskState.isOpen}
+                onOpenChange={() => handleToggleCreateTask()}
                 projectData={projectData}
+                columnId={createTaskState.columnId}
             />
         </div>
     );

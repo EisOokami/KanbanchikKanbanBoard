@@ -141,3 +141,13 @@ export interface UserData {
     message: string;
     data: User | null;
 }
+
+export interface CreateTaskFormData {
+    categories: Category[];
+    newCategories: Omit<Category, "created_at" | "updated_at">[];
+    members: Omit<User, "email">[];
+    subtasks: Omit<Subtask, "created_at">[];
+    attachments: Attachment[];
+    labels: Label[];
+    newLabels: Omit<Label, "created_at" | "updated_at">[];
+}

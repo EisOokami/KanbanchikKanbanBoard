@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect, useActionState } from "react";
 import {
     Dialog,
     DialogContent,
@@ -9,76 +9,84 @@ import {
     DialogFooter,
 } from "@/components/ui/shadcn/dialog";
 import { Button } from "@/components/ui/shadcn/button";
-import { Input } from "@/components/ui/shadcn/input";
-import { Textarea } from "@/components/ui/shadcn/textarea";
-import { Checkbox } from "@/components/ui/shadcn/checkbox";
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/shadcn/popover";
-import { Calendar } from "@/components/ui/shadcn/calendar";
 import { format } from "date-fns";
-import { cn, getInitials } from "@/libs/utils";
-import Chip from "./chip/Chip";
-import ColorDotPicker from "./colorDotPicker/ColorDotPicker";
 import { PRIORITY_CONFIG } from "@/constants/constants";
-import { Priority, Project } from "@/types/types";
-import { TaskFormData } from "@/types/createTaskModal";
-import {
-    CalendarIcon,
-    PaperclipIcon,
-    PlusIcon,
-    TrashSimpleIcon,
-    UploadSimpleIcon,
-    XIcon,
-} from "@phosphor-icons/react";
+import { CreateTaskFormData, Project, User } from "@/types/types";
+import { PlusIcon } from "@phosphor-icons/react";
 import { getProjectsData } from "@/data/loaders";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "../shadcn/select";
+import { BaseAction } from "@/types/actions";
+import { createTaskAction } from "@/data/actions";
+import ProjectSection from "./projectSection/ProjectSection";
+import ColumnSection from "./columnSection/ColumnSection";
+import TitleSection from "./titleSection/TitleSection";
+import DescriptionSection from "./descriptionSection/DescriptionSection";
+import DateSection from "./dateSection/DateSection";
+import PrioritySection from "./prioritySection/PrioritySection";
+import MembersSection from "./membersSection/MembersSection";
+import CategoriesSection from "./categoriesSection/CategoriesSection";
+import LabelsSection from "./labelsSection/LabelsSection";
+import SubtasksSection from "./subtasksSection/SubtasksSection";
+import AttachmentsSection from "./attachmentsSection/AttachmentsSection";
 
 interface CreateTaskModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     projectData?: Project;
-    onSubmit?: (data: TaskFormData) => void;
     showProjectSelect?: boolean;
+    columnId?: number;
 }
+
+const INITIAL_STATE: BaseAction = {
+    zodErrors: null,
+    error: null,
+    status: null,
+    details: null,
+    message: null,
+    formData: null,
+};
 
 export function CreateTaskModal({
     open,
     onOpenChange,
     projectData,
-    onSubmit,
     showProjectSelect = false,
-}: CreateTaskModalProps) {
+    columnId,
+}: Readonly<CreateTaskModalProps>) {
     const [projectsData, setProjectsData] = useState<Project[] | null>(null);
     const [selectedProject, setSelectedProject] = useState<Project | undefined>(
         projectData,
     );
-    const [accentColor, setAccentColor] = useState<string>("#6366f1");
-    const [form, setForm] = useState<TaskFormData>({
-        title: "",
-        description: "",
-        startDate: undefined,
-        dueDate: undefined,
-        priority: null,
+    const [selectedColumnId, setSelectedColumnId] = useState<
+        number | undefined
+    >(columnId);
+    const [startDateOpen, setStartDateOpen] = useState<boolean>(false);
+    const [dueDateOpen, setDueDateOpen] = useState<boolean>(false);
+    const [priority, setPriority] = useState<string>(
+        Object.keys(PRIORITY_CONFIG)[0],
+    );
+    const [startDate, setStartDate] = useState<Date | undefined>();
+    const [dueDate, setDueDate] = useState<Date | undefined>();
+    const [progressShow, setProgressShow] = useState<boolean>(false);
+    const [formData, setFormData] = useState<CreateTaskFormData>({
         categories: [],
+        newCategories: [],
         members: [],
-        attachments: [],
         subtasks: [],
+        attachments: [],
+        labels: [],
+        newLabels: [],
     });
-    const [newCheckItem, setNewCheckItem] = useState<string>("");
-    const [newCategory, setNewCategory] = useState<string>("");
-    const [newCategoryColor, setNewCategoryColor] = useState<string>("#000");
-    const [calOpen, setCalOpen] = useState(false);
-    const [errors, setErrors] = useState<{ title?: string }>({});
-    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [formState, formAction, isPending] = useActionState(
+        createTaskAction.bind(null, formData),
+        INITIAL_STATE,
+    );
+
+    useEffect(() => {
+        if (columnId) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setSelectedColumnId(columnId);
+        }
+    }, [columnId]);
 
     useEffect(() => {
         if (!showProjectSelect) {
@@ -90,113 +98,35 @@ export function CreateTaskModal({
 
             setProjectsData(fetchProject);
             setSelectedProject(fetchProject[0]);
-            setNewCategoryColor(fetchProject[0].categories[0].color);
         })();
     }, [showProjectSelect]);
 
-    const update = <K extends keyof TaskFormData>(
-        key: K,
-        value: TaskFormData[K],
-    ) => setForm((f) => ({ ...f, [key]: value }));
-
-    const addCheckItem = () => {
-        if (!newCheckItem.trim()) return;
-        update("subtasks", [
-            ...form.subtasks,
-            {
-                id: form.subtasks.length + 1,
-                title: newCheckItem.trim(),
-                position: form.subtasks.length,
-                is_done: false,
-                created_at: new Date(),
-            },
-        ]);
-        setNewCheckItem("");
+    const toggleMember = (memberValue: Omit<User, "email">) => {
+        setFormData((prevState) => ({
+            ...prevState,
+            members: prevState.members.some(
+                (member) => member.id === memberValue.id,
+            )
+                ? prevState.members.filter(
+                      (member) => member.id !== memberValue.id,
+                  )
+                : [...prevState.members, memberValue],
+        }));
     };
-
-    const toggleCheck = (id: number) =>
-        update(
-            "subtasks",
-            form.subtasks.map((i) =>
-                i.id === id ? { ...i, done: !i.is_done } : i,
-            ),
-        );
-
-    const removeCheck = (id: number) =>
-        update(
-            "subtasks",
-            form.subtasks.filter((i) => i.id !== id),
-        );
-
-    const togglemember = (id: number) =>
-        update(
-            "members",
-            form.members.includes(id)
-                ? form.members.filter((a) => a !== id)
-                : [...form.members, id],
-        );
-
-    const addCategory = () => {
-        const t = newCategory.trim();
-        if (!t || form.categories.includes(t)) return;
-        update("categories", [...form.categories, t]);
-        setNewCategory("");
-    };
-
-    const removeCategory = (cat: string) =>
-        update(
-            "categories",
-            form.categories.filter((c) => c !== cat),
-        );
-
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = Array.from(e.target.files ?? []);
-        update("attachments", [
-            ...form.attachments,
-            ...files.map((f) => ({
-                id: form.attachments.length + 1,
-                uploader_id: form.attachments.length + 1,
-                filename: f.name,
-                file_url: "",
-                mime_type: f.type,
-                size_bytes: f.size,
-                created_at: new Date(),
-            })),
-        ]);
-        e.target.value = "";
-    };
-
-    const removeAttachment = (id: number) =>
-        update(
-            "attachments",
-            form.attachments.filter((a) => a.id !== id),
-        );
 
     const handleSubmit = () => {
-        if (!form.title.trim()) {
-            setErrors({ title: "Task title is required" });
-            return;
-        }
-        onSubmit?.(form);
-        handleClose();
+        // if (!form.title.trim()) {
+        //     setErrors({ title: "Task title is required" });
+        //     return;
+        // }
+        // onSubmit?.(form);
+        // handleClose();
     };
 
     const handleClose = () => {
-        setForm({
-            title: "",
-            description: "",
-            startDate: undefined,
-            dueDate: undefined,
-            priority: null,
-            categories: [],
-            members: [],
-            attachments: [],
-            subtasks: [],
-        });
-        setAccentColor("#6366f1");
-        setNewCheckItem("");
-        setNewCategory("");
-        setErrors({});
+        // setNewSubtaskName("");
+        // setNewCategoryName("");
+        // setNewLabelName("");
         onOpenChange(false);
     };
 
@@ -205,601 +135,186 @@ export function CreateTaskModal({
             return;
         }
 
-        const project = projectsData.find((p) => p.id.toString() === id);
+        const project = projectsData.find(
+            (project) => project.id.toString() === id,
+        );
 
         if (project) {
             setSelectedProject(project);
-            setNewCategoryColor(project.categories[0].color);
         }
     };
 
-    const completedChecks = form.subtasks.filter((i) => i.is_done).length;
+    const handleChangeColumn = (id: string) => {
+        if (!selectedProject) {
+            return;
+        }
+
+        const column = selectedProject.columns.find(
+            (column) => column.id.toString() === id,
+        );
+
+        if (column) {
+            setSelectedColumnId(column.id);
+        }
+    };
+
     const selectedMembers = selectedProject
         ? selectedProject.members.filter((member) =>
-              form.members.includes(member.id),
+              formData.members.some(
+                  (formDataMember) => member.id === formDataMember.id,
+              ),
           )
         : [];
 
     return (
         <Dialog open={open} onOpenChange={handleClose}>
             <DialogContent className="flex max-h-[92vh] w-full max-w-2xl flex-col gap-0 overflow-hidden rounded-md border border-border/70 p-0 shadow-2xl">
-                <DialogHeader className="flex-shrink-0 border-b border-border/60 px-6 pb-4 pt-6">
-                    <div className="min-w-0 flex-1">
-                        <DialogTitle className="mb-0.5 text-base font-semibold">
-                            New Task
-                        </DialogTitle>
-                        <p className="text-xs text-muted-foreground">
-                            Configure your task details
-                        </p>
-                    </div>
-                </DialogHeader>
-                {showProjectSelect && projectsData && selectedProject && (
-                    <div className="flex-1 space-y-8 px-6 py-5 shadow-sm">
-                        <div className="space-y-1">
-                            <label
-                                className="block font-semibold"
-                                htmlFor="project"
-                            >
-                                Project <span className="text-red-500">*</span>
-                            </label>
-                            <Select
-                                value={selectedProject.id.toString()}
-                                onValueChange={handleChangeProject}
-                            >
-                                <SelectTrigger
-                                    id="project"
-                                    className="focus:ring-1 focus:ring-bright-blue"
-                                >
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {projectsData.map((project) => (
-                                        <SelectItem
-                                            key={project.id}
-                                            value={project.id.toString()}
-                                            className="rounded-md text-sm font-medium capitalize"
-                                        >
-                                            <span>{project.name}</span>
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                <form
+                    action={formAction}
+                    noValidate
+                    className="flex min-h-0 flex-1 flex-col"
+                >
+                    <DialogHeader className="flex-shrink-0 border-b border-border/60 px-6 pb-4 pt-6">
+                        <div className="min-w-0 flex-1">
+                            <DialogTitle className="mb-0.5 text-base font-semibold">
+                                New Task
+                            </DialogTitle>
+                            <p className="text-xs text-muted-foreground">
+                                Configure your task details
+                            </p>
                         </div>
-                    </div>
-                )}
-                {selectedProject && (
-                    <div className="flex-1 space-y-8 overflow-y-auto px-6 py-5">
-                        <div className="space-y-1">
-                            <label
-                                className="block font-semibold"
-                                htmlFor="title"
-                            >
-                                Task title{" "}
-                                <span className="text-red-500">*</span>
-                            </label>
-                            <Input
-                                id="title"
-                                placeholder="e.g. Design login screen"
-                                value={form.title}
-                                onChange={(e) => {
-                                    update("title", e.target.value);
-                                    setErrors({});
-                                }}
-                                className={`h-9 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue ${errors.title ? "border-red-400" : ""}`}
+                    </DialogHeader>
+                    {showProjectSelect && projectsData && selectedProject && (
+                        <ProjectSection
+                            formState={formState}
+                            onValueChange={handleChangeProject}
+                            isPending={isPending}
+                            selectedProject={selectedProject}
+                            projectsData={projectsData}
+                        />
+                    )}
+                    {selectedProject && (
+                        <div className="flex-1 space-y-8 overflow-y-auto px-6 py-5">
+                            <ColumnSection
+                                formState={formState}
+                                isPending={isPending}
+                                selectedProject={selectedProject}
+                                selectedColumnId={selectedColumnId}
+                                onValueChange={handleChangeColumn}
                             />
-                            {errors.title && (
-                                <p className="mt-1 text-xs text-red-500">
-                                    {errors.title}
-                                </p>
-                            )}
-                        </div>
-                        <div className="space-y-1">
-                            <label
-                                className="block font-semibold"
-                                htmlFor="description"
-                            >
-                                Description
-                            </label>
-                            <Textarea
-                                id="description"
-                                placeholder="Add context, goals, or acceptance criteria…"
-                                value={form.description}
-                                onChange={(e) =>
-                                    update("description", e.target.value)
-                                }
-                                className="min-h-[72px] resize-none bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue"
+                            <TitleSection
+                                formState={formState}
+                                isPending={isPending}
+                            />
+                            <DescriptionSection
+                                formState={formState}
+                                isPending={isPending}
+                            />
+                            <DateSection
+                                formState={formState}
+                                isPending={isPending}
+                                startDate={startDate}
+                                dueDate={dueDate}
+                                startDateOpen={startDateOpen}
+                                dueDateOpen={dueDateOpen}
+                                onOpenStartDateChange={setStartDateOpen}
+                                onOpenDueDateChange={setDueDateOpen}
+                                onStartDateChange={setStartDate}
+                                onDueDateChange={setDueDate}
+                            />
+                            <PrioritySection
+                                formState={formState}
+                                isPending={isPending}
+                                priority={priority}
+                                onPriorityChange={setPriority}
+                            />
+                            <MembersSection
+                                formState={formState}
+                                isPending={isPending}
+                                formData={formData}
+                                selectedMembers={selectedMembers}
+                                selectedProject={selectedProject}
+                                onMemberChange={toggleMember}
+                            />
+                            <CategoriesSection
+                                formState={formState}
+                                isPending={isPending}
+                                formData={formData}
+                                selectedProject={selectedProject}
+                                onFormDataChange={setFormData}
+                            />
+                            <LabelsSection
+                                formState={formState}
+                                isPending={isPending}
+                                formData={formData}
+                                selectedProject={selectedProject}
+                                onFormDataChange={setFormData}
+                            />
+                            <SubtasksSection
+                                formState={formState}
+                                isPending={isPending}
+                                formData={formData}
+                                progressShow={progressShow}
+                                onShowProgress={setProgressShow}
+                                onFormDataChange={setFormData}
+                            />
+                            <AttachmentsSection
+                                formState={formState}
+                                isPending={isPending}
+                                formData={formData}
+                                onFormDataChange={setFormData}
                             />
                         </div>
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="space-y-1">
-                                <label
-                                    className="block font-semibold"
-                                    htmlFor="start-date"
-                                >
-                                    Start Date
-                                </label>
-                                <Popover
-                                    open={calOpen}
-                                    onOpenChange={setCalOpen}
-                                >
-                                    <PopoverTrigger id="start-date" asChild>
-                                        <button
-                                            type="button"
-                                            className={cn(
-                                                "flex h-9 w-full items-center gap-1.5 rounded-md border border-input bg-white px-3 text-sm transition-colors hover:bg-muted/40",
-                                                form.startDate
-                                                    ? "text-foreground"
-                                                    : "text-muted-foreground",
-                                            )}
-                                        >
-                                            <CalendarIcon
-                                                weight="duotone"
-                                                className="size-4 flex-shrink-0 text-muted-foreground"
-                                            />
-                                            {form.startDate
-                                                ? format(
-                                                      form.startDate,
-                                                      "MMM d, yyyy",
-                                                  )
-                                                : "Pick a date"}
-                                        </button>
-                                    </PopoverTrigger>
-                                    <PopoverContent
-                                        className="p-0"
-                                        align="start"
-                                    >
-                                        <Calendar
-                                            mode="single"
-                                            selected={form.startDate}
-                                            onSelect={(d) => {
-                                                update("startDate", d);
-                                                setCalOpen(false);
-                                            }}
-                                        />
-                                    </PopoverContent>
-                                </Popover>
-                            </div>
-                            <div className="space-y-1">
-                                <label
-                                    className="block font-semibold"
-                                    htmlFor="due-date"
-                                >
-                                    Due Date
-                                </label>
-                                <Popover
-                                    open={calOpen}
-                                    onOpenChange={setCalOpen}
-                                >
-                                    <PopoverTrigger id="due-date" asChild>
-                                        <button
-                                            type="button"
-                                            className={cn(
-                                                "flex h-9 w-full items-center gap-1.5 rounded-md border border-input bg-white px-3 text-sm transition-colors hover:bg-muted/40",
-                                                form.dueDate
-                                                    ? "text-foreground"
-                                                    : "text-muted-foreground",
-                                            )}
-                                        >
-                                            <CalendarIcon
-                                                weight="duotone"
-                                                className="size-4 flex-shrink-0 text-muted-foreground"
-                                            />
-                                            {form.dueDate
-                                                ? format(
-                                                      form.dueDate,
-                                                      "MMM d, yyyy",
-                                                  )
-                                                : "Pick a date"}
-                                        </button>
-                                    </PopoverTrigger>
-                                    <PopoverContent
-                                        className="p-0"
-                                        align="start"
-                                    >
-                                        <Calendar
-                                            mode="single"
-                                            selected={form.dueDate}
-                                            onSelect={(d) => {
-                                                update("dueDate", d);
-                                                setCalOpen(false);
-                                            }}
-                                        />
-                                    </PopoverContent>
-                                </Popover>
-                            </div>
-                        </div>
-                        <div className="space-y-1">
-                            <label className="block font-semibold">
-                                Priority
-                            </label>
-                            <div className="flex flex-wrap gap-1.5">
-                                {(
-                                    Object.keys(PRIORITY_CONFIG) as Priority[]
-                                ).map((p) => (
-                                    <button
-                                        key={p}
-                                        type="button"
-                                        onClick={() => update("priority", p)}
-                                        className={cn(
-                                            "flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium transition-all",
-                                            form.priority === p
-                                                ? "ring-1 ring-current"
-                                                : "opacity-60 hover:opacity-100",
-                                        )}
-                                        style={{
-                                            backgroundColor:
-                                                PRIORITY_CONFIG[p].color,
-                                            color: "#fff",
-                                        }}
-                                    >
-                                        {PRIORITY_CONFIG[p].label}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                        <div className="space-y-1">
-                            <h3 className="font-semibold">Members</h3>
-                            <div className="space-y-3">
-                                {selectedMembers.length > 0 && (
-                                    <div className="flex flex-wrap gap-2">
-                                        {selectedMembers.map((member) => (
-                                            <div
-                                                key={member.id}
-                                                className="flex items-center gap-2 rounded-md border border-border/60 bg-muted/40 px-2.5 py-1.5"
-                                            >
-                                                <div
-                                                    className="flex size-6 items-center justify-center rounded-full text-[10px] font-bold text-white"
-                                                    style={{
-                                                        backgroundColor:
-                                                            member.color,
-                                                    }}
-                                                >
-                                                    {getInitials(
-                                                        member.name,
-                                                        member.surname,
-                                                    )}
-                                                </div>
-                                                <div className="min-w-0">
-                                                    <p className="text-xs font-medium leading-none">
-                                                        {member.name}{" "}
-                                                        {member.surname}
-                                                    </p>
-                                                </div>
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        togglemember(member.id)
-                                                    }
-                                                    className="ml-1 text-muted-foreground transition-colors hover:text-foreground"
-                                                >
-                                                    <XIcon
-                                                        weight="duotone"
-                                                        className="size-3.5"
-                                                    />
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                                <div className="flex flex-wrap gap-1.5">
-                                    {selectedProject.members
-                                        .filter(
-                                            (member) =>
-                                                !form.members.includes(
-                                                    member.id,
-                                                ),
-                                        )
-                                        .map((member) => (
-                                            <button
-                                                key={member.id}
-                                                type="button"
-                                                onClick={() =>
-                                                    togglemember(member.id)
-                                                }
-                                                className="flex items-center gap-1.5 rounded-md border border-border/60 bg-white px-2.5 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
-                                            >
-                                                <div
-                                                    className="flex size-5 items-center justify-center rounded-full text-[10px] font-medium text-white"
-                                                    style={{
-                                                        backgroundColor:
-                                                            member.color,
-                                                    }}
-                                                >
-                                                    {getInitials(
-                                                        member.name,
-                                                        member.surname,
-                                                    )}
-                                                </div>
-                                                {member.name}
-                                                <PlusIcon
-                                                    weight="duotone"
-                                                    className="size-4 opacity-50"
-                                                />
-                                            </button>
-                                        ))}
-                                </div>
-                            </div>
-                        </div>
-                        <div className="space-y-1">
-                            <label className="font-semibold" htmlFor="category">
-                                Categories
-                            </label>
-                            <div className="space-y-3">
-                                {form.categories.length > 0 && (
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {form.categories.map((cat) => (
-                                            <Chip
-                                                key={cat}
-                                                label={cat}
-                                                color={newCategoryColor}
-                                                onRemove={() =>
-                                                    removeCategory(cat)
-                                                }
-                                            />
-                                        ))}
-                                    </div>
-                                )}
-                                <div className="flex flex-wrap gap-1.5">
-                                    {selectedProject.categories
-                                        .filter(
-                                            (category) =>
-                                                !form.categories.includes(
-                                                    category.name,
-                                                ),
-                                        )
-                                        .map((category) => (
-                                            <button
-                                                key={category.id}
-                                                type="button"
-                                                onClick={() =>
-                                                    update("categories", [
-                                                        ...form.categories,
-                                                        category.name,
-                                                    ])
-                                                }
-                                                className="flex items-center gap-1 rounded-md border border-border/60 bg-white px-2.5 py-0.5 text-sm capitalize text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
-                                            >
-                                                {category.name}
-                                                <PlusIcon
-                                                    weight="duotone"
-                                                    className="size-4"
-                                                />
-                                            </button>
-                                        ))}
-                                </div>
-                                <div className="space-y-4">
-                                    <ColorDotPicker
-                                        value={newCategoryColor}
-                                        onChange={setNewCategoryColor}
-                                        colors={selectedProject.categories.map(
-                                            (category) => category.color,
-                                        )}
-                                    />
-                                    <div className="flex gap-2">
-                                        <Input
-                                            id="category"
-                                            placeholder="Category name…"
-                                            value={newCategory}
-                                            onChange={(e) =>
-                                                setNewCategory(e.target.value)
-                                            }
-                                            onKeyDown={(e) =>
-                                                e.key === "Enter" &&
-                                                (e.preventDefault(),
-                                                addCategory())
-                                            }
-                                            className="h-8 flex-1 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue"
-                                        />
-                                        <Button
-                                            type="button"
-                                            size="sm"
-                                            onClick={addCategory}
-                                            className="h-8 gap-1 bg-bright-blue text-white hover:bg-blue-600"
-                                        >
-                                            <PlusIcon
-                                                weight="duotone"
-                                                className="size-3.5"
-                                            />{" "}
-                                            Add
-                                        </Button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="space-y-1">
-                            <label
-                                className="font-semibold"
-                                htmlFor="checklist"
+                    )}
+                    <DialogFooter className="flex flex-shrink-0 items-center justify-between gap-3 border-t border-border/60 px-6 py-4">
+                        <div className="flex gap-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={handleClose}
+                                className="h-9"
                             >
-                                Checklist
-                            </label>
-                            <div className="space-y-3">
-                                {form.subtasks.length > 0 && (
-                                    <>
-                                        <div className="flex items-center gap-2">
-                                            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
-                                                <div
-                                                    className="h-full rounded-full bg-bright-blue transition-all duration-500"
-                                                    style={{
-                                                        width: `${(completedChecks / form.subtasks.length) * 100}%`,
-                                                    }}
-                                                />
-                                            </div>
-                                            <span className="text-[10px] text-muted-foreground">
-                                                {completedChecks}/
-                                                {form.subtasks.length}
-                                            </span>
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            {form.subtasks.map((item) => (
-                                                <div
-                                                    key={item.id}
-                                                    className="group flex items-center gap-3 rounded-md border border-border/50 bg-white px-3 py-2"
-                                                >
-                                                    <Checkbox
-                                                        checked={item.is_done}
-                                                        onCheckedChange={() =>
-                                                            toggleCheck(item.id)
-                                                        }
-                                                        className="rounded-md border-border data-[state=checked]:border-bright-blue data-[state=checked]:bg-bright-blue"
-                                                    />
-                                                    <span
-                                                        className={cn(
-                                                            "flex-1 text-sm",
-                                                            item.is_done
-                                                                ? "text-muted-foreground line-through"
-                                                                : "text-foreground",
-                                                        )}
-                                                    >
-                                                        {item.title}
-                                                    </span>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            removeCheck(item.id)
-                                                        }
-                                                        className="text-muted-foreground/50 opacity-0 transition-all hover:text-red-500 group-hover:opacity-100"
-                                                    >
-                                                        <XIcon
-                                                            weight="duotone"
-                                                            className="size-3.5"
-                                                        />
-                                                    </button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </>
-                                )}
-                                <div className="flex gap-2">
-                                    <Input
-                                        id="checklist"
-                                        placeholder="Add subtasks item…"
-                                        value={newCheckItem}
-                                        onChange={(e) =>
-                                            setNewCheckItem(e.target.value)
-                                        }
-                                        onKeyDown={(e) =>
-                                            e.key === "Enter" &&
-                                            (e.preventDefault(), addCheckItem())
-                                        }
-                                        className="h-8 flex-1 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue"
-                                    />
-                                    <Button
-                                        type="button"
-                                        size="sm"
-                                        onClick={addCheckItem}
-                                        className="h-8 gap-1 bg-bright-blue text-white hover:bg-blue-600"
-                                    >
-                                        <PlusIcon
-                                            weight="duotone"
-                                            className="size-3.5"
-                                        />{" "}
-                                        Add
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="space-y-1">
-                            <label
-                                className="font-semibold"
-                                htmlFor="attachment"
+                                Cancel
+                            </Button>
+                            <Button
+                                type="submit"
+                                size="sm"
+                                onClick={handleSubmit}
+                                className="h-9 gap-1.5 bg-bright-blue text-white hover:bg-blue-600"
                             >
-                                Attachments
-                            </label>
-                            <div className="space-y-1">
-                                <input
-                                    id="attachment"
-                                    ref={fileInputRef}
-                                    type="file"
-                                    multiple
-                                    className="hidden"
-                                    onChange={handleFileChange}
-                                />
-                                {form.attachments.length > 0 && (
-                                    <div className="space-y-1.5">
-                                        {form.attachments.map((a) => (
-                                            <div
-                                                key={a.id}
-                                                className="group flex items-center gap-2.5 rounded-md border border-border/50 bg-white px-3 py-2"
-                                            >
-                                                <div
-                                                    className="flex size-7 flex-shrink-0 items-center justify-center rounded-md"
-                                                    style={{
-                                                        backgroundColor:
-                                                            accentColor + "22",
-                                                    }}
-                                                >
-                                                    <PaperclipIcon
-                                                        weight="duotone"
-                                                        className="size-4"
-                                                        style={{
-                                                            color: accentColor,
-                                                        }}
-                                                    />
-                                                </div>
-                                                <div className="min-w-0 flex-1">
-                                                    <p className="truncate text-xs font-medium">
-                                                        {a.filename}
-                                                    </p>
-                                                    <p className="text-[10px] text-muted-foreground">
-                                                        {a.size_bytes}
-                                                    </p>
-                                                </div>
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        removeAttachment(a.id)
-                                                    }
-                                                    className="text-muted-foreground/50 opacity-0 transition-all hover:text-red-500 group-hover:opacity-100"
-                                                >
-                                                    <TrashSimpleIcon
-                                                        weight="duotone"
-                                                        className="size-4"
-                                                    />
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        fileInputRef.current?.click()
-                                    }
-                                    className="flex w-full items-center gap-2 rounded-md border border-dashed border-border/60 bg-white px-3 py-2.5 text-xs text-muted-foreground transition-colors hover:bg-muted/30 hover:text-foreground"
-                                >
-                                    <UploadSimpleIcon
-                                        weight="duotone"
-                                        className="size-3.5"
-                                    />
-                                    Upload files or drag &amp; drop
-                                </button>
-                            </div>
+                                <PlusIcon weight="duotone" className="size-4" />{" "}
+                                Create Task
+                            </Button>
                         </div>
-                    </div>
-                )}
-                <DialogFooter className="flex flex-shrink-0 items-center justify-between gap-3 border-t border-border/60 px-6 py-4">
-                    <div className="flex gap-2">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={handleClose}
-                            className="h-9"
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            type="button"
-                            size="sm"
-                            onClick={handleSubmit}
-                            className="h-9 gap-1.5 bg-bright-blue text-white hover:bg-blue-600"
-                        >
-                            <PlusIcon weight="duotone" className="size-4" />{" "}
-                            Create Task
-                        </Button>
-                    </div>
-                </DialogFooter>
+                    </DialogFooter>
+                    <input
+                        type="hidden"
+                        name="project-id"
+                        value={selectedProject ? selectedProject.id : -1}
+                    />
+                    <input
+                        type="hidden"
+                        name="column-id"
+                        value={selectedColumnId ? selectedColumnId : -1}
+                    />
+                    <input
+                        type="hidden"
+                        name="start-date"
+                        value={startDate ? format(startDate, "yyyy-MM-dd") : ""}
+                    />
+                    <input
+                        type="hidden"
+                        name="due-date"
+                        value={dueDate ? format(dueDate, "yyyy-MM-dd") : ""}
+                    />
+                    <input type="hidden" name="priority" value={priority} />
+                    <input
+                        type="hidden"
+                        name="show-progress"
+                        value={String(!!progressShow)}
+                    />
+                </form>
             </DialogContent>
         </Dialog>
     );

@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { mutateData } from "./mutateData";
 import {
     CreateProjectAction,
+    CreateTaskAction,
     ForgotPasswordAction,
     LoginAction,
     RegisterAction,
@@ -834,4 +835,204 @@ export async function deleteProjectAction(
         ok: true,
         message: "Project delete",
     };
+}
+
+const attachmentSchema = z.object({
+    filename: z
+        .string({
+            error: "Filename is required",
+        })
+        .trim()
+        .min(1, "Filename cannot be empty")
+        .max(255, "Filename must be less than 255 characters"),
+    file_url: z
+        .url("File URL must be a valid URL")
+        .trim()
+        .max(500, "File URL must be less than 500 characters"),
+    mime_type: z
+        .string()
+        .trim()
+        .max(100, "MIME type must be less than 100 characters")
+        .nullable()
+        .optional(),
+    size_bytes: z
+        .number()
+        .int("File size must be an integer")
+        .min(0, "File size cannot be negative")
+        .nullable()
+        .optional(),
+});
+
+const subtaskSchema = z.object({
+    title: z
+        .string({
+            error: "Title is required",
+        })
+        .trim()
+        .min(1, "Title cannot be empty")
+        .max(150, "Title must be less than 150 characters"),
+    position: z
+        .number()
+        .int("Position must be an integer")
+        .min(0, "Position cannot be negative")
+        .max(255, "Position must be less than 255")
+        .default(0),
+    is_done: z
+        .union([z.boolean(), z.literal(0), z.literal(1)])
+        .transform((value) => Boolean(value)),
+});
+
+const createTaskSchema = z
+    .object({
+        title: z
+            .string()
+            .trim()
+            .min(1, "Title must be at least 1 characters")
+            .max(255, "Title must be less than 255 characters"),
+        description: z
+            .string()
+            .trim()
+            .max(500, "Description must be less than 500 characters long")
+            .nullable()
+            .optional(),
+        priority: z.enum(["low", "medium", "high", "critical"], {
+            message: "Invalid task priority",
+        }),
+        dueDate: z.preprocess(
+            (value) => (value === "" ? undefined : value),
+            z.iso.date().nullable().optional(),
+        ),
+        startDate: z.preprocess(
+            (value) => (value === "" ? undefined : value),
+            z.iso.date().nullable().optional(),
+        ),
+        showProgress: z.stringbool(),
+        projectId: z
+            .string()
+            .regex(/^\d+$/, "Select a project")
+            .transform(Number)
+            .refine((value) => Number.isSafeInteger(value), {
+                message: "ID is too large a numerical value",
+            }),
+        columnId: z
+            .string()
+            .regex(/^\d+$/, "Select a column")
+            .transform(Number)
+            .refine((value) => Number.isSafeInteger(value), {
+                message: "ID is too large a numerical value",
+            }),
+        categories: z.array(namedColorSchema),
+        newCategories: z.array(namedColorSchema),
+        members: z
+            .array(memberSchema)
+            .min(1, "At least one member is required"),
+        labels: z.array(namedColorSchema),
+        newLabels: z.array(namedColorSchema),
+        // attachments: z.array(attachmentSchema),
+        subtasks: z.array(subtaskSchema),
+    })
+    .superRefine((data, ctx) => {
+        if (!data.categories.length && !data.newCategories.length) {
+            ctx.addIssue({
+                code: "custom",
+                message: "At least one category (existing or new) is required",
+                path: ["categories"],
+            });
+        }
+
+        if (!data.labels.length && !data.newLabels.length) {
+            ctx.addIssue({
+                code: "custom",
+                message: "At least one label (existing or new) is required",
+                path: ["labels"],
+            });
+        }
+    });
+
+export async function createTaskAction(
+    data: {
+        members: Omit<User, "email">[];
+        categories: Category[];
+        newCategories: Omit<Category, "created_at" | "updated_at">[];
+        subtasks: Omit<Subtask, "created_at">[];
+        attachments: Attachment[];
+        labels: Label[];
+        newLabels: Omit<Label, "created_at" | "updated_at">[];
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    prevState: any,
+    formData: FormData,
+): Promise<CreateTaskAction | undefined> {
+    const validatedFields = createTaskSchema.safeParse({
+        title: formData.get("title"),
+        description: formData.get("description"),
+        startDate: formData.get("start-date"),
+        dueDate: formData.get("due-date"),
+        priority: formData.get("priority"),
+        projectId: formData.get("project-id"),
+        columnId: formData.get("column-id"),
+        showProgress: formData.get("show-progress"),
+        members: data.members,
+        categories: data.categories,
+        newCategories: data.newCategories,
+        subtasks: data.subtasks,
+        // attachments: data.attachments,
+        labels: data.labels,
+        newLabels: data.newLabels,
+    });
+
+    if (!validatedFields.success) {
+        return {
+            formData,
+            zodErrors: z.flattenError(validatedFields.error).fieldErrors,
+            error: null,
+            status: null,
+            details: null,
+            message: null,
+        };
+    }
+
+    const responseData = await mutateData(
+        "POST",
+        "/tasks",
+        validatedFields.data,
+    );
+
+    if (!responseData) {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: null,
+            details: null,
+            message: "Ops! Something went wrong. Please try again.",
+        };
+    }
+
+    if (
+        "message" in responseData &&
+        "status" in responseData &&
+        responseData.message &&
+        responseData.status !== "success"
+    ) {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: responseData.status,
+            details: null,
+            message: responseData.message,
+        };
+    }
+
+    if ("error" in responseData && responseData.error) {
+        return {
+            formData,
+            zodErrors: null,
+            error: responseData.error,
+            status: null,
+            details: responseData.details,
+            message: null,
+        };
+    }
 }

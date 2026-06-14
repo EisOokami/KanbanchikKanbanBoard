@@ -444,7 +444,6 @@ export default function Calendar({ tasksData }: CalendarProps) {
             <CreateTaskModal
                 open={showNewTaskModal}
                 onOpenChange={handleShowNewTaskModal}
-                onSubmit={(data) => console.log(data)}
                 showProjectSelect
             />
             {selectedTask && projectData && (

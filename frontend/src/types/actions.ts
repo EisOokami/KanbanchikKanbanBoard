@@ -75,6 +75,18 @@ export interface UpdateProjectZodErrors extends BaseZodErrors {
     emails?: string[];
 }
 
+export interface CreateTaskZodErrors extends BaseZodErrors {
+    title?: string[];
+    description?: string[];
+    startDate?: string[];
+    dueDate?: string[];
+    priority?: string[];
+    members?: string[];
+    categories?: string[];
+    subtasks?: string[];
+    attachments?: string[];
+}
+
 export interface LoginAction extends BaseAction {
     zodErrors: LoginZodErrors | null;
 }
@@ -99,7 +111,14 @@ export interface ResetPasswordAction extends BaseAction {
     zodErrors: ResetPasswordZodErrors | null;
 }
 
+export interface CreateProjectAction extends BaseAction {
+    zodErrors: CreateProjectZodErrors | null;
+}
 
 export interface UpdateProjectAction extends BaseAction {
     zodErrors: UpdateProjectZodErrors | null;
+}
+
+export interface CreateTaskAction extends BaseAction {
+    zodErrors: CreateTaskZodErrors | null;
 }
