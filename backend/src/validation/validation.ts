@@ -18,21 +18,21 @@ export const updateProfileSchema = z
             .toLowerCase()
             .min(1, "Email is required")
             .max(255, "Email must be less than 255 characters long"),
-        avatar_url: z
-            .url({ message: "Invalid avatar URL" })
-            .max(500, {
-                message: "Avatar URL must be less than 500 characters",
-            })
-            .nullable()
-            .optional(),
-        color: z
-            .string()
-            .trim()
-            .length(7, { message: "Color must be a valid HEX value" })
-            .regex(/^#[0-9A-Fa-f]{6}$/, {
-                message: "Color must be a valid HEX value",
-            })
-            .optional(),
+        // avatar_url: z
+        //     .url({ message: "Invalid avatar URL" })
+        //     .max(500, {
+        //         message: "Avatar URL must be less than 500 characters",
+        //     })
+        //     .nullable()
+        //     .optional(),
+        // color: z
+        //     .string()
+        //     .trim()
+        //     .length(7, { message: "Color must be a valid HEX value" })
+        //     .regex(/^#[0-9A-Fa-f]{6}$/, {
+        //         message: "Color must be a valid HEX value",
+        //     })
+        //     .optional(),
     })
     .refine((data) => Object.values(data).some((v) => v !== undefined), {
         message: "At least one field must be provided",
@@ -40,12 +40,26 @@ export const updateProfileSchema = z
 
 export const changePasswordSchema = z
     .object({
-        currentPassword: z.string().min(6),
-        newPassword: z.string().min(8).max(255),
+        currentPassword: z
+            .string()
+            .min(8, "Password must be at least 8 characters long")
+            .max(255, "Password must be less than 255 characters long")
+            .regex(
+                /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[~`!@#$%^&*()_+=\-\[\]\\|;:'",.<>/?])/,
+                "Password must contain at least one uppercase letter, one lowercase letter, one special character and one number",
+            ),
+        newPassword: z
+            .string()
+            .min(8, "Password must be at least 8 characters long")
+            .max(255, "Password must be less than 255 characters long")
+            .regex(
+                /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[~`!@#$%^&*()_+=\-\[\]\\|;:'",.<>/?])/,
+                "Password must contain at least one uppercase letter, one lowercase letter, one special character and one number",
+            ),
     })
     .refine((data) => data.currentPassword !== data.newPassword, {
-        message: "New password must be different from current password",
-        path: ["newPassword"],
+        message: "Passwords are the same",
+        path: ["confirmPassword"],
     });
 
 export const validateIdSchema = z.object({
