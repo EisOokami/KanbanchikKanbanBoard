@@ -75,7 +75,7 @@ export const updateProfile = async (
     try {
         const validateData = updateProfileSchema.parse(req.body);
 
-        const { name, surname, email, avatar_url, color } = validateData;
+        const { name, surname, email } = validateData;
         const { id } = req.user;
 
         if (!email) {
@@ -119,15 +119,15 @@ export const updateProfile = async (
             updateValues.push(email);
         }
 
-        if (avatar_url) {
-            updateFields.push("avatar_url = ?");
-            updateValues.push(avatar_url);
-        }
+        // if (avatar_url) {
+        //     updateFields.push("avatar_url = ?");
+        //     updateValues.push(avatar_url);
+        // }
 
-        if (color) {
-            updateFields.push("color = ?");
-            updateValues.push(color);
-        }
+        // if (color) {
+        //     updateFields.push("color = ?");
+        //     updateValues.push(color);
+        // }
 
         if (updateFields.length === 0) {
             res.status(400).json({
@@ -234,7 +234,7 @@ export const changePassword = async (
         );
 
         if (!isPasswordValid) {
-            res.status(401).json({
+            res.status(400).json({
                 status: "error",
                 message: "Current password is incorrect",
             });
@@ -306,8 +306,6 @@ export const deleteAccount = async (
     res: Response,
 ): Promise<void> => {
     try {
-        validateIdSchema.parse(req.params);
-
         if (!req.params.id) {
             res.status(400).json({
                 status: "error",
@@ -353,9 +351,6 @@ export const deleteAccount = async (
                 status: "error",
                 message:
                     "Cannot delete account with owned projects. Transfer or delete projects first.",
-                details: {
-                    owned_projects: ownedProjects[0].count,
-                },
             });
 
             return;
