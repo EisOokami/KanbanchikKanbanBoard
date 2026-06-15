@@ -27,17 +27,6 @@ export interface RegisterZodErrors extends BaseZodErrors {
     password?: string[];
 }
 
-export interface UpdateProfileZodErrors extends BaseZodErrors {
-    username?: string[];
-    email?: string[];
-}
-
-export interface ChangePasswordZodErrors extends BaseZodErrors {
-    currentPassword?: string[];
-    newPassword?: string[];
-    confirmPassword?: string[];
-}
-
 export interface ForgotPasswordZodErrors extends BaseZodErrors {
     email?: string[];
 }
@@ -103,20 +92,25 @@ export interface UpdateTaskZodErrors extends BaseZodErrors {
     newComments?: string[];
 }
 
+export interface UpdateProfileZodErrors extends BaseZodErrors {
+    name?: string[];
+    surname?: string[];
+    avatar?: string[];
+    email?: string[];
+}
+
+export interface ChangePasswordZodErrors extends BaseZodErrors {
+    currentPassword?: string[];
+    newPassword?: string[];
+    confirmPassword?: string[];
+}
+
 export interface LoginAction extends BaseAction {
     zodErrors: LoginZodErrors | null;
 }
 
 export interface RegisterAction extends BaseAction {
     zodErrors: RegisterZodErrors | null;
-}
-
-export interface UpdateProfileAction extends BaseAction {
-    zodErrors: UpdateProfileZodErrors | null;
-}
-
-export interface ChangePasswordAction extends BaseAction {
-    zodErrors: ChangePasswordZodErrors | null;
 }
 
 export interface ForgotPasswordAction extends BaseAction {
@@ -141,4 +135,12 @@ export interface CreateTaskAction extends BaseAction {
 
 export interface UpdateTaskAction extends BaseAction {
     zodErrors: UpdateTaskZodErrors | null;
+}
+
+export interface UpdateProfileAction extends BaseAction {
+    zodErrors: UpdateProfileZodErrors | null;
+}
+
+export interface ChangePasswordAction extends BaseAction {
+    zodErrors: ChangePasswordZodErrors | null;
 }
