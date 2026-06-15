@@ -5,12 +5,15 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { mutateData } from "./mutateData";
 import {
+    BaseAction,
+    ChangePasswordAction,
     CreateProjectAction,
     CreateTaskAction,
     ForgotPasswordAction,
     LoginAction,
     RegisterAction,
     ResetPasswordAction,
+    UpdateProfileAction,
     UpdateProjectAction,
     UpdateTaskAction,
 } from "@/types/actions";
@@ -1214,4 +1217,242 @@ export async function deleteTaskAction(
         ok: true,
         message: "Task delete",
     };
+}
+
+const updateProfileSchema = z.object({
+    // avatar: z.array(attachmentSchema),
+    name: z
+        .string()
+        .trim()
+        .min(1, "Name must be at least 1 characters")
+        .max(100, "Name must be less than 100 characters"),
+    surname: z
+        .string()
+        .trim()
+        .min(1, "Surname must be at least 1 characters")
+        .max(100, "Surname must be less than 100 characters"),
+    email: z
+        .email("Please enter a valid email address")
+        .trim()
+        .toLowerCase()
+        .min(1, "Email is required")
+        .max(255, "Email must be less than 255 characters long"),
+});
+
+export async function updateProfileAction(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    prevState: any,
+    formData: FormData,
+): Promise<UpdateProfileAction | undefined> {
+    console.log({
+        // avatar: formData.get("avatar"),
+        name: formData.get("name"),
+        surname: formData.get("surname"),
+        email: formData.get("email"),
+    });
+
+    const validatedFields = updateProfileSchema.safeParse({
+        // avatar: formData.get("avatar"),
+        name: formData.get("name"),
+        surname: formData.get("surname"),
+        email: formData.get("email"),
+    });
+
+    console.log(validatedFields);
+
+    if (!validatedFields.success) {
+        return {
+            formData,
+            zodErrors: z.flattenError(validatedFields.error).fieldErrors,
+            error: null,
+            status: null,
+            details: null,
+            message: null,
+        };
+    }
+
+    const responseData = await mutateData(
+        "POST",
+        "/users/update-profile",
+        validatedFields.data,
+    );
+
+    console.log(responseData);
+
+    if (!responseData) {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: null,
+            details: null,
+            message: "Ops! Something went wrong. Please try again.",
+        };
+    }
+
+    if (
+        "message" in responseData &&
+        "status" in responseData &&
+        responseData.message &&
+        responseData.status !== "success"
+    ) {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: responseData.status,
+            details: null,
+            message: responseData.message,
+        };
+    }
+
+    if ("error" in responseData && responseData.error) {
+        return {
+            formData,
+            zodErrors: null,
+            error: responseData.error,
+            status: null,
+            details: responseData.details,
+            message: null,
+        };
+    }
+}
+
+export async function deleteAccountAction(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    prevState: any,
+    formData: FormData,
+): Promise<Pick<BaseAction, "status" | "message"> | undefined> {
+    const id = formData.get("id");
+
+    const responseData = await mutateData("DELETE", `/users/${id}`);
+
+    if (!responseData) {
+        return {
+            status: null,
+            message: "Ops! Something went wrong. Please try again.",
+        };
+    }
+
+    if (
+        "message" in responseData &&
+        "status" in responseData &&
+        responseData.message &&
+        responseData.status !== "success"
+    ) {
+        return {
+            status: responseData.status,
+            message: responseData.message,
+        };
+    }
+
+    await logoutAction();
+
+    redirect("/");
+}
+
+const changePasswordSchema = z
+    .object({
+        currentPassword: z
+            .string()
+            .min(8, "Password must be at least 8 characters long")
+            .max(255, "Password must be less than 255 characters long")
+            .regex(
+                /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[~`!@#$%^&*()_+=\-\[\]\\|;:'",.<>/?])/,
+                "Password must contain at least one uppercase letter, one lowercase letter, one special character and one number",
+            ),
+        newPassword: z
+            .string()
+            .min(8, "Password must be at least 8 characters long")
+            .max(255, "Password must be less than 255 characters long")
+            .regex(
+                /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[~`!@#$%^&*()_+=\-\[\]\\|;:'",.<>/?])/,
+                "Password must contain at least one uppercase letter, one lowercase letter, one special character and one number",
+            ),
+        confirmPassword: z
+            .string()
+            .min(8, "Password must be at least 8 characters long")
+            .max(255, "Password must be less than 255 characters long")
+            .regex(
+                /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[~`!@#$%^&*()_+=\-\[\]\\|;:'",.<>/?])/,
+                "Password must contain at least one uppercase letter, one lowercase letter, one special character and one number",
+            ),
+    })
+    .refine((data) => data.currentPassword !== data.newPassword, {
+        message: "Passwords are the same",
+        path: ["confirmPassword"],
+    })
+    .refine((data) => data.newPassword === data.confirmPassword, {
+        message: "Confirm New Password must be the same as New Password",
+        path: ["confirmPassword"],
+    });
+
+export async function changePasswordAction(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    prevState: any,
+    formData: FormData,
+): Promise<ChangePasswordAction | undefined> {
+    const validatedFields = changePasswordSchema.safeParse({
+        currentPassword: formData.get("current-password"),
+        newPassword: formData.get("new-password"),
+        confirmPassword: formData.get("confirm-password"),
+    });
+
+    console.log(validatedFields);
+
+    if (!validatedFields.success) {
+        return {
+            formData,
+            zodErrors: z.flattenError(validatedFields.error).fieldErrors,
+            error: null,
+            status: null,
+            details: null,
+            message: null,
+        };
+    }
+
+    const responseData = await mutateData("POST", "/users/change-password", {
+        currentPassword: validatedFields.data.currentPassword,
+        newPassword: validatedFields.data.newPassword,
+    });
+
+    console.log(responseData);
+
+    if (!responseData) {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: null,
+            details: null,
+            message: "Ops! Something went wrong. Please try again.",
+        };
+    }
+
+    if (
+        "message" in responseData &&
+        "status" in responseData &&
+        responseData.message &&
+        responseData.status
+    ) {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: responseData.status,
+            details: null,
+            message: responseData.message,
+        };
+    }
+
+    if ("error" in responseData && responseData.error) {
+        return {
+            formData,
+            zodErrors: null,
+            error: responseData.error,
+            status: null,
+            details: responseData.details,
+            message: null,
+        };
+    }
 }
