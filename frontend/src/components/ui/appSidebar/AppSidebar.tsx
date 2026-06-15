@@ -66,6 +66,7 @@ export default function AppSidebar({
             <AccountSettingsModal
                 open={showAccountSettings}
                 onOpenChange={handleShowAccountSettings}
+                userData={userData}
             />
         </>
     );

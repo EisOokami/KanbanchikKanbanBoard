@@ -1,36 +1,47 @@
 "use client";
 
-import { profileForm, socialLinks } from "@/constants/accountSettings";
-import { ProfileForm } from "@/types/accountSettings";
-import { useState } from "react";
+import { useActionState, useState } from "react";
 import SectionTitle from "../sectionTitle/SectionTitle";
 import { Avatar, AvatarFallback } from "../../shadcn/avatar";
 import { Button } from "../../shadcn/button";
 import FieldRow from "../fieldRow/FieldRow";
 import { Input } from "../../shadcn/input";
-import { Textarea } from "../../shadcn/textarea";
 import SaveBar from "../saveBar/SaveBar";
-import { Badge } from "../../shadcn/badge";
-import { CameraIcon, CheckCircleIcon } from "@phosphor-icons/react";
+import { CameraIcon } from "@phosphor-icons/react";
+import { BaseAction } from "@/types/actions";
+import { updateProfileAction } from "@/data/actions";
+import { ZodErrors } from "../../zodErrors/ZodErrors";
+import { User } from "@/types/types";
+import { getInitials } from "@/libs/utils";
 
-export default function ProfileSection() {
-    const [dirty, setDirty] = useState<boolean>(false);
-    const [saved, setSaved] = useState<boolean>(false);
-    const [form, setForm] = useState<ProfileForm>(profileForm);
+const INITIAL_STATE: BaseAction = {
+    zodErrors: null,
+    error: null,
+    status: null,
+    details: null,
+    message: null,
+    formData: null,
+};
 
-    const up = <K extends keyof ProfileForm>(k: K, v: ProfileForm[K]): void => {
-        setForm((f) => ({ ...f, [k]: v }));
-        setDirty(true);
-    };
+interface ProfileSectionProps {
+    userData: User;
+}
 
-    const save = (): void => {
-        setSaved(true);
-        setDirty(false);
-        setTimeout(() => setSaved(false), 2500);
-    };
+export default function ProfileSection({
+    userData,
+}: Readonly<ProfileSectionProps>) {
+    const [isChanged, setIsChanged] = useState<boolean>(false);
+    const [formState, formAction, isPending] = useActionState(
+        updateProfileAction,
+        INITIAL_STATE,
+    );
 
     return (
-        <div className="space-y-5">
+        <form
+            action={formAction}
+            onSubmit={() => setIsChanged(false)}
+            className="space-y-5"
+        >
             <div>
                 <h2 className="text-lg font-bold text-gray-800">Profile</h2>
                 <p className="mt-0.5 text-sm text-gray-400">
@@ -42,11 +53,17 @@ export default function ProfileSection() {
                 <div className="flex items-center gap-5 rounded-md border bg-gray-50 p-4">
                     <div className="group relative">
                         <Avatar className="size-16 shadow-md ring-2 ring-white">
-                            <AvatarFallback className="bg-blue-500 text-xl font-bold text-white">
-                                AK
+                            <AvatarFallback
+                                className="text-xl font-bold text-white"
+                                style={{ backgroundColor: userData.color }}
+                            >
+                                {getInitials(userData.name, userData.surname)}
                             </AvatarFallback>
                         </Avatar>
-                        <button className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                        <button
+                            type="button"
+                            className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
+                        >
                             <CameraIcon
                                 weight="duotone"
                                 className="size-4 text-white"
@@ -55,6 +72,7 @@ export default function ProfileSection() {
                     </div>
                     <div>
                         <Button
+                            type="button"
                             variant="outline"
                             size="sm"
                             className="mr-2 h-7 text-xs"
@@ -62,6 +80,7 @@ export default function ProfileSection() {
                             Upload photo
                         </Button>
                         <Button
+                            type="button"
                             variant="ghost"
                             size="sm"
                             className="h-7 text-xs text-gray-400"
@@ -73,6 +92,7 @@ export default function ProfileSection() {
                         </p>
                     </div>
                 </div>
+                <ZodErrors error={formState?.zodErrors?.avatar} />
             </div>
             <div className="space-y-2">
                 <SectionTitle>Personal info</SectionTitle>
@@ -83,22 +103,40 @@ export default function ProfileSection() {
                     >
                         <div className="grid grid-cols-2 gap-2">
                             <Input
-                                value={form.firstName}
-                                onChange={(
-                                    e: React.ChangeEvent<HTMLInputElement>,
-                                ) => up("firstName", e.target.value)}
+                                name="name"
                                 placeholder="First"
+                                defaultValue={
+                                    formState?.formData
+                                        ?.get("name")
+                                        ?.toString() ?? userData.name
+                                }
+                                onChange={(e) =>
+                                    e.target.value !== userData.name
+                                        ? setIsChanged(true)
+                                        : setIsChanged(false)
+                                }
                                 className="h-8 text-sm placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-bright-blue"
+                                disabled={isPending}
                             />
                             <Input
-                                value={form.lastName}
-                                onChange={(
-                                    e: React.ChangeEvent<HTMLInputElement>,
-                                ) => up("lastName", e.target.value)}
+                                name="surname"
                                 placeholder="Last"
+                                defaultValue={
+                                    formState?.formData
+                                        ?.get("surname")
+                                        ?.toString() ?? userData.surname
+                                }
+                                onChange={(e) =>
+                                    e.target.value !== userData.surname
+                                        ? setIsChanged(true)
+                                        : setIsChanged(false)
+                                }
                                 className="h-8 text-sm placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-bright-blue"
+                                disabled={isPending}
                             />
                         </div>
+                        <ZodErrors error={formState?.zodErrors?.name} />
+                        <ZodErrors error={formState?.zodErrors?.surname} />
                     </FieldRow>
                     <FieldRow
                         label="Email address"
@@ -106,102 +144,37 @@ export default function ProfileSection() {
                     >
                         <div className="flex items-center gap-2">
                             <Input
-                                value={form.email}
-                                onChange={(
-                                    e: React.ChangeEvent<HTMLInputElement>,
-                                ) => up("email", e.target.value)}
+                                type="email"
+                                name="email"
+                                defaultValue={
+                                    formState?.formData
+                                        ?.get("email")
+                                        ?.toString() ?? userData.email
+                                }
+                                onChange={(e) =>
+                                    e.target.value !== userData.email
+                                        ? setIsChanged(true)
+                                        : setIsChanged(false)
+                                }
                                 className="h-8 flex-1 text-sm placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-bright-blue"
+                                disabled={isPending}
                             />
-                            <Badge className="gap-1 border-emerald-200 bg-emerald-100 px-2 text-[10px] text-emerald-700 hover:border-emerald-200 hover:bg-emerald-100 hover:text-emerald-700">
-                                <CheckCircleIcon
-                                    weight="duotone"
-                                    className="size-2.5"
-                                />{" "}
-                                Verified
-                            </Badge>
                         </div>
+                        <ZodErrors error={formState?.zodErrors?.email} />
                     </FieldRow>
-                    <FieldRow
-                        label="Phone"
-                        hint="Optional — shown to teammates"
-                    >
-                        <Input
-                            value={form.phone}
-                            onChange={(
-                                e: React.ChangeEvent<HTMLInputElement>,
-                            ) => up("phone", e.target.value)}
-                            className="h-8 text-sm placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-bright-blue"
-                        />
-                    </FieldRow>
-                    <FieldRow label="Job title" hint="">
-                        <Input
-                            value={form.role}
-                            onChange={(
-                                e: React.ChangeEvent<HTMLInputElement>,
-                            ) => up("role", e.target.value)}
-                            className="h-8 text-sm placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-bright-blue"
-                        />
-                    </FieldRow>
-                    <FieldRow label="Location" hint="">
-                        <Input
-                            value={form.location}
-                            onChange={(
-                                e: React.ChangeEvent<HTMLInputElement>,
-                            ) => up("location", e.target.value)}
-                            className="h-8 text-sm placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-bright-blue"
-                        />
-                    </FieldRow>
-                    <FieldRow
-                        label="Bio"
-                        hint="Brief description shown on your profile"
-                    >
-                        <Textarea
-                            value={form.bio}
-                            onChange={(
-                                e: React.ChangeEvent<HTMLTextAreaElement>,
-                            ) => up("bio", e.target.value)}
-                            rows={3}
-                            className="resize-none text-sm placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-bright-blue"
-                        />
-                    </FieldRow>
-                </div>
-            </div>
-            <div className="space-y-2">
-                <SectionTitle>Social links</SectionTitle>
-                <div className="divide-y divide-gray-100 overflow-hidden rounded-md border px-5">
-                    {socialLinks.map(
-                        ({ key, icon: Icon, label, placeholder }) => (
-                            <FieldRow key={key} label={label} hint="">
-                                <div className="relative">
-                                    <Icon
-                                        weight="duotone"
-                                        className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-gray-400"
-                                    />
-                                    <Input
-                                        value={form[key]}
-                                        onChange={(
-                                            e: React.ChangeEvent<HTMLInputElement>,
-                                        ) => up(key, e.target.value)}
-                                        placeholder={placeholder}
-                                        className="h-8 pl-8 text-sm placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-bright-blue"
-                                    />
-                                </div>
-                            </FieldRow>
-                        ),
-                    )}
                 </div>
             </div>
             <SaveBar
-                dirty={dirty}
-                onSave={save}
-                onDiscard={() => setDirty(false)}
+                isChanged={isChanged}
+                onDiscard={() => setIsChanged(false)}
+                isPending={isPending}
             />
-            {saved && (
+            {/* {isChanged && (
                 <div className="mt-3 flex items-center gap-2 text-sm text-emerald-600 animate-in fade-in slide-in-from-bottom-2">
                     <CheckCircleIcon weight="duotone" className="size-4" />{" "}
                     Changes saved!
                 </div>
-            )}
-        </div>
+            )} */}
+        </form>
     );
 }

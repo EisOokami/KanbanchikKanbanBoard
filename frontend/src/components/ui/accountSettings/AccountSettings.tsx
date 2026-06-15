@@ -13,21 +13,24 @@ import ProfileSection from "./profileSection/ProfileSection";
 import DangerZone from "./dangerZone/DangerZone";
 import SecuritySection from "./securitySection/SecuritySection";
 import { NAV } from "@/constants/accountSettings";
-import { cn } from "@/libs/utils";
+import { cn, getInitials } from "@/libs/utils";
 import { CaretRightIcon, SignOutIcon } from "@phosphor-icons/react";
+import { User, UserData } from "@/types/types";
+import { logoutAction } from "@/data/actions";
 
 interface AccountSettingsModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    userData: UserData;
 }
 
-function renderSection(id: SectionId): React.ReactNode {
+function renderSection(id: SectionId, userData: User): React.ReactNode {
     switch (id) {
         case "profile":
             return (
                 <>
-                    <ProfileSection />
-                    <DangerZone />
+                    <ProfileSection userData={userData} />
+                    <DangerZone userData={userData} />
                 </>
             );
         case "security":
@@ -40,8 +43,22 @@ function renderSection(id: SectionId): React.ReactNode {
 export default function AccountSettingsModal({
     open,
     onOpenChange,
+    userData,
 }: AccountSettingsModalProps) {
     const [activeSection, setActiveSection] = useState<SectionId>("profile");
+
+    const isLoggedIn =
+        userData && userData.status === "success" && userData.data;
+
+    const user = userData.data;
+
+    if (!isLoggedIn || !user) {
+        return null;
+    }
+
+    const handleSignOut = async () => {
+        await logoutAction();
+    };
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -96,20 +113,29 @@ export default function AccountSettingsModal({
                         <div className="border-t p-3">
                             <div className="mb-2 flex items-center gap-2 px-1">
                                 <Avatar className="size-7">
-                                    <AvatarFallback className="bg-blue-500 text-[10px] font-bold text-white">
-                                        AK
+                                    <AvatarFallback
+                                        className="text-[10px] font-bold text-white"
+                                        style={{
+                                            backgroundColor: user.color,
+                                        }}
+                                    >
+                                        {getInitials(user.name, user.surname)}
                                     </AvatarFallback>
                                 </Avatar>
                                 <div className="min-w-0">
                                     <p className="truncate text-xs font-semibold text-gray-700">
-                                        Alex Kovalenko
+                                        {user.name} {user.surname}
                                     </p>
                                     <p className="truncate text-[10px] text-gray-400">
-                                        alex@acme.com
+                                        {user.email}
                                     </p>
                                 </div>
                             </div>
-                            <button className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs text-gray-400 transition-colors hover:bg-rose-50 hover:text-rose-500">
+                            <button
+                                type="button"
+                                onClick={handleSignOut}
+                                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs text-gray-400 transition-colors hover:bg-rose-50 hover:text-rose-500"
+                            >
                                 <SignOutIcon
                                     weight="duotone"
                                     className="size-4"
@@ -120,7 +146,7 @@ export default function AccountSettingsModal({
                     </nav>
                     <ScrollArea className="flex-1">
                         <div className="p-6">
-                            {renderSection(activeSection)}
+                            {renderSection(activeSection, user)}
                         </div>
                     </ScrollArea>
                 </div>

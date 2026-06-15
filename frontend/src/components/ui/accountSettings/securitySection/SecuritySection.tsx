@@ -1,110 +1,114 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState, useState } from "react";
 import SectionTitle from "../sectionTitle/SectionTitle";
 import FieldRow from "../fieldRow/FieldRow";
-import { Input } from "../../shadcn/input";
-import { strengthColor } from "@/libs/accountSettings";
-import { Switch } from "../../shadcn/switch";
-import { sessions } from "@/constants/accountSettings";
-import { Button } from "../../shadcn/button";
 import SaveBar from "../saveBar/SaveBar";
-import { Badge } from "../../shadcn/badge";
-import {
-    DeviceMobileIcon,
-    EyeIcon,
-    EyeSlashIcon,
-    KeyIcon,
-    MonitorIcon,
-} from "@phosphor-icons/react";
+import { PasswordInput } from "../../shadcn/password-input";
+import { BaseAction } from "@/types/actions";
+import { changePasswordAction } from "@/data/actions";
+import { ZodErrors } from "../../zodErrors/ZodErrors";
+import { InfoIcon } from "@phosphor-icons/react";
+
+const INITIAL_STATE: BaseAction = {
+    zodErrors: null,
+    error: null,
+    status: null,
+    details: null,
+    message: null,
+    formData: null,
+};
 
 export default function SecuritySection() {
-    const [showCurrent, setShowCurrent] = useState<boolean>(false);
-    const [showNew, setShowNew] = useState<boolean>(false);
-    const [twoFa, setTwoFa] = useState<boolean>(true);
-    const [passkey, setPasskey] = useState<boolean>(false);
-    const [dirty, setDirty] = useState<boolean>(false);
+    const [isChanged, setIsChanged] = useState<boolean>(false);
+    const [formState, formAction, isPending] = useActionState(
+        changePasswordAction,
+        INITIAL_STATE,
+    );
 
     return (
-        <div className="mb-10 space-y-5">
+        <form
+            action={formAction}
+            onSubmit={() => setIsChanged(false)}
+            className="mb-10 space-y-5"
+        >
             <div>
                 <h2 className="text-lg font-bold text-gray-800">Security</h2>
                 <p className="mt-0.5 text-sm text-gray-400">
-                    Manage your password, 2FA, and active sessions
+                    Manage your password
+                    {/* , 2FA, and active sessions */}
                 </p>
             </div>
             <div className="space-y-2">
                 <SectionTitle>Change password</SectionTitle>
                 <div className="divide-y divide-gray-100 overflow-hidden rounded-md border px-5">
-                    <FieldRow label="Current password" hint="">
-                        <div className="relative">
-                            <Input
-                                type={showCurrent ? "text" : "password"}
-                                className="h-8 pr-9 text-sm placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-bright-blue"
-                                placeholder="••••••••"
-                            />
-                            <button
-                                onClick={() => setShowCurrent(!showCurrent)}
-                                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                            >
-                                {showCurrent ? (
-                                    <EyeSlashIcon
-                                        weight="duotone"
-                                        className="size-3.5"
-                                    />
-                                ) : (
-                                    <EyeIcon
-                                        weight="duotone"
-                                        className="size-3.5"
-                                    />
-                                )}
-                            </button>
-                        </div>
+                    <FieldRow
+                        label="Current password"
+                        hint="Minimum 8 characters"
+                    >
+                        <PasswordInput
+                            name="current-password"
+                            placeholder="Current password"
+                            defaultValue={
+                                formState?.formData
+                                    ?.get("current-password")
+                                    ?.toString() ?? undefined
+                            }
+                            onChange={(e) =>
+                                e.target.value.trim() !== ""
+                                    ? setIsChanged(true)
+                                    : setIsChanged(false)
+                            }
+                            className="h-8 pr-9 text-sm placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-bright-blue"
+                            disabled={isPending}
+                        />
+                        <ZodErrors
+                            error={formState?.zodErrors?.currentPassword}
+                        />
                     </FieldRow>
-                    <FieldRow label="New password" hint="Minimum 12 characters">
-                        <div className="relative">
-                            <Input
-                                type={showNew ? "text" : "password"}
-                                className="h-8 pr-9 text-sm placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-bright-blue"
-                                placeholder="••••••••"
-                                onChange={() => setDirty(true)}
-                            />
-                            <button
-                                onClick={() => setShowNew(!showNew)}
-                                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                            >
-                                {showNew ? (
-                                    <EyeSlashIcon
-                                        weight="duotone"
-                                        className="size-3.5"
-                                    />
-                                ) : (
-                                    <EyeIcon
-                                        weight="duotone"
-                                        className="size-3.5"
-                                    />
-                                )}
-                            </button>
-                        </div>
-                        <div className="mt-2 flex gap-1">
-                            {([1, 2, 3, 4] as const).map((n) => (
-                                <div
-                                    key={n}
-                                    className={`h-1 flex-1 rounded-full ${strengthColor(n)}`}
-                                />
-                            ))}
-                        </div>
+                    <FieldRow label="New password" hint="Minimum 8 characters">
+                        <PasswordInput
+                            name="new-password"
+                            placeholder="Enter your new password"
+                            defaultValue={
+                                formState?.formData
+                                    ?.get("new-password")
+                                    ?.toString() ?? undefined
+                            }
+                            onChange={(e) =>
+                                e.target.value.trim() !== ""
+                                    ? setIsChanged(true)
+                                    : setIsChanged(false)
+                            }
+                            className="h-8 pr-9 text-sm placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-bright-blue"
+                            disabled={isPending}
+                        />
+                        <ZodErrors error={formState?.zodErrors?.newPassword} />
                     </FieldRow>
-                    <FieldRow label="Confirm password" hint="">
-                        <Input
-                            type="password"
-                            className="h-8 text-sm placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-bright-blue"
-                            placeholder="••••••••"
+                    <FieldRow label="Confirm password">
+                        <PasswordInput
+                            name="confirm-password"
+                            placeholder="Confirm password"
+                            defaultValue={
+                                formState?.formData
+                                    ?.get("confirm-password")
+                                    ?.toString() ?? undefined
+                            }
+                            onChange={(e) =>
+                                e.target.value.trim() !== ""
+                                    ? setIsChanged(true)
+                                    : setIsChanged(false)
+                            }
+                            className="h-8 pr-9 text-sm placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-bright-blue"
+                            disabled={isPending}
+                        />
+                        <ZodErrors
+                            error={formState?.zodErrors?.confirmPassword}
                         />
                     </FieldRow>
                 </div>
             </div>
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
                 <SectionTitle>Two-factor authentication</SectionTitle>
                 <div className="overflow-hidden rounded-md border">
                     <div className="flex items-center justify-between border-b p-4">
@@ -166,8 +170,8 @@ export default function SecuritySection() {
                         />
                     </div>
                 </div>
-            </div>
-            <div className="space-y-2">
+            </div> */}
+            {/* <div className="space-y-2">
                 <SectionTitle>Active sessions</SectionTitle>
                 <div className="overflow-hidden rounded-md border">
                     {sessions.map((s, i) => (
@@ -210,14 +214,20 @@ export default function SecuritySection() {
                         </div>
                     ))}
                 </div>
-            </div>
-            {dirty && (
-                <SaveBar
-                    dirty
-                    onSave={() => setDirty(false)}
-                    onDiscard={() => setDirty(false)}
-                />
+            </div> */}
+            {formState?.message && (
+                <div
+                    className={`flex items-center gap-2 rounded-md text-sm ${formState?.status === "error" ? "text-red-500" : formState?.status === "success" ? "text-green-500" : "text-yellow-300"}`}
+                >
+                    <InfoIcon weight="duotone" className="size-4" />
+                    <p>{formState?.message}</p>
+                </div>
             )}
-        </div>
+            <SaveBar
+                isChanged={isChanged}
+                onDiscard={() => setIsChanged(false)}
+                isPending={isPending}
+            />
+        </form>
     );
 }
