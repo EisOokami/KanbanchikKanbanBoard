@@ -39,13 +39,6 @@ export async function mutateData(
             },
         );
 
-        if (method === "DELETE") {
-            return {
-                status: response.ok ? "success" : "error",
-                message: response.ok ? "Success" : "Error",
-            };
-        }
-
         const data = await response.json();
         return data;
     } catch (error) {
