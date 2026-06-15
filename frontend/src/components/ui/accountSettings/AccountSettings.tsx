@@ -12,7 +12,6 @@ import { SectionId } from "@/types/accountSettings";
 import ProfileSection from "./profileSection/ProfileSection";
 import DangerZone from "./dangerZone/DangerZone";
 import SecuritySection from "./securitySection/SecuritySection";
-import AppearanceSection from "./appearanceSection/AppearanceSection";
 import { NAV } from "@/constants/accountSettings";
 import { cn } from "@/libs/utils";
 import { CaretRightIcon, SignOutIcon } from "@phosphor-icons/react";
@@ -33,8 +32,8 @@ function renderSection(id: SectionId): React.ReactNode {
             );
         case "security":
             return <SecuritySection />;
-        case "appearance":
-            return <AppearanceSection />;
+        // case "appearance":
+        //     return <AppearanceSection />;
     }
 }
 
