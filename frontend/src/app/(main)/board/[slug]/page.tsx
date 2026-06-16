@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import KanbanBoard from "@/components/layout/kanbanBoard/KanbanBoard";
+import Project from "@/components/layout/project/Project";
 import { getProjectData, getUserData } from "@/data/loaders";
 
 interface BoardPageProps {
@@ -23,5 +23,5 @@ export default async function BoardPage({
 
     const projectData = await getProjectData(id);
 
-    return <KanbanBoard userData={userData.data} projectData={projectData} />;
+    return <Project userData={userData.data} projectData={projectData} />;
 }

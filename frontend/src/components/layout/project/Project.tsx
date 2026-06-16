@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
     DndContext,
     DragOverlay,
@@ -14,7 +14,13 @@ import {
 } from "@dnd-kit/core";
 import OverlayTask from "@/components/ui/overlayTask/OverlayTask";
 import KanbanColumn from "@/components/ui/kanbanColumn/KanbanColumn";
-import { Column, FilterState, Project, Task, User } from "@/types/types";
+import {
+    Column,
+    FilterState,
+    Project as IProject,
+    Task,
+    User,
+} from "@/types/types";
 import { Button } from "@/components/ui/shadcn/button";
 import {
     Avatar,
@@ -42,27 +48,32 @@ import {
     UserPlusIcon,
 } from "@phosphor-icons/react";
 import { CreateTaskModal } from "@/components/ui/createTaskModal/CreateTaskModal";
-import { arrayMove } from "@dnd-kit/sortable";
 import { getInitials } from "@/libs/utils";
-import { deleteTaskAction } from "@/data/actions";
+import { deleteTaskAction, moveTaskAction } from "@/data/actions";
+import {
+    getSurroundingPositions,
+    midpoint,
+    needsRebalance,
+    rebalanceTasks,
+} from "@/libs/project";
 
-interface KanbanBoardProps {
+interface ProjectProps {
     userData: User;
-    projectData: Project;
+    projectData: IProject;
 }
 
-export default function KanbanBoard({
+export default function Project({
     userData,
     projectData,
-}: Readonly<KanbanBoardProps>) {
+}: Readonly<ProjectProps>) {
     const [columns, setColumns] = useState<Column[]>(
         Object.values(projectData.columns),
     );
     const [activeTask, setActiveTask] = useState<Task | null>(null);
     const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-    const [showInvite, setshowInvite] = useState<boolean>(false);
-    const [showFilters, setshowFilters] = useState<boolean>(false);
-    const [showSettings, setshowSettings] = useState<boolean>(false);
+    const [showInvite, setShowInvite] = useState<boolean>(false);
+    const [showFilters, setShowFilters] = useState<boolean>(false);
+    const [showSettings, setShowSettings] = useState<boolean>(false);
     const [showTaskDetails, setShowTaskDetails] = useState<boolean>(false);
     const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTER);
     const [selectedMode, setSelectedMode] = useState<
@@ -72,103 +83,212 @@ export default function KanbanBoard({
         isOpen: boolean;
         columnId: number | undefined;
     }>({ isOpen: false, columnId: undefined });
+    const dragSnapshot = useRef<{ columnId: number; position: number } | null>(
+        null,
+    );
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     );
 
     const handleDragStart = (event: DragStartEvent) => {
-        const { active } = event;
+        const activeId = event.active.id as number;
+        const column = columns.find((column) =>
+            column.tasks.some((task) => task.id === activeId),
+        );
 
-        const task = columns
-            .flatMap((col) => col.tasks)
-            .find((t) => t.id === active.id);
+        if (!column) {
+            return;
+        }
 
-        setActiveTask(task || null);
+        const task = column.tasks.find((task) => task.id === activeId) ?? null;
+
+        setActiveTask(task);
+
+        dragSnapshot.current = task
+            ? { columnId: column.id, position: task.position }
+            : null;
     };
 
     const handleDragOver = (event: DragOverEvent) => {
         const { active, over } = event;
 
-        if (!over) return;
-
-        const activeId = active.id;
-        const overId = over.id;
-
-        if (activeId === overId) return;
-
-        const activeColumn = columns.find((col) =>
-            col.tasks.some((t) => t.id === activeId),
-        );
-        const overColumn = columns.find(
-            (col) =>
-                col.id === overId || col.tasks.some((t) => t.id === overId),
-        );
-
-        if (!activeColumn || !overColumn) return;
-
-        if (activeColumn.id !== overColumn.id) {
-            setColumns((prev) => {
-                const activeItems = activeColumn.tasks;
-                const overItems = overColumn.tasks;
-
-                const activeIndex = activeItems.findIndex(
-                    (t) => t.id === activeId,
-                );
-                const overIndex = overItems.findIndex((t) => t.id === overId);
-
-                const activeTask = activeItems[activeIndex];
-
-                const newActiveItems = activeItems.filter(
-                    (t) => t.id !== activeId,
-                );
-
-                const newOverItems = [...overItems];
-                const insertIndex =
-                    overId === overColumn.id
-                        ? newOverItems.length
-                        : overIndex >= 0
-                          ? overIndex
-                          : newOverItems.length;
-
-                newOverItems.splice(insertIndex, 0, activeTask);
-
-                return prev.map((col) => {
-                    if (col.id === activeColumn.id) {
-                        return { ...col, tasks: newActiveItems };
-                    }
-                    if (col.id === overColumn.id) {
-                        return { ...col, tasks: newOverItems };
-                    }
-                    return col;
-                });
-            });
-        } else {
-            setColumns((prev) => {
-                const column = prev.find((c) => c.id === activeColumn.id);
-                if (!column) return prev;
-
-                const oldIndex = column.tasks.findIndex(
-                    (t) => t.id === activeId,
-                );
-                const newIndex = column.tasks.findIndex((t) => t.id === overId);
-
-                return prev.map((col) => {
-                    if (col.id === column.id) {
-                        return {
-                            ...col,
-                            tasks: arrayMove(col.tasks, oldIndex, newIndex),
-                        };
-                    }
-                    return col;
-                });
-            });
+        if (!over || active.id === over.id) {
+            return;
         }
+
+        const activeId = active.id as number;
+        const overId = over.id as number;
+
+        setColumns((prev) => {
+            const activeCol = prev.find((column) =>
+                column.tasks.some((task) => task.id === activeId),
+            );
+            const overCol = prev.find(
+                (column) =>
+                    column.id === overId ||
+                    column.tasks.some((task) => task.id === overId),
+            );
+
+            if (!activeCol || !overCol) {
+                return prev;
+            }
+
+            const activeTask = activeCol.tasks.find(
+                (task) => task.id === activeId,
+            );
+
+            if (!activeTask) {
+                return prev;
+            }
+
+            if (activeCol.id === overCol.id) {
+                const sorted = [...activeCol.tasks].sort(
+                    (a, b) => a.position - b.position,
+                );
+                const fromIndex = sorted.findIndex(
+                    (task) => task.id === activeId,
+                );
+                const rawToIndex = sorted.findIndex(
+                    (task) => task.id === overId,
+                );
+
+                if (fromIndex === rawToIndex || rawToIndex === -1) {
+                    return prev;
+                }
+
+                const withoutActive = sorted.filter(
+                    (task) => task.id !== activeId,
+                );
+                const insertIndex =
+                    fromIndex < rawToIndex ? rawToIndex - 1 : rawToIndex;
+
+                const { prev: p, next: n } = getSurroundingPositions(
+                    withoutActive,
+                    insertIndex,
+                );
+                const newPosition = midpoint(p, n);
+
+                const result = [...withoutActive];
+                result.splice(insertIndex, 0, {
+                    ...activeTask,
+                    position: newPosition,
+                });
+
+                const updatedTasks = needsRebalance(p, n)
+                    ? rebalanceTasks(result)
+                    : result;
+
+                return prev.map((column) =>
+                    column.id === activeCol.id
+                        ? { ...column, tasks: updatedTasks }
+                        : column,
+                );
+            }
+
+            const newActiveItems = activeCol.tasks.filter(
+                (task) => task.id !== activeId,
+            );
+            const overTasks = [...overCol.tasks].sort(
+                (a, b) => a.position - b.position,
+            );
+
+            const overTaskIndex = overTasks.findIndex(
+                (task) => task.id === overId,
+            );
+            const insertIndex =
+                overId === overCol.id
+                    ? overTasks.length
+                    : overTaskIndex >= 0
+                      ? overTaskIndex
+                      : overTasks.length;
+
+            const { prev: p, next: n } = getSurroundingPositions(
+                overTasks,
+                insertIndex,
+            );
+            const newPosition = midpoint(p, n);
+
+            let newOverItems: Task[];
+
+            if (needsRebalance(p, n)) {
+                const draft = [...overTasks];
+
+                draft.splice(insertIndex, 0, {
+                    ...activeTask,
+                    position: newPosition,
+                    column: {
+                        ...activeTask.column,
+                        id: overCol.id,
+                        name: overCol.name,
+                    },
+                });
+
+                newOverItems = rebalanceTasks(draft);
+            } else {
+                newOverItems = [...overTasks];
+                newOverItems.splice(insertIndex, 0, {
+                    ...activeTask,
+                    position: newPosition,
+                    column: {
+                        ...activeTask.column,
+                        id: overCol.id,
+                        name: overCol.name,
+                    },
+                });
+            }
+
+            return prev.map((column) => {
+                if (column.id === activeCol.id) {
+                    return { ...column, tasks: newActiveItems };
+                }
+
+                if (column.id === overCol.id) {
+                    return { ...column, tasks: newOverItems };
+                }
+
+                return column;
+            });
+        });
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const handleDragEnd = (event: DragEndEvent) => {
+    const handleDragEnd = async (event: DragEndEvent) => {
+        const { active } = event;
+
         setActiveTask(null);
+
+        const activeId = active.id as number;
+
+        const finalCol = columns.find((column) =>
+            column.tasks.some((task) => task.id === activeId),
+        );
+
+        if (!finalCol) {
+            return;
+        }
+
+        const finalTask = finalCol.tasks.find((task) => task.id === activeId);
+        const snapshot = dragSnapshot.current;
+        dragSnapshot.current = null;
+
+        if (!finalTask) {
+            return;
+        }
+
+        if (
+            snapshot &&
+            snapshot.columnId === finalCol.id &&
+            snapshot.position === finalTask.position
+        ) {
+            return;
+        }
+
+        await moveTaskAction({
+            taskId: activeId,
+            columnId: finalCol.id,
+            position: finalTask.position,
+            projectId: projectData.id,
+        });
     };
 
     const handleDeleteTask = useCallback(async (id: number) => {
@@ -200,15 +320,15 @@ export default function KanbanBoard({
     // const stats = useMemo(
     //     () => ({
     //         total: tasks.length,
-    //         inProgress: tasks.filter((t) => t.column === "in_progress").length,
-    //         done: tasks.filter((t) => t.column === "done").length,
-    //         overdue: tasks.filter((t) => isOverdue(t.due_date, t.column))
+    //         inProgress: tasks.filter((task) => task.column === "in_progress").length,
+    //         done: tasks.filter((task) => task.column === "done").length,
+    //         overdue: tasks.filter((task) => isOverdue(task.due_date, task.column))
     //             .length,
     //     }),
     //     [tasks],
     // );
 
-    const hasTasks = columns.some((col) => col.tasks.length > 0);
+    const hasTasks = columns.some((column) => column.tasks.length > 0);
 
     return (
         <div className="h-full w-full overflow-y-auto rounded-xl bg-white">
@@ -258,7 +378,7 @@ export default function KanbanBoard({
                         </AvatarGroup>
                         <Button
                             variant="outline"
-                            onClick={() => setshowInvite(true)}
+                            onClick={() => setShowInvite(true)}
                         >
                             <UserPlusIcon weight="duotone" />
                             Invite
@@ -267,7 +387,7 @@ export default function KanbanBoard({
                             size="icon"
                             variant="ghost"
                             className="[&_svg]:size-5"
-                            onClick={() => setshowSettings(true)}
+                            onClick={() => setShowSettings(true)}
                         >
                             <GearSixIcon weight="duotone" />
                         </Button>
@@ -300,7 +420,7 @@ export default function KanbanBoard({
                     <div className="flex gap-3">
                         <Button
                             variant="outline"
-                            onClick={() => setshowFilters(true)}
+                            onClick={() => setShowFilters(true)}
                         >
                             <FunnelIcon weight="duotone" />
                             Filter
@@ -420,19 +540,19 @@ export default function KanbanBoard({
             </main>
             <InviteMemberModal
                 open={showInvite}
-                onOpenChange={() => setshowInvite(!showInvite)}
+                onOpenChange={() => setShowInvite(!showInvite)}
                 membersData={projectData.members}
             />
             <TaskFilterSheet
                 open={showFilters}
-                onOpenChange={() => setshowFilters(!showFilters)}
+                onOpenChange={() => setShowFilters(!showFilters)}
                 filters={filters}
                 onFiltersChange={setFilters}
                 projectData={projectData}
             />
             <ProjectSettingsModal
                 open={showSettings}
-                onOpenChange={() => setshowSettings(!showSettings)}
+                onOpenChange={() => setShowSettings(!showSettings)}
                 columnsData={columns}
                 projectData={projectData}
             />

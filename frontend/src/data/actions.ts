@@ -31,6 +31,7 @@ import {
     Subtask,
     User,
 } from "@/types/types";
+import { revalidatePath } from "next/cache";
 
 const accessTokenConfig = {
     maxAge: 15 * 60,
@@ -1451,4 +1452,88 @@ export async function changePasswordAction(
             message: null,
         };
     }
+}
+
+const EPSILON = 1e-9;
+const MAX_POSITION = Number.MAX_SAFE_INTEGER;
+
+const moveTaskSchema = z.object({
+    taskId: z
+        .number()
+        .positive()
+        .int("Task ID must be an integer")
+        .refine((value) => Number.isSafeInteger(value), {
+            message: "ID is too large a numerical value",
+        }),
+    columnId: z
+        .number()
+        .positive()
+        .int("Column ID must be an integer")
+        .refine((value) => Number.isSafeInteger(value), {
+            message: "ID is too large a numerical value",
+        }),
+    position: z
+        .number("Position is required")
+        .gt(
+            EPSILON,
+            `position must be greater than ${EPSILON} (fractional index minimum)`,
+        )
+        .lte(MAX_POSITION, `position must not exceed MAX_SAFE_INTEGER`)
+        .refine(Number.isFinite, {
+            message: "position must be a finite number",
+        }),
+});
+
+export async function moveTaskAction(data: {
+    taskId: number;
+    columnId: number;
+    position: number;
+    projectId: number;
+}): Promise<Pick<BaseAction, "status" | "message" | "zodErrors"> | undefined> {
+    const validatedFields = moveTaskSchema.safeParse({
+        taskId: data.taskId,
+        columnId: data.columnId,
+        position: data.position,
+    });
+
+    if (!validatedFields.success) {
+        return {
+            status: "error",
+            zodErrors: z.flattenError(validatedFields.error).fieldErrors,
+            message: null,
+        };
+    }
+
+    const responseData = await mutateData(
+        "PATCH",
+        `/tasks/${data.taskId}/move`,
+        {
+            taskId: data.taskId,
+            columnId: data.columnId,
+            position: data.position,
+        },
+    );
+
+    if (!responseData) {
+        return {
+            status: null,
+            zodErrors: null,
+            message: "Ops! Something went wrong. Please try again.",
+        };
+    }
+
+    if (
+        "message" in responseData &&
+        "status" in responseData &&
+        responseData.message &&
+        responseData.status !== "success"
+    ) {
+        return {
+            status: responseData.status,
+            zodErrors: null,
+            message: responseData.message,
+        };
+    }
+
+    revalidatePath(`/board/id=?${data.projectId}`);
 }
