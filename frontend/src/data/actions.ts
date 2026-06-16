@@ -1398,8 +1398,6 @@ export async function changePasswordAction(
         confirmPassword: formData.get("confirm-password"),
     });
 
-    console.log(validatedFields);
-
     if (!validatedFields.success) {
         return {
             formData,
@@ -1415,8 +1413,6 @@ export async function changePasswordAction(
         currentPassword: validatedFields.data.currentPassword,
         newPassword: validatedFields.data.newPassword,
     });
-
-    console.log(responseData);
 
     if (!responseData) {
         return {
