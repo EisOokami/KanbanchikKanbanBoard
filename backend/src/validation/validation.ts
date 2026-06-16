@@ -460,3 +460,33 @@ export const updateTaskSchema = z.object({
     subtasks: z.array(subtaskSchema),
     newSubtasks: z.array(subtaskSchema),
 });
+
+const EPSILON = 1e-9;
+const MAX_POSITION = Number.MAX_SAFE_INTEGER;
+
+export const moveTaskSchema = z.object({
+    taskId: z
+        .number()
+        .positive()
+        .int("Task ID must be an integer")
+        .refine((value) => Number.isSafeInteger(value), {
+            message: "ID is too large a numerical value",
+        }),
+    columnId: z
+        .number()
+        .positive()
+        .int("Column ID must be an integer")
+        .refine((value) => Number.isSafeInteger(value), {
+            message: "ID is too large a numerical value",
+        }),
+    position: z
+        .number("Position is required")
+        .gt(
+            EPSILON,
+            `position must be greater than ${EPSILON} (fractional index minimum)`,
+        )
+        .lte(MAX_POSITION, `position must not exceed MAX_SAFE_INTEGER`)
+        .refine(Number.isFinite, {
+            message: "position must be a finite number",
+        }),
+});

@@ -16,6 +16,7 @@ import type {
 } from "../types/types";
 import {
     createTaskSchema,
+    moveTaskSchema,
     updateTaskSchema,
     validateIdSchema,
 } from "../validation/validation";
@@ -491,13 +492,16 @@ export const createTask = async (req: IGetUserRequest, res: Response) => {
 
         const [rows] = await pool.execute<
             ({ max_pos: number } & RowDataPacket)[]
-        >(`SELECT MAX(position) as max_pos FROM tasks WHERE column_id = ?`, [
-            validatedData.columnId,
-        ]);
+        >(
+            `
+                SELECT COALESCE(MAX(position), 0) AS max_pos
+                FROM tasks
+                WHERE column_id = ?
+            `,
+            [validatedData.columnId],
+        );
 
-        const maxPosition = rows[0];
-
-        if (!maxPosition) {
+        if (!rows || !rows.length) {
             res.status(404).json({
                 status: "error",
                 message: "Tasks not found",
@@ -506,7 +510,19 @@ export const createTask = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
-        const position = (maxPosition.max_pos ?? -1) + 1;
+        const INITIAL_GAP = 65536;
+        const [firstRow] = rows as { max_pos: number }[];
+        const maxPos = firstRow?.max_pos ?? 0;
+        const position = maxPos + INITIAL_GAP;
+
+        if (!position) {
+            res.status(404).json({
+                status: "error",
+                message: "Tasks not found",
+            });
+
+            return;
+        }
 
         const [result] = await pool.execute<ResultSetHeader>(
             `
@@ -1046,5 +1062,113 @@ export const getTaskFilterOptions = async (
             status: "error",
             message: "Database error",
         });
+    }
+};
+
+export const moveTask = async (req: IGetUserRequest, res: Response) => {
+    try {
+        validateIdSchema.parse(req.params);
+
+        const { id } = req.params;
+        const userId = req.user.id;
+
+        if (!userId) {
+            res.status(401).json({
+                status: "error",
+                message: "Unauthorized",
+            });
+
+            return;
+        }
+
+        if (!id) {
+            res.status(400).json({
+                status: "error",
+                message: "Invalid task ID",
+            });
+
+            return;
+        }
+
+        const validatedData = moveTaskSchema.parse(req.body);
+
+        const [result] = await pool.execute<ResultSetHeader>(
+            `
+                UPDATE tasks
+                    SET column_id = ?,
+                        position  = ?,
+                        updated_at = NOW()
+                WHERE id = ?
+            `,
+            [
+                validatedData.columnId,
+                validatedData.position,
+                validatedData.taskId,
+            ],
+        );
+
+        if (result.affectedRows === 0) {
+            res.status(400).json({
+                status: "error",
+                message: "Failed to move task",
+            });
+
+            return;
+        }
+
+        const [rows] = await pool.execute<Task[]>(
+            `
+                (SELECT position FROM tasks
+                WHERE column_id = ? AND id != ?
+                    AND position < ?
+                ORDER BY position DESC LIMIT 1)
+                UNION ALL
+                (SELECT position FROM tasks
+                WHERE column_id = ? AND id != ?
+                    AND position > ?
+                ORDER BY position ASC  LIMIT 1)
+            `,
+            [
+                validatedData.columnId,
+                validatedData.taskId,
+                validatedData.position,
+                validatedData.columnId,
+                validatedData.taskId,
+                validatedData.position,
+            ],
+        );
+
+        const neighbors = rows.map((row) => row.position);
+        const EPSILON = 1e-9;
+        const [prevPos, nextPos] = neighbors;
+
+        if (
+            neighbors.length === 2 &&
+            prevPos !== undefined &&
+            nextPos !== undefined &&
+            Math.abs(nextPos - prevPos) < EPSILON * 2
+        ) {
+            const [rebalanceResult] = await pool.execute<ResultSetHeader>(
+                `CALL sp_rebalance_column(?)`,
+                [validatedData.columnId],
+            );
+
+            if (rebalanceResult.affectedRows === 0) {
+                res.status(400).json({
+                    status: "error",
+                    message: "Failed to rebalance column",
+                });
+
+                return;
+            }
+        }
+
+        res.status(200).json({
+            status: "success",
+            message: "Task moved successfully",
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: "error", message: "Database error" });
     }
 };

@@ -5,14 +5,15 @@ import {
     getTaskById,
     getTaskFilterOptions,
     getTasks,
+    moveTask,
     updateTask,
 } from "../controllers/tasks.controller";
 import { authenticateToken } from "../middleware/auth.middleware";
 import { validateData } from "../middleware/validation.middleware";
 import {
     createTaskSchema,
+    moveTaskSchema,
     updateTaskSchema,
-    validateIdSchema,
 } from "../validation/validation";
 
 const router = Router();
@@ -28,5 +29,11 @@ router.put(
     updateTask,
 );
 router.delete("/:id", authenticateToken, deleteTask);
+router.patch(
+    "/:id/move",
+    authenticateToken,
+    validateData(moveTaskSchema),
+    moveTask,
+);
 
 export default router;
