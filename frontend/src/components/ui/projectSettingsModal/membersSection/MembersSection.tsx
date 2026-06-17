@@ -3,7 +3,7 @@
 import { ROLE_META } from "@/constants/constants";
 import { cn, getInitials } from "@/libs/utils";
 import { UserPlusIcon, XIcon } from "@phosphor-icons/react";
-import { Avatar, AvatarFallback } from "../../shadcn/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "../../shadcn/avatar";
 import { Button } from "../../shadcn/button";
 import { Input } from "../../shadcn/input";
 import { useState } from "react";
@@ -150,6 +150,7 @@ export default function MembersSection({
                             className="flex items-center gap-3 rounded-md border px-3 py-2.5 transition-colors hover:bg-gray-50"
                         >
                             <Avatar className="size-8 shrink-0">
+                                <AvatarImage src={member.avatar_url} />
                                 <AvatarFallback
                                     className="text-xs font-bold text-white"
                                     style={{

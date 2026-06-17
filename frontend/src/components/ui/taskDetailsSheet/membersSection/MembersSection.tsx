@@ -8,7 +8,7 @@ import {
 } from "@phosphor-icons/react";
 import FieldRow from "../../fieldRow/FieldRow";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../../shadcn/tooltip";
-import { Avatar, AvatarFallback } from "../../shadcn/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "../../shadcn/avatar";
 import { cn, getInitials } from "@/libs/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "../../shadcn/popover";
 import { Project, UpdateTaskFormData, User } from "@/types/types";
@@ -59,6 +59,7 @@ export default function MembersSection({
                         <TooltipTrigger asChild disabled={isPending}>
                             <div className="group/av relative">
                                 <Avatar className="size-7 cursor-pointer ring-2 ring-white">
+                                    <AvatarImage src={member.avatar_url} />
                                     <AvatarFallback
                                         className="text-[10px] font-bold text-white"
                                         style={{
@@ -125,6 +126,7 @@ export default function MembersSection({
                                     disabled={isPending}
                                 >
                                     <Avatar className="size-6">
+                                        <AvatarImage src={member.avatar_url} />
                                         <AvatarFallback
                                             className="text-[10px] font-bold text-white"
                                             style={{

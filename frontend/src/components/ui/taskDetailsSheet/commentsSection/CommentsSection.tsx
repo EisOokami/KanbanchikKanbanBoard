@@ -1,7 +1,7 @@
 "use client";
 
 import { getInitials } from "@/libs/utils";
-import { Avatar, AvatarFallback } from "../../shadcn/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "../../shadcn/avatar";
 import { Textarea } from "../../shadcn/textarea";
 import { Button } from "../../shadcn/button";
 import { PaperPlaneTiltIcon } from "@phosphor-icons/react";
@@ -55,6 +55,7 @@ export default function CommentsSection({
         <div className="space-y-2">
             <div className="mt-5 flex items-start gap-3">
                 <Avatar className="mt-1 size-7 shrink-0">
+                    <AvatarImage src={userData.avatar_url} />
                     <AvatarFallback
                         className="text-[10px] font-bold text-white"
                         style={{ background: userData.color }}

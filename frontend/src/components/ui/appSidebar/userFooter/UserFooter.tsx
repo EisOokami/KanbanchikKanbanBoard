@@ -9,7 +9,7 @@ import {
     UserPlusIcon,
 } from "@phosphor-icons/react";
 
-import { Avatar, AvatarFallback } from "../../shadcn/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "../../shadcn/avatar";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -116,6 +116,7 @@ export default function UserFooter({ userData }: Readonly<UserFooterProps>) {
                             className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                         >
                             <Avatar className="size-8 rounded-lg">
+                                <AvatarImage src={user.avatar_url} />
                                 <AvatarFallback
                                     className="rounded-lg text-xs font-bold text-white"
                                     style={{ backgroundColor: user.color }}

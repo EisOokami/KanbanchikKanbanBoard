@@ -5,6 +5,7 @@ import { CreateTaskFormData, Project, User } from "@/types/types";
 import { PlusIcon, XIcon } from "@phosphor-icons/react";
 import { ZodErrors } from "../../zodErrors/ZodErrors";
 import { BaseAction } from "@/types/actions";
+import { Avatar, AvatarFallback, AvatarImage } from "../../shadcn/avatar";
 
 interface MembersSectionProps {
     formState: BaseAction | undefined;
@@ -29,41 +30,43 @@ export default function MembersSection({
                 Members <span className="text-red-500">*</span>
             </h3>
             <div className="space-y-3">
-                {selectedMembers.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
+                {selectedMembers.length ? (
+                    <div className="flex flex-wrap gap-1.5">
                         {selectedMembers.map((member) => (
-                            <div
+                            <button
                                 key={member.id}
-                                className="flex items-center gap-2 rounded-md border border-border/60 bg-muted/40 px-2.5 py-1.5"
+                                type="button"
+                                onClick={() => onMemberChange(member)}
+                                className="flex items-center gap-1.5 rounded-md border border-border/60 bg-muted/60 px-2.5 py-1.5 transition-colors hover:bg-muted/40 hover:text-foreground"
+                                disabled={isPending}
                             >
-                                <div
-                                    className="flex size-6 items-center justify-center rounded-full text-[10px] font-bold text-white"
+                                <Avatar
+                                    className="size-6"
                                     style={{
                                         backgroundColor: member.color,
                                     }}
                                 >
-                                    {getInitials(member.name, member.surname)}
-                                </div>
+                                    <AvatarImage src={member.avatar_url} />
+                                    <AvatarFallback className="text-[10px] font-bold text-white">
+                                        {getInitials(
+                                            member.name,
+                                            member.surname,
+                                        )}
+                                    </AvatarFallback>
+                                </Avatar>
                                 <div className="min-w-0">
                                     <p className="text-xs font-medium leading-none">
                                         {member.name} {member.surname}
                                     </p>
                                 </div>
-                                <button
-                                    type="button"
-                                    onClick={() => onMemberChange(member)}
-                                    className="ml-1 text-muted-foreground transition-colors hover:text-foreground"
-                                    disabled={isPending}
-                                >
-                                    <XIcon
-                                        weight="duotone"
-                                        className="size-3.5"
-                                    />
-                                </button>
-                            </div>
+                                <XIcon
+                                    weight="duotone"
+                                    className="size-4 opacity-50"
+                                />
+                            </button>
                         ))}
                     </div>
-                )}
+                ) : null}
                 <div className="flex flex-wrap gap-1.5">
                     {selectedProject.members
                         .filter(
@@ -78,18 +81,28 @@ export default function MembersSection({
                                 key={member.id}
                                 type="button"
                                 onClick={() => onMemberChange(member)}
-                                className="flex items-center gap-1.5 rounded-md border border-border/60 bg-white px-2.5 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+                                className="flex items-center gap-1.5 rounded-md border border-border/60 bg-muted/60 px-2.5 py-1.5 transition-colors hover:bg-muted/40 hover:text-foreground"
                                 disabled={isPending}
                             >
-                                <div
-                                    className="flex size-5 items-center justify-center rounded-full text-[10px] font-medium text-white"
+                                <Avatar
+                                    className="size-6"
                                     style={{
                                         backgroundColor: member.color,
                                     }}
                                 >
-                                    {getInitials(member.name, member.surname)}
+                                    <AvatarImage src={member.avatar_url} />
+                                    <AvatarFallback className="text-[10px] font-bold text-white">
+                                        {getInitials(
+                                            member.name,
+                                            member.surname,
+                                        )}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <div className="min-w-0">
+                                    <p className="text-xs font-medium leading-none">
+                                        {member.name} {member.surname}
+                                    </p>
                                 </div>
-                                {member.name}
                                 <PlusIcon
                                     weight="duotone"
                                     className="size-4 opacity-50"

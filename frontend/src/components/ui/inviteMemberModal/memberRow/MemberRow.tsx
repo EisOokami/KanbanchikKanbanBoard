@@ -1,6 +1,6 @@
 "use client";
 
-import { Avatar, AvatarFallback } from "../../shadcn/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "../../shadcn/avatar";
 import RoleSelect from "../roleSelect/RoleSelect";
 import { User, Role } from "@/types/types";
 import { getInitials } from "@/libs/utils";
@@ -19,6 +19,7 @@ export default function MemberRow({
         <div className="group flex items-center gap-3 rounded-md px-1 py-2.5 transition-colors hover:bg-gray-50">
             <div className="relative">
                 <Avatar className="size-9 ring-2 ring-white">
+                    <AvatarImage src={member.avatar_url} />
                     <AvatarFallback
                         className="text-xs font-bold text-white"
                         style={{ background: member.color }}

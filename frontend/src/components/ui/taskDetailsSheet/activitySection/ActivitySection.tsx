@@ -1,7 +1,7 @@
 "use client";
 
 import { LightningIcon } from "@phosphor-icons/react";
-import { Avatar, AvatarFallback } from "../../shadcn/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "../../shadcn/avatar";
 import { getInitials } from "@/libs/utils";
 import { formatDistanceToNow } from "date-fns";
 import { ActivityEntry } from "@/types/taskDetailsSheet";
@@ -35,6 +35,7 @@ export default function ActivitySection({
                     <div key={entry.id} className="mb-3">
                         <div className="flex items-start gap-3">
                             <Avatar className="mt-0.5 size-7 shrink-0">
+                                <AvatarImage src={entry.author.avatar_url} />
                                 <AvatarFallback
                                     className="text-[10px] font-bold text-white"
                                     style={{

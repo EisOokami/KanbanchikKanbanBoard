@@ -6,7 +6,11 @@ import {
     DialogContent,
     DialogTitle,
 } from "@/components/ui/shadcn/dialog";
-import { Avatar, AvatarFallback } from "@/components/ui/shadcn/avatar";
+import {
+    Avatar,
+    AvatarFallback,
+    AvatarImage,
+} from "@/components/ui/shadcn/avatar";
 import { ScrollArea } from "@/components/ui/shadcn/scroll-area";
 import { SectionId } from "@/types/accountSettings";
 import ProfileSection from "./profileSection/ProfileSection";
@@ -113,6 +117,7 @@ export default function AccountSettingsModal({
                         <div className="border-t p-3">
                             <div className="mb-2 flex items-center gap-2 px-1">
                                 <Avatar className="size-7">
+                                    <AvatarImage src={user.avatar_url} />
                                     <AvatarFallback
                                         className="text-[10px] font-bold text-white"
                                         style={{
