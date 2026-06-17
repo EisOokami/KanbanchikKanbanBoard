@@ -44,8 +44,6 @@ export default function AttachmentSection({
             ...formData,
             newAttachments: [...formData.newAttachments, ...newAttachments],
         });
-
-        e.target.value = "";
     };
 
     const removeAttachment = (id: number) => {
@@ -80,9 +78,14 @@ export default function AttachmentSection({
                 ) : null}
             </div>
             <input
+                name="attachments"
                 ref={fileInputRef}
                 type="file"
                 multiple
+                defaultValue={
+                    formState?.formData?.get("attachments")?.toString() ??
+                    undefined
+                }
                 className="hidden"
                 onChange={handleFileChange}
                 disabled={isPending}
