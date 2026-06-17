@@ -22,7 +22,7 @@ const registerLimiter = rateLimit({
     message: {
         status: 429,
         error: "Too many requests",
-        message: "Too many requests. Please try again in 15 minutes.",
+        message: "Too many requests. Please try again in 5 minutes.",
     },
     standardHeaders: true,
     legacyHeaders: false,
@@ -34,7 +34,7 @@ const loginLimiter = rateLimit({
     message: {
         status: 429,
         error: "Too many requests",
-        message: "Too many requests. Please try again in 15 minutes.",
+        message: "Too many requests. Please try again in 5 minutes.",
     },
     standardHeaders: true,
     legacyHeaders: false,
@@ -46,7 +46,7 @@ const forgotPasswordLimiter = rateLimit({
     message: {
         status: 429,
         error: "Too many requests",
-        message: "Too many requests. Please try again in 15 minutes.",
+        message: "Too many requests. Please try again in 30 minutes.",
     },
     standardHeaders: true,
     legacyHeaders: false,
@@ -58,7 +58,7 @@ const resetPasswordLimiter = rateLimit({
     message: {
         status: 429,
         error: "Too many requests",
-        message: "Too many requests. Please try again in 15 minutes.",
+        message: "Too many requests. Please try again in 5 minutes.",
     },
     standardHeaders: true,
     legacyHeaders: false,
