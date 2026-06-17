@@ -1437,21 +1437,12 @@ export async function updateProfileAction(
     prevState: any,
     formData: FormData,
 ): Promise<UpdateProfileAction | undefined> {
-    console.log({
-        // avatar: formData.get("avatar"),
-        name: formData.get("name"),
-        surname: formData.get("surname"),
-        email: formData.get("email"),
-    });
-
     const validatedFields = updateProfileSchema.safeParse({
         // avatar: formData.get("avatar"),
         name: formData.get("name"),
         surname: formData.get("surname"),
         email: formData.get("email"),
     });
-
-    console.log(validatedFields);
 
     if (!validatedFields.success) {
         return {
@@ -1469,8 +1460,6 @@ export async function updateProfileAction(
         "/users/update-profile",
         validatedFields.data,
     );
-
-    console.log(responseData);
 
     if (!responseData) {
         return {
