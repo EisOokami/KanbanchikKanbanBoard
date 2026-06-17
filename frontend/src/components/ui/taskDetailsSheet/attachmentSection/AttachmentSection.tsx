@@ -10,6 +10,7 @@ import {
 } from "@phosphor-icons/react";
 import { useRef } from "react";
 import { ZodErrors } from "../../zodErrors/ZodErrors";
+import { deleteAttachmentAction } from "@/data/actions";
 
 interface AttachmentSectionProps {
     formState: BaseAction | undefined;
@@ -46,16 +47,20 @@ export default function AttachmentSection({
         });
     };
 
-    const removeAttachment = (id: number) => {
-        onFormDataChange({
-            ...formData,
-            attachments: formData.attachments.filter(
-                (attachment) => attachment.id !== id,
-            ),
-            newAttachments: formData.newAttachments.filter(
-                (attachment) => attachment.id !== id,
-            ),
-        });
+    const removeAttachment = async (id: number) => {
+        const result = await deleteAttachmentAction(id);
+
+        if (result && result.ok) {
+            onFormDataChange({
+                ...formData,
+                attachments: formData.attachments.filter(
+                    (attachment) => attachment.id !== id,
+                ),
+                newAttachments: formData.newAttachments.filter(
+                    (attachment) => attachment.id !== id,
+                ),
+            });
+        }
     };
 
     return (

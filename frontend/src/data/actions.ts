@@ -1792,6 +1792,47 @@ export async function moveTaskAction(data: {
     revalidatePath(`/board/id=?${data.projectId}`);
 }
 
+export async function deleteAttachmentAction(
+    attachmentId: number,
+): Promise<{ ok: boolean; message: string } | undefined> {
+    const responseData = await mutateData("DELETE", `/uploads/${attachmentId}`);
+
+    if (!responseData) {
+        console.error("Ops! Something went wrong. Please try again.");
+
+        return {
+            ok: false,
+            message: "Ops! Something went wrong. Please try again or later",
+        };
+    }
+
+    if (
+        "message" in responseData &&
+        "status" in responseData &&
+        responseData.message &&
+        responseData.status
+    ) {
+        return {
+            ok: responseData.status === "error" ? false : true,
+            message: responseData.message,
+        };
+    }
+
+    if ("error" in responseData && responseData.error) {
+        console.error(responseData.error);
+
+        return {
+            ok: false,
+            message: "Failed to delete a attachment",
+        };
+    }
+
+    return {
+        ok: true,
+        message: "Attachment delete",
+    };
+}
+
 export async function deleteAvatarAction(
     avatar_url: string,
 ): Promise<{ ok: boolean; message: string } | undefined> {
