@@ -25,6 +25,7 @@
         "host-validation": "^2.0.1",
         "hpp": "^0.2.3",
         "jose": "^6.2.2",
+        "multer": "^2.1.1",
         "mysql2": "^3.17.4",
         "nodemailer": "^8.0.5",
         "zod": "^4.3.6"
@@ -36,6 +37,7 @@
         "@types/express-xss-sanitizer": "^2.0.0",
         "@types/host-validation": "^2.0.4",
         "@types/hpp": "^0.2.7",
+        "@types/multer": "^2.1.0",
         "@types/node": "^25.3.0",
         "@types/nodemailer": "^8.0.0",
         "eslint": "^9.39.2",
