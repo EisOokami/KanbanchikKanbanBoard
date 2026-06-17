@@ -842,32 +842,6 @@ export async function deleteProjectAction(
     };
 }
 
-const attachmentSchema = z.object({
-    filename: z
-        .string({
-            error: "Filename is required",
-        })
-        .trim()
-        .min(1, "Filename cannot be empty")
-        .max(255, "Filename must be less than 255 characters"),
-    file_url: z
-        .url("File URL must be a valid URL")
-        .trim()
-        .max(500, "File URL must be less than 500 characters"),
-    mime_type: z
-        .string()
-        .trim()
-        .max(100, "MIME type must be less than 100 characters")
-        .nullable()
-        .optional(),
-    size_bytes: z
-        .number()
-        .int("File size must be an integer")
-        .min(0, "File size cannot be negative")
-        .nullable()
-        .optional(),
-});
-
 const subtaskSchema = z.object({
     title: z
         .string({
