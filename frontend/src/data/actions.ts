@@ -933,7 +933,44 @@ const createTaskSchema = z
             .min(1, "At least one member is required"),
         labels: z.array(namedColorSchema),
         newLabels: z.array(namedColorSchema),
-        // attachments: z.array(attachmentSchema),
+        attachments: z
+            .preprocess(
+                (value) => {
+                    if (!value) return [undefined];
+
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    return Array.from(value as Iterable<any>).filter(
+                        (file) =>
+                            file instanceof File &&
+                            file.name !== "" &&
+                            file.size > 0,
+                    );
+                },
+                z
+                    .array(
+                        z
+                            .instanceof(File, {
+                                message: "Attachment is required",
+                            })
+                            .refine((file) => file.size <= 5 * 1024 * 1024, {
+                                message: "Maximum file size is 5MB",
+                            })
+                            .refine(
+                                (file) =>
+                                    [
+                                        "image/jpeg",
+                                        "image/png",
+                                        "image/webp",
+                                    ].includes(file.type),
+                                {
+                                    message:
+                                        "Only JPG, PNG and WEBP are allowed",
+                                },
+                            ),
+                    )
+                    .max(3, "Attachments must be less than 3"),
+            )
+            .optional(),
         subtasks: z.array(subtaskSchema),
     })
     .superRefine((data, ctx) => {
@@ -981,7 +1018,7 @@ export async function createTaskAction(
         categories: data.categories,
         newCategories: data.newCategories,
         subtasks: data.subtasks,
-        // attachments: data.attachments,
+        attachments: formData.getAll("attachments"),
         labels: data.labels,
         newLabels: data.newLabels,
     });
@@ -1039,6 +1076,67 @@ export async function createTaskAction(
             details: responseData.details,
             message: null,
         };
+    }
+
+    const body = new FormData();
+
+    if (
+        validatedFields.data.attachments &&
+        validatedFields.data.attachments.length &&
+        "message" in responseData &&
+        "status" in responseData &&
+        responseData.data
+    ) {
+        validatedFields.data.attachments.forEach((file) => {
+            body.append("files", file);
+        });
+
+        body.append("taskId", responseData.data.id);
+
+        const uploadResponseData = await mutateData(
+            "POST",
+            "/uploads/multiple",
+            body,
+            true,
+        );
+
+        if (!uploadResponseData) {
+            return {
+                formData,
+                zodErrors: null,
+                error: null,
+                status: null,
+                details: null,
+                message: "Ops! Something went wrong. Please try again.",
+            };
+        }
+
+        if (
+            "message" in uploadResponseData &&
+            "status" in uploadResponseData &&
+            uploadResponseData.message &&
+            uploadResponseData.status !== "success"
+        ) {
+            return {
+                formData,
+                zodErrors: null,
+                error: null,
+                status: uploadResponseData.status,
+                details: null,
+                message: uploadResponseData.message,
+            };
+        }
+
+        if ("error" in uploadResponseData && uploadResponseData.error) {
+            return {
+                formData,
+                zodErrors: null,
+                error: uploadResponseData.error,
+                status: null,
+                details: uploadResponseData.details,
+                message: null,
+            };
+        }
     }
 }
 

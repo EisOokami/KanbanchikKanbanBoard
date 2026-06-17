@@ -44,7 +44,6 @@ export default function AttachmentsSection({
                 })),
             ],
         });
-        e.target.value = "";
     };
 
     const onAttachmentRemove = (attachmentValue: Attachment) => {
@@ -58,15 +57,16 @@ export default function AttachmentsSection({
 
     return (
         <div className="space-y-1">
-            <label className="font-semibold" htmlFor="attachment">
+            <label className="font-semibold" htmlFor="attachments">
                 Attachments
             </label>
             <div className="space-y-1">
                 <input
-                    id="attachment"
+                    id="attachments"
+                    name="attachments"
                     ref={fileInputRef}
                     defaultValue={
-                        formState?.formData?.get("attachment")?.toString() ??
+                        formState?.formData?.get("attachments")?.toString() ??
                         undefined
                     }
                     type="file"
