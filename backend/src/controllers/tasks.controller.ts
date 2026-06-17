@@ -654,7 +654,7 @@ export const createTask = async (req: IGetUserRequest, res: Response) => {
         res.status(201).json({
             status: "success",
             message: "Task created successfully",
-            task: newTasks,
+            data: newTasks[0],
         });
     } catch (error: any) {
         if (error instanceof ZodError) {
