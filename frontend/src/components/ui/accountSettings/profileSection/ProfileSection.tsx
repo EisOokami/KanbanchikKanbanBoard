@@ -1,15 +1,15 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import SectionTitle from "../sectionTitle/SectionTitle";
-import { Avatar, AvatarFallback } from "../../shadcn/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "../../shadcn/avatar";
 import { Button } from "../../shadcn/button";
 import FieldRow from "../fieldRow/FieldRow";
 import { Input } from "../../shadcn/input";
 import SaveBar from "../saveBar/SaveBar";
 import { CameraIcon } from "@phosphor-icons/react";
 import { BaseAction } from "@/types/actions";
-import { updateProfileAction } from "@/data/actions";
+import { deleteAvatarAction, updateProfileAction } from "@/data/actions";
 import { ZodErrors } from "../../zodErrors/ZodErrors";
 import { User } from "@/types/types";
 import { getInitials } from "@/libs/utils";
@@ -30,16 +30,46 @@ interface ProfileSectionProps {
 export default function ProfileSection({
     userData,
 }: Readonly<ProfileSectionProps>) {
+    const [avatarPreview, setAvatarPreview] = useState<string>(
+        userData.avatar_url,
+    );
     const [isChanged, setIsChanged] = useState<boolean>(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const [formState, formAction, isPending] = useActionState(
         updateProfileAction,
         INITIAL_STATE,
     );
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+
+        if (file) {
+            setAvatarPreview(URL.createObjectURL(file));
+            setIsChanged(true);
+        }
+    };
+
+    const handleRemoveAvatar = () => {
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
+
+        setAvatarPreview(userData.avatar_url);
+        setIsChanged(true);
+    };
+
+    const handleDeleteAvatar = async (avatar_url: string) => {
+        const result = await deleteAvatarAction(avatar_url);
+
+        if (result && result.ok) {
+            setAvatarPreview("");
+        }
+    };
+
     return (
         <form
             action={formAction}
-            onSubmit={() => setIsChanged(false)}
+            // onSubmit={() => setIsChanged(false)}
             className="space-y-5"
         >
             <div>
@@ -49,10 +79,23 @@ export default function ProfileSection({
                 </p>
             </div>
             <div className="space-y-2">
+                <input
+                    name="avatar"
+                    ref={fileInputRef}
+                    defaultValue={
+                        formState?.formData?.get("avatar")?.toString() ??
+                        undefined
+                    }
+                    type="file"
+                    className="hidden"
+                    disabled={isPending}
+                    onChange={handleFileChange}
+                />
                 <SectionTitle>Avatar</SectionTitle>
                 <div className="flex items-center gap-5 rounded-md border bg-gray-50 p-4">
                     <div className="group relative">
                         <Avatar className="size-16 shadow-md ring-2 ring-white">
+                            <AvatarImage src={avatarPreview} />
                             <AvatarFallback
                                 className="text-xl font-bold text-white"
                                 style={{ backgroundColor: userData.color }}
@@ -63,6 +106,7 @@ export default function ProfileSection({
                         <button
                             type="button"
                             className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
+                            onClick={() => fileInputRef.current?.click()}
                         >
                             <CameraIcon
                                 weight="duotone"
@@ -76,17 +120,34 @@ export default function ProfileSection({
                             variant="outline"
                             size="sm"
                             className="mr-2 h-7 text-xs"
+                            onClick={() => fileInputRef.current?.click()}
                         >
                             Upload photo
                         </Button>
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 text-xs text-gray-400"
-                        >
-                            Remove
-                        </Button>
+                        {avatarPreview !== userData.avatar_url && (
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 text-xs text-gray-400"
+                                onClick={handleRemoveAvatar}
+                            >
+                                Remove
+                            </Button>
+                        )}
+                        {avatarPreview === userData.avatar_url && (
+                            <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                className="h-7 text-xs"
+                                onClick={() =>
+                                    handleDeleteAvatar(userData.avatar_url)
+                                }
+                            >
+                                Delete
+                            </Button>
+                        )}
                         <p className="mt-1.5 text-xs text-gray-400">
                             JPG, PNG or WebP. Max 2 MB.
                         </p>

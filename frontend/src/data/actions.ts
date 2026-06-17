@@ -1413,7 +1413,24 @@ export async function deleteTaskAction(
 }
 
 const updateProfileSchema = z.object({
-    // avatar: z.array(attachmentSchema),
+    avatar: z
+        .instanceof(File, {
+            message: "Avatar is required",
+        })
+        .refine((file) => file.size > 0, {
+            message: "Avatar is empty",
+        })
+        .refine((file) => file.size <= 5 * 1024 * 1024, {
+            message: "Maximum file size is 5MB",
+        })
+        .refine(
+            (file) =>
+                ["image/jpeg", "image/png", "image/webp"].includes(file.type),
+            {
+                message: "Only JPG, PNG and WEBP are allowed",
+            },
+        )
+        .optional(),
     name: z
         .string()
         .trim()
@@ -1438,7 +1455,7 @@ export async function updateProfileAction(
     formData: FormData,
 ): Promise<UpdateProfileAction | undefined> {
     const validatedFields = updateProfileSchema.safeParse({
-        // avatar: formData.get("avatar"),
+        avatar: formData.get("avatar"),
         name: formData.get("name"),
         surname: formData.get("surname"),
         email: formData.get("email"),
@@ -1455,10 +1472,66 @@ export async function updateProfileAction(
         };
     }
 
+    const data = new FormData();
+    const file = new FormData();
+
+    data.append("name", validatedFields.data.name);
+    data.append("surname", validatedFields.data.surname);
+    data.append("email", validatedFields.data.email);
+
+    if (validatedFields.data.avatar) {
+        file.append("file", validatedFields.data.avatar);
+
+        const uploadResponseData = await mutateData(
+            "POST",
+            "/uploads/avatar",
+            file,
+            true,
+        );
+
+        if (!uploadResponseData) {
+            return {
+                formData,
+                zodErrors: null,
+                error: null,
+                status: null,
+                details: null,
+                message: "Ops! Something went wrong. Please try again.",
+            };
+        }
+
+        if (
+            "message" in uploadResponseData &&
+            "status" in uploadResponseData &&
+            uploadResponseData.message &&
+            uploadResponseData.status !== "success"
+        ) {
+            return {
+                formData,
+                zodErrors: null,
+                error: null,
+                status: uploadResponseData.status,
+                details: null,
+                message: uploadResponseData.message,
+            };
+        }
+
+        if ("error" in uploadResponseData && uploadResponseData.error) {
+            return {
+                formData,
+                zodErrors: null,
+                error: uploadResponseData.error,
+                status: null,
+                details: uploadResponseData.details,
+                message: null,
+            };
+        }
+    }
+
     const responseData = await mutateData(
         "POST",
         "/users/update-profile",
-        validatedFields.data,
+        data,
     );
 
     if (!responseData) {
@@ -1717,4 +1790,47 @@ export async function moveTaskAction(data: {
     }
 
     revalidatePath(`/board/id=?${data.projectId}`);
+}
+
+export async function deleteAvatarAction(
+    avatar_url: string,
+): Promise<{ ok: boolean; message: string } | undefined> {
+    const responseData = await mutateData("DELETE", `/uploads/avatar`, {
+        avatar_url,
+    });
+
+    if (!responseData) {
+        console.error("Ops! Something went wrong. Please try again.");
+
+        return {
+            ok: false,
+            message: "Ops! Something went wrong. Please try again or later",
+        };
+    }
+
+    if (
+        "message" in responseData &&
+        "status" in responseData &&
+        responseData.message &&
+        responseData.status
+    ) {
+        return {
+            ok: responseData.status === "error" ? false : true,
+            message: responseData.message,
+        };
+    }
+
+    if ("error" in responseData && responseData.error) {
+        console.error(responseData.error);
+
+        return {
+            ok: false,
+            message: "Failed to delete a avatar",
+        };
+    }
+
+    return {
+        ok: true,
+        message: "Avatar delete",
+    };
 }
