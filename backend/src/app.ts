@@ -11,6 +11,8 @@ import projectsRoutes from "./routes/projects.routes";
 import tasksRoutes from "./routes/tasks.routes";
 import usersRoutes from "./routes/users.routes";
 import authRoutes from "./routes/auth.routes";
+import uploadsRoutes from "./routes/uploads.routes";
+import path from "path";
 
 dotenv.config();
 
@@ -52,6 +54,9 @@ app.use("/projects", projectsRoutes);
 app.use("/tasks", tasksRoutes);
 app.use("/users", usersRoutes);
 app.use("/auth", authRoutes);
+app.use("/uploads", uploadsRoutes);
+
+app.use("/files", express.static(path.join(process.cwd(), "src/uploads")));
 
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`);

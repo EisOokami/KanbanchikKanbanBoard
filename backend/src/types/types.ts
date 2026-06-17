@@ -71,6 +71,7 @@ export interface Subtask extends Base {
 
 export interface Attachment extends Base {
     uploader_id: number;
+    task_id: number;
     filename: string;
     file_url: string;
     mime_type: string;

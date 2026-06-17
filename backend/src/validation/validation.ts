@@ -490,3 +490,23 @@ export const moveTaskSchema = z.object({
             message: "position must be a finite number",
         }),
 });
+
+export const getAttachmentsSchema = z.object({
+    taskId: z
+        .string()
+        .refine((value) => /^\d+$/.test(value), {
+            message: "Task ID must be a numeric string",
+        })
+        .refine((value) => Number.isSafeInteger(Number(value)), {
+            message: "ID is too large a numerical value",
+        })
+        .transform((value) => Number(value)),
+});
+
+export const deleteAvatarSchema = z.object({
+    avatar_url: z
+        .url({ message: "Invalid avatar URL" })
+        .max(500, { message: "Avatar URL must be less than 500 characters" })
+        .nullable()
+        .optional(),
+});
