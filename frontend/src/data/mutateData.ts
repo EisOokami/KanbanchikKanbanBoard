@@ -10,8 +10,10 @@ export async function mutateData(
     path: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     payload?: any,
+    isImage?: boolean,
 ): Promise<
-    | { status: "error" | "message" | "success"; message: string }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    | { status: "error" | "message" | "success"; message: string; data?: any }
     | {
           error: string;
           details: {
@@ -35,8 +37,11 @@ export async function mutateData(
             refreshToken,
             {
                 method,
-                ...(payload && { body: JSON.stringify({ ...payload }) }),
+                ...(payload && {
+                    body: isImage ? payload : JSON.stringify({ ...payload }),
+                }),
             },
+            isImage,
         );
 
         const data = await response.json();

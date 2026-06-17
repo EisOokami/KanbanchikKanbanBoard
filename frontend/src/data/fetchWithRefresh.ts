@@ -25,9 +25,10 @@ export async function fetchWithRefresh(
     accessToken: string | undefined,
     refreshToken: string | undefined,
     options: FetchOptions = {},
+    isImage?: boolean
 ): Promise<Response> {
     const buildHeaders = (token: string | undefined) => ({
-        "Content-Type": "application/json",
+        ...(!isImage && {"Content-Type": "application/json"}),
         ...(token && { Authorization: `Bearer ${token}` }),
         ...(refreshToken && { Cookie: `refreshToken=${refreshToken}` }),
         ...options.headers,
