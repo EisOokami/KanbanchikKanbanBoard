@@ -3,6 +3,7 @@
 import { BaseAction } from "@/types/actions";
 import { Textarea } from "../../shadcn/textarea";
 import { ZodErrors } from "../../zodErrors/ZodErrors";
+import { useState } from "react";
 
 interface DescriptionSectionProps {
     formState: BaseAction | undefined;
@@ -13,24 +14,35 @@ export default function DescriptionSection({
     formState,
     isPending,
 }: Readonly<DescriptionSectionProps>) {
+    const [description, setDescription] = useState<string>("");
+
     return (
-        <div className="space-y-1">
+        <div className="relative space-y-1">
             <label className="font-semibold" htmlFor="description">
                 Description
             </label>
             <Textarea
                 id="description"
                 name="description"
+                value={description}
                 placeholder="Add context, goals, or acceptance criteria…"
                 defaultValue={
                     formState?.formData?.get("description")?.toString() ??
                     undefined
                 }
+                onChange={(e) => setDescription(e.target.value)}
                 className={`min-h-[72px] resize-none bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue ${
                     formState?.zodErrors?.description ? "border-red-500" : ""
                 }`}
                 disabled={isPending}
             />
+            <div className="absolute right-0">
+                <span
+                    className={`text-xs ${description.length > 300 ? "text-red-500" : "text-muted-foreground"}`}
+                >
+                    {description.length}/300
+                </span>
+            </div>
             <ZodErrors error={formState?.zodErrors?.description} />
         </div>
     );
