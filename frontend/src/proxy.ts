@@ -8,7 +8,7 @@ const accessTokenConfig = {
     domain: process.env.HOST ?? "localhost",
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "strict" as const,
+    sameSite: "lax" as const,
 };
 const refreshTokenConfig = {
     maxAge: 60 * 60 * 24 * 7,
