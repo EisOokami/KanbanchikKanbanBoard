@@ -143,7 +143,8 @@ export async function loginAction(
             accessTokenConfig,
         );
 
-        redirect("/overview");
+        const redirectPath = formData.get("redirect")?.toString();
+        redirect(redirectPath ?? "/overview");
     }
 }
 
