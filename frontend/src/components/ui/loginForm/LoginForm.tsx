@@ -30,7 +30,11 @@ const INITIAL_STATE: BaseAction = {
     formData: null,
 };
 
-export default function LoginForm() {
+interface LoginFormProps {
+    redirect?: string;
+}
+
+export default function LoginForm({ redirect }: Readonly<LoginFormProps>) {
     const [formState, formAction, isPending] = useActionState(
         loginAction,
         INITIAL_STATE,
@@ -123,6 +127,9 @@ export default function LoginForm() {
                             "Sign in"
                         )}
                     </Button>
+                    {redirect && (
+                        <input type="hidden" name="redirect" value={redirect} />
+                    )}
                 </form>
             </CardContent>
             <CardFooter className="flex justify-center">
