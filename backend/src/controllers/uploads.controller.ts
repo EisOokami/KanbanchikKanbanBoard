@@ -345,10 +345,12 @@ export const uploadMultiple = async (req: IGetUserRequest, res: Response) => {
             );
 
             if (result.affectedRows === 0) {
-                return res.status(400).json({
+                res.status(400).json({
                     status: "error",
                     message: "Failed to upload file",
                 });
+
+                return;
             }
         }
 
@@ -522,10 +524,12 @@ export const deleteAttachment = async (req: IGetUserRequest, res: Response) => {
         );
 
         if (rows.affectedRows === 0) {
-            return res.status(400).json({
+            res.status(400).json({
                 status: "error",
                 message: "Failed to delete file",
             });
+
+            return;
         }
 
         res.status(200).json({
@@ -619,10 +623,12 @@ export const deleteAvatar = async (req: IGetUserRequest, res: Response) => {
         );
 
         if (deleteRows.affectedRows === 0) {
-            return res.status(400).json({
+            res.status(400).json({
                 status: "error",
                 message: "Failed to delete file",
             });
+
+            return;
         }
 
         const [updateRows] = await pool.execute<ResultSetHeader>(
@@ -631,10 +637,12 @@ export const deleteAvatar = async (req: IGetUserRequest, res: Response) => {
         );
 
         if (updateRows.affectedRows === 0) {
-            return res.status(400).json({
+            res.status(400).json({
                 status: "error",
                 message: "Failed to update avatar url",
             });
+
+            return;
         }
 
         res.status(200).json({

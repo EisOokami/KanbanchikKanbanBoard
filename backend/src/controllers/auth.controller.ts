@@ -433,6 +433,7 @@ export const resetPassword = async (
                 status: "error",
                 message: "Failed to reset password",
             });
+
             return;
         }
 
