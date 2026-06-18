@@ -541,7 +541,7 @@ export default function Project({
             <InviteMemberModal
                 open={showInvite}
                 onOpenChange={() => setShowInvite(!showInvite)}
-                membersData={projectData.members}
+                projectData={projectData}
             />
             <TaskFilterSheet
                 open={showFilters}

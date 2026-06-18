@@ -6,15 +6,19 @@ import { User, Role } from "@/types/types";
 import { getInitials } from "@/libs/utils";
 import { XIcon } from "@phosphor-icons/react";
 
-export default function MemberRow({
-    member,
-    onRoleChange,
-    onRemove,
-}: {
+interface MemberRowProps {
     member: Omit<User, "email">;
+    isPending: boolean;
     onRoleChange: (id: number, role: Role) => void;
     onRemove: (id: number) => void;
-}) {
+}
+
+export default function MemberRow({
+    member,
+    isPending,
+    onRoleChange,
+    onRemove,
+}: Readonly<MemberRowProps>) {
     return (
         <div className="group flex items-center gap-3 rounded-md px-1 py-2.5 transition-colors hover:bg-gray-50">
             <div className="relative">
@@ -53,10 +57,13 @@ export default function MemberRow({
                         value={member.role}
                         onChange={(r) => onRoleChange(member.id, r)}
                         compact
+                        isPending={isPending}
                     />
                     <button
+                        type="button"
                         onClick={() => onRemove(member.id)}
                         className="flex size-8 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-red-50 hover:text-red-500"
+                        disabled={isPending}
                     >
                         <XIcon weight="duotone" size={14} />
                     </button>

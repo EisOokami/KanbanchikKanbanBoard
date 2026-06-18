@@ -15,13 +15,19 @@ export default function RoleSelect({
     value,
     onChange,
     compact = false,
+    isPending,
 }: {
     value: Role;
     onChange: (r: Role) => void;
     compact?: boolean;
+    isPending: boolean;
 }) {
     return (
-        <Select value={value} onValueChange={(v) => onChange(v as Role)}>
+        <Select
+            value={value}
+            onValueChange={(v) => onChange(v as Role)}
+            disabled={isPending}
+        >
             <SelectTrigger
                 className={cn(
                     "h-8 gap-1 rounded-md border text-xs font-medium capitalize focus:ring-1 focus:ring-bright-blue",

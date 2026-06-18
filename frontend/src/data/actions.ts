@@ -1850,6 +1850,62 @@ export async function deleteAvatarAction(
     };
 }
 
+export async function generateInviteAction(
+    projectId: number,
+): Promise<{ ok: boolean; message: string; inviteUrl?: string } | undefined> {
+    const responseData = await mutateData(
+        "POST",
+        `/invites/generate/${projectId}`,
+    );
+
+    if (!responseData) {
+        console.error("Ops! Something went wrong. Please try again.");
+
+        return {
+            ok: false,
+            message: "Ops! Something went wrong. Please try again or later",
+        };
+    }
+
+    if (
+        "message" in responseData &&
+        "status" in responseData &&
+        responseData.message &&
+        responseData.status
+    ) {
+        return {
+            ok: responseData.status === "error" ? false : true,
+            message: responseData.message,
+        };
+    }
+
+    if ("error" in responseData && responseData.error) {
+        console.error(responseData.error);
+
+        return {
+            ok: false,
+            message: "Failed to accept a invite",
+        };
+    }
+
+    if (
+        "data" in responseData &&
+        responseData.data &&
+        "inviteUrl" in responseData.data
+    ) {
+        return {
+            ok: true,
+            message: "Invitation accepted",
+            inviteUrl: responseData.data.inviteUrl,
+        };
+    }
+
+    return {
+        ok: true,
+        message: "Invitation accepted",
+    };
+}
+
 export async function acceptInviteAction(
     token: string,
 ): Promise<{ ok: boolean; message: string; projectId?: number } | undefined> {
@@ -1903,4 +1959,93 @@ export async function acceptInviteAction(
         ok: true,
         message: "Invitation accepted",
     };
+}
+
+const inviteMemberSchema = z.object({
+    projectId: z
+        .string()
+        .regex(/^\d+$/, "Select a project")
+        .transform(Number)
+        .refine((value) => Number.isSafeInteger(value), {
+            message: "ID is too large a numerical value",
+        }),
+    members: z
+        .array(
+            z
+                .email("Invalid email")
+                .trim()
+                .toLowerCase()
+                .min(1, "Email is required")
+                .max(255, "Email must be less than 255 characters long"),
+        )
+        .min(1, "At least one member is required"),
+});
+
+export async function inviteMemberAction(
+    // invites: Invite[],
+    invites: string[],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    prevState: any,
+    formData: FormData,
+): Promise<UpdateProjectAction | undefined> {
+    const validatedFields = inviteMemberSchema.safeParse({
+        projectId: formData.get("projectId"),
+        role: formData.get("role"),
+        members: invites,
+    });
+
+    if (!validatedFields.success) {
+        return {
+            formData,
+            zodErrors: z.flattenError(validatedFields.error).fieldErrors,
+            error: null,
+            status: null,
+            details: null,
+            message: null,
+        };
+    }
+
+    const responseData = await mutateData(
+        "POST",
+        `/invites/member`,
+        validatedFields.data,
+    );
+
+    if (!responseData) {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: null,
+            details: null,
+            message: "Ops! Something went wrong. Please try again.",
+        };
+    }
+
+    if (
+        "message" in responseData &&
+        "status" in responseData &&
+        responseData.message &&
+        responseData.status !== "success"
+    ) {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: responseData.status,
+            details: null,
+            message: responseData.message,
+        };
+    }
+
+    if ("error" in responseData && responseData.error) {
+        return {
+            formData,
+            zodErrors: null,
+            error: responseData.error,
+            status: null,
+            details: responseData.details,
+            message: null,
+        };
+    }
 }
