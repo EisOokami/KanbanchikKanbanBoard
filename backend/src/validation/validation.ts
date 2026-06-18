@@ -510,3 +510,23 @@ export const deleteAvatarSchema = z.object({
         .nullable()
         .optional(),
 });
+
+export const memberInviteSchema = z.object({
+    projectId: z
+        .number()
+        .positive()
+        .int("Project ID must be an integer")
+        .refine((value) => Number.isSafeInteger(value), {
+            message: "ID is too large a numerical value",
+        }),
+    members: z
+        .array(
+            z
+                .email("Invalid email")
+                .trim()
+                .toLowerCase()
+                .min(1, "Email is required")
+                .max(255, "Email must be less than 255 characters long"),
+        )
+        .min(1, "At least one member is required"),
+});

@@ -129,3 +129,19 @@ export interface FilterOptions {
     statuses: Pick<Column, "id" | "name">[];
     projects: Pick<Project, "id" | "name" | "color">[];
 }
+
+export interface ProjectInvite extends RowDataPacket {
+    id: number;
+    project_id: number;
+    token: string;
+    created_by: number;
+    expires_at: string;
+    used: number;
+    created_at: string;
+}
+
+export interface ProjectMember extends RowDataPacket {
+    id: number;
+    project_id: number;
+    user_id: number;
+}

@@ -1,5 +1,6 @@
 import { pool } from "../db/pool";
-import type { Request, Response } from "express";
+import crypto from "crypto";
+import type { Response } from "express";
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import { ZodError } from "zod";
 import type {
@@ -614,59 +615,78 @@ export const createProject = async (req: IGetUserRequest, res: Response) => {
             );
         });
 
-        validatedData.members.forEach((email) => {
-            const [username, domain] = email.split("@");
+        if (validatedData.members.length > 0) {
+            await Promise.all(
+                validatedData.members.map(async (email) => {
+                    const token = crypto.randomBytes(32).toString("hex");
+                    const expiresAt = new Date(
+                        Date.now() + 7 * 24 * 60 * 60 * 1000,
+                    );
 
-            const mailOptions = {
-                from: process.env.EMAIL_USER,
-                to: email,
-                subject: `Invitation to join ${validatedData.name}`,
-                html: `
-                    <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-                        <h2>You have been invited to a Kanban project</h2>
-                        <p>Hello ${username},</p>
-                        <p>
-                            You have been invited to join the project 
-                            <strong>${validatedData.name}</strong>.
-                        </p>
-                        <p>
-                            Open the platform to view tasks, collaborate with your team,
-                            and manage the workflow.
-                        </p>
-                        <a 
-                            href="${process.env.WEB_URL}/board/${validatedData.name}?id=${projectId}"
-                            style="
-                                display: inline-block;
-                                padding: 12px 20px;
-                                background-color: #4f46e5;
-                                color: white;
-                                text-decoration: none;
-                                border-radius: 8px;
-                                margin-top: 10px;
-                            "
-                        >
-                            Open Project
-                        </a>
-                        <p style="margin-top: 20px;">
-                            If you believe this invitation was sent by mistake,
-                            you can ignore this email.
-                        </p>
-                    </div>
-                `,
-            };
+                    await pool.execute<ResultSetHeader>(
+                        `
+                            INSERT INTO project_invites
+                                (project_id, token, created_by, expires_at)
+                            VALUES (?, ?, ?, ?)
+                        `,
+                        [projectId, token, userId, expiresAt],
+                    );
 
-            transporter.sendMail(mailOptions, (error, info) => {
-                if (error) {
-                    console.error(error);
-                    res.status(500).send({
-                        status: "error",
-                        message: "Error sending email",
+                    const inviteUrl = `${process.env.WEB_URL}/invite/${token}`;
+                    const [username] = email.split("@");
+
+                    const mailOptions = {
+                        from: process.env.EMAIL_USER,
+                        to: email,
+                        subject: `Invitation to join ${validatedData.name}`,
+                        html: `
+                            <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+                                <h2>You have been invited to a Kanban project</h2>
+                                <p>Hello ${username},</p>
+                                <p>
+                                    You have been invited to join the project 
+                                    <strong>${validatedData.name}</strong>.
+                                </p>
+                                <p>
+                                    Open the platform to view tasks, collaborate with your team,
+                                    and manage the workflow.
+                                </p>
+                                <a 
+                                    href="${inviteUrl}"
+                                    style="
+                                        display: inline-block;
+                                        padding: 12px 20px;
+                                        background-color: #4f46e5;
+                                        color: white;
+                                        text-decoration: none;
+                                        border-radius: 8px;
+                                        margin-top: 10px;
+                                    "
+                                >
+                                    Open Project
+                                </a>
+                                <p style="margin-top: 20px;">
+                                    If you believe this invitation was sent by mistake,
+                                    you can ignore this email.
+                                </p>
+                            </div>
+                        `,
+                    };
+
+                    transporter.sendMail(mailOptions, (error, info) => {
+                        if (error) {
+                            console.error(error);
+                            res.status(500).send({
+                                status: "error",
+                                message: "Error sending email",
+                            });
+                        } else {
+                            console.log(`Email sent: ${info.response}`);
+                        }
                     });
-                } else {
-                    console.log(`Email sent: ${info.response}`);
-                }
-            });
-        });
+                }),
+            );
+        }
 
         const [newProject] = await pool.execute<Project[]>(
             `
@@ -925,59 +945,76 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
         }
 
         if (validatedData.emails && validatedData.emails.length) {
-            validatedData.emails.forEach((email) => {
-                const [username, domain] = email.split("@");
+            await Promise.all(
+                validatedData.emails.map(async (email) => {
+                    const token = crypto.randomBytes(32).toString("hex");
+                    const expiresAt = new Date(
+                        Date.now() + 7 * 24 * 60 * 60 * 1000,
+                    );
 
-                const mailOptions = {
-                    from: process.env.EMAIL_USER,
-                    to: email,
-                    subject: `Invitation to join ${validatedData.name}`,
-                    html: `
-                        <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-                            <h2>You have been invited to a Kanban project</h2>
-                            <p>Hello ${username},</p>
-                            <p>
-                                You have been invited to join the project 
-                                <strong>${validatedData.name}</strong>.
-                            </p>
-                            <p>
-                                Open the platform to view tasks, collaborate with your team,
-                                and manage the workflow.
-                            </p>
-                            <a 
-                                href="${process.env.WEB_URL}/board/${validatedData.name}?id=${project.id}"
-                                style="
-                                    display: inline-block;
-                                    padding: 12px 20px;
-                                    background-color: #4f46e5;
-                                    color: white;
-                                    text-decoration: none;
-                                    border-radius: 8px;
-                                    margin-top: 10px;
-                                "
-                            >
-                                Open Project
-                            </a>
-                            <p style="margin-top: 20px;">
-                                If you believe this invitation was sent by mistake,
-                                you can ignore this email.
-                            </p>
-                        </div>
-                    `,
-                };
+                    await pool.execute<ResultSetHeader>(
+                        `
+                            INSERT INTO project_invites
+                                (project_id, token, created_by, expires_at)
+                            VALUES (?, ?, ?, ?)
+                        `,
+                        [project.id, token, userId, expiresAt],
+                    );
 
-                transporter.sendMail(mailOptions, (error, info) => {
-                    if (error) {
-                        console.error(error);
-                        res.status(500).send({
-                            status: "error",
-                            message: "Error sending email",
-                        });
-                    } else {
-                        console.log(`Email sent: ${info.response}`);
-                    }
-                });
-            });
+                    const inviteUrl = `${process.env.WEB_URL}/invite/${token}`;
+                    const [username] = email.split("@");
+
+                    const mailOptions = {
+                        from: process.env.EMAIL_USER,
+                        to: email,
+                        subject: `Invitation to join ${validatedData.name}`,
+                        html: `
+                            <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+                                <h2>You have been invited to a Kanban project</h2>
+                                <p>Hello ${username},</p>
+                                <p>
+                                    You have been invited to join the project 
+                                    <strong>${validatedData.name}</strong>.
+                                </p>
+                                <p>
+                                    Open the platform to view tasks, collaborate with your team,
+                                    and manage the workflow.
+                                </p>
+                                <a 
+                                    href="${inviteUrl}"
+                                    style="
+                                        display: inline-block;
+                                        padding: 12px 20px;
+                                        background-color: #4f46e5;
+                                        color: white;
+                                        text-decoration: none;
+                                        border-radius: 8px;
+                                        margin-top: 10px;
+                                    "
+                                >
+                                    Open Project
+                                </a>
+                                <p style="margin-top: 20px;">
+                                    If you believe this invitation was sent by mistake,
+                                    you can ignore this email.
+                                </p>
+                            </div>
+                        `,
+                    };
+
+                    transporter.sendMail(mailOptions, (error, info) => {
+                        if (error) {
+                            console.error(error);
+                            res.status(500).send({
+                                status: "error",
+                                message: "Error sending email",
+                            });
+                        } else {
+                            console.log(`Email sent: ${info.response}`);
+                        }
+                    });
+                }),
+            );
         }
 
         const [updatedProject] = await pool.execute<Project[]>(
