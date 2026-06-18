@@ -9,7 +9,7 @@ const accessTokenConfig = {
     domain: process.env.HOST ?? "localhost",
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "strict" as const,
+    sameSite: "lax" as const,
 };
 const refreshTokenConfig = {
     maxAge: 60 * 60 * 24 * 7,
@@ -25,10 +25,10 @@ export async function fetchWithRefresh(
     accessToken: string | undefined,
     refreshToken: string | undefined,
     options: FetchOptions = {},
-    isImage?: boolean
+    isImage?: boolean,
 ): Promise<Response> {
     const buildHeaders = (token: string | undefined) => ({
-        ...(!isImage && {"Content-Type": "application/json"}),
+        ...(!isImage && { "Content-Type": "application/json" }),
         ...(token && { Authorization: `Bearer ${token}` }),
         ...(refreshToken && { Cookie: `refreshToken=${refreshToken}` }),
         ...options.headers,
