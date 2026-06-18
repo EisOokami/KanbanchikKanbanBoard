@@ -1849,3 +1849,58 @@ export async function deleteAvatarAction(
         message: "Avatar delete",
     };
 }
+
+export async function acceptInviteAction(
+    token: string,
+): Promise<{ ok: boolean; message: string; projectId?: number } | undefined> {
+    const responseData = await mutateData("POST", `/invites/accept`, {
+        token,
+    });
+
+    if (!responseData) {
+        console.error("Ops! Something went wrong. Please try again.");
+
+        return {
+            ok: false,
+            message: "Ops! Something went wrong. Please try again or later",
+        };
+    }
+
+    if (
+        "message" in responseData &&
+        "status" in responseData &&
+        responseData.message &&
+        responseData.status
+    ) {
+        return {
+            ok: responseData.status === "error" ? false : true,
+            message: responseData.message,
+        };
+    }
+
+    if ("error" in responseData && responseData.error) {
+        console.error(responseData.error);
+
+        return {
+            ok: false,
+            message: "Failed to accept a invite",
+        };
+    }
+
+    if (
+        "data" in responseData &&
+        responseData.data &&
+        "projectId" in responseData.data
+    ) {
+        return {
+            ok: true,
+            message: "Invitation accepted",
+            projectId: responseData.data.projectId,
+        };
+    }
+
+    return {
+        ok: true,
+        message: "Invitation accepted",
+    };
+}
