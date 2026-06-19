@@ -24,6 +24,7 @@ import {
     SortDir,
     SortField,
     Task,
+    User,
 } from "@/types/types";
 import { DEFAULT_FILTER, PRIORITY_CONFIG } from "@/constants/constants";
 import { cn, isOverdue } from "@/libs/utils";
@@ -84,11 +85,13 @@ function TH({
 interface TasksProps {
     tasksData: Task[];
     taskFilterOptionsData: FilterOptions;
+    userData: User;
 }
 
 export default function Tasks({
     tasksData,
     taskFilterOptionsData,
+    userData,
 }: Readonly<TasksProps>) {
     const [tasks, setTasks] = useState<Task[]>(tasksData);
     const [filter, setFilter] = useState<FilterState>(DEFAULT_FILTER);
@@ -713,6 +716,7 @@ export default function Tasks({
                     onOpenChange={handleShowTaskDetailsSheet}
                     selectedTask={selectedTask}
                     projectData={projectData}
+                    userData={userData}
                 />
             )}
             <CreateTaskModal
