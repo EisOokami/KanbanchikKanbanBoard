@@ -4,7 +4,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { DotsSixVerticalIcon, XIcon } from "@phosphor-icons/react";
 
 interface SortableColumnRowProps {
-    column: Omit<Column, "tasks">;
+    column: Omit<Column, "tasks" | "created_at" | "updated_at">;
     isPending: boolean;
     onRemove: (id: number) => void;
 }
