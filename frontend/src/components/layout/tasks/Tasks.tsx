@@ -26,7 +26,7 @@ import {
     Task,
     User,
 } from "@/types/types";
-import { DEFAULT_FILTER, PRIORITY_CONFIG } from "@/constants/constants";
+import { PRIORITY_CONFIG } from "@/constants/constants";
 import { cn, isOverdue } from "@/libs/utils";
 import {
     CalendarBlankIcon,
@@ -46,6 +46,7 @@ import {
     XIcon,
 } from "@phosphor-icons/react";
 import { getProjectData } from "@/data/loaders";
+import { DEFAULT_FILTER } from "@/constants/taskFilterSheet";
 
 function TH({
     label,

@@ -116,6 +116,14 @@ export type SortField =
     | "project";
 export type SortDir = "asc" | "desc";
 
+export type TaskSortField =
+    | "title"
+    | "priority"
+    | "due_date"
+    | "created_at"
+    | "progress";
+export type SortDirection = "asc" | "desc";
+
 export interface FilterState {
     search: string;
     columns: string[];
@@ -129,6 +137,8 @@ export interface FilterState {
     has_subtasks?: boolean;
     due_soon?: boolean;
     date_range?: DateRange | undefined;
+    sortField?: TaskSortField;
+    sortDirection?: SortDirection;
 }
 
 export interface FilterOptions {

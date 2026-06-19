@@ -24,7 +24,7 @@ import { countActive } from "@/libs/taskFilterSheet";
 import FilterSection from "./filterSection/FilterSection";
 import Chip from "./chip/Chip";
 import { FilterState, Priority, Project } from "@/types/types";
-import { DEFAULT_FILTER, PRIORITY_CONFIG } from "@/constants/constants";
+import { PRIORITY_CONFIG } from "@/constants/constants";
 import { cn, getInitials } from "@/libs/utils";
 import {
     ArrowCounterClockwiseIcon,
@@ -40,6 +40,7 @@ import {
     UsersIcon,
     XIcon,
 } from "@phosphor-icons/react";
+import { DEFAULT_FILTER } from "@/constants/taskFilterSheet";
 
 interface TaskFilterSheetProps {
     open: boolean;

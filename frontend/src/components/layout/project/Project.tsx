@@ -36,7 +36,6 @@ import { ProjectSettingsModal } from "@/components/ui/projectSettingsModal/Proje
 import { ProjectListView } from "../projectListView/ProjectListView";
 import ProjectCalendarView from "../projectCalendarView/ProjectCalendarView";
 import { TaskDetailsSheet } from "@/components/ui/taskDetailsSheet/TaskDetailsSheet";
-import { DEFAULT_FILTER } from "@/constants/constants";
 import {
     CalendarDotsIcon,
     ClipboardTextIcon,
@@ -56,6 +55,7 @@ import {
     needsRebalance,
     rebalanceTasks,
 } from "@/libs/project";
+import { DEFAULT_FILTER } from "@/constants/taskFilterSheet";
 
 interface ProjectProps {
     userData: User;
