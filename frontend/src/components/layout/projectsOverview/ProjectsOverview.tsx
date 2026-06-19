@@ -1,24 +1,39 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Button } from "@/components/ui/shadcn/button";
 import { Card, CardContent } from "@/components/ui/shadcn/card";
 import { Input } from "@/components/ui/shadcn/input";
 import ProjectCard from "@/components/ui/projectCard/ProjectCard";
 import NewProjectModal from "@/components/ui/newProjectModal/NewProjectModal";
-import { ViewMode } from "@/types/projectsOverview";
+import { FilterSortOptions, ViewMode } from "@/types/projectsOverview";
 import { Project } from "@/types/types";
 import {
+    FunnelIcon,
     GridFourIcon,
     MagnifyingGlassIcon,
     PlusIcon,
     RowsIcon,
 } from "@phosphor-icons/react";
 import { deleteProjectAction } from "@/data/actions";
+import { Badge } from "@/components/ui/shadcn/badge";
+import ProjectFilterSheet from "@/components/ui/projectFilterSheet/ProjectFilterSheet";
+import {
+    applyFiltersAndSort,
+    countActiveFilters,
+} from "@/libs/projectOverview";
 
 interface ProjectsOverviewProps {
     projectsData: Project[];
 }
+
+const DEFAULT_FILTER_SORT: FilterSortOptions = {
+    sortField: "name",
+    sortDirection: "asc",
+    statuses: [],
+    memberIds: [],
+    categoryIds: [],
+};
 
 export default function ProjectsOverview({
     projectsData,
@@ -27,6 +42,15 @@ export default function ProjectsOverview({
     const [view, setView] = useState<ViewMode>("grid");
     const [showNewProjectModal, setShowNewProjectModal] =
         useState<boolean>(false);
+    const [showFilterSheet, setShowFilterSheet] = useState(false);
+    const [filterOpts, setFilterOpts] =
+        useState<FilterSortOptions>(DEFAULT_FILTER_SORT);
+    const filtered = useMemo(
+        () => applyFiltersAndSort(projectsData, search, filterOpts),
+        [projectsData, search, filterOpts],
+    );
+
+    const activeFilterCount = countActiveFilters(filterOpts);
 
     const handleDelete = useCallback(async (id: number) => {
         await deleteProjectAction(id);
@@ -65,6 +89,20 @@ export default function ProjectsOverview({
                         />
                     </div>
                     <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="relative h-9 gap-1.5 border-border/60 text-sm"
+                            onClick={() => setShowFilterSheet(true)}
+                        >
+                            <FunnelIcon weight="duotone" className="size-4" />
+                            Filter & Sort
+                            {activeFilterCount > 0 && (
+                                <Badge className="ml-0.5 h-4 min-w-4 rounded-full bg-bright-blue px-1 text-[10px] text-white">
+                                    {activeFilterCount}
+                                </Badge>
+                            )}
+                        </Button>
                         <div className="flex gap-0.5 rounded-md bg-muted/60 p-1">
                             {(["grid", "list"] as ViewMode[]).map((v) => (
                                 <button
@@ -96,10 +134,10 @@ export default function ProjectsOverview({
                     <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                         All Projects
                         <span className="ml-2 font-normal normal-case tracking-normal text-muted-foreground/60">
-                            ({projectsData.length})
+                            ({filtered.length})
                         </span>
                     </h2>
-                    {projectsData.length === 0 ? (
+                    {filtered.length === 0 ? (
                         <Card className="border-dashed border-border/60">
                             <CardContent className="flex flex-col items-center justify-center gap-3 py-16 text-center">
                                 <div className="flex size-12 items-center justify-center rounded-md bg-muted">
@@ -139,10 +177,10 @@ export default function ProjectsOverview({
                                     : "flex flex-col gap-3"
                             }
                         >
-                            {projectsData.map((p) => (
+                            {filtered.map((project) => (
                                 <ProjectCard
-                                    key={p.id}
-                                    project={p}
+                                    key={project.id}
+                                    project={project}
                                     onDelete={handleDelete}
                                 />
                             ))}
@@ -153,6 +191,14 @@ export default function ProjectsOverview({
             <NewProjectModal
                 open={showNewProjectModal}
                 onClose={handleShowNewProjectModal}
+            />
+            <ProjectFilterSheet
+                open={showFilterSheet}
+                onClose={() => setShowFilterSheet(false)}
+                projects={projectsData}
+                options={filterOpts}
+                onChange={setFilterOpts}
+                onReset={() => setFilterOpts(DEFAULT_FILTER_SORT)}
             />
         </div>
     );
