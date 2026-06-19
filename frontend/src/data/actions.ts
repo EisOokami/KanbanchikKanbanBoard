@@ -820,10 +820,11 @@ export async function deleteProjectAction(
         "message" in responseData &&
         "status" in responseData &&
         responseData.message &&
-        responseData.status
+        responseData.status &&
+        responseData.status === "error"
     ) {
         return {
-            ok: responseData.status === "error" ? false : true,
+            ok: false,
             message: responseData.message,
         };
     }
