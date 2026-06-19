@@ -10,7 +10,11 @@ import {
 import { Button } from "@/components/ui/shadcn/button";
 import { Input } from "@/components/ui/shadcn/input";
 import { Checkbox } from "@/components/ui/shadcn/checkbox";
-import { Avatar, AvatarFallback } from "@/components/ui/shadcn/avatar";
+import {
+    Avatar,
+    AvatarFallback,
+    AvatarImage,
+} from "@/components/ui/shadcn/avatar";
 import { Separator } from "@/components/ui/shadcn/separator";
 import { Slider } from "@/components/ui/shadcn/slider";
 import { Calendar } from "@/components/ui/shadcn/calendar";
@@ -23,11 +27,14 @@ import { format } from "date-fns";
 import { countActive } from "@/libs/taskFilterSheet";
 import FilterSection from "./filterSection/FilterSection";
 import Chip from "./chip/Chip";
-import { FilterState, Priority, Project } from "@/types/types";
+import { FilterState, Priority, Project, TaskSortField } from "@/types/types";
 import { PRIORITY_CONFIG } from "@/constants/constants";
 import { cn, getInitials } from "@/libs/utils";
 import {
     ArrowCounterClockwiseIcon,
+    ArrowDownIcon,
+    ArrowsDownUpIcon,
+    ArrowUpIcon,
     CalendarBlankIcon,
     CalendarIcon,
     ChartLineIcon,
@@ -40,7 +47,7 @@ import {
     UsersIcon,
     XIcon,
 } from "@phosphor-icons/react";
-import { DEFAULT_FILTER } from "@/constants/taskFilterSheet";
+import { DEFAULT_FILTER, SORT_FIELDS } from "@/constants/taskFilterSheet";
 
 interface TaskFilterSheetProps {
     open: boolean;
@@ -70,12 +77,13 @@ export function TaskFilterSheet({
     };
 
     const toggle = <
+        T,
         K extends "priorities" | "columns" | "members" | "categories",
     >(
         key: K,
-        value: string,
+        value: T,
     ) => {
-        const arr = filters[key] as string[];
+        const arr = filters[key] as T[];
 
         update({
             [key]: arr.includes(value)
@@ -83,6 +91,31 @@ export function TaskFilterSheet({
                 : [...arr, value],
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any);
+    };
+
+    const handleSortField = (field: TaskSortField) => {
+        if (filters.sortField !== field) {
+            update({
+                sortField: field,
+                sortDirection: "asc",
+            });
+
+            return;
+        }
+
+        if (filters.sortDirection === "asc") {
+            update({
+                sortField: field,
+                sortDirection: "desc",
+            });
+
+            return;
+        }
+
+        update({
+            sortField: undefined,
+            sortDirection: undefined,
+        });
     };
 
     const reset = () => {
@@ -122,6 +155,48 @@ export function TaskFilterSheet({
                     </div>
                 </SheetHeader>
                 <div className="grid flex-1 gap-2 overflow-y-auto px-5 py-2">
+                    <div className="py-3">
+                        <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-gray-400">
+                            Sort by
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                            {SORT_FIELDS.map(({ value, label }) => {
+                                const active = filters.sortField === value;
+                                return (
+                                    <button
+                                        key={value}
+                                        onClick={() => handleSortField(value)}
+                                        className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-all ${
+                                            active
+                                                ? "border-bright-blue bg-bright-blue/10 text-bright-blue"
+                                                : "border-gray-200 bg-gray-50 text-gray-500 hover:border-gray-300 hover:bg-gray-100"
+                                        }`}
+                                    >
+                                        {active ? (
+                                            filters.sortDirection === "asc" ? (
+                                                <ArrowUpIcon
+                                                    weight="bold"
+                                                    size={11}
+                                                />
+                                            ) : (
+                                                <ArrowDownIcon
+                                                    weight="bold"
+                                                    size={11}
+                                                />
+                                            )
+                                        ) : (
+                                            <ArrowsDownUpIcon
+                                                weight="duotone"
+                                                size={11}
+                                            />
+                                        )}
+                                        {label}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                    <Separator />
                     <div className="py-3">
                         <div className="relative">
                             <MagnifyingGlassIcon
@@ -236,14 +311,15 @@ export function TaskFilterSheet({
                                             className="h-8 rounded-md pl-8 text-xs placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-bright-blue"
                                         />
                                     </div>
-                                    {filteredMembers.map((m) => {
+                                    {filteredMembers.map((member) => {
                                         const active = filters.members?.some(
-                                            (member) => member.name === m.name,
+                                            (filterMember) =>
+                                                filterMember.id === member.id,
                                         );
 
                                         return (
                                             <label
-                                                key={m.id}
+                                                key={member.id}
                                                 className={`flex cursor-pointer items-center gap-3 rounded-md border px-2 py-1.5 transition-colors hover:bg-gray-50 ${active ? "border-bright-blue" : "border-transparent"}`}
                                             >
                                                 <Checkbox
@@ -251,21 +327,26 @@ export function TaskFilterSheet({
                                                     onCheckedChange={() =>
                                                         toggle(
                                                             "members",
-                                                            m.id.toString(),
+                                                            member,
                                                         )
                                                     }
                                                     className="rounded data-[state=checked]:border-bright-blue data-[state=checked]:bg-bright-blue"
                                                 />
                                                 <Avatar className="size-6">
+                                                    <AvatarImage
+                                                        src={member.avatar_url}
+                                                        alt={member.name}
+                                                    />
                                                     <AvatarFallback
                                                         className="text-[10px] font-bold text-white"
                                                         style={{
-                                                            background: m.color,
+                                                            background:
+                                                                member.color,
                                                         }}
                                                     >
                                                         {getInitials(
-                                                            m.name,
-                                                            m.surname,
+                                                            member.name,
+                                                            member.surname,
                                                         )}
                                                     </AvatarFallback>
                                                 </Avatar>
@@ -277,7 +358,8 @@ export function TaskFilterSheet({
                                                             : "#374151",
                                                     }}
                                                 >
-                                                    {m.name}
+                                                    {member.name}{" "}
+                                                    {member.surname}
                                                 </span>
                                             </label>
                                         );
