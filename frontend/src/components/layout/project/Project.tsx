@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
     DndContext,
     DragOverlay,
@@ -56,6 +56,7 @@ import {
     rebalanceTasks,
 } from "@/libs/project";
 import { DEFAULT_FILTER } from "@/constants/taskFilterSheet";
+import { applyTaskFilters } from "@/libs/taskFilterSheet";
 
 interface ProjectProps {
     userData: User;
@@ -85,6 +86,10 @@ export default function Project({
     }>({ isOpen: false, columnId: undefined });
     const dragSnapshot = useRef<{ columnId: number; position: number } | null>(
         null,
+    );
+    const filteredColumns = useMemo(
+        () => applyTaskFilters(columns, filters),
+        [columns, filters],
     );
 
     const sensors = useSensors(
@@ -160,8 +165,7 @@ export default function Project({
                 const withoutActive = sorted.filter(
                     (task) => task.id !== activeId,
                 );
-                const insertIndex =
-                    fromIndex < rawToIndex ? rawToIndex - 1 : rawToIndex;
+                const insertIndex = rawToIndex;
 
                 const { prev: p, next: n } = getSurroundingPositions(
                     withoutActive,
@@ -237,7 +241,7 @@ export default function Project({
                     },
                 });
             }
-
+            
             return prev.map((column) => {
                 if (column.id === activeCol.id) {
                     return { ...column, tasks: newActiveItems };
@@ -485,7 +489,7 @@ export default function Project({
                                     onDragEnd={handleDragEnd}
                                 >
                                     <div className="flex w-max items-start gap-4 pb-8">
-                                        {columns.map((column) => (
+                                        {filteredColumns.map((column) => (
                                             <KanbanColumn
                                                 key={column.id}
                                                 column={column}
@@ -518,7 +522,7 @@ export default function Project({
                         )}
                         {selectedMode === "list" && (
                             <ProjectListView
-                                columns={columns}
+                                columns={filteredColumns}
                                 setColumns={setColumns}
                                 onOpenDetails={(task: Task) => {
                                     handleShowTaskDetails();
@@ -528,7 +532,7 @@ export default function Project({
                         )}
                         {selectedMode === "calendar" && (
                             <ProjectCalendarView
-                                columns={columns}
+                                columns={filteredColumns}
                                 onOpenDetails={(task: Task) => {
                                     handleShowTaskDetails();
                                     setSelectedTask(task);
