@@ -241,7 +241,7 @@ export default function Project({
                     },
                 });
             }
-            
+
             return prev.map((column) => {
                 if (column.id === activeCol.id) {
                     return { ...column, tasks: newActiveItems };
