@@ -1,5 +1,5 @@
 import { TriangleAlert } from "lucide-react";
-import { DetailsError } from "@/interfaces/actions";
+import { DetailsError } from "@/types/actions";
 
 interface DetailsErrorsProps {
     error: DetailsError | null | undefined;
