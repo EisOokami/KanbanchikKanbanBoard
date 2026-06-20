@@ -35,7 +35,7 @@ export default function DayCell({
     showGantt,
     taskLanes = {},
     maxLanes = 3,
-}: DayCellProps) {
+}: Readonly<DayCellProps>) {
     const visible = tasks.slice(0, 3);
     const overflow = tasks.length - 3;
     const ganttCellHeight =

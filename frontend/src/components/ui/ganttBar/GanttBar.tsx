@@ -17,7 +17,7 @@ export default function GanttBar({
     isEndDay,
     isToday,
     onClick,
-}: GanttBarProps) {
+}: Readonly<GanttBarProps>) {
     const baseColor = task.categories[0]?.color || "#6366f1";
 
     return (

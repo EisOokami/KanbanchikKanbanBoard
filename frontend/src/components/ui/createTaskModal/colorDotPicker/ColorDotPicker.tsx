@@ -2,15 +2,17 @@
 
 import { CheckIcon } from "@phosphor-icons/react";
 
+interface ColorDotPickerProps {
+    value: string;
+    onChange: (c: string) => void;
+    colors: string[];
+}
+
 export default function ColorDotPicker({
     value,
     onChange,
     colors,
-}: {
-    value: string;
-    onChange: (c: string) => void;
-    colors: string[];
-}) {
+}: Readonly<ColorDotPickerProps>) {
     return (
         <div className="flex flex-wrap gap-1.5">
             {colors.map((c) => (

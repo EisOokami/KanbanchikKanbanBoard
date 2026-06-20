@@ -44,7 +44,7 @@ export function ProjectSettingsModal({
     onOpenChange,
     columnsData,
     projectData,
-}: ProjectSettingsModalProps) {
+}: Readonly<ProjectSettingsModalProps>) {
     const [activeSection, setActiveSection] = useState<NavSection>("general");
     const [name, setName] = useState<string>(projectData.name);
     const [icon, setIcon] = useState<string>(projectData.icon);

@@ -66,7 +66,7 @@ const INITIAL_STATE: BaseAction = {
 export default function NewProjectModal({
     open,
     onClose,
-}: NewProjectModalProps) {
+}: Readonly<NewProjectModalProps>) {
     const [icon, setIcon] = useState("🚀");
     const [status, setStatus] = useState<Status>("active");
     const [projectColor, setProjectColor] = useState(PROJECT_COLORS[0]);

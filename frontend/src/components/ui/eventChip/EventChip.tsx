@@ -8,7 +8,7 @@ interface EventChipProps {
     onClick: (task: Task) => void;
 }
 
-export default function EventChip({ task, onClick }: EventChipProps) {
+export default function EventChip({ task, onClick }: Readonly<EventChipProps>) {
     return (
         <button
             onClick={(e: React.MouseEvent<HTMLButtonElement>) => {

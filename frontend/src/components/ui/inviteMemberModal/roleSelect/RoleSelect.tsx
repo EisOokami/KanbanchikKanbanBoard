@@ -11,17 +11,19 @@ import {
 import { cn } from "@/libs/utils";
 import { ROLES } from "@/constants/constants";
 
+interface RoleSelectProps {
+    value: Role;
+    onChange: (r: Role) => void;
+    compact?: boolean;
+    isPending: boolean;
+}
+
 export default function RoleSelect({
     value,
     onChange,
     compact = false,
     isPending,
-}: {
-    value: Role;
-    onChange: (r: Role) => void;
-    compact?: boolean;
-    isPending: boolean;
-}) {
+}: Readonly<RoleSelectProps>) {
     return (
         <Select
             value={value}

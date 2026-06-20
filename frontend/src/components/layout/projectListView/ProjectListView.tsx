@@ -27,7 +27,7 @@ function TH({
     sortDir,
     onSort,
     Icon,
-}: {
+}: Readonly<{
     label: string;
     field: SortField;
     className?: string;
@@ -35,7 +35,7 @@ function TH({
     sortDir: SortDir;
     onSort: (f: SortField) => void;
     Icon?: Icon;
-}) {
+}>) {
     return (
         <th
             className={`cursor-pointer select-none whitespace-nowrap py-2.5 pr-4 text-left text-sm font-normal tracking-wider text-gray-400 ${className}`}
@@ -64,7 +64,7 @@ export function ProjectListView({
     columns,
     setColumns,
     onOpenDetails,
-}: ProjectListViewProps) {
+}: Readonly<ProjectListViewProps>) {
     const [sortField, setSortField] = useState<SortField>("priority");
     const [sortDir, setSortDir] = useState<SortDir>("asc");
     const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);

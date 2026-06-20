@@ -23,7 +23,7 @@ export default function MiniCalendar({
     selectedDate,
     onSelectDate,
     eventDates,
-}: MiniCalendarProps) {
+}: Readonly<MiniCalendarProps>) {
     const [mYear, setMYear] = useState<number>(viewYear);
     const [mMonth, setMMonth] = useState<number>(viewMonth);
 

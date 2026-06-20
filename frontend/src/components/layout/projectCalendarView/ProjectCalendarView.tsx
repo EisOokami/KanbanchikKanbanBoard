@@ -30,7 +30,7 @@ interface ProjectCalendarViewProps {
 export default function ProjectCalendarView({
     columns,
     onOpenDetails,
-}: ProjectCalendarViewProps) {
+}: Readonly<ProjectCalendarViewProps>) {
     const now = new Date();
     const [year, setYear] = useState<number>(now.getFullYear());
     const [month, setMonth] = useState<number>(now.getMonth());

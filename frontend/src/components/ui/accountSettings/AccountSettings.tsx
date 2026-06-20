@@ -48,7 +48,7 @@ export default function AccountSettingsModal({
     open,
     onOpenChange,
     userData,
-}: AccountSettingsModalProps) {
+}: Readonly<AccountSettingsModalProps>) {
     const [activeSection, setActiveSection] = useState<SectionId>("profile");
 
     const isLoggedIn =

@@ -55,7 +55,7 @@ export function TaskDetailsSheet({
     selectedTask,
     userData,
     projectData,
-}: TaskDetailsSheetProps) {
+}: Readonly<TaskDetailsSheetProps>) {
     const [task, setTask] = useState<Task>(selectedTask);
     const [activity, setActivity] = useState<ActivityEntry[]>(() =>
         commentsToActivity(selectedTask.comments),

@@ -34,7 +34,7 @@ export default function CategoriesSection({
     onCategoriesChange,
     onNewCategoriesChange,
     onCategoryInputValuesChange,
-}: CategoriesSectionProps) {
+}: Readonly<CategoriesSectionProps>) {
     const addCategory = () => {
         if (!categoryInputValues.name.trim()) {
             return;

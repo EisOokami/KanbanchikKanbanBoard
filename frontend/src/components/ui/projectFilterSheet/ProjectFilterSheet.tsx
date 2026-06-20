@@ -33,7 +33,7 @@ export default function ProjectFilterSheet({
     options,
     onChange,
     onReset,
-}: FilterSortSheetProps) {
+}: Readonly<FilterSortSheetProps>) {
     const members = Array.from(
         new Map(
             projects

@@ -29,7 +29,7 @@ interface CalendarProps {
     tasksData: Task[];
 }
 
-export default function Calendar({ tasksData }: CalendarProps) {
+export default function Calendar({ tasksData }: Readonly<CalendarProps>) {
     const now = new Date();
     const [year, setYear] = useState<number>(now.getFullYear());
     const [month, setMonth] = useState<number>(now.getMonth());

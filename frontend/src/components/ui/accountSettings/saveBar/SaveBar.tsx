@@ -11,8 +11,10 @@ export default function SaveBar({
     isChanged,
     onDiscard,
     isPending,
-}: SaveBarProps) {
-    if (!isChanged) return null;
+}: Readonly<SaveBarProps>) {
+    if (!isChanged) {
+        return null;
+    }
 
     return (
         <div className="absolute bottom-0 -mx-6 mt-6 flex w-full items-center justify-between gap-3 border-t bg-white/95 px-6 py-3 backdrop-blur">

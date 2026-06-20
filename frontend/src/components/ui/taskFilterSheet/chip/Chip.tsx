@@ -2,19 +2,21 @@
 
 import { XIcon } from "@phosphor-icons/react";
 
+interface ChipProps {
+    active: boolean;
+    bgColor: string;
+    textColor: string;
+    onClick: () => void;
+    children: React.ReactNode;
+}
+
 export default function Chip({
     active,
     bgColor,
     textColor,
     onClick,
     children,
-}: {
-    active: boolean;
-    bgColor: string;
-    textColor: string;
-    onClick: () => void;
-    children: React.ReactNode;
-}) {
+}: Readonly<ChipProps>) {
     return (
         <button
             onClick={onClick}

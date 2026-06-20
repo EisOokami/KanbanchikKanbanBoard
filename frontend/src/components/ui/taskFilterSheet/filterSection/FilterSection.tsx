@@ -8,19 +8,21 @@ import {
 } from "../../shadcn/collapsible";
 import { CaretDownIcon, CaretRightIcon } from "@phosphor-icons/react";
 
+interface FilterSectionProps {
+    title: string;
+    icon?: React.ReactNode;
+    count?: number;
+    children: React.ReactNode;
+    defaultOpen?: boolean;
+}
+
 export default function FilterSection({
     title,
     icon,
     count,
     children,
     defaultOpen = true,
-}: {
-    title: string;
-    icon?: React.ReactNode;
-    count?: number;
-    children: React.ReactNode;
-    defaultOpen?: boolean;
-}) {
+}: Readonly<FilterSectionProps>) {
     const [open, setOpen] = useState<boolean>(defaultOpen);
 
     return (

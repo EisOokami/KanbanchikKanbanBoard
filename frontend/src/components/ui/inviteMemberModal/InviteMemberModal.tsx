@@ -53,7 +53,7 @@ export function InviteMemberModal({
     open,
     onOpenChange,
     projectData,
-}: InviteMemberModalProps) {
+}: Readonly<InviteMemberModalProps>) {
     const [members, setMembers] = useState<Omit<User, "email">[]>(
         projectData.members,
     );

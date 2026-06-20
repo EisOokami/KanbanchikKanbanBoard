@@ -2,17 +2,19 @@
 
 import { XIcon } from "@phosphor-icons/react";
 
+interface ChipProps {
+    label: string;
+    color: string;
+    onRemove?: () => void;
+    isPending: boolean;
+}
+
 export default function Chip({
     label,
     color,
     onRemove,
     isPending,
-}: {
-    label: string;
-    color: string;
-    onRemove?: () => void;
-    isPending: boolean;
-}) {
+}: Readonly<ChipProps>) {
     return (
         <button
             onClick={onRemove}

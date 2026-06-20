@@ -13,7 +13,7 @@ interface SidebarEventCardProps {
 export default function SidebarEventCard({
     task,
     onOpen,
-}: SidebarEventCardProps) {
+}: Readonly<SidebarEventCardProps>) {
     const priority = PRIORITY_CONFIG[task.priority];
 
     return (

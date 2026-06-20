@@ -21,7 +21,7 @@ export default function DaySidebar({
     columns,
     onOpenCreate,
     onOpenDetails,
-}: DaySidebarProps) {
+}: Readonly<DaySidebarProps>) {
     const date = new Date(dateStr);
     const isToday = dateStr === todayStr();
 

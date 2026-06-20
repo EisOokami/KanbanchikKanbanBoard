@@ -6,6 +6,6 @@ interface SectionTitleProps {
 export default function SectionTitle({
     children,
     className,
-}: SectionTitleProps) {
+}: Readonly<SectionTitleProps>) {
     return <h3 className={`font-semibold ${className ?? ""}`}>{children}</h3>;
 }

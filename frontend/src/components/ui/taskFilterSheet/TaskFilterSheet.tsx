@@ -63,7 +63,7 @@ export function TaskFilterSheet({
     projectData,
     filters: externalFilters,
     onFiltersChange,
-}: TaskFilterSheetProps) {
+}: Readonly<TaskFilterSheetProps>) {
     const [filters, setFilters] = useState<FilterState>(
         externalFilters ?? DEFAULT_FILTER,
     );
