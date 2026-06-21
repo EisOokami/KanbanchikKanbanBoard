@@ -88,12 +88,13 @@ export const getTasks = async (req: IGetUserRequest, res: Response) => {
             tasks.map(async (task) => {
                 const [members] = await pool.execute<User[]>(
                     `
-                        SELECT 
+                        SELECT DISTINCT
                             u.id,
                             u.name,
                             u.surname,
                             u.avatar_url,
                             u.color,
+                            u.email,
                             pm.role,
                             pm.status,
                             pm.joined_at
@@ -101,8 +102,10 @@ export const getTasks = async (req: IGetUserRequest, res: Response) => {
                         JOIN users u ON tm.user_id = u.id
                         JOIN tasks t ON tm.task_id = t.id
                         JOIN columns c ON t.column_id = c.id
-                        JOIN project_members pm ON c.project_id = pm.project_id
+                        JOIN project_members pm ON c.project_id = pm.project_id AND tm.user_id = pm.user_id
+                        JOIN projects p ON c.project_id = p.id
                         WHERE tm.task_id = ?
+                        ORDER BY u.name, u.surname;
                     `,
                     [task.id],
                 );
