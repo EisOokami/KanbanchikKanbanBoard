@@ -530,7 +530,7 @@ export default function NewProjectModal({
                             </div>
                         </div>
                         <div className="space-y-1">
-                            <h3 className="font-semibold">Board Columns</h3>
+                            <h3 className="font-semibold">Project Columns</h3>
                             <div className="space-y-5">
                                 <div className="space-y-1.5">
                                     <DndContext

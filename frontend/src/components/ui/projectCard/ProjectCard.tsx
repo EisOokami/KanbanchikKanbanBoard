@@ -58,7 +58,7 @@ export default function ProjectCard({
     return (
         <>
             <Link
-                href={`/board/${convertToSlug(project.name)}?id=${project.id}`}
+                href={`/project/${convertToSlug(project.name)}?id=${project.id}`}
                 className="grid"
             >
                 <Card className="group relative flex flex-col overflow-hidden border border-border/60 bg-card shadow-sm transition-shadow duration-200 hover:shadow-md">

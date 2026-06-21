@@ -28,7 +28,7 @@ export default function AppearanceSection() {
             <div>
                 <h2 className="text-lg font-bold text-gray-800">Appearance</h2>
                 <p className="mt-0.5 text-sm text-gray-400">
-                    Personalise how KanbanBoard looks for you
+                    Personalise how Project looks for you
                 </p>
             </div>
             <div className="space-y-2">

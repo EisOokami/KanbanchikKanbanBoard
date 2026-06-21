@@ -35,7 +35,7 @@ const navMain = [
     {
         title: "My Boards",
         icon: KanbanIcon,
-        url: "/board",
+        url: "/project",
     },
     { title: "Tasks", icon: ClipboardTextIcon, url: "/tasks" },
     { title: "Calendar", icon: CalendarDotsIcon, url: "/calendar" },
@@ -57,7 +57,7 @@ export default function NavMain({ projectsData }: Readonly<NavMainProps>) {
     return (
         <SidebarMenu>
             {navMain.map((item) =>
-                item.url === "/board" ? (
+                item.url === "/project" ? (
                     <Collapsible
                         key={item.title}
                         open={!!openItems[item.title]}

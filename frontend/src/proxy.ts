@@ -19,7 +19,7 @@ const refreshTokenConfig = {
     sameSite: "strict" as const,
 };
 
-const protectedRoutes = ["/overview", "/board", "/tasks", "/calendar"];
+const protectedRoutes = ["/overview", "/project", "/tasks", "/calendar"];
 const protectedAuthRoutes = [
     "/signIn",
     "/signUp",

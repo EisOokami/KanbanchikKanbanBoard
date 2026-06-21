@@ -2,13 +2,13 @@ import { redirect } from "next/navigation";
 import Project from "@/components/layout/project/Project";
 import { getProjectData, getUserData } from "@/data/loaders";
 
-interface BoardPageProps {
+interface ProjectPageProps {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-export default async function BoardPage({
+export default async function ProjectPage({
     searchParams,
-}: Readonly<BoardPageProps>) {
+}: Readonly<ProjectPageProps>) {
     const { id } = await searchParams;
 
     if (typeof id !== "string") {

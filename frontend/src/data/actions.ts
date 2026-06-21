@@ -1765,7 +1765,7 @@ export async function moveTaskAction(data: {
         };
     }
 
-    revalidatePath(`/board/id=?${data.projectId}`);
+    revalidatePath(`/project/id=?${data.projectId}`);
 }
 
 export async function deleteAttachmentAction(
