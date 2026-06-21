@@ -615,7 +615,7 @@ export default function Tasks({
                                     Icon={LayoutIcon}
                                 />
                                 <TasksTh
-                                    label="members"
+                                    label="Members"
                                     field="members"
                                     className="w-28"
                                     sortField={sortField}
