@@ -15,7 +15,7 @@ import {
     AvatarFallback,
     AvatarImage,
 } from "@/components/ui/shadcn/avatar";
-import { formatDate, getInitials, isOverdue } from "@/libs/utils";
+import { cn, formatDate, getInitials, isOverdue } from "@/libs/utils";
 import {
     CalendarBlankIcon,
     ChatTeardropDotsIcon,
@@ -128,7 +128,12 @@ export default function KanbanTask({
             {(!task.show_progress || task.subtasks_total === 0) &&
                 task.due_date && (
                     <div
-                        className={`mb-2 flex items-center gap-0.5 ${overdue ? "font-semibold text-rose-500" : "font-medium text-gray-400"}`}
+                        className={cn(
+                            "mb-2 flex items-center gap-0.5",
+                            overdue
+                                ? "font-semibold text-rose-500"
+                                : "font-medium text-gray-400",
+                        )}
                     >
                         <CalendarBlankIcon
                             weight="duotone"
@@ -178,13 +183,12 @@ export default function KanbanTask({
                                 )}
                                 {task.due_date && (
                                     <span
-                                        className={`text-[10px] 
-                                    ${
-                                        overdue
-                                            ? "text-rose-500"
-                                            : "text-gray-400"
-                                    }
-                                `}
+                                        className={cn(
+                                            "text-[10px]",
+                                            overdue
+                                                ? "text-rose-500"
+                                                : "text-gray-400",
+                                        )}
                                     >
                                         {formatDate(task.due_date)}
                                     </span>

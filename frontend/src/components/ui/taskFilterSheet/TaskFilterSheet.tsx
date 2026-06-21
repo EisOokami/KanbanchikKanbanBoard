@@ -166,11 +166,12 @@ export function TaskFilterSheet({
                                     <button
                                         key={value}
                                         onClick={() => handleSortField(value)}
-                                        className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-all ${
+                                        className={cn(
+                                            "flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-all",
                                             active
                                                 ? "border-bright-blue bg-bright-blue/10 text-bright-blue"
-                                                : "border-gray-200 bg-gray-50 text-gray-500 hover:border-gray-300 hover:bg-gray-100"
-                                        }`}
+                                                : "border-gray-200 bg-gray-50 text-gray-500 hover:border-gray-300 hover:bg-gray-100",
+                                        )}
                                     >
                                         {active ? (
                                             filters.sortDirection === "asc" ? (
@@ -261,7 +262,12 @@ export function TaskFilterSheet({
                                 return (
                                     <label
                                         key={column.id}
-                                        className={`flex cursor-pointer items-center gap-3 rounded-md border px-3 py-2 transition-colors hover:bg-gray-50 ${active ? "border-bright-blue" : "border-transparent"}`}
+                                        className={cn(
+                                            "flex cursor-pointer items-center gap-3 rounded-md border px-3 py-2 transition-colors hover:bg-gray-50",
+                                            active
+                                                ? "border-bright-blue"
+                                                : "border-transparent",
+                                        )}
                                     >
                                         <Checkbox
                                             checked={active}
@@ -320,7 +326,12 @@ export function TaskFilterSheet({
                                         return (
                                             <label
                                                 key={member.id}
-                                                className={`flex cursor-pointer items-center gap-3 rounded-md border px-2 py-1.5 transition-colors hover:bg-gray-50 ${active ? "border-bright-blue" : "border-transparent"}`}
+                                                className={cn(
+                                                    "flex cursor-pointer items-center gap-3 rounded-md border px-2 py-1.5 transition-colors hover:bg-gray-50",
+                                                    active
+                                                        ? "border-bright-blue"
+                                                        : "border-transparent",
+                                                )}
                                             >
                                                 <Checkbox
                                                     checked={active}

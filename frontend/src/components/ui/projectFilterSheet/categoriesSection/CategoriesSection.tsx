@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@/libs/utils";
 import { FilterSortOptions } from "@/types/projectsOverview";
 import { Category } from "@/types/types";
 import { CheckIcon } from "@phosphor-icons/react";
@@ -37,11 +38,12 @@ export default function CategoriesSection({
                                     ),
                                 })
                             }
-                            className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium capitalize transition-all ${
+                            className={cn(
+                                "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium capitalize transition-all",
                                 active
                                     ? "border-transparent text-white"
-                                    : "border-border/60 bg-background text-muted-foreground hover:border-border"
-                            }`}
+                                    : "border-border/60 bg-background text-muted-foreground hover:border-border",
+                            )}
                             style={
                                 active
                                     ? {

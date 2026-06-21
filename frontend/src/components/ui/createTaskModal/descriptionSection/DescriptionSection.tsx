@@ -4,6 +4,7 @@ import { BaseAction } from "@/types/actions";
 import { Textarea } from "../../shadcn/textarea";
 import { ZodErrors } from "../../zodErrors/ZodErrors";
 import { useState } from "react";
+import { cn } from "@/libs/utils";
 
 interface DescriptionSectionProps {
     formState: BaseAction | undefined;
@@ -31,14 +32,20 @@ export default function DescriptionSection({
                     undefined
                 }
                 onChange={(e) => setDescription(e.target.value)}
-                className={`min-h-[72px] resize-none bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue ${
-                    formState?.zodErrors?.description ? "border-red-500" : ""
-                }`}
+                className={cn(
+                    "min-h-[72px] resize-none bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue",
+                    formState?.zodErrors?.description ? "border-red-500" : "",
+                )}
                 disabled={isPending}
             />
             <div className="absolute right-0">
                 <span
-                    className={`text-xs ${description.length > 300 ? "text-red-500" : "text-muted-foreground"}`}
+                    className={cn(
+                        "text-xs",
+                        description.length > 300
+                            ? "text-red-500"
+                            : "text-muted-foreground",
+                    )}
                 >
                     {description.length}/300
                 </span>

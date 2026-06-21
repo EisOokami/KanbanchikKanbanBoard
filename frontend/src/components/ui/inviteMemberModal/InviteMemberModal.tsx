@@ -318,7 +318,12 @@ export function InviteMemberModal({
                                             <button
                                                 type="button"
                                                 onClick={handleCopyLink}
-                                                className={`flex h-8 items-center gap-1.5 rounded-md border px-3 text-xs font-medium transition-all ${linkCopied ? "border-green-300 text-green-500" : "bg-gray-100 text-gray-500"}`}
+                                                className={cn(
+                                                    "flex h-8 items-center gap-1.5 rounded-md border px-3 text-xs font-medium transition-all",
+                                                    linkCopied
+                                                        ? "border-green-300 text-green-500"
+                                                        : "bg-gray-100 text-gray-500",
+                                                )}
                                                 disabled={isPending}
                                             >
                                                 {linkCopied ? (

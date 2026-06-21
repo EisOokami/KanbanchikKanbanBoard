@@ -186,9 +186,10 @@ export default function GeneralSection({
                         undefined
                     }
                     onChange={(e) => onNameChange(e.target.value)}
-                    className={`h-10 rounded-md text-sm placeholder:text-gray-300 focus-visible:ring-1 focus-visible:ring-bright-blue ${
-                        formState?.zodErrors?.name ? "border-red-500" : ""
-                    }`}
+                    className={cn(
+                        "h-10 rounded-md text-sm placeholder:text-gray-300 focus-visible:ring-1 focus-visible:ring-bright-blue",
+                        formState?.zodErrors?.name ? "border-red-500" : "",
+                    )}
                     disabled={isPending}
                 />
                 <ZodErrors error={formState?.zodErrors?.name} />
@@ -204,11 +205,12 @@ export default function GeneralSection({
                     }
                     onChange={(e) => onDescriptionChange(e.target.value)}
                     rows={4}
-                    className={`resize-none rounded-md text-xs placeholder:text-gray-300 focus-visible:ring-1 focus-visible:ring-bright-blue ${
+                    className={cn(
+                        "resize-none rounded-md text-xs placeholder:text-gray-300 focus-visible:ring-1 focus-visible:ring-bright-blue",
                         formState?.zodErrors?.description
                             ? "border-red-500"
-                            : ""
-                    }`}
+                            : "",
+                    )}
                     disabled={isPending}
                 />
                 <p className="mt-1 text-xs text-gray-500">
@@ -226,7 +228,12 @@ export default function GeneralSection({
                                 key={statusConfig}
                                 type="button"
                                 onClick={() => onStatusChange(statusConfig)}
-                                className={`flex items-center gap-1.5 rounded-md bg-muted/60 px-2.5 py-1 text-xs font-medium transition-all hover:bg-muted ${status === statusConfig ? "bg-muted ring-1 ring-border" : "opacity-60 hover:opacity-100"}`}
+                                className={cn(
+                                    "flex items-center gap-1.5 rounded-md bg-muted/60 px-2.5 py-1 text-xs font-medium transition-all hover:bg-muted",
+                                    status === statusConfig
+                                        ? "bg-muted ring-1 ring-border"
+                                        : "opacity-60 hover:opacity-100",
+                                )}
                                 disabled={isPending}
                             >
                                 <span

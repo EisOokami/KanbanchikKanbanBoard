@@ -11,6 +11,7 @@ import { Label, Project } from "@/types/types";
 import { useState } from "react";
 import { PALETTE } from "@/constants/constants";
 import { Input } from "../../shadcn/input";
+import { cn } from "@/libs/utils";
 
 interface LabelsSectionProps {
     formState: BaseAction | undefined;
@@ -154,11 +155,12 @@ export default function LabelsSection({
                                 e.key === "Enter" &&
                                 (e.preventDefault(), onNewLabelAdd())
                             }
-                            className={`h-8 flex-1 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue ${
+                            className={cn(
+                                "h-8 flex-1 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue",
                                 formState?.zodErrors?.labels
                                     ? "border-red-500"
-                                    : ""
-                            }`}
+                                    : "",
+                            )}
                             disabled={isPending}
                         />
                         <Button

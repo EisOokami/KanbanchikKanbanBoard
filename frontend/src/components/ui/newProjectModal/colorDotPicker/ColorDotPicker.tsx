@@ -4,7 +4,7 @@ import { CheckIcon } from "@phosphor-icons/react";
 
 interface ColorDotPickerProps {
     value: string;
-    onChange: (c: string) => void;
+    onChange: (color: string) => void;
     colors: string[];
     isPending: boolean;
 }
@@ -17,20 +17,21 @@ export default function ColorDotPicker({
 }: Readonly<ColorDotPickerProps>) {
     return (
         <div className="flex flex-wrap gap-1.5">
-            {colors.map((c) => (
+            {colors.map((color) => (
                 <button
-                    key={c}
+                    key={color}
                     type="button"
-                    onClick={() => onChange(c)}
+                    onClick={() => onChange(color)}
                     className="size-5 rounded-full ring-offset-background transition-transform"
                     style={{
-                        backgroundColor: c,
-                        outline: value === c ? `2px solid ${c}` : "none",
+                        backgroundColor: color,
+                        outline:
+                            value === color ? `2px solid ${color}` : "none",
                         outlineOffset: 2,
                     }}
                     disabled={isPending}
                 >
-                    {value === c && (
+                    {value === color && (
                         <CheckIcon
                             weight="duotone"
                             className="mx-auto size-3 text-white"

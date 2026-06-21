@@ -141,7 +141,11 @@ export function ProjectSettingsModal({
                                         )}
                                     >
                                         <span
-                                            className={`${activeSection === item.id ? "text-bright-blue" : "text-gray-500"}`}
+                                            className={
+                                                activeSection === item.id
+                                                    ? "text-bright-blue"
+                                                    : "text-gray-500"
+                                            }
                                         >
                                             <Icon weight="duotone" size={18} />
                                         </span>

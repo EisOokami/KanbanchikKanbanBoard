@@ -22,6 +22,7 @@ import {
     applyFiltersAndSort,
     countActiveFilters,
 } from "@/libs/projectOverview";
+import { cn } from "@/libs/utils";
 
 interface ProjectsOverviewProps {
     projectsData: Project[];
@@ -108,11 +109,12 @@ export default function ProjectsOverview({
                                 <button
                                     key={v}
                                     onClick={() => setView(v)}
-                                    className={`rounded-md p-1 transition-colors ${
+                                    className={cn(
+                                        "rounded-md p-1 transition-colors",
                                         view === v
                                             ? "bg-background text-foreground shadow-sm"
-                                            : "text-muted-foreground hover:text-foreground"
-                                    }`}
+                                            : "text-muted-foreground hover:text-foreground",
+                                    )}
                                 >
                                     {v === "grid" ? (
                                         <GridFourIcon

@@ -159,11 +159,12 @@ export default function SubtasksSection({
                             e.key === "Enter" &&
                             (e.preventDefault(), onSubtaskAdd())
                         }
-                        className={`h-8 flex-1 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue ${
+                        className={cn(
+                            "h-8 flex-1 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue",
                             formState?.zodErrors?.subtasks
                                 ? "border-red-500"
-                                : ""
-                        }`}
+                                : "",
+                        )}
                         disabled={isPending}
                     />
                     <Button

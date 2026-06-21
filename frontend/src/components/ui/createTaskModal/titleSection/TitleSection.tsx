@@ -3,6 +3,7 @@
 import { BaseAction } from "@/types/actions";
 import { Input } from "../../shadcn/input";
 import { ZodErrors } from "../../zodErrors/ZodErrors";
+import { cn } from "@/libs/utils";
 
 interface TitleSectionProps {
     formState: BaseAction | undefined;
@@ -25,7 +26,10 @@ export default function TitleSection({
                 defaultValue={
                     formState?.formData?.get("title")?.toString() ?? undefined
                 }
-                className={`h-9 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue ${formState?.zodErrors?.name ? "border-red-500" : ""}`}
+                className={cn(
+                    "h-9 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue",
+                    formState?.zodErrors?.name ? "border-red-500" : "",
+                )}
                 disabled={isPending}
             />
             <ZodErrors error={formState?.zodErrors?.title} />

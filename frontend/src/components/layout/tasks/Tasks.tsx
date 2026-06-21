@@ -67,7 +67,10 @@ function TH({
 }>) {
     return (
         <th
-            className={`cursor-pointer select-none whitespace-nowrap py-2.5 pr-4 text-left text-sm font-normal tracking-wider text-gray-400 ${className}`}
+            className={cn(
+                "cursor-pointer select-none whitespace-nowrap py-2.5 pr-4 text-left text-sm font-normal tracking-wider text-gray-400",
+                className,
+            )}
             onClick={() => onSort(field)}
         >
             <span className="flex items-center gap-1 transition-colors hover:text-gray-600">
@@ -315,7 +318,12 @@ export default function Tasks({
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        className={`h-9 gap-1.5 text-xs ${filter.columns.length ? "border-bright-blue bg-blue-50 text-blue-600" : "text-gray-500"}`}
+                                        className={cn(
+                                            "h-9 gap-1.5 text-xs",
+                                            filter.columns.length
+                                                ? "border-bright-blue bg-blue-50 text-blue-600"
+                                                : "text-gray-500",
+                                        )}
                                     >
                                         <FunnelIcon
                                             weight="duotone"
@@ -359,7 +367,12 @@ export default function Tasks({
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        className={`h-9 gap-1.5 text-xs ${filter.priorities.length ? "border-bright-blue bg-blue-50 text-blue-600" : "text-gray-500"}`}
+                                        className={cn(
+                                            "h-9 gap-1.5 text-xs",
+                                            filter.priorities.length
+                                                ? "border-bright-blue bg-blue-50 text-blue-600"
+                                                : "text-gray-500",
+                                        )}
                                     >
                                         <FlagIcon
                                             weight="duotone"
@@ -411,7 +424,12 @@ export default function Tasks({
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                className={`h-9 gap-1.5 text-xs ${filter.projects.length ? "border-bright-blue bg-blue-50 text-blue-600" : "text-gray-500"}`}
+                                                className={cn(
+                                                    "h-9 gap-1.5 text-xs",
+                                                    filter.projects.length
+                                                        ? "border-bright-blue bg-blue-50 text-blue-600"
+                                                        : "text-gray-500",
+                                                )}
                                             >
                                                 <LayoutIcon
                                                     weight="duotone"
@@ -463,7 +481,12 @@ export default function Tasks({
                                 variant="outline"
                                 size="sm"
                                 onClick={() => setF("overdue", !filter.overdue)}
-                                className={`h-9 gap-1.5 text-xs ${filter.overdue ? "border-rose-300 bg-rose-50 text-rose-600" : "text-gray-500"}`}
+                                className={cn(
+                                    "h-9 gap-1.5 text-xs",
+                                    filter.overdue
+                                        ? "border-rose-300 bg-rose-50 text-rose-600"
+                                        : "text-gray-500",
+                                )}
                             >
                                 <FireIcon weight="duotone" className="size-3" />{" "}
                                 Overdue
@@ -486,39 +509,42 @@ export default function Tasks({
                                     {[
                                         {
                                             label: "Total",
-                                            val: stats.total,
-                                            col: "text-gray-600",
+                                            value: stats.total,
+                                            style: "text-gray-600",
                                         },
                                         {
                                             label: "In Progress",
-                                            val: stats.inProgress,
-                                            col: "text-blue-600",
+                                            value: stats.inProgress,
+                                            style: "text-blue-600",
                                         },
                                         {
                                             label: "Done",
-                                            val: stats.done,
-                                            col: "text-emerald-600",
+                                            value: stats.done,
+                                            style: "text-emerald-600",
                                         },
                                         {
                                             label: "Overdue",
-                                            val: stats.overdue,
-                                            col: "text-rose-600",
+                                            value: stats.overdue,
+                                            style: "text-rose-600",
                                         },
-                                    ].map((s, i) => (
+                                    ].map((status, i) => (
                                         <div
-                                            key={s.label}
+                                            key={status.label}
                                             className="flex items-center gap-2"
                                         >
                                             {i > 0 && (
                                                 <div className="h-3 w-px bg-gray-200" />
                                             )}
                                             <span className="text-xs text-gray-400">
-                                                {s.label}
+                                                {status.label}
                                             </span>
                                             <span
-                                                className={`text-xs font-bold ${s.col}`}
+                                                className={cn(
+                                                    "text-xs font-bold",
+                                                    status.style,
+                                                )}
                                             >
-                                                {s.val}
+                                                {status.value}
                                             </span>
                                         </div>
                                     ))}

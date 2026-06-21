@@ -18,6 +18,7 @@ import {
     TextTIcon,
     UsersIcon,
 } from "@phosphor-icons/react";
+import { cn } from "@/libs/utils";
 
 function TH({
     label,
@@ -38,7 +39,10 @@ function TH({
 }>) {
     return (
         <th
-            className={`cursor-pointer select-none whitespace-nowrap py-2.5 pr-4 text-left text-sm font-normal tracking-wider text-gray-400 ${className}`}
+            className={cn(
+                "cursor-pointer select-none whitespace-nowrap py-2.5 pr-4 text-left text-sm font-normal tracking-wider text-gray-400",
+                className,
+            )}
             onClick={() => onSort(field)}
         >
             <span className="flex items-center gap-1 transition-colors hover:text-gray-600">

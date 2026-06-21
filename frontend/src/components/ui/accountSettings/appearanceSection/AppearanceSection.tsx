@@ -14,6 +14,7 @@ import SaveBar from "../saveBar/SaveBar";
 import SectionTitle from "../sectionTitle/SectionTitle";
 import FieldRow from "../fieldRow/FieldRow";
 import { CheckIcon } from "@phosphor-icons/react";
+import { cn } from "@/libs/utils";
 
 export default function AppearanceSection() {
     const [theme, setTheme] = useState<ThemeId>("system");
@@ -40,18 +41,38 @@ export default function AppearanceSection() {
                                 setTheme(id);
                                 setDirty(true);
                             }}
-                            className={`relative flex flex-col items-center gap-2 rounded-md border-2 p-4 transition-all ${theme === id ? "border-blue-500 bg-blue-50" : "bg-white hover:border-gray-300"}`}
+                            className={cn(
+                                "relative flex flex-col items-center gap-2 rounded-md border-2 p-4 transition-all",
+                                theme === id
+                                    ? "border-blue-500 bg-blue-50"
+                                    : "bg-white hover:border-gray-300",
+                            )}
                         >
                             <div
-                                className={`rounded-md p-2 ${theme === id ? "bg-blue-100" : "bg-gray-100"}`}
+                                className={cn(
+                                    "rounded-md p-2",
+                                    theme === id
+                                        ? "bg-blue-100"
+                                        : "bg-gray-100",
+                                )}
                             >
                                 <Icon
                                     weight="duotone"
-                                    className={`size-5 ${theme === id ? "text-bright-blue" : "text-gray-500"}`}
+                                    className={cn(
+                                        "size-5",
+                                        theme === id
+                                            ? "text-bright-blue"
+                                            : "text-gray-500",
+                                    )}
                                 />
                             </div>
                             <span
-                                className={`text-xs font-semibold ${theme === id ? "text-blue-600" : "text-gray-600"}`}
+                                className={cn(
+                                    "text-xs font-semibold",
+                                    theme === id
+                                        ? "text-blue-600"
+                                        : "text-gray-600",
+                                )}
                             >
                                 {label}
                             </span>
@@ -70,17 +91,22 @@ export default function AppearanceSection() {
             <div className="space-y-2">
                 <SectionTitle>Accent colour</SectionTitle>
                 <div className="flex gap-3">
-                    {accents.map((c) => (
+                    {accents.map((accentColour) => (
                         <button
-                            key={c}
+                            key={accentColour}
                             onClick={() => {
-                                setAccent(c);
+                                setAccent(accentColour);
                                 setDirty(true);
                             }}
-                            className={`flex size-8 items-center justify-center rounded-full transition-transform hover:scale-110 ${accent === c ? "scale-110 ring-2 ring-gray-400 ring-offset-2" : ""}`}
-                            style={{ background: c }}
+                            className={cn(
+                                "flex size-8 items-center justify-center rounded-full transition-transform hover:scale-110",
+                                accent === accentColour
+                                    ? "scale-110 ring-2 ring-gray-400 ring-offset-2"
+                                    : "",
+                            )}
+                            style={{ background: accentColour }}
                         >
-                            {accent === c && (
+                            {accent === accentColour && (
                                 <CheckIcon
                                     weight="duotone"
                                     className="size-3.5 text-white"
@@ -100,10 +126,20 @@ export default function AppearanceSection() {
                                 setDensity(id);
                                 setDirty(true);
                             }}
-                            className={`flex flex-col gap-1 rounded-md border-2 p-3.5 text-left transition-all ${density === id ? "border-blue-500 bg-blue-50" : "bg-white hover:border-gray-300"}`}
+                            className={cn(
+                                "flex flex-col gap-1 rounded-md border-2 p-3.5 text-left transition-all",
+                                density === id
+                                    ? "border-blue-500 bg-blue-50"
+                                    : "bg-white hover:border-gray-300",
+                            )}
                         >
                             <span
-                                className={`text-xs font-bold ${density === id ? "text-blue-600" : "text-gray-700"}`}
+                                className={cn(
+                                    "text-xs font-bold",
+                                    density === id
+                                        ? "text-blue-600"
+                                        : "text-gray-700",
+                                )}
                             >
                                 {label}
                             </span>

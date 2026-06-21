@@ -310,39 +310,39 @@ export default function NewProjectModal({
                                         Select color
                                     </p>
                                     <div className="flex flex-wrap gap-2">
-                                        {PROJECT_COLORS.map((c) => (
+                                        {PROJECT_COLORS.map((color) => (
                                             <button
                                                 type="button"
-                                                key={c}
+                                                key={color}
                                                 onClick={() => {
-                                                    setProjectColor(c);
+                                                    setProjectColor(color);
                                                     setColorPickerOpen(false);
                                                 }}
                                                 className={cn(
                                                     "flex size-8 items-center justify-center rounded-full transition-all hover:brightness-90",
-                                                    projectColor === c
+                                                    projectColor === color
                                                         ? "ring-2 ring-offset-2"
                                                         : "",
                                                 )}
                                                 style={{
-                                                    background: c,
-                                                    ...(projectColor === c
+                                                    background: color,
+                                                    ...(projectColor === color
                                                         ? {
-                                                              ringColor: c,
+                                                              ringColor: color,
                                                           }
                                                         : {}),
                                                     outline:
-                                                        projectColor === c
-                                                            ? `2px solid ${c}`
+                                                        projectColor === color
+                                                            ? `2px solid ${color}`
                                                             : "none",
                                                     outlineOffset:
-                                                        projectColor === c
+                                                        projectColor === color
                                                             ? "2px"
                                                             : "0",
                                                 }}
                                                 disabled={isPending}
                                             >
-                                                {projectColor === c && (
+                                                {projectColor === color && (
                                                     <CheckIcon
                                                         weight="duotone"
                                                         size={13}
@@ -368,11 +368,12 @@ export default function NewProjectModal({
                                         ?.get("name")
                                         ?.toString() ?? undefined
                                 }
-                                className={`h-9 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue ${
+                                className={cn(
+                                    "h-9 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue",
                                     formState?.zodErrors?.name
                                         ? "border-red-500"
-                                        : ""
-                                }`}
+                                        : "",
+                                )}
                                 disabled={isPending}
                             />
                             <ZodErrors error={formState?.zodErrors?.name} />
@@ -389,11 +390,12 @@ export default function NewProjectModal({
                                         ?.get("description")
                                         ?.toString() ?? undefined
                                 }
-                                className={`min-h-[72px] resize-none bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue ${
+                                className={cn(
+                                    "min-h-[72px] resize-none bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue",
                                     formState?.zodErrors?.description
                                         ? "border-red-500"
-                                        : ""
-                                }`}
+                                        : "",
+                                )}
                                 disabled={isPending}
                             />
                             <ZodErrors
@@ -406,22 +408,31 @@ export default function NewProjectModal({
                             </label>
                             <div className="flex flex-wrap gap-1.5">
                                 {(Object.keys(STATUS_CONFIG) as Status[]).map(
-                                    (s) => (
+                                    (statusConfig) => (
                                         <button
-                                            key={s}
+                                            key={statusConfig}
                                             type="button"
-                                            onClick={() => setStatus(s)}
-                                            className={`flex items-center gap-1.5 rounded-md bg-muted/60 px-2.5 py-1 text-xs font-medium transition-all hover:bg-muted ${status === s ? "bg-muted ring-1 ring-border" : "opacity-60 hover:opacity-100"}`}
+                                            onClick={() =>
+                                                setStatus(statusConfig)
+                                            }
+                                            className={cn(
+                                                "flex items-center gap-1.5 rounded-md bg-muted/60 px-2.5 py-1 text-xs font-medium transition-all hover:bg-muted",
+                                                status === statusConfig
+                                                    ? "bg-muted ring-1 ring-border"
+                                                    : "opacity-60 hover:opacity-100",
+                                            )}
                                             disabled={isPending}
                                         >
                                             <span
                                                 className="size-1.5 rounded-full"
                                                 style={{
                                                     backgroundColor:
-                                                        STATUS_CONFIG[s].dot,
+                                                        STATUS_CONFIG[
+                                                            statusConfig
+                                                        ].dot,
                                                 }}
                                             />
-                                            {STATUS_CONFIG[s].label}
+                                            {STATUS_CONFIG[statusConfig].label}
                                         </button>
                                     ),
                                 )}
@@ -490,7 +501,12 @@ export default function NewProjectModal({
                                                 (e.preventDefault(),
                                                 inviteMember())
                                             }
-                                            className={`h-9 bg-white pl-8 text-sm focus-visible:ring-1 focus-visible:ring-bright-blue ${emailError ? "border-red-400" : ""}`}
+                                            className={cn(
+                                                "h-9 bg-white pl-8 text-sm focus-visible:ring-1 focus-visible:ring-bright-blue",
+                                                emailError
+                                                    ? "border-red-400"
+                                                    : "",
+                                            )}
                                             disabled={isPending}
                                         />
                                     </div>
@@ -523,7 +539,9 @@ export default function NewProjectModal({
                                         onDragEnd={handleDragEnd}
                                     >
                                         <SortableContext
-                                            items={columns.map((c) => c.id)}
+                                            items={columns.map(
+                                                (column) => column.id,
+                                            )}
                                             strategy={
                                                 verticalListSortingStrategy
                                             }
@@ -534,11 +552,15 @@ export default function NewProjectModal({
                                                     column={column}
                                                     isPending={isPending}
                                                     onRemove={(id) =>
-                                                        setColumns((prev) =>
-                                                            prev.filter(
-                                                                (c) =>
-                                                                    c.id !== id,
-                                                            ),
+                                                        setColumns(
+                                                            (prevState) =>
+                                                                prevState.filter(
+                                                                    (
+                                                                        columnsState,
+                                                                    ) =>
+                                                                        columnsState.id !==
+                                                                        id,
+                                                                ),
                                                         )
                                                     }
                                                 />
@@ -560,11 +582,12 @@ export default function NewProjectModal({
                                                 (e.preventDefault(),
                                                 addColumn())
                                             }
-                                            className={`h-8 flex-1 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue ${
+                                            className={cn(
+                                                "h-8 flex-1 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue",
                                                 formState?.zodErrors?.columns
                                                     ? "border-red-500"
-                                                    : ""
-                                            }`}
+                                                    : "",
+                                            )}
                                             disabled={isPending}
                                         />
                                         <Button
@@ -592,20 +615,22 @@ export default function NewProjectModal({
                             <div className="space-y-3">
                                 {categories.length > 0 && (
                                     <div className="flex flex-wrap gap-1.5">
-                                        {categories.map((cat) => (
+                                        {categories.map((category) => (
                                             <Chip
-                                                key={cat.id}
-                                                label={cat.name}
-                                                color={cat.color}
+                                                key={category.id}
+                                                label={category.name}
+                                                color={category.color}
                                                 onRemove={() =>
                                                     isPending
                                                         ? null
                                                         : setCategories(
-                                                              (prev) =>
-                                                                  prev.filter(
-                                                                      (c) =>
-                                                                          c.id !==
-                                                                          cat.id,
+                                                              (prevState) =>
+                                                                  prevState.filter(
+                                                                      (
+                                                                          categoriesState,
+                                                                      ) =>
+                                                                          categoriesState.id !==
+                                                                          category.id,
                                                                   ),
                                                           )
                                                 }
@@ -633,11 +658,12 @@ export default function NewProjectModal({
                                                 (e.preventDefault(),
                                                 addCategory())
                                             }
-                                            className={`h-8 flex-1 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue ${
+                                            className={cn(
+                                                "h-8 flex-1 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue",
                                                 formState?.zodErrors?.categories
                                                     ? "border-red-500"
-                                                    : ""
-                                            }`}
+                                                    : "",
+                                            )}
                                             disabled={isPending}
                                         />
                                         <Button
@@ -704,11 +730,12 @@ export default function NewProjectModal({
                                                 e.key === "Enter" &&
                                                 (e.preventDefault(), addLabel())
                                             }
-                                            className={`h-8 flex-1 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue ${
+                                            className={cn(
+                                                "h-8 flex-1 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue",
                                                 formState?.zodErrors?.labels
                                                     ? "border-red-500"
-                                                    : ""
-                                            }`}
+                                                    : "",
+                                            )}
                                             disabled={isPending}
                                         />
                                         <Button
@@ -735,7 +762,14 @@ export default function NewProjectModal({
                     <DialogFooter className="flex flex-shrink-0 items-center justify-between gap-3 border-t border-border/60 px-6 py-4">
                         {formState?.message && (
                             <div
-                                className={`flex items-center gap-2 rounded-md text-sm ${formState?.status === "error" ? "text-red-500" : formState?.status === "success" ? "text-green-500" : "text-yellow-300"}`}
+                                className={cn(
+                                    "flex items-center gap-2 rounded-md text-sm",
+                                    formState?.status === "error"
+                                        ? "text-red-500"
+                                        : formState?.status === "success"
+                                          ? "text-green-500"
+                                          : "text-yellow-300",
+                                )}
                             >
                                 <Info className="h-4 w-4" />
                                 <p>{formState?.message}</p>

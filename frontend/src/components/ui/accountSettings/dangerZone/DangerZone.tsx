@@ -17,6 +17,7 @@ import { User } from "@/types/types";
 import { useActionState, useRef } from "react";
 import { deleteAccountAction } from "@/data/actions";
 import { BaseAction } from "@/types/actions";
+import { cn } from "@/libs/utils";
 
 interface DangerZoneProps {
     userData: User;
@@ -116,7 +117,14 @@ export default function DangerZone({ userData }: Readonly<DangerZoneProps>) {
             <input type="hidden" name="id" value={userData.id} />
             {formState?.message && (
                 <div
-                    className={`flex items-center gap-2 rounded-md text-sm ${formState?.status === "error" ? "text-red-500" : formState?.status === "success" ? "text-green-500" : "text-yellow-300"}`}
+                    className={cn(
+                        "flex items-center gap-2 rounded-md text-sm",
+                        formState?.status === "error"
+                            ? "text-red-500"
+                            : formState?.status === "success"
+                              ? "text-green-500"
+                              : "text-yellow-300",
+                    )}
                 >
                     <InfoIcon weight="duotone" className="size-4" />
                     <p>{formState?.message}</p>

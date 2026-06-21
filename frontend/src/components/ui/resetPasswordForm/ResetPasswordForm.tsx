@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/shadcn/button";
 import { ZodErrors } from "@/components/ui/zodErrors/ZodErrors";
 import { DetailsErrors } from "@/components/ui/detailsErrors/DetailsErrors";
 import { PasswordInput } from "../shadcn/password-input";
+import { cn } from "@/libs/utils";
 
 const INITIAL_STATE: BaseAction = {
     zodErrors: null,
@@ -93,7 +94,14 @@ export default function ResetPasswordForm() {
                     <input type="hidden" name="token" value={token ?? ""} />
                     {formState?.message && (
                         <div
-                            className={`flex items-center gap-2 rounded-md text-sm ${formState?.status === "error" ? "text-red-500" : formState?.status === "success" ? "text-green-500" : "text-yellow-300"}`}
+                            className={cn(
+                                "flex items-center gap-2 rounded-md text-sm",
+                                formState?.status === "error"
+                                    ? "text-red-500"
+                                    : formState?.status === "success"
+                                      ? "text-green-500"
+                                      : "text-yellow-300",
+                            )}
                         >
                             <Info className="h-4 w-4" />
                             <p>{formState?.message}</p>

@@ -1,6 +1,7 @@
 "use client";
 
 import { STATUS_COLORS, STATUS_LABELS } from "@/constants/projectsOverview";
+import { cn } from "@/libs/utils";
 import { FilterSortOptions } from "@/types/projectsOverview";
 import { Status } from "@/types/types";
 import { CheckIcon } from "@phosphor-icons/react";
@@ -36,11 +37,12 @@ export default function StatusSection({
                                     ),
                                 })
                             }
-                            className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-all ${
+                            className={cn(
+                                "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-all",
                                 active
                                     ? STATUS_COLORS[status]
-                                    : "border-border/60 bg-background text-muted-foreground hover:border-border"
-                            }`}
+                                    : "border-border/60 bg-background text-muted-foreground hover:border-border",
+                            )}
                         >
                             {active && (
                                 <CheckIcon weight="bold" className="size-3" />

@@ -11,6 +11,7 @@ import { BaseAction } from "@/types/actions";
 import { Category, Project } from "@/types/types";
 import { useState } from "react";
 import { PALETTE } from "@/constants/constants";
+import { cn } from "@/libs/utils";
 
 interface CategoriesSectionProps {
     formState: BaseAction | undefined;
@@ -157,11 +158,12 @@ export default function CategoriesSection({
                                 e.key === "Enter" &&
                                 (e.preventDefault(), onNewCategoryAdd())
                             }
-                            className={`h-8 flex-1 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue ${
+                            className={cn(
+                                "h-8 flex-1 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue",
                                 formState?.zodErrors?.categories
                                     ? "border-red-500"
-                                    : ""
-                            }`}
+                                    : "",
+                            )}
                             disabled={isPending}
                         />
                         <Button

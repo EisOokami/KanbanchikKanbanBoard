@@ -1,4 +1,5 @@
 import { Input } from "@/components/ui/shadcn/input";
+import { cn } from "@/libs/utils";
 import { BaseAction } from "@/types/actions";
 import { Column } from "@/types/types";
 import { useSortable } from "@dnd-kit/sortable";
@@ -52,9 +53,10 @@ export default function SortableColumnRow({
         <div
             ref={setNodeRef}
             style={style}
-            className={`flex items-center gap-3 rounded-md border px-3 py-2.5 transition-colors hover:bg-gray-50 ${
-                isDragging ? "opacity-40" : ""
-            }`}
+            className={cn(
+                "flex items-center gap-3 rounded-md border px-3 py-2.5 transition-colors hover:bg-gray-50",
+                isDragging ? "opacity-40" : "",
+            )}
         >
             <DotsSixVerticalIcon
                 weight="duotone"

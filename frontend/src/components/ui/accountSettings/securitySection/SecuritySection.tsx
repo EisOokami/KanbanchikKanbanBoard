@@ -9,6 +9,7 @@ import { BaseAction } from "@/types/actions";
 import { changePasswordAction } from "@/data/actions";
 import { ZodErrors } from "../../zodErrors/ZodErrors";
 import { InfoIcon } from "@phosphor-icons/react";
+import { cn } from "@/libs/utils";
 
 const INITIAL_STATE: BaseAction = {
     zodErrors: null,
@@ -114,11 +115,11 @@ export default function SecuritySection() {
                     <div className="flex items-center justify-between border-b p-4">
                         <div className="flex items-center gap-3">
                             <div
-                                className={`rounded-md p-2 ${twoFa ? "bg-emerald-50" : "bg-gray-50"}`}
+                                className={cn("rounded-md p-2", twoFa ? "bg-emerald-50" : "bg-gray-50")}
                             >
                                 <DeviceMobileIcon
                                     weight="duotone"
-                                    className={`size-4 ${twoFa ? "text-emerald-500" : "text-gray-400"}`}
+                                    className={cn("size-4", twoFa ? "text-emerald-500" : "text-gray-400")}
                                 />
                             </div>
                             <div>
@@ -146,11 +147,11 @@ export default function SecuritySection() {
                     <div className="flex items-center justify-between p-4">
                         <div className="flex items-center gap-3">
                             <div
-                                className={`rounded-md p-2 ${passkey ? "bg-blue-50" : "bg-gray-50"}`}
+                                className={cn("rounded-md p-2", passkey ? "bg-blue-50" : "bg-gray-50")}
                             >
                                 <KeyIcon
                                     weight="duotone"
-                                    className={`size-4 ${passkey ? "text-blue-500" : "text-gray-400"}`}
+                                    className={cn("size-4", passkey ? "text-blue-500" : "text-gray-400")}
                                 />
                             </div>
                             <div>
@@ -177,7 +178,7 @@ export default function SecuritySection() {
                     {sessions.map((s, i) => (
                         <div
                             key={i}
-                            className={`flex items-center justify-between p-4 ${i < sessions.length - 1 ? "border-b" : ""}`}
+                            className={cn("flex items-center justify-between p-4", i < sessions.length - 1 ? "border-b" : "")}
                         >
                             <div className="flex items-center gap-3">
                                 <div className="rounded-md bg-gray-50 p-2">
@@ -217,7 +218,14 @@ export default function SecuritySection() {
             </div> */}
             {formState?.message && (
                 <div
-                    className={`flex items-center gap-2 rounded-md text-sm ${formState?.status === "error" ? "text-red-500" : formState?.status === "success" ? "text-green-500" : "text-yellow-300"}`}
+                    className={cn(
+                        "flex items-center gap-2 rounded-md text-sm",
+                        formState?.status === "error"
+                            ? "text-red-500"
+                            : formState?.status === "success"
+                              ? "text-green-500"
+                              : "text-yellow-300",
+                    )}
                 >
                     <InfoIcon weight="duotone" className="size-4" />
                     <p>{formState?.message}</p>

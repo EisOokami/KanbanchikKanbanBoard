@@ -9,6 +9,7 @@ import { useRef } from "react";
 import KanbanTask from "../kanbanTask/KanbanTask";
 import { Column, Task } from "@/types/types";
 import { PlusIcon } from "@phosphor-icons/react";
+import { cn } from "@/libs/utils";
 
 interface KanbanColumnProps {
     column: Column;
@@ -39,9 +40,10 @@ export default function KanbanColumn({
 
     return (
         <div
-            className={`flex w-[320px] flex-shrink-0 flex-col rounded-xl p-2 transition-colors duration-150 ${
-                isOver ? "bg-gray-200" : "bg-gray-100"
-            }`}
+            className={cn(
+                "flex w-[320px] flex-shrink-0 flex-col rounded-xl p-2 transition-colors duration-150",
+                isOver ? "bg-gray-200" : "bg-gray-100",
+            )}
         >
             <div className="relative mb-3 flex items-center justify-between rounded-md border bg-white px-3 py-2">
                 <div className="flex items-center gap-1.5">

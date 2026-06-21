@@ -1,3 +1,4 @@
+import { cn } from "@/libs/utils";
 import { Column } from "@/types/types";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -32,9 +33,10 @@ export default function SortableColumnRow({
         <div
             ref={setNodeRef}
             style={style}
-            className={`flex items-center gap-2.5 rounded-md border border-border/50 bg-muted/30 bg-white px-3 py-2 transition-all ${
-                isDragging ? "cursor-grabbing opacity-40" : ""
-            }`}
+            className={cn(
+                "flex items-center gap-2.5 rounded-md border border-border/50 bg-muted/30 bg-white px-3 py-2 transition-all",
+                isDragging ? "cursor-grabbing opacity-40" : "",
+            )}
         >
             <DotsSixVerticalIcon
                 weight="duotone"
