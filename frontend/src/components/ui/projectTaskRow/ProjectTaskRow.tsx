@@ -131,17 +131,18 @@ export default function ProjectTaskRow({
                 )}
             </td>
             <td className="w-24 py-3 pr-4">
-                {task.subtasks_total && task.subtasks_total > 0 && (
+                {task.subtasks_total && task.subtasks_total > 0 ? (
                     <div className="flex items-center gap-2">
                         <Progress
                             value={progress}
                             className="h-1 w-12 [&>*]:bg-bright-blue"
                         />
                         <span className="text-[10px] text-gray-400">
-                            {task.subtasks_done ?? 0}/{task.subtasks_total ?? 0}
+                            {task.subtasks_done ? task.subtasks_done : 0}/
+                            {task.subtasks_total ? task.subtasks_total : 0}
                         </span>
                     </div>
-                )}
+                ) : null}
             </td>
             <td className="w-28 py-3 pr-4">
                 <div className="flex -space-x-1.5">
