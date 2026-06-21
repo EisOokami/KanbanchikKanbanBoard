@@ -1,5 +1,77 @@
-import { Column, FilterState } from "@/types/types";
+import { Column, FilterState, Priority, Task } from "@/types/types";
 import { isAfter, isBefore, addDays, startOfDay } from "date-fns";
+
+const PRIORITY_ORDER: Record<Priority, number> = {
+    low: 0,
+    medium: 1,
+    high: 2,
+    critical: 3,
+};
+
+export function isOverdue(task: Task): boolean {
+    if (!task.due_date) {
+        return false;
+    }
+
+    return isBefore(new Date(task.due_date), startOfDay(new Date()));
+}
+
+export function isDueSoon(task: Task): boolean {
+    if (!task.due_date) {
+        return false;
+    }
+
+    const due = new Date(task.due_date);
+    const now = startOfDay(new Date());
+
+    return isAfter(due, now) && isBefore(due, addDays(now, 3));
+}
+
+export function getProgress(task: Task): number {
+    if (!task.subtasks_total || task.subtasks_total === 0) {
+        return 0;
+    }
+
+    return Math.round(((task.subtasks_done ?? 0) / task.subtasks_total) * 100);
+}
+
+export function sortTasks(tasks: Task[], filters: FilterState): Task[] {
+    if (!filters.sortField || !filters.sortDirection) {
+        return tasks;
+    }
+
+    const dir = filters.sortDirection === "desc" ? -1 : 1;
+
+    return [...tasks].sort((a, b) => {
+        switch (filters.sortField) {
+            case "title":
+                return dir * a.title.localeCompare(b.title);
+            case "priority":
+                return (
+                    dir *
+                    (PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority])
+                );
+            case "due_date": {
+                const da = a.due_date
+                    ? new Date(a.due_date).getTime()
+                    : Infinity;
+                const db = b.due_date
+                    ? new Date(b.due_date).getTime()
+                    : Infinity;
+                return dir * (da - db);
+            }
+            case "created_at": {
+                const ca = new Date(a.created_at).getTime();
+                const cb = new Date(b.created_at).getTime();
+                return dir * (ca - cb);
+            }
+            case "progress":
+                return dir * (getProgress(a) - getProgress(b));
+            default:
+                return 0;
+        }
+    });
+}
 
 export function applyTaskFilters(
     columns: Column[],
