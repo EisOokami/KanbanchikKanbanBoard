@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/shadcn/dropdown-menu";
 import { TaskDetailsSheet } from "@/components/ui/taskDetailsSheet/TaskDetailsSheet";
 import { CreateTaskModal } from "@/components/ui/createTaskModal/CreateTaskModal";
-import SortIcon from "@/components/ui/sortIcon/SortIcon";
 import FilterChip from "@/components/ui/filterChip/FilterChip";
 import TaskRow from "@/components/ui/taskRow/TaskRow";
 import {
@@ -35,7 +34,6 @@ import {
     FlagIcon,
     FunnelIcon,
     HashIcon,
-    Icon,
     LayoutIcon,
     MagnifyingGlassIcon,
     PlusIcon,
@@ -47,44 +45,7 @@ import {
 } from "@phosphor-icons/react";
 import { getProjectData } from "@/data/loaders";
 import { DEFAULT_FILTER } from "@/constants/taskFilterSheet";
-
-function TH({
-    label,
-    field,
-    className = "",
-    sortField,
-    sortDir,
-    onSort,
-    Icon,
-}: Readonly<{
-    label: string;
-    field: SortField;
-    className?: string;
-    sortField: SortField;
-    sortDir: SortDir;
-    onSort: (field: SortField) => void;
-    Icon?: Icon;
-}>) {
-    return (
-        <th
-            className={cn(
-                "cursor-pointer select-none whitespace-nowrap py-2.5 pr-4 text-left text-sm font-normal tracking-wider text-gray-400",
-                className,
-            )}
-            onClick={() => onSort(field)}
-        >
-            <span className="flex items-center gap-1 transition-colors hover:text-gray-600">
-                {Icon && <Icon weight="duotone" className="size-4" />}
-                {label}
-                <SortIcon
-                    field={field}
-                    sortField={sortField}
-                    sortDir={sortDir}
-                />
-            </span>
-        </th>
-    );
-}
+import TasksTh from "@/components/ui/tasksTh/TasksTh";
 
 interface TasksProps {
     tasksData: Task[];
@@ -617,7 +578,7 @@ export default function Tasks({
                                     />
                                     ID
                                 </th>
-                                <TH
+                                <TasksTh
                                     label="Title"
                                     field="title"
                                     className="min-w-[240px]"
@@ -626,7 +587,7 @@ export default function Tasks({
                                     onSort={toggleSort}
                                     Icon={TextTIcon}
                                 />
-                                <TH
+                                <TasksTh
                                     label="Status"
                                     field="status"
                                     className="w-36"
@@ -635,7 +596,7 @@ export default function Tasks({
                                     onSort={toggleSort}
                                     Icon={SealIcon}
                                 />
-                                <TH
+                                <TasksTh
                                     label="Priority"
                                     field="priority"
                                     className="w-28"
@@ -644,7 +605,7 @@ export default function Tasks({
                                     onSort={toggleSort}
                                     Icon={FlagIcon}
                                 />
-                                <TH
+                                <TasksTh
                                     label="Project"
                                     field="project"
                                     className="w-40"
@@ -653,7 +614,7 @@ export default function Tasks({
                                     onSort={toggleSort}
                                     Icon={LayoutIcon}
                                 />
-                                <TH
+                                <TasksTh
                                     label="members"
                                     field="members"
                                     className="w-28"
@@ -662,7 +623,7 @@ export default function Tasks({
                                     onSort={toggleSort}
                                     Icon={UsersIcon}
                                 />
-                                <TH
+                                <TasksTh
                                     label="Due"
                                     field="dueDate"
                                     className="w-28"
