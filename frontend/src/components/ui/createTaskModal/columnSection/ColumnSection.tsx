@@ -46,15 +46,22 @@ export default function ColumnSection({
                     <SelectValue placeholder="Select a column" />
                 </SelectTrigger>
                 <SelectContent>
-                    {selectedProject.columns.map((column) => (
-                        <SelectItem
-                            key={column.id}
-                            value={column.id.toString()}
-                            className="rounded-md text-sm font-medium capitalize"
-                        >
-                            <span>{column.name}</span>
-                        </SelectItem>
-                    ))}
+                    {selectedProject.columns
+                        .filter(
+                            (column) =>
+                                !column.wip_limit ||
+                                column.wip_limit === 0 ||
+                                column.tasks.length < column.wip_limit,
+                        )
+                        .map((column) => (
+                            <SelectItem
+                                key={column.id}
+                                value={column.id.toString()}
+                                className="rounded-md text-sm font-medium capitalize"
+                            >
+                                <span>{column.name}</span>
+                            </SelectItem>
+                        ))}
                 </SelectContent>
             </Select>
             <ZodErrors error={formState?.zodErrors?.columnId} />
