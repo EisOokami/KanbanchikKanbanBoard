@@ -2,7 +2,7 @@ import { Router } from "express";
 import {
     createProject,
     deleteProject,
-    getProjectById,
+    getProject,
     getProjects,
     updateProject,
 } from "../controllers/projects.controller";
@@ -10,14 +10,13 @@ import { authenticateToken } from "../middleware/auth.middleware";
 import {
     createProjectSchema,
     updateProjectSchema,
-    validateIdSchema,
 } from "../validation/validation";
 import { validateData } from "../middleware/validation.middleware";
 
 const router = Router();
 
 router.get("/", authenticateToken, getProjects);
-router.get("/:id", authenticateToken, getProjectById);
+router.get("/:slug", authenticateToken, getProject);
 router.post(
     "/",
     authenticateToken,
@@ -25,11 +24,11 @@ router.post(
     createProject,
 );
 router.put(
-    "/:id",
+    "/:slug",
     authenticateToken,
     validateData(updateProjectSchema),
     updateProject,
 );
-router.delete("/:id", authenticateToken, deleteProject);
+router.delete("/:slug", authenticateToken, deleteProject);
 
 export default router;

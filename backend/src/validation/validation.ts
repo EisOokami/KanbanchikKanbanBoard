@@ -253,7 +253,14 @@ const memberSchema = z.object({
 });
 
 export const updateProjectSchema = z.object({
-    id: z.number().int().positive(),
+    slug: z
+        .string()
+        .min(1, "Slug must be at least 1 characters")
+        .max(200, "Slug must be 200 characters or less")
+        .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
+            message:
+                "Slug can only contain lowercase letters, numbers, and single hyphens",
+        }),
     icon: z.string().trim().min(1, "Invalid emoji").max(10, "Invalid emoji"),
     color: z
         .string()
@@ -295,7 +302,7 @@ export const updateProjectSchema = z.object({
     members: z.array(memberSchema).min(1, "At least one member is required"),
 });
 
-const attachmentSchema = z.object({
+export const attachmentSchema = z.object({
     filename: z
         .string({
             error: "Filename is required",
@@ -321,7 +328,7 @@ const attachmentSchema = z.object({
         .optional(),
 });
 
-const subtaskSchema = z.object({
+export const subtaskSchema = z.object({
     title: z
         .string({
             error: "Title is required",
@@ -529,4 +536,15 @@ export const memberInviteSchema = z.object({
                 .max(255, "Email must be less than 255 characters long"),
         )
         .min(1, "At least one member is required"),
+});
+
+export const validateSlugSchema = z.object({
+    slug: z
+        .string()
+        .min(1, "Slug must be at least 1 characters")
+        .max(200, "Slug must be 200 characters or less")
+        .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
+            message:
+                "Slug can only contain lowercase letters, numbers, and single hyphens",
+        }),
 });

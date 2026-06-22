@@ -56,7 +56,8 @@ export const getTasks = async (req: IGetUserRequest, res: Response) => {
                 p.id as project_id,
                 p.name as project_name,
                 p.icon as project_icon,
-                p.color as project_color
+                p.color as project_color,
+                p.slug as project_slug
             FROM tasks t
             JOIN columns c ON t.column_id = c.id
             JOIN projects p ON c.project_id = p.id
@@ -202,6 +203,7 @@ export const getTasks = async (req: IGetUserRequest, res: Response) => {
                         name: task.project_name,
                         icon: task.project_icon,
                         color: task.project_color,
+                        slug: task.project_slug,
                     },
                     members,
                     labels,
@@ -298,7 +300,8 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
                     p.id as project_id,
                     p.name as project_name,
                     p.icon as project_icon,
-                    p.color as project_color
+                    p.color as project_color,
+                    p.slug as project_slug
                 FROM tasks t
                 JOIN columns c ON t.column_id = c.id
                 JOIN projects p ON c.project_id = p.id
@@ -448,6 +451,7 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
                 name: task.project_name,
                 icon: task.project_icon,
                 color: task.project_color,
+                slug: task.project_slug,
             },
             members,
             labels,
@@ -1098,13 +1102,14 @@ export const getTaskFilterOptions = async (
         );
 
         const [projects] = await pool.execute<
-            (Pick<Project, "id" | "name" | "color"> & RowDataPacket)[]
+            (Pick<Project, "id" | "name" | "color" | "slug"> & RowDataPacket)[]
         >(
             `
                 SELECT DISTINCT
                     p.id,
                     p.name,
-                    p.color
+                    p.color,
+                    p.slug
                 FROM projects p
                 WHERE p.id IN (
                     SELECT project_id FROM project_members WHERE user_id = ?
@@ -1123,6 +1128,7 @@ export const getTaskFilterOptions = async (
                 id: project.id,
                 name: project.name,
                 color: project.color,
+                slug: project.slug,
             })),
         };
 

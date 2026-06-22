@@ -244,7 +244,7 @@ export function ProjectSettingsModal({
                                 {activeSection === "danger" && (
                                     <DangerSection
                                         name={name}
-                                        projectId={projectData.id}
+                                        slug={projectData.slug}
                                         isPending={isPending}
                                         onOpenChange={onOpenChange}
                                         onSectionChange={setActiveSection}
@@ -272,7 +272,7 @@ export function ProjectSettingsModal({
                             Save changes
                         </Button>
                     </div>
-                    <input type="hidden" name="id" value={projectData.id} />
+                    <input type="hidden" name="slug" value={projectData.slug} />
                     <input type="hidden" name="icon" value={icon} />
                     <input type="hidden" name="color" value={color} />
                     <input type="hidden" name="name" value={name} />

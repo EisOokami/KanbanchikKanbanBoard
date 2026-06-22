@@ -10,16 +10,18 @@ import type {
     IGetUserRequest,
     Label,
     Project,
+    ProjectSlugHistory,
     Subtask,
     Task,
     User,
 } from "../types/types";
 import {
     createProjectSchema,
+    validateSlugSchema,
     updateProjectSchema,
-    validateIdSchema,
 } from "../validation/validation";
 import { transporter } from "../utils/email";
+import { generateSlug, generateUniqueSlug } from "../utils/slugify";
 
 export const getProjects = async (req: IGetUserRequest, res: Response) => {
     try {
@@ -44,6 +46,7 @@ export const getProjects = async (req: IGetUserRequest, res: Response) => {
                     p.color, 
                     p.description, 
                     p.status,
+                    p.slug,
                     p.created_at,
                     p.updated_at
                 FROM projects p
@@ -142,6 +145,7 @@ export const getProjects = async (req: IGetUserRequest, res: Response) => {
                     icon: project.icon,
                     color: project.color,
                     status: project.status,
+                    slug: project.slug,
                     created_at: project.created_at,
                     updated_at: project.updated_at,
                     owner:
@@ -183,26 +187,26 @@ export const getProjects = async (req: IGetUserRequest, res: Response) => {
     }
 };
 
-export const getProjectById = async (req: IGetUserRequest, res: Response) => {
+export const getProject = async (req: IGetUserRequest, res: Response) => {
     try {
-        validateIdSchema.parse(req.params);
+        validateSlugSchema.parse(req.params);
 
-        const { id } = req.params;
+        const { slug } = req.params;
         const userId = req.user.id;
-
-        if (!id) {
-            res.status(400).json({
-                status: "error",
-                message: "Invalid project ID",
-            });
-
-            return;
-        }
 
         if (!userId) {
             res.status(401).json({
                 status: "error",
                 message: "Unauthorized",
+            });
+
+            return;
+        }
+
+        if (!slug) {
+            res.status(400).json({
+                status: "error",
+                message: "Invalid project slug",
             });
 
             return;
@@ -218,35 +222,46 @@ export const getProjectById = async (req: IGetUserRequest, res: Response) => {
                     p.color, 
                     p.description, 
                     p.status,
+                    p.slug,
                     p.created_at,
                     p.updated_at
                 FROM projects p
-                WHERE p.id = ? AND (p.owner_id = ? OR p.id IN (
+                WHERE p.slug = ? AND (p.owner_id = ? OR p.id IN (
                     SELECT project_id FROM project_members WHERE user_id = ?
                 ))
             `,
-            [id, userId, userId],
+            [slug, userId, userId],
         );
 
-        if (!projects.length) {
-            res.status(404).json({
-                status: "error",
-                message: "Project not found",
-            });
+        if (!projects.length || !projects[0]) {
+            const [history] = await pool.execute<ProjectSlugHistory[]>(
+                `
+                    SELECT 
+                        h.project_id, 
+                        p.slug AS current_slug
+                    FROM project_slug_history h
+                    JOIN projects p ON p.id = h.project_id
+                    WHERE h.old_slug = ?
+                    LIMIT 1
+                `,
+                [slug],
+            );
+
+            if (!history.length || !history[0]) {
+                res.status(404).json({
+                    status: "error",
+                    message: "Project not found",
+                });
+
+                return;
+            }
+
+            res.redirect(301, `/projects/${history[0].current_slug}`);
 
             return;
         }
 
         const project = projects[0];
-
-        if (!project) {
-            res.status(404).json({
-                status: "error",
-                message: "Project not found",
-            });
-
-            return;
-        }
 
         const [columns] = await pool.execute<Column[]>(
             `
@@ -255,7 +270,7 @@ export const getProjectById = async (req: IGetUserRequest, res: Response) => {
                 WHERE project_id = ?
                 ORDER BY position ASC
             `,
-            [id],
+            [project.id],
         );
 
         const [categories] = await pool.execute<Category[]>(
@@ -265,7 +280,7 @@ export const getProjectById = async (req: IGetUserRequest, res: Response) => {
                 WHERE project_id = ?
                 ORDER BY name ASC
             `,
-            [id],
+            [project.id],
         );
 
         const [labels] = await pool.execute<Label[]>(
@@ -275,7 +290,7 @@ export const getProjectById = async (req: IGetUserRequest, res: Response) => {
                 WHERE project_id = ?
                 ORDER BY name ASC
             `,
-            [id],
+            [project.id],
         );
 
         const [members] = await pool.execute<User[]>(
@@ -294,7 +309,7 @@ export const getProjectById = async (req: IGetUserRequest, res: Response) => {
                 WHERE pm.project_id = ?
                 ORDER BY pm.joined_at ASC
             `,
-            [id],
+            [project.id],
         );
 
         const [ownerData] = await pool.execute<User[]>(
@@ -491,7 +506,7 @@ export const getProjectById = async (req: IGetUserRequest, res: Response) => {
                 JOIN columns c ON t.column_id = c.id
                 WHERE c.project_id = ?
             `,
-            [id],
+            [project.id],
         );
 
         res.status(200).json({
@@ -501,6 +516,7 @@ export const getProjectById = async (req: IGetUserRequest, res: Response) => {
             icon: project.icon,
             color: project.color,
             status: project.status,
+            slug: project.slug,
             created_at: project.created_at,
             updated_at: project.updated_at,
             owner:
@@ -549,10 +565,36 @@ export const createProject = async (req: IGetUserRequest, res: Response) => {
 
         const validatedData = createProjectSchema.parse(req.body);
 
+        const baseSlug = generateSlug(validatedData.name);
+
+        if (!baseSlug) {
+            res.status(400).json({
+                status: "error",
+                message:
+                    "Project name must contain at least one letter or digit",
+            });
+
+            return;
+        }
+
+        validateSlugSchema.parse({ slug: baseSlug });
+
+        const [slugRows] = await pool.execute<Project[]>(
+            `
+                SELECT slug
+                FROM projects
+                WHERE slug LIKE ?
+            `,
+            [`${baseSlug}%`],
+        );
+
+        const existingSlugs = new Set(slugRows.map((row) => row.slug));
+        const slug = generateUniqueSlug(baseSlug, existingSlugs);
+
         const [result] = await pool.execute<ResultSetHeader>(
             `
-                INSERT INTO projects (owner_id, name, icon, color, description, status)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO projects (owner_id, name, icon, color, description, status, slug)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             `,
             [
                 userId,
@@ -561,6 +603,7 @@ export const createProject = async (req: IGetUserRequest, res: Response) => {
                 validatedData.color,
                 validatedData.description || null,
                 validatedData.status,
+                slug,
             ],
         );
 
@@ -698,6 +741,7 @@ export const createProject = async (req: IGetUserRequest, res: Response) => {
                     color, 
                     description, 
                     status,
+                    slug,
                     created_at,
                     updated_at
                 FROM projects
@@ -734,19 +778,10 @@ export const createProject = async (req: IGetUserRequest, res: Response) => {
 
 export const updateProject = async (req: IGetUserRequest, res: Response) => {
     try {
-        validateIdSchema.parse(req.params);
+        validateSlugSchema.parse(req.params);
 
-        const { id } = req.params;
+        const { slug } = req.params;
         const userId = +req.user.id;
-
-        if (!id) {
-            res.status(400).json({
-                status: "error",
-                message: "Invalid project ID",
-            });
-
-            return;
-        }
 
         if (!userId) {
             res.status(401).json({
@@ -757,9 +792,18 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
+        if (!slug) {
+            res.status(400).json({
+                status: "error",
+                message: "Invalid project slug",
+            });
+
+            return;
+        }
+
         const [projects] = await pool.execute<Project[]>(
-            `SELECT id, name, owner_id FROM projects WHERE id = ?`,
-            [id],
+            `SELECT id, name, owner_id FROM projects WHERE slug = ?`,
+            [slug],
         );
 
         if (!projects.length) {
@@ -809,6 +853,57 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
         if (validatedData.name) {
             updateFields.push("name = ?");
             updateValues.push(validatedData.name);
+
+            const baseSlug = generateSlug(validatedData.name);
+
+            if (!baseSlug) {
+                res.status(400).json({
+                    status: "error",
+                    message:
+                        "Project name must contain at least one letter or digit",
+                });
+
+                return;
+            }
+
+            validateSlugSchema.parse({ slug: baseSlug });
+
+            const [slugRows] = await pool.execute<Project[]>(
+                `
+                    SELECT slug
+                    FROM projects
+                    WHERE slug LIKE ?
+                `,
+                [`${baseSlug}%`],
+            );
+
+            const existingSlugs = new Set(slugRows.map((row) => row.slug));
+            existingSlugs.delete(slug as string);
+
+            const newSlug = generateUniqueSlug(baseSlug, existingSlugs);
+
+            updateFields.push("slug = ?");
+            updateValues.push(newSlug);
+
+            if (newSlug && slug && newSlug !== slug) {
+                const [result] = await pool.execute<ResultSetHeader>(
+                    `
+                            INSERT IGNORE INTO project_slug_history 
+                            (project_id, old_slug)
+                            VALUES (?, ?)
+                        `,
+                    [project.id, slug],
+                );
+
+                if (result.affectedRows === 0) {
+                    res.status(400).json({
+                        status: "error",
+                        message: "Failed to update slug",
+                    });
+
+                    return;
+                }
+            }
         }
 
         if (validatedData.description) {
@@ -830,7 +925,7 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
-        updateValues.push(id);
+        updateValues.push(project.id);
 
         const [result] = await pool.execute<ResultSetHeader>(
             `
@@ -1027,12 +1122,13 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
                     name, 
                     description, 
                     status,
+                    slug,
                     created_at,
                     updated_at
                 FROM projects
                 WHERE id = ?
             `,
-            [id],
+            [project.id],
         );
 
         res.status(200).json({
@@ -1063,19 +1159,10 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
 
 export const deleteProject = async (req: IGetUserRequest, res: Response) => {
     try {
-        validateIdSchema.parse(req.params);
+        validateSlugSchema.parse(req.params);
 
-        const { id } = req.params;
+        const { slug } = req.params;
         const userId = +req.user.id;
-
-        if (!id) {
-            res.status(400).json({
-                status: "error",
-                message: "Invalid project ID",
-            });
-
-            return;
-        }
 
         if (!userId) {
             res.status(401).json({
@@ -1086,9 +1173,18 @@ export const deleteProject = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
+        if (!slug) {
+            res.status(400).json({
+                status: "error",
+                message: "Invalid project slug",
+            });
+
+            return;
+        }
+
         const [projects] = await pool.execute<Project[]>(
-            `SELECT owner_id FROM projects WHERE id = ?`,
-            [id],
+            `SELECT id, owner_id FROM projects WHERE slug = ?`,
+            [slug],
         );
 
         if (projects.length === 0) {
@@ -1122,7 +1218,7 @@ export const deleteProject = async (req: IGetUserRequest, res: Response) => {
 
         const [result] = await pool.execute<ResultSetHeader>(
             `DELETE FROM projects WHERE id = ?`,
-            [id],
+            [project.id],
         );
 
         if (result.affectedRows === 0) {

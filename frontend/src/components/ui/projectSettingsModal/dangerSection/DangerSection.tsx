@@ -16,11 +16,10 @@ import { Button } from "../../shadcn/button";
 import { ArchiveIcon, TrashSimpleIcon } from "@phosphor-icons/react";
 import { deleteProjectAction } from "@/data/actions";
 import { toast } from "sonner";
-import { usePathname } from "next/navigation";
 
 interface DangerSectionProps {
     name: string;
-    projectId: number;
+    slug: string;
     isPending: boolean;
     onSectionChange: (section: NavSection) => void;
     onOpenChange: (open: boolean) => void;
@@ -28,15 +27,13 @@ interface DangerSectionProps {
 
 export default function DangerSection({
     name,
-    projectId,
+    slug,
     isPending,
     onSectionChange,
     onOpenChange,
 }: Readonly<DangerSectionProps>) {
-    const pathname = usePathname();
-
     const handleDeleteProject = async () => {
-        const result = await deleteProjectAction(projectId, pathname);
+        const result = await deleteProjectAction(slug);
 
         if (result && result.ok) {
             toast.success("Success", {

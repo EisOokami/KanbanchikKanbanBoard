@@ -74,10 +74,8 @@ export async function getProjectsData(): Promise<Project[]> {
     return fetchedData;
 }
 
-export async function getProjectData(
-    projectId: number | string,
-): Promise<Project> {
-    const url = new URL(`/projects/${projectId}`, baseUrl);
+export async function getProjectData(slug: string): Promise<Project> {
+    const url = new URL(`/projects/${slug}`, baseUrl);
 
     const fetchedData = await fetchData(url.href);
 

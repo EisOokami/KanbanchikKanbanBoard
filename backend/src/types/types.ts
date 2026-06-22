@@ -61,6 +61,7 @@ export interface Project extends ExtendedBase {
     icon: string;
     color: string;
     columns?: (ColumnConfig & Column)[];
+    slug: string;
 }
 
 export interface Subtask extends Base {
@@ -144,4 +145,11 @@ export interface ProjectMember extends RowDataPacket {
     id: number;
     project_id: number;
     user_id: number;
+}
+
+export interface ProjectSlugHistory extends RowDataPacket {
+    id: number;
+    project_id: number;
+    old_slug: string;
+    created_at: string;
 }

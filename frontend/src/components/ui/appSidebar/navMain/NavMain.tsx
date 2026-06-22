@@ -92,7 +92,7 @@ export default function NavMain({ projectsData }: Readonly<NavMainProps>) {
                                                 className="transition-colors hover:bg-gray-200"
                                             >
                                                 <Link
-                                                    href={`${item.url}/${project.name}?id=${project.id}`}
+                                                    href={`${item.url}/${project.slug}`}
                                                     className="flex items-center gap-2"
                                                 >
                                                     <span

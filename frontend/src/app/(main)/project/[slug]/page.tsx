@@ -3,15 +3,15 @@ import Project from "@/components/layout/project/Project";
 import { getProjectData, getUserData } from "@/data/loaders";
 
 interface ProjectPageProps {
-    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+    params: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 export default async function ProjectPage({
-    searchParams,
+    params,
 }: Readonly<ProjectPageProps>) {
-    const { id } = await searchParams;
+    const { slug } = await params;
 
-    if (typeof id !== "string") {
+    if (typeof slug !== "string") {
         redirect("/overview");
     }
 
@@ -21,7 +21,7 @@ export default async function ProjectPage({
         redirect("/signIn");
     }
 
-    const projectData = await getProjectData(id);
+    const projectData = await getProjectData(slug);
 
     return <Project userData={userData.data} projectData={projectData} />;
 }

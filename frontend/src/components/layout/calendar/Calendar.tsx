@@ -54,7 +54,7 @@ export default function Calendar({
         }
 
         (async () => {
-            const project = await getProjectData(selectedTask.project.id);
+            const project = await getProjectData(selectedTask.project.slug);
 
             setProjectData(project);
         })();

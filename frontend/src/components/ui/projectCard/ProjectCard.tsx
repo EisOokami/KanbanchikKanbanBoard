@@ -22,7 +22,7 @@ import { ProjectSettingsModal } from "../projectSettingsModal/ProjectSettingsMod
 import { useState } from "react";
 import { Project } from "@/types/types";
 import { STATUS_CONFIG } from "@/constants/constants";
-import { convertToSlug, getInitials } from "@/libs/utils";
+import { getInitials } from "@/libs/utils";
 import {
     CheckSquareIcon,
     DotsThreeOutlineIcon,
@@ -33,7 +33,7 @@ import Link from "next/link";
 
 interface ProjectCardProps {
     project: Project;
-    onDelete: (id: number) => void;
+    onDelete: (slug: string) => void;
 }
 
 export default function ProjectCard({
@@ -57,10 +57,7 @@ export default function ProjectCard({
 
     return (
         <>
-            <Link
-                href={`/project/${convertToSlug(project.name)}?id=${project.id}`}
-                className="grid"
-            >
+            <Link href={`/project/${project.slug}`} className="grid">
                 <Card className="group relative flex flex-col overflow-hidden border border-border/60 bg-card shadow-sm transition-shadow duration-200 hover:shadow-md">
                     <CardHeader className="flex-row items-start justify-between gap-2 px-3 pb-0 pt-3">
                         <div className="flex min-w-0 items-center gap-3">
@@ -119,7 +116,7 @@ export default function ProjectCard({
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
                                         className="text-destructive focus:text-destructive"
-                                        onClick={() => onDelete(project.id)}
+                                        onClick={() => onDelete(project.slug)}
                                     >
                                         <TrashIcon
                                             weight="duotone"

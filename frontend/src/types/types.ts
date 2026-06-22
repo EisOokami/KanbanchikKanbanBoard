@@ -47,6 +47,7 @@ export interface Project extends ExtendedBase {
     icon: string;
     color: string;
     columns: Column[];
+    slug: string;
 }
 
 export interface Subtask extends Base {
@@ -95,7 +96,7 @@ export interface Task extends ExtendedBase {
     show_progress: boolean;
     attachments: Attachment[];
     comments: Comment[];
-    project: Pick<Project, "id" | "name" | "color" | "icon">;
+    project: Pick<Project, "id" | "name" | "color" | "icon" | "slug">;
 }
 
 export interface Column extends ExtendedBase {

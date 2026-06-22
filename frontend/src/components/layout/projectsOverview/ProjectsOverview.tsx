@@ -23,7 +23,6 @@ import {
     countActiveFilters,
 } from "@/libs/projectOverview";
 import { cn } from "@/libs/utils";
-import { usePathname } from "next/navigation";
 
 interface ProjectsOverviewProps {
     projectsData: Project[];
@@ -51,16 +50,12 @@ export default function ProjectsOverview({
         () => applyFiltersAndSort(projectsData, search, filterOpts),
         [projectsData, search, filterOpts],
     );
-    const pathname = usePathname();
 
     const activeFilterCount = countActiveFilters(filterOpts);
 
-    const handleDelete = useCallback(
-        async (id: number) => {
-            await deleteProjectAction(id, pathname);
-        },
-        [pathname],
-    );
+    const handleDelete = useCallback(async (slug: string) => {
+        await deleteProjectAction(slug);
+    }, []);
 
     const handleShowNewProjectModal = () => {
         setShowNewProjectModal(!showNewProjectModal);

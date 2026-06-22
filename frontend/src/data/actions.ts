@@ -673,12 +673,13 @@ const memberSchema = z.object({
 });
 
 const updateProjectSchema = z.object({
-    id: z
+    slug: z
         .string()
-        .regex(/^\d+$/)
-        .transform(Number)
-        .refine((value) => Number.isSafeInteger(value), {
-            message: "ID is too large a numerical value",
+        .min(1, "Slug must be at least 1 characters")
+        .max(200, "Slug must be 200 characters or less")
+        .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
+            message:
+                "Slug can only contain lowercase letters, numbers, and single hyphens",
         }),
     icon: z.string().trim().min(1, "Invalid emoji").max(10, "Invalid emoji"),
     color: z
@@ -744,7 +745,7 @@ export async function updateProjectAction(
     formData: FormData,
 ): Promise<UpdateProjectAction | undefined> {
     const validatedFields = updateProjectSchema.safeParse({
-        id: formData.get("id"),
+        slug: formData.get("slug"),
         icon: formData.get("icon"),
         color: formData.get("color"),
         name: formData.get("name"),
@@ -773,7 +774,7 @@ export async function updateProjectAction(
 
     const responseData = await mutateData(
         "PUT",
-        `/projects/${validatedFields.data.id}`,
+        `/projects/${validatedFields.data.slug}`,
         validatedFields.data,
     );
 
@@ -832,10 +833,9 @@ export async function updateProjectAction(
 }
 
 export async function deleteProjectAction(
-    projectId: number,
-    currentPath?: string,
+    slug: string,
 ): Promise<{ ok: boolean; message: string } | undefined> {
-    const responseData = await mutateData("DELETE", `/projects/${projectId}`);
+    const responseData = await mutateData("DELETE", `/projects/${slug}`);
 
     if (!responseData) {
         console.error("Ops! Something went wrong. Please try again.");
@@ -868,14 +868,7 @@ export async function deleteProjectAction(
         };
     }
 
-    if (currentPath) {
-        revalidatePath(currentPath);
-    }
-
-    return {
-        ok: true,
-        message: "Project delete",
-    };
+    redirect("/overview");
 }
 
 const subtaskSchema = z.object({
@@ -1875,7 +1868,7 @@ export async function moveTaskAction(data: {
         };
     }
 
-    revalidatePath(`/project/id=?${data.projectId}`);
+    revalidatePath(`/project`);
 }
 
 export async function deleteAttachmentAction(
