@@ -357,6 +357,17 @@ export default function Project({
         [showTaskDetails],
     );
 
+    const handleShowProjectSettings = useCallback(
+        (open?: boolean, data?: IProject) => {
+            setShowSettings(typeof open === "boolean" ? open : !showSettings);
+
+            if (data) {
+                setColumns(data.columns);
+            }
+        },
+        [showSettings],
+    );
+
     const viewModes = [
         { id: "kanban", label: "Kanban", icon: KanbanIcon },
         { id: "list", label: "List", icon: ListIcon },
@@ -422,7 +433,7 @@ export default function Project({
                             size="icon"
                             variant="ghost"
                             className="[&_svg]:size-5"
-                            onClick={() => setShowSettings(true)}
+                            onClick={() => handleShowProjectSettings(true)}
                         >
                             <GearSixIcon weight="duotone" />
                         </Button>
@@ -586,7 +597,7 @@ export default function Project({
             />
             <ProjectSettingsModal
                 open={showSettings}
-                onOpenChange={() => setShowSettings(!showSettings)}
+                onOpenChange={handleShowProjectSettings}
                 columnsData={columns}
                 projectData={projectData}
             />

@@ -23,10 +23,11 @@ import { updateProjectAction } from "@/data/actions";
 import { BaseAction } from "@/types/actions";
 import { PALETTE } from "@/constants/constants";
 import { usePathname } from "next/navigation";
+import { getProjectData } from "@/data/loaders";
 
 interface ProjectSettingsModalProps {
     open: boolean;
-    onOpenChange: (open: boolean) => void;
+    onOpenChange: (open: boolean, data?: Project) => void;
     columnsData: Column[];
     projectData: Project;
 }
@@ -115,9 +116,13 @@ export function ProjectSettingsModal({
     );
 
     useEffect(() => {
-        if (formState && formState.status === "success") {
-            onOpenChange(false);
-        }
+        (async () => {
+            if (formState && formState.status === "success") {
+                const result = await getProjectData(projectData.slug);
+
+                onOpenChange(false, result);
+            }
+        })();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [formState]);
 
