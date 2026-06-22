@@ -46,6 +46,7 @@ import {
 import { getProjectData } from "@/data/loaders";
 import { DEFAULT_FILTER } from "@/constants/taskFilterSheet";
 import TasksTh from "@/components/ui/tasksTh/TasksTh";
+import { deleteTaskAction } from "@/data/actions";
 
 interface TasksProps {
     tasksData: Task[];
@@ -58,7 +59,6 @@ export default function Tasks({
     taskFilterOptionsData,
     userData,
 }: Readonly<TasksProps>) {
-    const [tasks, setTasks] = useState<Task[]>(tasksData);
     const [filter, setFilter] = useState<FilterState>(DEFAULT_FILTER);
     const [sortField, setSortField] = useState<SortField>("priority");
     const [sortDir, setSortDir] = useState<SortDir>("asc");
@@ -80,106 +80,16 @@ export default function Tasks({
         })();
     }, [selectedTask]);
 
-    // const filtered = useMemo(() => {
-    //     let list = [...tasks];
-
-    //     if (filter.search) {
-    //         const q = filter.search.toLowerCase();
-    //         list = list.filter(
-    //             (t) =>
-    //                 t.title.toLowerCase().includes(q) ||
-    //                 t.id.toString().includes(q),
-    //         );
-    //     }
-    //     if (filter.status.length)
-    //         list = list.filter((t) => filter.status.includes(t.status));
-    //     if (filter.priority.length)
-    //         list = list.filter((t) => filter.priority.includes(t.priority));
-    //     if (filter.project.length)
-    //         list = list.filter((t) => filter.project.includes(t.project));
-    //     if (filter.member.length)
-    //         list = list.filter((t) => filter.member.includes(t.members));
-    //     if (filter.overdue)
-    //         list = list.filter((t) => isOverdue(t.due_date, t.status));
-
-    //     list.sort((a, b) => {
-    //         if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
-    //         let av: number | string, bv: number | string;
-    //         switch (sortField) {
-    //             case "priority":
-    //                 av = PRIORITY_CONFIG[a.priority as Priority].order;
-    //                 bv = PRIORITY_CONFIG[b.priority as Priority].order;
-    //                 break;
-    //             case "status":
-    //                 av = COLUMN_CONFIG[a.status as Columns].order;
-    //                 bv = COLUMN_CONFIG[b.status as Columns].order;
-    //                 break;
-    //             case "dueDate":
-    //                 av = a.due_date;
-    //                 bv = b.due_date;
-    //                 break;
-    //             case "project":
-    //                 av = a.project;
-    //                 bv = b.project;
-    //                 break;
-    //             case "member":
-    //                 av = a.member;
-    //                 bv = b.member;
-    //                 break;
-    //             default:
-    //                 av = a.title;
-    //                 bv = b.title;
-    //         }
-    //         if (av < bv) return sortDir === "asc" ? -1 : 1;
-    //         if (av > bv) return sortDir === "asc" ? 1 : -1;
-    //         return 0;
-    //     });
-
-    //     return list;
-    // }, [tasks, filter, sortField, sortDir]);
-
-    // const updateTask = useCallback((id: number, patch: Partial<Task>) => {
-    //     setTasks((prev) =>
-    //         prev.map((t) => (t.id === id ? { ...t, ...patch } : t)),
-    //     );
-    //     setSelectedTask((prevState) =>
-    //         prevState && prevState.id === id
-    //             ? { ...prevState, ...patch }
-    //             : prevState,
-    //     );
-    // }, []);
-
     const deleteTask = useCallback(
-        (id: number) => {
-            setTasks((prev) => prev.filter((t) => t.id !== id));
+        async (id: number) => {
+            await deleteTaskAction(id, "/tasks");
 
-            if (selectedTask?.id === id) setSelectedTask(null);
+            if (selectedTask && selectedTask.id === id) {
+                setSelectedTask(null);
+            }
         },
         [selectedTask],
     );
-
-    // const allChecked =
-    //     filtered.length > 0 && filtered.every((t) => checked.has(t.id));
-    // const someChecked = !allChecked && filtered.some((t) => checked.has(t.id));
-
-    // const toggleAll = () => {
-    //     if (allChecked) setChecked(new Set());
-    //     else setChecked(new Set(filtered.map((t) => t.id)));
-    // };
-
-    // const toggleCheck = (id: number, v: boolean) => {
-    //     setChecked((prev) => {
-    //         const s = new Set(prev);
-
-    //         if (v) {
-    //             s.add(id);
-    //         } else {
-    //             s.delete(id);
-    //         }
-
-    //         return s;
-    //     });
-    // };
 
     const toggleSort = (field: SortField) => {
         if (sortField === field)
@@ -229,15 +139,19 @@ export default function Tasks({
 
     const stats = useMemo(
         () => ({
-            total: tasks.length,
-            todo: tasks.filter((t) => t.column.name === "todo").length,
-            inProgress: tasks.filter((t) => t.column.name === "in_progress")
+            total: tasksData.length,
+            todo: tasksData.filter((task) => task.column.name === "todo")
                 .length,
-            done: tasks.filter((t) => t.column.name === "done").length,
-            overdue: tasks.filter((t) => isOverdue(t.due_date, t.column.name))
+            inProgress: tasksData.filter(
+                (task) => task.column.name === "in_progress",
+            ).length,
+            done: tasksData.filter((task) => task.column.name === "done")
                 .length,
+            overdue: tasksData.filter((task) =>
+                isOverdue(task.due_date, task.column.name),
+            ).length,
         }),
-        [tasks],
+        [tasksData],
     );
 
     return (
@@ -410,9 +324,6 @@ export default function Tasks({
                                                 (project) => (
                                                     <DropdownMenuCheckboxItem
                                                         key={project.id}
-                                                        // checked={projectFilter.includes(
-                                                        //     ,
-                                                        // )}
                                                         onCheckedChange={() =>
                                                             toggleArrFilter(
                                                                 "projects",
@@ -653,37 +564,7 @@ export default function Tasks({
                             </tr>
                         </thead>
                         <tbody className="bg-white">
-                            {/* {filtered.length === 0 ? (
-                                    <tr>
-                                        <td
-                                            colSpan={11}
-                                            className="py-20 text-center text-gray-400"
-                                        >
-                                            <LayoutList className="mx-auto mb-3 size-10 opacity-30" />
-                                            <p className="text-sm font-semibold">
-                                                No tasks found
-                                            </p>
-                                            <p className="mt-1 text-xs">
-                                                Try adjusting your filters
-                                            </p>
-                                        </td>
-                                    </tr>
-                                ) : ( */}
-                            {/* filtered.map((task) => (
-                                        <TaskRow
-                                            key={task.id}
-                                            task={task}
-                                            selected={
-                                                selectedTask?.id === task.id
-                                            }
-                                            onClick={setSelectedTask}
-                                            onUpdate={updateTask}
-                                            onDelete={deleteTask}
-                                            allMembers={[]}
-                                        />
-                                    )) */}
-                            {/* )} */}
-                            {tasks.map((task) => (
+                            {tasksData.map((task) => (
                                 <TaskRow
                                     key={task.id}
                                     task={task}
