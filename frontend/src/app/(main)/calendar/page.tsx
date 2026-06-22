@@ -1,8 +1,14 @@
 import Calendar from "@/components/layout/calendar/Calendar";
-import { getTasksData } from "@/data/loaders";
+import { getTasksData, getUserData } from "@/data/loaders";
+import { redirect } from "next/navigation";
 
 export default async function CalendarPage() {
     const tasksData = await getTasksData();
+    const userData = await getUserData();
 
-    return <Calendar tasksData={tasksData} />;
+    if (!userData.data) {
+        redirect("/signIn");
+    }
+
+    return <Calendar tasksData={tasksData} userData={userData.data} />;
 }

@@ -13,7 +13,7 @@ import {
 import MiniCalendar from "@/components/ui/miniCalendar/MiniCalendar";
 import DayCell from "@/components/ui/dayCell/DayCell";
 import DaySidebar from "@/components/ui/daySidebar/DaySidebar";
-import { Project, Task } from "@/types/types";
+import { Project, Task, User } from "@/types/types";
 import { MONTHS, WEEKDAYS } from "@/constants/constants";
 import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
 import { TaskDetailsSheet } from "@/components/ui/taskDetailsSheet/TaskDetailsSheet";
@@ -27,9 +27,13 @@ interface GridCell {
 
 interface CalendarProps {
     tasksData: Task[];
+    userData: User;
 }
 
-export default function Calendar({ tasksData }: Readonly<CalendarProps>) {
+export default function Calendar({
+    tasksData,
+    userData,
+}: Readonly<CalendarProps>) {
     const now = new Date();
     const [year, setYear] = useState<number>(now.getFullYear());
     const [month, setMonth] = useState<number>(now.getMonth());
@@ -452,6 +456,7 @@ export default function Calendar({ tasksData }: Readonly<CalendarProps>) {
                     onOpenChange={handleShowTaskDetailsSheet}
                     selectedTask={selectedTask}
                     projectData={projectData}
+                    userData={userData}
                 />
             )}
         </>
