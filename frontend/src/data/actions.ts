@@ -1462,24 +1462,38 @@ export async function deleteTaskAction(
 }
 
 const updateProfileSchema = z.object({
-    avatar: z
-        .instanceof(File, {
-            message: "Avatar is required",
-        })
-        .refine((file) => file.size > 0, {
-            message: "Avatar is empty",
-        })
-        .refine((file) => file.size <= 5 * 1024 * 1024, {
-            message: "Maximum file size is 5MB",
-        })
-        .refine(
-            (file) =>
-                ["image/jpeg", "image/png", "image/webp"].includes(file.type),
-            {
-                message: "Only JPG, PNG and WEBP are allowed",
-            },
-        )
-        .optional(),
+    avatar: z.preprocess(
+        (value) => {
+            if (!value || value === "") return undefined;
+
+            if (typeof window !== "undefined" && value instanceof FileList) {
+                const file = value.item(0);
+                return file && file.size > 0 ? file : undefined;
+            }
+
+            if (
+                value instanceof File &&
+                (value.size === 0 || value.name === "")
+            ) {
+                return undefined;
+            }
+
+            return value;
+        },
+        z
+            .instanceof(File, { message: "Avatar is required" })
+            .refine((file) => file.size <= 5 * 1024 * 1024, {
+                message: "Maximum file size is 5MB",
+            })
+            .refine(
+                (file) =>
+                    ["image/jpeg", "image/png", "image/webp"].includes(
+                        file.type,
+                    ),
+                { message: "Only JPG, PNG and WEBP are allowed" },
+            )
+            .optional(),
+    ),
     name: z
         .string()
         .trim()
@@ -1521,12 +1535,7 @@ export async function updateProfileAction(
         };
     }
 
-    const data = new FormData();
     const file = new FormData();
-
-    data.append("name", validatedFields.data.name);
-    data.append("surname", validatedFields.data.surname);
-    data.append("email", validatedFields.data.email);
 
     if (validatedFields.data.avatar) {
         file.append("file", validatedFields.data.avatar);
@@ -1580,7 +1589,7 @@ export async function updateProfileAction(
     const responseData = await mutateData(
         "POST",
         "/users/update-profile",
-        data,
+        validatedFields.data,
     );
 
     if (!responseData) {
