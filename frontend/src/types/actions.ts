@@ -14,6 +14,8 @@ export interface BaseAction {
     error: string | null;
     details: DetailsError[] | null;
     formData: FormData | null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    data?: any;
 }
 
 export interface LoginZodErrors extends BaseZodErrors {
