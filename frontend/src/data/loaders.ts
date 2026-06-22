@@ -112,6 +112,24 @@ export async function getTasksData(): Promise<Task[]> {
     return fetchedData;
 }
 
+export async function getTaskData(taskId: number | string): Promise<Task> {
+    const url = new URL(`/tasks/${taskId}`, baseUrl);
+
+    const fetchedData = await fetchData(url.href);
+
+    if (fetchedData.status === "error" && fetchedData.details) {
+        throw new Error(
+            JSON.stringify({
+                error: fetchedData.details,
+                status: fetchedData.status,
+                description: fetchedData.message,
+            }),
+        );
+    }
+
+    return fetchedData;
+}
+
 export async function getTaskFilterOptionsData(): Promise<FilterOptions> {
     const url = new URL("/tasks/filter-options", baseUrl);
 
