@@ -527,7 +527,7 @@ export const createTask = async (req: IGetUserRequest, res: Response) => {
             [validatedData.projectId, userId, userId],
         );
 
-        if (!projects || !projects.length) {
+        if (!projects.length) {
             res.status(403).json({
                 status: "error",
                 message: "Access denied or project not found",
@@ -538,28 +538,56 @@ export const createTask = async (req: IGetUserRequest, res: Response) => {
 
         const [columns] = await pool.execute<Column[]>(
             `
-                SELECT c.id, p.id as project_id
+                SELECT
+                    c.id,
+                    c.name,
+                    c.wip_limit,
+                    COUNT(t.id) AS task_count
                 FROM columns c
                 JOIN projects p ON c.project_id = p.id
-                WHERE c.id = ? AND p.id = ? AND c.project_id = ? AND (
-                    p.id IN (
-                        SELECT project_id FROM project_members WHERE user_id = ?
-                    ) OR p.owner_id = ?
+                LEFT JOIN tasks t ON t.column_id = c.id
+                WHERE c.id = ?
+                AND p.id = ?
+                AND (
+                    p.owner_id = ?
+                    OR p.id IN (
+                        SELECT project_id
+                        FROM project_members
+                        WHERE user_id = ?
+                    )
                 )
+                GROUP BY c.id, c.name, c.wip_limit, p.id
             `,
-            [
-                validatedData.columnId,
-                validatedData.projectId,
-                validatedData.projectId,
-                userId,
-                userId,
-            ],
+            [validatedData.columnId, validatedData.projectId, userId, userId],
         );
 
-        if (!columns || !columns.length) {
+        if (!columns.length) {
             res.status(403).json({
                 status: "error",
                 message: "Access denied or column not found",
+            });
+
+            return;
+        }
+
+        const column = columns[0];
+
+        if (!column) {
+            res.status(404).json({
+                status: "error",
+                message: "Column not found",
+            });
+
+            return;
+        }
+
+        if (
+            column.wip_limit !== null &&
+            column.task_count >= column.wip_limit
+        ) {
+            res.status(409).json({
+                status: "error",
+                message: "The column has reached its WIP limit.",
             });
 
             return;
@@ -576,7 +604,7 @@ export const createTask = async (req: IGetUserRequest, res: Response) => {
             [validatedData.columnId],
         );
 
-        if (!rows || !rows.length) {
+        if (!rows.length) {
             res.status(404).json({
                 status: "error",
                 message: "Tasks not found",
@@ -1168,6 +1196,52 @@ export const moveTask = async (req: IGetUserRequest, res: Response) => {
         }
 
         const validatedData = moveTaskSchema.parse(req.body);
+
+        const [columns] = await pool.execute<Column[]>(
+            `
+                SELECT
+                    c.name,
+                    c.wip_limit,
+                    COUNT(t.id) AS task_count
+                FROM columns c
+                LEFT JOIN tasks t ON t.column_id = c.id
+                WHERE c.id = ?
+                GROUP BY c.id, c.name, c.wip_limit;
+            `,
+            [validatedData.columnId],
+        );
+
+        if (!columns.length) {
+            res.status(404).json({
+                status: "error",
+                message: "Column not found",
+            });
+
+            return;
+        }
+
+        const column = columns[0];
+
+        if (!column) {
+            res.status(404).json({
+                status: "error",
+                message: "Column not found",
+            });
+
+            return;
+        }
+
+        if (
+            column.wip_limit !== null &&
+            column.task_count >= column.wip_limit
+        ) {
+            res.status(409).json({
+                status: "error",
+                message: "The column has reached its WIP limit.",
+            });
+
+            return;
+        }
 
         const [result] = await pool.execute<ResultSetHeader>(
             `

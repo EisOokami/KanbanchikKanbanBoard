@@ -627,15 +627,13 @@ export const createProject = async (req: IGetUserRequest, res: Response) => {
         );
 
         validatedData.columns.forEach(async (column) => {
-            if (column.wip_limit) {
-                await pool.execute<ResultSetHeader>(
-                    `
+            await pool.execute<ResultSetHeader>(
+                `
                         INSERT INTO columns (project_id, name, position, wip_limit)
                         VALUES (?, ?, ?, ?)
                     `,
-                    [projectId, column.name, column.position, column.wip_limit],
-                );
-            }
+                [projectId, column.name, column.position, column.wip_limit],
+            );
         });
 
         validatedData.labels.forEach(async (label) => {
@@ -950,11 +948,16 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
                 if (column.id) {
                     await pool.execute<ResultSetHeader>(
                         `
-                        UPDATE columns 
-                        SET name = ?, position = ?, updated_at = CURRENT_TIMESTAMP
-                        WHERE id = ?
+                            UPDATE columns 
+                            SET name = ?, position = ?, wip_limit = ?, updated_at = CURRENT_TIMESTAMP
+                            WHERE id = ?
                         `,
-                        [column.name, column.position, column.id],
+                        [
+                            column.name,
+                            column.position,
+                            column.wip_limit,
+                            column.id,
+                        ],
                     );
                 }
             });
