@@ -291,11 +291,10 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
                     t.show_progress,
                     t.created_at,
                     t.updated_at,
-                    u.name as creator_name,
-                    u.surname as creator_surname,
-                    u.avatar_url as creator_avatar,
-                    u.email as creator_email,
+                    c.id as column_id,
                     c.name as column_name,
+                    c.position as column_position,
+                    c.wip_limit as column_wip_limit,
                     p.id as project_id,
                     p.name as project_name,
                     p.icon as project_icon,
@@ -335,12 +334,13 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
 
         const [members] = await pool.execute<User[]>(
             `
-                SELECT 
+                SELECT DISTINCT
                     u.id,
                     u.name,
                     u.surname,
                     u.avatar_url,
                     u.color,
+                    u.email,
                     pm.role,
                     pm.status,
                     pm.joined_at
@@ -348,8 +348,10 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
                 JOIN users u ON tm.user_id = u.id
                 JOIN tasks t ON tm.task_id = t.id
                 JOIN columns c ON t.column_id = c.id
-                JOIN project_members pm ON c.project_id = pm.project_id
+                JOIN project_members pm ON c.project_id = pm.project_id AND tm.user_id = pm.user_id
+                JOIN projects p ON c.project_id = p.id
                 WHERE tm.task_id = ?
+                ORDER BY u.name, u.surname;
             `,
             [id],
         );
@@ -404,11 +406,43 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
             [id],
         );
 
+        const [attachments] = await pool.execute<any[]>(
+            `
+                SELECT
+                    a.id,
+                    a.filename,
+                    a.file_url,
+                    a.mime_type,
+                    a.size_bytes,
+                    a.created_at,
+                    u.id as uploader_id,
+                    u.name as uploader_name,
+                    u.surname as uploader_surname,
+                    u.avatar_url as uploader_avatar
+                FROM attachments a
+                JOIN users u ON a.uploader_id = u.id
+                WHERE a.task_id = ?
+                ORDER BY a.created_at DESC
+            `,
+            [task.id],
+        );
+
         const subtasksTotal = subtasks.length;
-        const subtasksDone = subtasks.filter((s) => s.is_done).length;
+        const subtasksDone = subtasks.filter(
+            (subtask) => subtask.is_done,
+        ).length;
 
         res.status(200).json({
-            ...task,
+            id: task.id,
+            created_at: task.created_at,
+            updated_at: task.updated_at,
+            title: task.title,
+            description: task.description,
+            position: task.position,
+            due_date: task.due_date,
+            start_date: task.start_date,
+            priority: task.priority,
+            show_progress: task.show_progress === true,
             project: {
                 id: task.project_id,
                 name: task.project_name,
@@ -419,7 +453,39 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
             labels,
             categories,
             subtasks,
-            comments,
+            attachments: attachments.map((attachment) => ({
+                id: attachment.id,
+                filename: attachment.filename,
+                file_url: attachment.file_url,
+                mime_type: attachment.mime_type,
+                size_bytes: attachment.size_bytes,
+                created_at: attachment.created_at,
+                uploader: {
+                    id: attachment.uploader_id,
+                    name: attachment.uploader_name,
+                    surname: attachment.uploader_surname,
+                    avatar_url: attachment.uploader_avatar,
+                },
+            })),
+            column: {
+                id: task.column_id,
+                name: task.column_name,
+                position: task.column_position,
+                wip_limit: task.column_wip_limit,
+            },
+            comments: comments.map((comment) => ({
+                id: comment.id,
+                body: comment.body,
+                created_at: comment.created_at,
+                updated_at: comment.updated_at,
+                member: {
+                    id: comment.user_id,
+                    name: comment.name,
+                    surname: comment.surname,
+                    avatar_url: comment.avatar_url,
+                    color: comment.color,
+                },
+            })),
             subtasks_total: subtasksTotal,
             subtasks_done: subtasksDone,
         });
