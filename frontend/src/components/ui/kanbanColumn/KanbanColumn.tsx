@@ -36,7 +36,9 @@ export default function KanbanColumn({
     };
 
     const wipExceeded =
-        column.wip_limit > 0 && column.tasks.length >= column.wip_limit;
+        column.wip_limit &&
+        column.wip_limit > 0 &&
+        column.tasks.length >= column.wip_limit;
 
     return (
         <div
@@ -57,12 +59,14 @@ export default function KanbanColumn({
                         </span>
                     )}
                 </div>
-                <button
-                    onClick={startAdding}
-                    className="absolute right-3 flex size-5 items-center justify-center rounded-md text-gray-600 transition-colors hover:bg-gray-200 hover:text-gray-800"
-                >
-                    <PlusIcon weight="duotone" className="size-3.5" />
-                </button>
+                {!wipExceeded && (
+                    <button
+                        onClick={startAdding}
+                        className="absolute right-3 flex size-5 items-center justify-center rounded-md text-gray-600 transition-colors hover:bg-gray-200 hover:text-gray-800"
+                    >
+                        <PlusIcon weight="duotone" className="size-3.5" />
+                    </button>
+                )}
             </div>
             <div className="flex-1 overflow-y-auto">
                 <SortableContext
