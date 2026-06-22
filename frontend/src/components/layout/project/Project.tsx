@@ -148,6 +148,17 @@ export default function Project({
                 return prev;
             }
 
+            if (activeColumn.id !== overColumn.id) {
+                const wipExceeded =
+                    overColumn.wip_limit &&
+                    overColumn.wip_limit > 0 &&
+                    overColumn.tasks.length >= overColumn.wip_limit;
+
+                if (wipExceeded) {
+                    return prev;
+                }
+            }
+
             if (activeColumn.id === overColumn.id) {
                 const sorted = [...activeColumn.tasks].sort(
                     (a, b) => a.position - b.position,
