@@ -57,6 +57,7 @@ import {
 } from "@/libs/project";
 import { DEFAULT_FILTER } from "@/constants/taskFilterSheet";
 import { applyTaskFilters } from "@/libs/taskFilterSheet";
+import ListDragOverlay from "@/components/ui/listDragOverlay/ListDragOverlay";
 
 interface ProjectProps {
     userData: User;
@@ -126,20 +127,20 @@ export default function Project({
         const overId = over.id as number;
 
         setColumns((prev) => {
-            const activeCol = prev.find((column) =>
+            const activeColumn = prev.find((column) =>
                 column.tasks.some((task) => task.id === activeId),
             );
-            const overCol = prev.find(
+            const overColumn = prev.find(
                 (column) =>
                     column.id === overId ||
                     column.tasks.some((task) => task.id === overId),
             );
 
-            if (!activeCol || !overCol) {
+            if (!activeColumn || !overColumn) {
                 return prev;
             }
 
-            const activeTask = activeCol.tasks.find(
+            const activeTask = activeColumn.tasks.find(
                 (task) => task.id === activeId,
             );
 
@@ -147,8 +148,8 @@ export default function Project({
                 return prev;
             }
 
-            if (activeCol.id === overCol.id) {
-                const sorted = [...activeCol.tasks].sort(
+            if (activeColumn.id === overColumn.id) {
+                const sorted = [...activeColumn.tasks].sort(
                     (a, b) => a.position - b.position,
                 );
                 const fromIndex = sorted.findIndex(
@@ -184,16 +185,16 @@ export default function Project({
                     : result;
 
                 return prev.map((column) =>
-                    column.id === activeCol.id
+                    column.id === activeColumn.id
                         ? { ...column, tasks: updatedTasks }
                         : column,
                 );
             }
 
-            const newActiveItems = activeCol.tasks.filter(
+            const newActiveItems = activeColumn.tasks.filter(
                 (task) => task.id !== activeId,
             );
-            const overTasks = [...overCol.tasks].sort(
+            const overTasks = [...overColumn.tasks].sort(
                 (a, b) => a.position - b.position,
             );
 
@@ -201,7 +202,7 @@ export default function Project({
                 (task) => task.id === overId,
             );
             const insertIndex =
-                overId === overCol.id
+                overId === overColumn.id
                     ? overTasks.length
                     : overTaskIndex >= 0
                       ? overTaskIndex
@@ -223,8 +224,8 @@ export default function Project({
                     position: newPosition,
                     column: {
                         ...activeTask.column,
-                        id: overCol.id,
-                        name: overCol.name,
+                        id: overColumn.id,
+                        name: overColumn.name,
                     },
                 });
 
@@ -236,18 +237,18 @@ export default function Project({
                     position: newPosition,
                     column: {
                         ...activeTask.column,
-                        id: overCol.id,
-                        name: overCol.name,
+                        id: overColumn.id,
+                        name: overColumn.name,
                     },
                 });
             }
 
             return prev.map((column) => {
-                if (column.id === activeCol.id) {
+                if (column.id === activeColumn.id) {
                     return { ...column, tasks: newActiveItems };
                 }
 
-                if (column.id === overCol.id) {
+                if (column.id === overColumn.id) {
                     return { ...column, tasks: newOverItems };
                 }
 
@@ -319,24 +320,11 @@ export default function Project({
         { id: "calendar", label: "Calendar", icon: CalendarDotsIcon },
     ] as const;
 
-    // const tasks = columns.map((column) => column.tasks).flat(1);
-
-    // const stats = useMemo(
-    //     () => ({
-    //         total: tasks.length,
-    //         inProgress: tasks.filter((task) => task.column === "in_progress").length,
-    //         done: tasks.filter((task) => task.column === "done").length,
-    //         overdue: tasks.filter((task) => isOverdue(task.due_date, task.column))
-    //             .length,
-    //     }),
-    //     [tasks],
-    // );
-
     const hasTasks = columns.some((column) => column.tasks.length > 0);
 
     return (
-        <div className="h-full w-full overflow-y-auto rounded-xl bg-white">
-            <header className="sticky top-0 z-10 grid gap-5 border-b bg-white px-8 py-4">
+        <div className="flex h-full w-full flex-col rounded-xl bg-white">
+            <header className="z-10 grid shrink-0 gap-5 border-b bg-white px-8 py-4">
                 <div className="flex items-start justify-between">
                     <div className="w-full space-y-3">
                         <div className="flex items-center gap-3">
@@ -439,56 +427,50 @@ export default function Project({
                     </div>
                 </div>
             </header>
-            <main
-                className={
-                    selectedMode === "kanban" || !hasTasks
-                        ? "h-[calc(100svh-155px)]"
-                        : ""
-                }
+            <DndContext
+                sensors={sensors}
+                collisionDetection={closestCorners}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDragEnd={handleDragEnd}
             >
-                {!hasTasks ? (
-                    <div className="flex h-full flex-1 items-center justify-center px-6">
-                        <div className="flex max-w-md flex-col items-center text-center">
-                            <div className="mb-5 flex size-20 items-center justify-center rounded-2xl bg-gray-100">
-                                <ClipboardTextIcon
-                                    weight="duotone"
-                                    className="size-10 text-gray-400"
-                                />
-                            </div>
-                            <h2 className="text-xl font-semibold text-gray-900">
-                                No tasks yet
-                            </h2>
-                            <p className="mt-2 text-sm leading-relaxed text-gray-500">
-                                Start by creating your first task, inviting
-                                teammates, or importing existing work into this
-                                project.
-                            </p>
-                            <div className="mt-6 flex items-center gap-3">
-                                <Button
-                                    className="gap-1.5 bg-bright-blue px-4 py-2 text-sm hover:bg-blue-600"
-                                    onClick={() => handleToggleCreateTask()}
-                                >
-                                    <PlusIcon
+                <main className="flex min-h-0 flex-1 flex-col">
+                    {!hasTasks ? (
+                        <div className="flex h-full flex-1 items-center justify-center px-6">
+                            <div className="flex max-w-md flex-col items-center text-center">
+                                <div className="mb-5 flex size-20 items-center justify-center rounded-2xl bg-gray-100">
+                                    <ClipboardTextIcon
                                         weight="duotone"
-                                        className="size-3.5"
-                                    />{" "}
-                                    Create task
-                                </Button>
+                                        className="size-10 text-gray-400"
+                                    />
+                                </div>
+                                <h2 className="text-xl font-semibold text-gray-900">
+                                    No tasks yet
+                                </h2>
+                                <p className="mt-2 text-sm leading-relaxed text-gray-500">
+                                    Start by creating your first task, inviting
+                                    teammates, or importing existing work into
+                                    this project.
+                                </p>
+                                <div className="mt-6 flex items-center gap-3">
+                                    <Button
+                                        className="gap-1.5 bg-bright-blue px-4 py-2 text-sm hover:bg-blue-600"
+                                        onClick={() => handleToggleCreateTask()}
+                                    >
+                                        <PlusIcon
+                                            weight="duotone"
+                                            className="size-3.5"
+                                        />{" "}
+                                        Create task
+                                    </Button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                ) : (
-                    <>
-                        {selectedMode === "kanban" && (
-                            <div className="h-full w-full overflow-x-auto p-8">
-                                <DndContext
-                                    sensors={sensors}
-                                    collisionDetection={closestCorners}
-                                    onDragStart={handleDragStart}
-                                    onDragOver={handleDragOver}
-                                    onDragEnd={handleDragEnd}
-                                >
-                                    <div className="flex w-max items-start gap-4 pb-8">
+                    ) : (
+                        <>
+                            {selectedMode === "kanban" && (
+                                <div className="overflow-x-auto p-8">
+                                    <div className="flex items-start gap-4">
                                         {filteredColumns.map((column) => (
                                             <KanbanColumn
                                                 key={column.id}
@@ -507,41 +489,46 @@ export default function Project({
                                             />
                                         ))}
                                     </div>
-                                    <DragOverlay
-                                        dropAnimation={{
-                                            duration: 160,
-                                            easing: "ease-out",
-                                        }}
-                                    >
-                                        {activeTask ? (
-                                            <OverlayTask task={activeTask} />
-                                        ) : null}
-                                    </DragOverlay>
-                                </DndContext>
-                            </div>
-                        )}
-                        {selectedMode === "list" && (
-                            <ProjectListView
-                                columns={filteredColumns}
-                                setColumns={setColumns}
-                                onOpenDetails={(task: Task) => {
-                                    handleShowTaskDetails();
-                                    setSelectedTask(task);
-                                }}
-                            />
-                        )}
-                        {selectedMode === "calendar" && (
-                            <ProjectCalendarView
-                                columns={filteredColumns}
-                                onOpenDetails={(task: Task) => {
-                                    handleShowTaskDetails();
-                                    setSelectedTask(task);
-                                }}
-                            />
-                        )}
-                    </>
-                )}
-            </main>
+                                </div>
+                            )}
+                            {selectedMode === "list" && (
+                                <ProjectListView
+                                    columns={filteredColumns}
+                                    setColumns={setColumns}
+                                    activeTask={activeTask}
+                                    onOpenDetails={(task: Task) => {
+                                        handleShowTaskDetails();
+                                        setSelectedTask(task);
+                                    }}
+                                />
+                            )}
+                            {selectedMode === "calendar" && (
+                                <ProjectCalendarView
+                                    columns={filteredColumns}
+                                    onOpenDetails={(task: Task) => {
+                                        handleShowTaskDetails();
+                                        setSelectedTask(task);
+                                    }}
+                                />
+                            )}
+                        </>
+                    )}
+                </main>
+                <DragOverlay
+                    dropAnimation={{
+                        duration: 160,
+                        easing: "ease-out",
+                    }}
+                >
+                    {activeTask ? (
+                        selectedMode === "kanban" ? (
+                            <OverlayTask task={activeTask} />
+                        ) : (
+                            <ListDragOverlay task={activeTask} />
+                        )
+                    ) : null}
+                </DragOverlay>
+            </DndContext>
             <InviteMemberModal
                 open={showInvite}
                 onOpenChange={() => setShowInvite(!showInvite)}

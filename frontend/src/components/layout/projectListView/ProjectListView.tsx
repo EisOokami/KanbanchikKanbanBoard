@@ -17,16 +17,23 @@ import {
     UsersIcon,
 } from "@phosphor-icons/react";
 import ListTh from "@/components/ui/listTh/ListTh";
+import {
+    SortableContext,
+    verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import DroppableTbody from "@/components/ui/droppableTbody/DroppableTbody";
 
 interface ProjectListViewProps {
     columns: Column[];
     setColumns: Dispatch<SetStateAction<Column[]>>;
+    activeTask: Task | null;
     onOpenDetails: (task: Task) => void;
 }
 
 export function ProjectListView({
     columns,
     setColumns,
+    activeTask,
     onOpenDetails,
 }: Readonly<ProjectListViewProps>) {
     const [sortField, setSortField] = useState<SortField>("priority");
@@ -36,35 +43,44 @@ export function ProjectListView({
         new Set(),
     );
 
-    const deleteTask = useCallback(
+    const handleDeleteTask = useCallback(
         (taskId: number) => {
             setColumns((prev) =>
-                prev.map((col) => ({
-                    ...col,
-                    tasks: col.tasks.filter((t) => t.id !== taskId),
+                prev.map((column) => ({
+                    ...column,
+                    tasks: column.tasks.filter((task) => task.id !== taskId),
                 })),
             );
-            if (selectedTaskId === taskId) setSelectedTaskId(null);
+
+            if (selectedTaskId === taskId) {
+                setSelectedTaskId(null);
+            }
         },
         [selectedTaskId, setColumns],
     );
 
     const toggleSort = (field: SortField) => {
-        if (sortField === field)
-            setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-        else {
+        if (sortField !== field) {
             setSortField(field);
             setSortDir("asc");
         }
+
+        setSortDir((prevState) => (prevState === "asc" ? "desc" : "asc"));
     };
 
     return (
         <>
-            <div className="flex h-full min-h-0 flex-1 flex-col">
-                <div className="mx-8 mb-3 flex-1 space-y-5 overflow-auto bg-white">
+            <div className="flex h-full flex-col">
+                <div className="flex-1 space-y-5 overflow-auto bg-white px-8">
                     {columns.map((column) => {
-                        if (column.tasks.length === 0) return null;
+                        if (column.tasks.length === 0) {
+                            return null;
+                        }
+
                         const collapsed = collapsedGroups.has(column.name);
+                        const sortedTasks = [...column.tasks].sort(
+                            (a, b) => a.position - b.position,
+                        );
 
                         return (
                             <div key={column.id}>
@@ -191,19 +207,36 @@ export function ProjectListView({
                                                 </th>
                                             </tr>
                                         </thead>
-                                        <tbody>
-                                            {column.tasks.map((task) => (
-                                                <ProjectTaskRow
-                                                    key={task.id}
-                                                    task={task}
-                                                    column={column}
-                                                    onDelete={deleteTask}
-                                                    onOpenDetails={
-                                                        onOpenDetails
-                                                    }
-                                                />
-                                            ))}
-                                        </tbody>
+                                        <SortableContext
+                                            items={sortedTasks.map(
+                                                (task) => task.id,
+                                            )}
+                                            strategy={
+                                                verticalListSortingStrategy
+                                            }
+                                        >
+                                            <DroppableTbody
+                                                columnId={column.id}
+                                            >
+                                                {sortedTasks.map((task) => (
+                                                    <ProjectTaskRow
+                                                        key={task.id}
+                                                        task={task}
+                                                        column={column}
+                                                        onDelete={
+                                                            handleDeleteTask
+                                                        }
+                                                        onOpenDetails={
+                                                            onOpenDetails
+                                                        }
+                                                        isDragging={
+                                                            activeTask?.id ===
+                                                            task.id
+                                                        }
+                                                    />
+                                                ))}
+                                            </DroppableTbody>
+                                        </SortableContext>
                                     </table>
                                 )}
                             </div>
@@ -212,17 +245,19 @@ export function ProjectListView({
                 </div>
                 <div className="sticky bottom-0 flex shrink-0 items-center justify-between border-t bg-gray-50 px-8 py-2">
                     <div className="flex items-center gap-1">
-                        {columns.map((col) => {
-                            if (col.tasks.length === 0) return null;
+                        {columns.map((column) => {
+                            if (column.tasks.length === 0) {
+                                return null;
+                            }
 
                             return (
                                 <span
-                                    key={col.id}
+                                    key={column.id}
                                     className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs text-gray-500"
                                 >
-                                    {/* {COLUMNS_CONFIG[col.name].label} */}
+                                    {column.name}
                                     <span className="font-semibold text-black">
-                                        {col.tasks.length}
+                                        {column.tasks.length}
                                     </span>
                                 </span>
                             );

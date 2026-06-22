@@ -27,15 +27,19 @@ import { PRIORITY_CONFIG } from "@/constants/constants";
 import {
     CalendarBlankIcon,
     ChatTeardropDotsIcon,
+    DotsSixVerticalIcon,
     DotsThreeOutlineIcon,
     FireIcon,
     PaperclipIcon,
     TrashIcon,
 } from "@phosphor-icons/react";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface TaskRowProps {
     task: Task;
     column: Column;
+    isDragging?: boolean;
     onDelete: (id: number) => void;
     onOpenDetails: (task: Task) => void;
 }
@@ -43,9 +47,18 @@ interface TaskRowProps {
 export default function ProjectTaskRow({
     task,
     column,
+    isDragging = false,
     onDelete,
     onOpenDetails,
 }: Readonly<TaskRowProps>) {
+    const { attributes, listeners, setNodeRef, transform, transition } =
+        useSortable({ id: task.id });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+    };
+
     const priority = PRIORITY_CONFIG[task.priority];
     const overdue = isOverdue(task.due_date, column.name);
     const progress = Math.round(
@@ -55,13 +68,32 @@ export default function ProjectTaskRow({
 
     return (
         <tr
-            className="group cursor-pointer border-b transition-colors duration-100"
+            ref={setNodeRef}
+            style={style}
+            className={cn(
+                "group cursor-pointer transition-colors duration-100",
+                isDragging && "opacity-30",
+            )}
             onClick={() => onOpenDetails(task)}
         >
-            <td className="w-24 py-3 pl-8 pr-2">
-                <span className="font-mono text-xs font-medium text-gray-400">
-                    {task.id}
-                </span>
+            <td className="w-24 py-3 pl-4 pr-2">
+                <div className="flex items-center gap-2">
+                    <button
+                        {...attributes}
+                        {...listeners}
+                        onClick={(e) => e.stopPropagation()}
+                        className="cursor-grab touch-none opacity-0 transition-opacity active:cursor-grabbing group-hover:opacity-100"
+                        aria-label="Drag to reorder"
+                    >
+                        <DotsSixVerticalIcon
+                            weight="duotone"
+                            className="size-4"
+                        />
+                    </button>
+                    <span className="font-mono text-xs font-medium text-gray-400">
+                        {task.id}
+                    </span>
+                </div>
             </td>
             <td className="min-w-[240px] py-3 pr-4">
                 <span className="text-sm font-medium leading-snug text-gray-800">
@@ -86,7 +118,7 @@ export default function ProjectTaskRow({
                     </div>
                 )}
             </td>
-            <td className="w-36 py-3 pr-4">
+            <td className="flex w-36 flex-wrap gap-1 py-3 pr-4">
                 {task.categories.map((category) => (
                     <span
                         key={category.id}
