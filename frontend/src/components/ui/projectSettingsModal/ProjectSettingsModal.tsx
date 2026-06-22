@@ -148,6 +148,7 @@ export function ProjectSettingsModal({
                                                 ? "bg-white text-bright-blue shadow-sm"
                                                 : "border-transparent text-gray-500 hover:bg-white/80",
                                         )}
+                                        disabled={isPending}
                                     >
                                         <span
                                             className={
@@ -244,6 +245,7 @@ export function ProjectSettingsModal({
                                     <DangerSection
                                         name={name}
                                         projectId={projectData.id}
+                                        isPending={isPending}
                                         onOpenChange={onOpenChange}
                                         onSectionChange={setActiveSection}
                                     />
@@ -257,13 +259,13 @@ export function ProjectSettingsModal({
                             variant="outline"
                             onClick={() => onOpenChange(false)}
                             className="h-9 rounded-md px-4 text-sm hover:bg-gray-100"
+                            disabled={isPending}
                         >
                             Cancel
                         </Button>
                         <Button
                             type="submit"
-                            onClick={handleSave}
-                            disabled={!name.trim()}
+                            disabled={!name.trim() || isPending}
                             className="h-9 rounded-md bg-bright-blue text-sm font-semibold text-white hover:bg-blue-600 disabled:opacity-40"
                         >
                             <CheckIcon weight="duotone" size={14} />

@@ -21,6 +21,7 @@ import { usePathname } from "next/navigation";
 interface DangerSectionProps {
     name: string;
     projectId: number;
+    isPending: boolean;
     onSectionChange: (section: NavSection) => void;
     onOpenChange: (open: boolean) => void;
 }
@@ -28,6 +29,7 @@ interface DangerSectionProps {
 export default function DangerSection({
     name,
     projectId,
+    isPending,
     onSectionChange,
     onOpenChange,
 }: Readonly<DangerSectionProps>) {
@@ -86,6 +88,7 @@ export default function DangerSection({
                             color: "#C9620A",
                             background: "#FFF",
                         }}
+                        disabled={isPending}
                     >
                         <ArchiveIcon weight="duotone" size={13} />
                         Archive
@@ -121,6 +124,7 @@ export default function DangerSection({
                                     color: "#D93025",
                                     background: "#FFF",
                                 }}
+                                disabled={isPending}
                             >
                                 <TrashSimpleIcon weight="duotone" size={13} />
                                 Delete
@@ -139,12 +143,16 @@ export default function DangerSection({
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                                <AlertDialogCancel className="rounded-md">
+                                <AlertDialogCancel
+                                    className="rounded-md"
+                                    disabled={isPending}
+                                >
                                     Cancel
                                 </AlertDialogCancel>
                                 <AlertDialogAction
                                     className="rounded-md bg-red-500 font-semibold text-white hover:bg-red-600"
                                     onClick={handleDeleteProject}
+                                    disabled={isPending}
                                 >
                                     Delete project
                                 </AlertDialogAction>
