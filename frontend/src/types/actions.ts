@@ -107,6 +107,11 @@ export interface ChangePasswordZodErrors extends BaseZodErrors {
     confirmPassword?: string[];
 }
 
+export interface InviteMemberZodErrors extends BaseZodErrors {
+    projectId?: string[];
+    members?: string[];
+}
+
 export interface LoginAction extends BaseAction {
     zodErrors: LoginZodErrors | null;
 }
@@ -145,4 +150,8 @@ export interface UpdateProfileAction extends BaseAction {
 
 export interface ChangePasswordAction extends BaseAction {
     zodErrors: ChangePasswordZodErrors | null;
+}
+
+export interface InviteMemberAction extends BaseAction {
+    zodErrors: InviteMemberZodErrors | null;
 }

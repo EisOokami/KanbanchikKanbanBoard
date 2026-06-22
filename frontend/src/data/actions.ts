@@ -10,6 +10,7 @@ import {
     CreateProjectAction,
     CreateTaskAction,
     ForgotPasswordAction,
+    InviteMemberAction,
     LoginAction,
     RegisterAction,
     ResetPasswordAction,
@@ -2094,7 +2095,7 @@ export async function inviteMemberAction(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     prevState: any,
     formData: FormData,
-): Promise<UpdateProjectAction | undefined> {
+): Promise<InviteMemberAction | undefined> {
     const validatedFields = inviteMemberSchema.safeParse({
         projectId: formData.get("projectId"),
         role: formData.get("role"),
