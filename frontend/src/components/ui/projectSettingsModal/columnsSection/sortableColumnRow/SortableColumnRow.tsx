@@ -91,6 +91,35 @@ export default function SortableColumnRow({
                     {column.name}
                 </span>
             )}
+            <div className="flex items-center gap-1.5">
+                <label
+                    htmlFor={`wip-limit-${column.id}`}
+                    className="whitespace-nowrap text-xs text-gray-400"
+                >
+                    WIP
+                </label>
+                <Input
+                    id={`wip-limit-${column.id}`}
+                    type="number"
+                    min={1}
+                    placeholder="∞"
+                    disabled={isPending}
+                    value={
+                        "wip_limit" in column && column.wip_limit != null
+                            ? column.wip_limit
+                            : ""
+                    }
+                    onChange={(e) => {
+                        const raw = e.target.value;
+
+                        onColumnUpdate(column.id, {
+                            wip_limit:
+                                raw === "" ? null : Math.max(1, Number(raw)),
+                        });
+                    }}
+                    className="h-7 w-14 rounded-md px-2 text-center text-sm focus-visible:ring-1 focus-visible:ring-bright-blue"
+                />
+            </div>
             <div className="flex items-center gap-1">
                 <button
                     type="button"

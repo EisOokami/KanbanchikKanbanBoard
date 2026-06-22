@@ -3,16 +3,19 @@ import { Column } from "@/types/types";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { DotsSixVerticalIcon, XIcon } from "@phosphor-icons/react";
+import { Input } from "../../shadcn/input";
 
 interface SortableColumnRowProps {
     column: Omit<Column, "tasks" | "created_at" | "updated_at">;
     isPending: boolean;
+    onWipLimitChange: (wipLimit: number | null, id: number) => void;
     onRemove: (id: number) => void;
 }
 
 export default function SortableColumnRow({
     column,
     isPending,
+    onWipLimitChange,
     onRemove,
 }: Readonly<SortableColumnRowProps>) {
     const {
@@ -45,6 +48,27 @@ export default function SortableColumnRow({
                 {...listeners}
             />
             <span className="flex-1 text-sm font-medium">{column.name}</span>
+            <div className="flex items-center gap-1.5">
+                <span className="text-xs text-muted-foreground/60">WIP</span>
+                <Input
+                    name="wip-limit"
+                    type="number"
+                    min={1}
+                    max={999}
+                    placeholder="∞"
+                    value={column.wip_limit ?? ""}
+                    className="h-6 w-12 px-1 py-0 text-center text-sm"
+                    onChange={(e) => {
+                        const raw = e.target.value;
+
+                        onWipLimitChange(
+                            raw === "" ? null : Math.max(1, Number(raw)),
+                            column.id,
+                        );
+                    }}
+                    disabled={isPending}
+                />
+            </div>
             <button
                 type="button"
                 onClick={() => onRemove(column.id)}

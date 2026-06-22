@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useActionState, useEffect } from "react";
+import { useState, useActionState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/shadcn/button";
 import { Input } from "@/components/ui/shadcn/input";
 import { Textarea } from "@/components/ui/shadcn/textarea";
@@ -141,7 +141,7 @@ export default function NewProjectModal({
                 position: Object.keys(columns).length,
                 created_at: new Date(),
                 updated_at: null,
-                wip_limit: 100,
+                wip_limit: null,
             },
         ]);
         setNewColumnName("");
@@ -211,6 +211,19 @@ export default function NewProjectModal({
     const handleClose = () => {
         onClose();
     };
+
+    const handleChangeWipLimit = useCallback(
+        (wipLimit: number | null, id: number) => {
+            setColumns((prevState) =>
+                prevState.map((column) =>
+                    column.id === id
+                        ? { ...column, wip_limit: wipLimit }
+                        : column,
+                ),
+            );
+        },
+        [],
+    );
 
     return (
         <Dialog open={open} onOpenChange={handleClose}>
@@ -561,6 +574,9 @@ export default function NewProjectModal({
                                                     key={column.id}
                                                     column={column}
                                                     isPending={isPending}
+                                                    onWipLimitChange={
+                                                        handleChangeWipLimit
+                                                    }
                                                     onRemove={(id) =>
                                                         setColumns(
                                                             (prevState) =>
