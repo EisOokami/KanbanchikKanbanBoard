@@ -16,6 +16,7 @@ import { Button } from "../../shadcn/button";
 import { ArchiveIcon, TrashSimpleIcon } from "@phosphor-icons/react";
 import { deleteProjectAction } from "@/data/actions";
 import { toast } from "sonner";
+import { usePathname } from "next/navigation";
 
 interface DangerSectionProps {
     name: string;
@@ -30,8 +31,10 @@ export default function DangerSection({
     onSectionChange,
     onOpenChange,
 }: Readonly<DangerSectionProps>) {
+    const pathname = usePathname();
+
     const handleDeleteProject = async () => {
-        const result = await deleteProjectAction(projectId);
+        const result = await deleteProjectAction(projectId, pathname);
 
         if (result && result.ok) {
             toast.success("Success", {

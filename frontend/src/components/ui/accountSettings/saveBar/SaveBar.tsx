@@ -5,12 +5,14 @@ interface SaveBarProps {
     isChanged: boolean;
     onDiscard?: () => void;
     isPending: boolean;
+    onSave?: () => void;
 }
 
 export default function SaveBar({
     isChanged,
     onDiscard,
     isPending,
+    onSave,
 }: Readonly<SaveBarProps>) {
     if (!isChanged) {
         return null;
@@ -41,6 +43,7 @@ export default function SaveBar({
                     size="sm"
                     className="h-7 gap-1.5 bg-bright-blue text-xs hover:bg-blue-600"
                     disabled={isPending}
+                    onClick={onSave}
                 >
                     <CheckIcon weight="duotone" className="size-4" /> Save
                     changes

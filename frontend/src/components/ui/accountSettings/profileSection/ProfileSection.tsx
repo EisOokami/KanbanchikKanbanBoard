@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import SectionTitle from "../sectionTitle/SectionTitle";
 import { Avatar, AvatarFallback, AvatarImage } from "../../shadcn/avatar";
 import { Button } from "../../shadcn/button";
@@ -40,6 +40,13 @@ export default function ProfileSection({
         INITIAL_STATE,
     );
 
+    useEffect(() => {
+        if (formState && formState.status === "success") {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setIsChanged(false);
+        }
+    }, [formState]);
+
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
 
@@ -67,11 +74,7 @@ export default function ProfileSection({
     };
 
     return (
-        <form
-            action={formAction}
-            // onSubmit={() => setIsChanged(false)}
-            className="space-y-5"
-        >
+        <form action={formAction} className="space-y-5">
             <div>
                 <h2 className="text-lg font-bold text-gray-800">Profile</h2>
                 <p className="mt-0.5 text-sm text-gray-400">

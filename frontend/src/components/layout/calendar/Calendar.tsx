@@ -449,6 +449,7 @@ export default function Calendar({
                 open={showNewTaskModal}
                 onOpenChange={handleShowNewTaskModal}
                 showProjectSelect
+                currentPath="/calendar"
             />
             {selectedTask && projectData && (
                 <TaskDetailsSheet
@@ -457,6 +458,7 @@ export default function Calendar({
                     selectedTask={selectedTask}
                     projectData={projectData}
                     userData={userData}
+                    currentPath="/calendar"
                 />
             )}
         </>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import {
     Dialog,
     DialogContent,
@@ -22,6 +22,7 @@ import DangerSection from "./dangerSection/DangerSection";
 import { updateProjectAction } from "@/data/actions";
 import { BaseAction } from "@/types/actions";
 import { PALETTE } from "@/constants/constants";
+import { usePathname } from "next/navigation";
 
 interface ProjectSettingsModalProps {
     open: boolean;
@@ -94,23 +95,31 @@ export function ProjectSettingsModal({
     );
     const [emails, setEmails] = useState<string[]>([]);
     const [status, setStatus] = useState<Status>(projectData.status);
+    const pathname = usePathname();
     const [formState, formAction, isPending] = useActionState(
-        updateProjectAction.bind(null, {
-            categories: categories,
-            newCategories: newCategories,
-            columns: columns,
-            newColumns: newColumns,
-            labels: labels,
-            newLabels: newLabels,
-            members: members,
-            emails: emails,
-        }),
+        updateProjectAction.bind(
+            null,
+            {
+                categories: categories,
+                newCategories: newCategories,
+                columns: columns,
+                newColumns: newColumns,
+                labels: labels,
+                newLabels: newLabels,
+                members: members,
+                emails: emails,
+            },
+            pathname,
+        ),
         INITIAL_STATE,
     );
 
-    const handleSave = () => {
-        // onOpenChange(false);
-    };
+    useEffect(() => {
+        if (formState && formState.status === "success") {
+            onOpenChange(false);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [formState]);
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>

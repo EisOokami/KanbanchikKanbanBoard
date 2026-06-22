@@ -296,23 +296,66 @@ export default function Project({
         });
     };
 
-    const handleDeleteTask = useCallback(async (id: number) => {
-        await deleteTaskAction(id);
-    }, []);
+    const handleDeleteTask = useCallback(
+        async (id: number) => {
+            setColumns((prevState) =>
+                prevState.map((column) => ({
+                    ...column,
+                    tasks: column.tasks.filter((task) => task.id !== id),
+                })),
+            );
+
+            const result = await deleteTaskAction(id, "/project/[slug]");
+
+            if (!result || !result.ok) {
+                setColumns(Object.values(projectData.columns));
+            }
+        },
+        [projectData],
+    );
 
     const handleChangeMode = (mode: "kanban" | "list" | "calendar") =>
         setSelectedMode(mode);
 
-    const handleToggleCreateTask = (columnId?: number) => {
+    const handleToggleCreateTask = (columnId?: number, data?: Task) => {
         setCreateTaskState((prevState) => ({
             isOpen: !prevState.isOpen,
             columnId,
         }));
+
+        if (data) {
+            setColumns((prevState) =>
+                prevState.map((column) => ({
+                    ...column,
+                    tasks:
+                        data.column.id === column.id
+                            ? [...column.tasks, data]
+                            : column.tasks,
+                })),
+            );
+        }
     };
 
-    const handleShowTaskDetails = useCallback(() => {
-        setShowTaskDetails(!showTaskDetails);
-    }, [showTaskDetails]);
+    const handleShowTaskDetails = useCallback(
+        (_?: boolean, data?: Task) => {
+            setShowTaskDetails(!showTaskDetails);
+
+            if (data) {
+                setColumns((prevState) =>
+                    prevState.map((column) => ({
+                        ...column,
+                        tasks:
+                            data.column.id === column.id
+                                ? column.tasks.map((task) =>
+                                      task.id === data.id ? data : task,
+                                  )
+                                : column.tasks,
+                    })),
+                );
+            }
+        },
+        [showTaskDetails],
+    );
 
     const viewModes = [
         { id: "kanban", label: "Kanban", icon: KanbanIcon },
@@ -554,13 +597,17 @@ export default function Project({
                     selectedTask={selectedTask}
                     projectData={projectData}
                     userData={userData}
+                    currentPath="/project/[slug]"
                 />
             )}
             <CreateTaskModal
                 open={createTaskState.isOpen}
-                onOpenChange={() => handleToggleCreateTask()}
+                onOpenChange={(open, data) =>
+                    handleToggleCreateTask(undefined, data)
+                }
                 projectData={projectData}
                 columnId={createTaskState.columnId}
+                currentPath="/project/[slug]"
             />
         </div>
     );

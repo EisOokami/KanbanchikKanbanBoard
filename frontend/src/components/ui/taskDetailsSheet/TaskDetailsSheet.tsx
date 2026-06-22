@@ -31,13 +31,15 @@ import CommentsSection from "./commentsSection/CommentsSection";
 import Header from "./header/Header";
 import CategoriesSection from "./categoriesSection/CategoriesSection";
 import { ZodErrors } from "../zodErrors/ZodErrors";
+import { getTaskData } from "@/data/loaders";
 
 interface TaskDetailsSheetProps {
     open: boolean;
-    onOpenChange: (v: boolean) => void;
+    onOpenChange: (open: boolean, data?: Task) => void;
     selectedTask: Task;
     userData: Omit<User, "email">;
     projectData: Project;
+    currentPath?: string;
 }
 
 const INITIAL_STATE: BaseAction = {
@@ -55,6 +57,7 @@ export function TaskDetailsSheet({
     selectedTask,
     userData,
     projectData,
+    currentPath,
 }: Readonly<TaskDetailsSheetProps>) {
     const [task, setTask] = useState<Task>(selectedTask);
     const [activity, setActivity] = useState<ActivityEntry[]>(() =>
@@ -72,7 +75,7 @@ export function TaskDetailsSheet({
         newComments: [],
     });
     const [formState, formAction, isPending] = useActionState(
-        updateTaskAction.bind(null, formData),
+        updateTaskAction.bind(null, formData, currentPath),
         INITIAL_STATE,
     );
 
@@ -81,9 +84,16 @@ export function TaskDetailsSheet({
         setTask(selectedTask);
     }, [selectedTask]);
 
-    const handleSave = () => {
-        // onOpenChange(false);
-    };
+    useEffect(() => {
+        (async () => {
+            if (formState && formState.status === "success" && formState.data) {
+                const result = await getTaskData(formState.data.id);
+
+                onOpenChange(false, result);
+            }
+        })();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [formState]);
 
     const createdAt = toDate(task.created_at) ?? new Date();
 
@@ -208,7 +218,6 @@ export function TaskDetailsSheet({
                         </Button>
                         <Button
                             type="submit"
-                            onClick={handleSave}
                             disabled={!task.title.trim()}
                             className="h-8 gap-1.5 rounded-md bg-bright-blue px-4 text-xs font-semibold text-white hover:bg-blue-600 disabled:opacity-40 [&_svg]:size-4"
                         >

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import SectionTitle from "../sectionTitle/SectionTitle";
 import FieldRow from "../fieldRow/FieldRow";
 import SaveBar from "../saveBar/SaveBar";
@@ -26,6 +26,13 @@ export default function SecuritySection() {
         changePasswordAction,
         INITIAL_STATE,
     );
+
+    useEffect(() => {
+        if (formState && formState.status === "success") {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setIsChanged(false);
+        }
+    }, [formState]);
 
     return (
         <form

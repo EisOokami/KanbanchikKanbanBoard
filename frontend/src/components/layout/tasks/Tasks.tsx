@@ -705,12 +705,14 @@ export default function Tasks({
                     selectedTask={selectedTask}
                     projectData={projectData}
                     userData={userData}
+                    currentPath="/tasks"
                 />
             )}
             <CreateTaskModal
                 open={showNewTaskModal}
                 onOpenChange={handleShowNewTaskModal}
                 showProjectSelect
+                currentPath="/tasks"
             />
         </>
     );

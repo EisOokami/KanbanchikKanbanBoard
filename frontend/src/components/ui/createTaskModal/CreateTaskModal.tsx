@@ -11,9 +11,9 @@ import {
 import { Button } from "@/components/ui/shadcn/button";
 import { format } from "date-fns";
 import { PRIORITY_CONFIG } from "@/constants/constants";
-import { CreateTaskFormData, Project, User } from "@/types/types";
+import { CreateTaskFormData, Project, Task, User } from "@/types/types";
 import { PlusIcon } from "@phosphor-icons/react";
-import { getProjectsData } from "@/data/loaders";
+import { getProjectsData, getTaskData } from "@/data/loaders";
 import { BaseAction } from "@/types/actions";
 import { createTaskAction } from "@/data/actions";
 import ProjectSection from "./projectSection/ProjectSection";
@@ -30,10 +30,11 @@ import AttachmentsSection from "./attachmentsSection/AttachmentsSection";
 
 interface CreateTaskModalProps {
     open: boolean;
-    onOpenChange: (open: boolean) => void;
+    onOpenChange: (open: boolean, data?: Task) => void;
     projectData?: Project;
     showProjectSelect?: boolean;
     columnId?: number;
+    currentPath?: string;
 }
 
 const INITIAL_STATE: BaseAction = {
@@ -51,6 +52,7 @@ export function CreateTaskModal({
     projectData,
     showProjectSelect = false,
     columnId,
+    currentPath,
 }: Readonly<CreateTaskModalProps>) {
     const [projectsData, setProjectsData] = useState<Project[] | null>(null);
     const [selectedProject, setSelectedProject] = useState<Project | undefined>(
@@ -77,7 +79,7 @@ export function CreateTaskModal({
         newLabels: [],
     });
     const [formState, formAction, isPending] = useActionState(
-        createTaskAction.bind(null, formData),
+        createTaskAction.bind(null, formData, currentPath),
         INITIAL_STATE,
     );
 
@@ -101,6 +103,17 @@ export function CreateTaskModal({
         })();
     }, [showProjectSelect]);
 
+    useEffect(() => {
+        (async () => {
+            if (formState && formState.status === "success" && formState.data) {
+                const result = await getTaskData(formState.data.id);
+
+                onOpenChange(false, result);
+            }
+        })();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [formState]);
+
     const toggleMember = (memberValue: Omit<User, "email">) => {
         setFormData((prevState) => ({
             ...prevState,
@@ -114,19 +127,7 @@ export function CreateTaskModal({
         }));
     };
 
-    const handleSubmit = () => {
-        // if (!form.title.trim()) {
-        //     setErrors({ title: "Task title is required" });
-        //     return;
-        // }
-        // onSubmit?.(form);
-        // handleClose();
-    };
-
     const handleClose = () => {
-        // setNewSubtaskName("");
-        // setNewCategoryName("");
-        // setNewLabelName("");
         onOpenChange(false);
     };
 
@@ -280,7 +281,6 @@ export function CreateTaskModal({
                             <Button
                                 type="submit"
                                 size="sm"
-                                onClick={handleSubmit}
                                 className="h-9 gap-1.5 bg-bright-blue text-white hover:bg-blue-600"
                             >
                                 <PlusIcon weight="duotone" className="size-4" />{" "}

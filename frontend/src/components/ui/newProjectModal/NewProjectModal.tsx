@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useActionState } from "react";
+import { useState, useActionState, useEffect } from "react";
 import { Button } from "@/components/ui/shadcn/button";
 import { Input } from "@/components/ui/shadcn/input";
 import { Textarea } from "@/components/ui/shadcn/textarea";
@@ -97,18 +97,33 @@ export default function NewProjectModal({
     );
     const sensors = useSensors(useSensor(PointerSensor));
 
+    useEffect(() => {
+        if (formState && formState.status === "success") {
+            onClose();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [formState]);
+
     const inviteMember = () => {
         const email = emailInput.trim();
-        if (!email) return;
+
+        if (!email) {
+            return;
+        }
+
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
             setEmailError("Enter a valid email address");
+
             return;
         }
-        if (members.find((m) => m === email)) {
+
+        if (members.find((member) => member === email)) {
             setEmailError("Already added");
+
             return;
         }
-        setMembers((prev) => [...prev, email]);
+
+        setMembers((prevState) => [...prevState, email]);
         setEmailInput("");
         setEmailError("");
     };
@@ -139,23 +154,30 @@ export default function NewProjectModal({
             return;
         }
 
-        setColumns((prev) => {
-            const oldIndex = prev.findIndex(
+        setColumns((prevState) => {
+            const oldIndex = prevState.findIndex(
                 (column) => column.id === active.id,
             );
-            const newIndex = prev.findIndex((column) => column.id === over.id);
+            const newIndex = prevState.findIndex(
+                (column) => column.id === over.id,
+            );
 
-            return arrayMove(prev, oldIndex, newIndex).map((column, i) => ({
-                ...column,
-                position: i + 1,
-            }));
+            return arrayMove(prevState, oldIndex, newIndex).map(
+                (column, i) => ({
+                    ...column,
+                    position: i + 1,
+                }),
+            );
         });
     };
 
     const addCategory = () => {
-        if (!newCatName.trim()) return;
-        setCategories((prev) => [
-            ...prev,
+        if (!newCatName.trim()) {
+            return;
+        }
+
+        setCategories((prevState) => [
+            ...prevState,
             {
                 id: categories.length + 1,
                 name: newCatName.trim(),
@@ -169,9 +191,12 @@ export default function NewProjectModal({
     };
 
     const addLabel = () => {
-        if (!newLabelName.trim()) return;
-        setLabels((prev) => [
-            ...prev,
+        if (!newLabelName.trim()) {
+            return;
+        }
+
+        setLabels((prevState) => [
+            ...prevState,
             {
                 id: new Date().getTime(),
                 name: newLabelName.trim(),
@@ -183,23 +208,7 @@ export default function NewProjectModal({
         setNewLabelName("");
     };
 
-    const handleSubmit = () => {
-        // handleClose();
-    };
-
     const handleClose = () => {
-        setIcon("🚀");
-        setProjectColor("#6366f1");
-        setStatus("active");
-        setMembers([]);
-        setEmailInput("");
-        setEmailError("");
-        setColumns(Object.values(COLUMNS_CONFIG));
-        setNewColumnName("");
-        setCategories([]);
-        setNewCatName("");
-        setLabels([]);
-        setNewLabelName("");
         onClose();
     };
 
@@ -457,12 +466,13 @@ export default function NewProjectModal({
                                                 <button
                                                     type="button"
                                                     onClick={() =>
-                                                        setMembers((prev) =>
-                                                            prev.filter(
-                                                                (value) =>
-                                                                    value !==
-                                                                    member,
-                                                            ),
+                                                        setMembers(
+                                                            (prevState) =>
+                                                                prevState.filter(
+                                                                    (value) =>
+                                                                        value !==
+                                                                        member,
+                                                                ),
                                                         )
                                                     }
                                                     className="ml-1 text-muted-foreground transition-colors hover:text-foreground"
@@ -699,12 +709,13 @@ export default function NewProjectModal({
                                                 onRemove={() =>
                                                     isPending
                                                         ? null
-                                                        : setLabels((prev) =>
-                                                              prev.filter(
-                                                                  (l) =>
-                                                                      l.id !==
-                                                                      lbl.id,
-                                                              ),
+                                                        : setLabels(
+                                                              (prevState) =>
+                                                                  prevState.filter(
+                                                                      (l) =>
+                                                                          l.id !==
+                                                                          lbl.id,
+                                                                  ),
                                                           )
                                                 }
                                             />
@@ -797,7 +808,6 @@ export default function NewProjectModal({
                             <Button
                                 type="submit"
                                 size="sm"
-                                onClick={handleSubmit}
                                 className="h-9 gap-1.5 bg-bright-blue text-white hover:bg-blue-600 [&_svg]:size-4"
                                 disabled={isPending}
                             >

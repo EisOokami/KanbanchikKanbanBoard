@@ -622,6 +622,19 @@ export async function createProjectAction(
             message: null,
         };
     }
+
+    revalidatePath(`/overview`);
+
+    if ("status" in responseData && responseData.status === "success") {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: responseData.status,
+            details: null,
+            message: responseData.message,
+        };
+    }
 }
 
 const memberSchema = z.object({
@@ -725,6 +738,7 @@ export async function updateProjectAction(
         members: Omit<User, "email">[];
         emails: string[];
     },
+    currentPath: string | undefined,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     prevState: any,
     formData: FormData,
@@ -800,10 +814,26 @@ export async function updateProjectAction(
             message: null,
         };
     }
+
+    if (currentPath) {
+        revalidatePath(currentPath);
+    }
+
+    if ("status" in responseData && responseData.status === "success") {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: responseData.status,
+            details: null,
+            message: responseData.message,
+        };
+    }
 }
 
 export async function deleteProjectAction(
     projectId: number,
+    currentPath?: string,
 ): Promise<{ ok: boolean; message: string } | undefined> {
     const responseData = await mutateData("DELETE", `/projects/${projectId}`);
 
@@ -836,6 +866,10 @@ export async function deleteProjectAction(
             ok: false,
             message: "Failed to delete a project",
         };
+    }
+
+    if (currentPath) {
+        revalidatePath(currentPath);
     }
 
     return {
@@ -977,6 +1011,7 @@ export async function createTaskAction(
         labels: Label[];
         newLabels: Omit<Label, "created_at" | "updated_at">[];
     },
+    currentPath: string | undefined,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     prevState: any,
     formData: FormData,
@@ -1114,6 +1149,22 @@ export async function createTaskAction(
             };
         }
     }
+
+    if (currentPath) {
+        revalidatePath(currentPath, "page");
+    }
+
+    if ("status" in responseData && responseData.status === "success") {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: responseData.status,
+            details: null,
+            message: responseData.message,
+            data: responseData.data,
+        };
+    }
 }
 
 const updateTaskSchema = z.object({
@@ -1211,6 +1262,7 @@ export async function updateTaskAction(
         newAttachments: Attachment[];
         labels: Label[];
     },
+    currentPath: string | undefined,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     prevState: any,
     formData: FormData,
@@ -1345,10 +1397,27 @@ export async function updateTaskAction(
             };
         }
     }
+
+    if (currentPath) {
+        revalidatePath(currentPath, "page");
+    }
+
+    if ("status" in responseData && responseData.status === "success") {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: responseData.status,
+            details: null,
+            message: responseData.message,
+            data: responseData.data,
+        };
+    }
 }
 
 export async function deleteTaskAction(
     taskId: number,
+    currentPath?: string,
 ): Promise<{ ok: boolean; message: string } | undefined> {
     const responseData = await mutateData("DELETE", `/tasks/${taskId}`);
 
@@ -1365,10 +1434,10 @@ export async function deleteTaskAction(
         "message" in responseData &&
         "status" in responseData &&
         responseData.message &&
-        responseData.status
+        responseData.status === "error"
     ) {
         return {
-            ok: responseData.status === "error" ? false : true,
+            ok: false,
             message: responseData.message,
         };
     }
@@ -1380,6 +1449,10 @@ export async function deleteTaskAction(
             ok: false,
             message: "Failed to delete a task",
         };
+    }
+
+    if (currentPath) {
+        revalidatePath(currentPath, "page");
     }
 
     return {
@@ -1547,6 +1620,20 @@ export async function updateProfileAction(
             message: null,
         };
     }
+
+    revalidatePath("/", "layout");
+
+    if ("status" in responseData && responseData.status === "success") {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: responseData.status,
+            details: null,
+            message: responseData.message,
+            data: responseData.data,
+        };
+    }
 }
 
 export async function deleteAccountAction(
@@ -1660,7 +1747,7 @@ export async function changePasswordAction(
         "message" in responseData &&
         "status" in responseData &&
         responseData.message &&
-        responseData.status
+        responseData.status !== "success"
     ) {
         return {
             formData,
@@ -1680,6 +1767,20 @@ export async function changePasswordAction(
             status: null,
             details: responseData.details,
             message: null,
+        };
+    }
+
+    revalidatePath("/", "layout");
+
+    if ("status" in responseData && responseData.status === "success") {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: responseData.status,
+            details: null,
+            message: responseData.message,
+            data: responseData.data,
         };
     }
 }
@@ -1845,6 +1946,8 @@ export async function deleteAvatarAction(
             message: "Failed to delete a avatar",
         };
     }
+
+    revalidatePath("/");
 
     return {
         ok: true,
