@@ -182,7 +182,9 @@ export const getTasks = async (req: IGetUserRequest, res: Response) => {
                 );
 
                 const subtasksTotal = subtasks.length;
-                const subtasksDone = subtasks.filter((s) => s.is_done).length;
+                const subtasksDone = subtasks.filter(
+                    (subtask) => subtask.is_done,
+                ).length;
 
                 return {
                     id: task.id,
@@ -205,18 +207,18 @@ export const getTasks = async (req: IGetUserRequest, res: Response) => {
                     labels,
                     categories,
                     subtasks,
-                    attachments: attachments.map((a) => ({
-                        id: a.id,
-                        filename: a.filename,
-                        file_url: a.file_url,
-                        mime_type: a.mime_type,
-                        size_bytes: a.size_bytes,
-                        created_at: a.created_at,
+                    attachments: attachments.map((attachment) => ({
+                        id: attachment.id,
+                        filename: attachment.filename,
+                        file_url: attachment.file_url,
+                        mime_type: attachment.mime_type,
+                        size_bytes: attachment.size_bytes,
+                        created_at: attachment.created_at,
                         uploader: {
-                            id: a.uploader_id,
-                            name: a.uploader_name,
-                            surname: a.uploader_surname,
-                            avatar_url: a.uploader_avatar,
+                            id: attachment.uploader_id,
+                            name: attachment.uploader_name,
+                            surname: attachment.uploader_surname,
+                            avatar_url: attachment.uploader_avatar,
                         },
                     })),
                     column: {
@@ -225,17 +227,17 @@ export const getTasks = async (req: IGetUserRequest, res: Response) => {
                         position: task.column_position,
                         wip_limit: task.column_wip_limit,
                     },
-                    comments: comments.map((c) => ({
-                        id: c.id,
-                        body: c.body,
-                        created_at: c.created_at,
-                        updated_at: c.updated_at,
+                    comments: comments.map((comment) => ({
+                        id: comment.id,
+                        body: comment.body,
+                        created_at: comment.created_at,
+                        updated_at: comment.updated_at,
                         member: {
-                            id: c.user_id,
-                            name: c.name,
-                            surname: c.surname,
-                            avatar_url: c.avatar_url,
-                            color: c.color,
+                            id: comment.user_id,
+                            name: comment.name,
+                            surname: comment.surname,
+                            avatar_url: comment.avatar_url,
+                            color: comment.color,
                         },
                     })),
                     subtasks_total: subtasksTotal,
