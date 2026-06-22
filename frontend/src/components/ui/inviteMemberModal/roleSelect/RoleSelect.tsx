@@ -36,7 +36,7 @@ export default function RoleSelect({
                     compact ? "w-[110px]" : "w-[130px]",
                 )}
             >
-                <SelectValue />
+                <SelectValue placeholder="Select a role" />
             </SelectTrigger>
             <SelectContent>
                 {ROLES.map((role) =>

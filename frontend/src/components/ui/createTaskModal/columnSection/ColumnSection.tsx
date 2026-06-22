@@ -43,7 +43,7 @@ export default function ColumnSection({
                     id="column"
                     className="focus:ring-1 focus:ring-bright-blue"
                 >
-                    <SelectValue />
+                    <SelectValue placeholder="Select a column" />
                 </SelectTrigger>
                 <SelectContent>
                     {selectedProject.columns.map((column) => (

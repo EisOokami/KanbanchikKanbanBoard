@@ -41,7 +41,7 @@ export default function ProjectSection({
                         id="project"
                         className="focus:ring-1 focus:ring-bright-blue"
                     >
-                        <SelectValue />
+                        <SelectValue placeholder="Select a project" />
                     </SelectTrigger>
                     <SelectContent>
                         {projectsData.map((project) => (
