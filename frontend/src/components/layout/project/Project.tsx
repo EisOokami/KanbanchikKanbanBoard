@@ -348,8 +348,10 @@ export default function Project({
     };
 
     const handleShowTaskDetails = useCallback(
-        (_?: boolean, data?: Task) => {
-            setShowTaskDetails(!showTaskDetails);
+        (open?: boolean, data?: Task) => {
+            setShowTaskDetails(
+                typeof open === "boolean" ? open : !showTaskDetails,
+            );
 
             if (data) {
                 setColumns((prevState) =>
