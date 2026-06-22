@@ -505,7 +505,7 @@ const columnSchema = z.object({
         .min(1, "Name is required")
         .max(150, "Name must be less than 255 characters long"),
     position: z.number().int().min(0),
-    wip_limit: z.number().int().max(100).optional(),
+    wip_limit: z.number().int().min(1).max(999).nullable(),
 });
 
 const createProjectSchema = z.object({

@@ -102,7 +102,7 @@ export interface Task extends ExtendedBase {
 export interface Column extends ExtendedBase {
     name: string;
     position: number;
-    wip_limit: number;
+    wip_limit: number | null;
     tasks: Task[];
 }
 
