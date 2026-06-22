@@ -967,7 +967,7 @@ export const updateTask = async (req: IGetUserRequest, res: Response) => {
         res.status(200).json({
             status: "success",
             message: "Task updated successfully",
-            task: updatedTasks,
+            data: updatedTasks[0],
         });
     } catch (error) {
         if (error instanceof ZodError) {
