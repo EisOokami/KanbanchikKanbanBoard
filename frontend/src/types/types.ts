@@ -153,6 +153,13 @@ export interface UserData {
     data: User | null;
 }
 
+export interface NewProjectFormData {
+    members: string[];
+    categories: Omit<Category, "updated_at" | "created_at">[];
+    columns: Omit<Column, "tasks" | "updated_at" | "created_at">[];
+    labels: Omit<Label, "created_at" | "updated_at">[];
+}
+
 export interface CreateTaskFormData {
     categories: Category[];
     newCategories: Omit<Category, "created_at" | "updated_at">[];

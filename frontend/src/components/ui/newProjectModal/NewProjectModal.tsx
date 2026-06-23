@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/shadcn/dialog";
 import ColorDotPicker from "./colorDotPicker/ColorDotPicker";
 import Chip from "./chip/Chip";
-import { Category, Column, Label, Status } from "@/types/types";
+import { Category, Label, NewProjectFormData, Status } from "@/types/types";
 import {
     COLUMN_COLORS,
     COLUMNS_CONFIG,
@@ -70,29 +70,23 @@ export default function NewProjectModal({
     const [icon, setIcon] = useState("🚀");
     const [status, setStatus] = useState<Status>("active");
     const [projectColor, setProjectColor] = useState(PROJECT_COLORS[0]);
-    const [members, setMembers] = useState<string[]>([]);
     const [emailInput, setEmailInput] = useState<string>("");
     const [emailError, setEmailError] = useState<string>("");
-    const [columns, setColumns] = useState<Omit<Column, "tasks">[]>(
-        Object.values(COLUMNS_CONFIG),
-    );
     const [newColumnName, setNewColumnName] = useState<string>("");
-    const [categories, setCategories] = useState<Category[]>([]);
     const [newCatName, setNewCatName] = useState("");
     const [newCatColor, setNewCatColor] = useState(COLUMN_COLORS[4]);
-    const [labels, setLabels] = useState<Label[]>([]);
     const [newLabelName, setNewLabelName] = useState<string>("");
     const [newLabelColor, setNewLabelColor] = useState(COLUMN_COLORS[5]);
     const [iconPickerOpen, setIconPickerOpen] = useState<boolean>(false);
     const [colorPickerOpen, setColorPickerOpen] = useState<boolean>(false);
-    const updatedCreateProjectAction = createProjectAction.bind(null, {
-        members: members,
-        categories: categories,
-        columns: columns,
-        labels: labels,
+    const [formData, setFormData] = useState<NewProjectFormData>({
+        members: [],
+        categories: [],
+        columns: Object.values(COLUMNS_CONFIG),
+        labels: [],
     });
     const [formState, formAction, isPending] = useActionState(
-        updatedCreateProjectAction,
+        createProjectAction.bind(null, formData),
         INITIAL_STATE,
     );
     const sensors = useSensors(useSensor(PointerSensor));
@@ -117,13 +111,13 @@ export default function NewProjectModal({
             return;
         }
 
-        if (members.find((member) => member === email)) {
+        if (formData.members.find((member) => member === email)) {
             setEmailError("Already added");
 
             return;
         }
 
-        setMembers((prevState) => [...prevState, email]);
+        setFormData({ ...formData, members: [...formData.members, email] });
         setEmailInput("");
         setEmailError("");
     };
@@ -133,17 +127,18 @@ export default function NewProjectModal({
             return;
         }
 
-        setColumns((prevState) => [
-            ...prevState,
-            {
-                id: Object.keys(columns).length + 1,
-                name: newColumnName.trim(),
-                position: Object.keys(columns).length,
-                created_at: new Date(),
-                updated_at: null,
-                wip_limit: null,
-            },
-        ]);
+        setFormData({
+            ...formData,
+            columns: [
+                ...formData.columns,
+                {
+                    id: Object.keys(formData.columns).length + 1,
+                    name: newColumnName.trim(),
+                    position: Object.keys(formData.columns).length,
+                    wip_limit: null,
+                },
+            ],
+        });
         setNewColumnName("");
     };
 
@@ -154,20 +149,21 @@ export default function NewProjectModal({
             return;
         }
 
-        setColumns((prevState) => {
-            const oldIndex = prevState.findIndex(
-                (column) => column.id === active.id,
-            );
-            const newIndex = prevState.findIndex(
-                (column) => column.id === over.id,
-            );
+        const oldIndex = formData.columns.findIndex(
+            (column) => column.id === active.id,
+        );
+        const newIndex = formData.columns.findIndex(
+            (column) => column.id === over.id,
+        );
 
-            return arrayMove(prevState, oldIndex, newIndex).map(
+        setFormData({
+            ...formData,
+            columns: arrayMove(formData.columns, oldIndex, newIndex).map(
                 (column, i) => ({
                     ...column,
                     position: i + 1,
                 }),
-            );
+            ),
         });
     };
 
@@ -176,17 +172,17 @@ export default function NewProjectModal({
             return;
         }
 
-        setCategories((prevState) => [
-            ...prevState,
-            {
-                id: categories.length + 1,
-                name: newCatName.trim(),
-                color: newCatColor,
-                created_at: new Date(),
-                description: "",
-                updated_at: null,
-            },
-        ]);
+        setFormData({
+            ...formData,
+            categories: [
+                ...formData.categories,
+                {
+                    id: formData.categories.length + 1,
+                    name: newCatName.trim(),
+                    color: newCatColor,
+                },
+            ],
+        });
         setNewCatName("");
     };
 
@@ -195,16 +191,17 @@ export default function NewProjectModal({
             return;
         }
 
-        setLabels((prevState) => [
-            ...prevState,
-            {
-                id: new Date().getTime(),
-                name: newLabelName.trim(),
-                color: newLabelColor,
-                created_at: new Date(),
-                updated_at: null,
-            },
-        ]);
+        setFormData({
+            ...formData,
+            labels: [
+                ...formData.labels,
+                {
+                    id: new Date().getTime(),
+                    name: newLabelName.trim(),
+                    color: newLabelColor,
+                },
+            ],
+        });
         setNewLabelName("");
     };
 
@@ -214,16 +211,55 @@ export default function NewProjectModal({
 
     const handleChangeWipLimit = useCallback(
         (wipLimit: number | null, id: number) => {
-            setColumns((prevState) =>
-                prevState.map((column) =>
+            setFormData({
+                ...formData,
+                columns: formData.columns.map((column) =>
                     column.id === id
                         ? { ...column, wip_limit: wipLimit }
                         : column,
                 ),
-            );
+            });
         },
-        [],
+        [formData],
     );
+
+    const handleRemoveMember = (member: string) => {
+        setFormData({
+            ...formData,
+            members: formData.members.filter((value) => value !== member),
+        });
+    };
+
+    const handleRemoveColumn = (id: number) => {
+        setFormData({
+            ...formData,
+            columns: formData.columns.filter(
+                (columnsState) => columnsState.id !== id,
+            ),
+        });
+    };
+
+    const handleRemoveCategory = (
+        category: Omit<Category, "updated_at" | "created_at">,
+    ) => {
+        setFormData({
+            ...formData,
+            categories: formData.categories.filter(
+                (categoriesState) => categoriesState.id !== category.id,
+            ),
+        });
+    };
+
+    const handleRemoveLabel = (
+        label: Omit<Label, "updated_at" | "created_at">,
+    ) => {
+        setFormData({
+            ...formData,
+            labels: formData.labels.filter(
+                (labelState) => labelState.id !== label.id,
+            ),
+        });
+    };
 
     return (
         <Dialog open={open} onOpenChange={handleClose}>
@@ -472,9 +508,9 @@ export default function NewProjectModal({
                                 Members
                             </label>
                             <div className="space-y-3">
-                                {members.length > 0 && (
+                                {formData.members.length > 0 && (
                                     <div className="flex flex-wrap gap-2">
-                                        {members.map((member) => (
+                                        {formData.members.map((member) => (
                                             <div
                                                 key={member}
                                                 className="flex items-center gap-2 rounded-md border border-border/60 bg-muted/40 px-2.5 py-1.5"
@@ -487,13 +523,8 @@ export default function NewProjectModal({
                                                 <button
                                                     type="button"
                                                     onClick={() =>
-                                                        setMembers(
-                                                            (prevState) =>
-                                                                prevState.filter(
-                                                                    (value) =>
-                                                                        value !==
-                                                                        member,
-                                                                ),
+                                                        handleRemoveMember(
+                                                            member,
                                                         )
                                                     }
                                                     className="ml-1 text-muted-foreground transition-colors hover:text-foreground"
@@ -574,14 +605,14 @@ export default function NewProjectModal({
                                         onDragEnd={handleDragEnd}
                                     >
                                         <SortableContext
-                                            items={columns.map(
+                                            items={formData.columns.map(
                                                 (column) => column.id,
                                             )}
                                             strategy={
                                                 verticalListSortingStrategy
                                             }
                                         >
-                                            {columns.map((column) => (
+                                            {formData.columns.map((column) => (
                                                 <SortableColumnRow
                                                     key={column.id}
                                                     column={column}
@@ -589,17 +620,8 @@ export default function NewProjectModal({
                                                     onWipLimitChange={
                                                         handleChangeWipLimit
                                                     }
-                                                    onRemove={(id) =>
-                                                        setColumns(
-                                                            (prevState) =>
-                                                                prevState.filter(
-                                                                    (
-                                                                        columnsState,
-                                                                    ) =>
-                                                                        columnsState.id !==
-                                                                        id,
-                                                                ),
-                                                        )
+                                                    onRemove={
+                                                        handleRemoveColumn
                                                     }
                                                 />
                                             ))}
@@ -657,9 +679,9 @@ export default function NewProjectModal({
                                 Categories
                             </label>
                             <div className="space-y-3">
-                                {categories.length > 0 && (
+                                {formData.categories.length > 0 && (
                                     <div className="flex flex-wrap gap-1.5">
-                                        {categories.map((category) => (
+                                        {formData.categories.map((category) => (
                                             <Chip
                                                 key={category.id}
                                                 label={category.name}
@@ -667,15 +689,8 @@ export default function NewProjectModal({
                                                 onRemove={() =>
                                                     isPending
                                                         ? null
-                                                        : setCategories(
-                                                              (prevState) =>
-                                                                  prevState.filter(
-                                                                      (
-                                                                          categoriesState,
-                                                                      ) =>
-                                                                          categoriesState.id !==
-                                                                          category.id,
-                                                                  ),
+                                                        : handleRemoveCategory(
+                                                              category,
                                                           )
                                                 }
                                             />
@@ -736,23 +751,18 @@ export default function NewProjectModal({
                                 Labels
                             </label>
                             <div className="space-y-3">
-                                {labels.length > 0 && (
+                                {formData.labels.length > 0 && (
                                     <div className="flex flex-wrap gap-1.5">
-                                        {labels.map((lbl) => (
+                                        {formData.labels.map((label) => (
                                             <Chip
-                                                key={lbl.id}
-                                                label={lbl.name}
-                                                color={lbl.color}
+                                                key={label.id}
+                                                label={label.name}
+                                                color={label.color}
                                                 onRemove={() =>
                                                     isPending
                                                         ? null
-                                                        : setLabels(
-                                                              (prevState) =>
-                                                                  prevState.filter(
-                                                                      (l) =>
-                                                                          l.id !==
-                                                                          lbl.id,
-                                                                  ),
+                                                        : handleRemoveLabel(
+                                                              label,
                                                           )
                                                 }
                                             />

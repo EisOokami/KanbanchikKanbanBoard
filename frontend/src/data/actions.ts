@@ -548,7 +548,7 @@ const createProjectSchema = z.object({
 
 export async function createProjectAction(
     data: {
-        labels: Omit<Label, "id">[];
+        labels: Omit<Label, "created_at" | "updated_at" | "id">[];
         columns: Omit<Column, "tasks" | "updated_at" | "created_at" | "id">[];
         categories: Omit<Category, "updated_at" | "created_at" | "id">[];
         members: string[];
