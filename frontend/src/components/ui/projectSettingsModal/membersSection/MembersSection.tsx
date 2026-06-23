@@ -7,53 +7,66 @@ import { Avatar, AvatarFallback, AvatarImage } from "../../shadcn/avatar";
 import { Button } from "../../shadcn/button";
 import { Input } from "../../shadcn/input";
 import { useState } from "react";
-import { User } from "@/types/types";
+import { ProjectSettingsFormData, User } from "@/types/types";
 import { BaseAction } from "@/types/actions";
 import { ZodErrors } from "../../zodErrors/ZodErrors";
 
 interface MembersSectionProps {
-    members: Omit<User, "email">[];
-    emails: string[];
+    formData: ProjectSettingsFormData;
     formState: BaseAction | undefined;
     isPending: boolean;
-    onMembersChange: (members: Omit<User, "email">[]) => void;
-    onEmailsChange: (emails: string[]) => void;
+    onFormDataChange: (formData: ProjectSettingsFormData) => void;
 }
 
 export default function MembersSection({
-    members,
-    emails,
+    formData,
     formState,
     isPending,
-    onMembersChange,
-    onEmailsChange,
+    onFormDataChange,
 }: Readonly<MembersSectionProps>) {
     const [inviteRole, setInviteRole] = useState<User["role"]>("member");
     const [inviteEmail, setInviteEmail] = useState<string>("");
 
-    const updateMemberRole = (id: number, role: User["role"]) =>
-        onMembersChange(
-            members.map((member) =>
+    const updateMemberRole = (id: number, role: User["role"]) => {
+        onFormDataChange({
+            ...formData,
+            members: formData.members.map((member) =>
                 member.id === id ? { ...member, role } : member,
             ),
-        );
+        });
+    };
 
-    const removeMember = (id: number) =>
-        onMembersChange(members.filter((member) => member.id !== id));
+    const removeMember = (id: number) => {
+        onFormDataChange({
+            ...formData,
+            members: formData.members.filter((member) => member.id !== id),
+        });
+    };
 
     const handleInvite = () => {
         if (!inviteEmail.trim()) {
             return;
         }
 
-        onEmailsChange([...emails, inviteEmail]);
-
+        onFormDataChange({
+            ...formData,
+            emails: [...formData.emails, inviteEmail],
+        });
         setInviteEmail("");
+    };
+
+    const handleRemoveEmail = (emailValue: string) => {
+        onFormDataChange({
+            ...formData,
+            emails: formData.emails.filter((email) => email !== emailValue),
+        });
     };
 
     return (
         <div className="space-y-1">
-            <h3 className="font-semibold">Members ({members.length})</h3>
+            <h3 className="font-semibold">
+                Members ({formData.members.length})
+            </h3>
             <div className="space-y-4">
                 <div className="flex items-center gap-3 rounded-md border px-3 py-2.5">
                     <UserPlusIcon weight="duotone" size={18} />
@@ -111,9 +124,9 @@ export default function MembersSection({
                     </Button>
                 </div>
                 <div className="space-y-1.5">
-                    {emails.length > 0 && (
+                    {formData.emails.length > 0 && (
                         <div className="flex flex-wrap gap-2">
-                            {emails.map((email) => (
+                            {formData.emails.map((email) => (
                                 <div
                                     key={email}
                                     className="flex items-center gap-2 rounded-md border border-border/60 bg-muted/40 px-2.5 py-1.5"
@@ -125,13 +138,7 @@ export default function MembersSection({
                                     </div>
                                     <button
                                         type="button"
-                                        onClick={() =>
-                                            onEmailsChange(
-                                                emails.filter(
-                                                    (value) => value !== email,
-                                                ),
-                                            )
-                                        }
+                                        onClick={() => handleRemoveEmail(email)}
                                         className="ml-1 text-muted-foreground transition-colors hover:text-foreground"
                                         disabled={isPending}
                                     >
@@ -144,7 +151,7 @@ export default function MembersSection({
                             ))}
                         </div>
                     )}
-                    {members.map((member) => (
+                    {formData.members.map((member) => (
                         <div
                             key={member.id}
                             className="flex items-center gap-3 rounded-md border px-3 py-2.5 transition-colors hover:bg-gray-50"

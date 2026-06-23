@@ -3,7 +3,7 @@
 import { Button } from "../../shadcn/button";
 import { PlusIcon } from "@phosphor-icons/react";
 import { Input } from "../../shadcn/input";
-import { Column } from "@/types/types";
+import { Column, ProjectSettingsFormData } from "@/types/types";
 import { useState } from "react";
 import { BaseAction } from "@/types/actions";
 import { ZodErrors } from "../../zodErrors/ZodErrors";
@@ -23,27 +23,21 @@ import {
 } from "@dnd-kit/sortable";
 
 interface ColumnsSectionProps {
-    columns: Column[];
-    newColumns: Omit<Column, "created_at" | "updated_at" | "tasks">[];
+    formData: ProjectSettingsFormData;
     newColumnName: string;
     formState: BaseAction | undefined;
     isPending: boolean;
-    onColumnsChange: (columnsValue: Column[]) => void;
     onColumnNameChange: (nameValue: string) => void;
-    onNewColumnsChange: (
-        newColumnsValue: Omit<Column, "created_at" | "updated_at" | "tasks">[],
-    ) => void;
+    onFormDataChange: (formData: ProjectSettingsFormData) => void;
 }
 
 export default function ColumnsSection({
-    columns,
-    newColumns,
+    formData,
     newColumnName,
     formState,
     isPending,
     onColumnNameChange,
-    onColumnsChange,
-    onNewColumnsChange,
+    onFormDataChange,
 }: Readonly<ColumnsSectionProps>) {
     const [editingColumn, setEditingColumn] = useState<number | null>(null);
     const sensors = useSensors(useSensor(PointerSensor));
@@ -55,7 +49,7 @@ export default function ColumnsSection({
             return;
         }
 
-        const allColumns = [...columns, ...newColumns];
+        const allColumns = [...formData.columns, ...formData.newColumns];
         const oldIndex = allColumns.findIndex((c) => c.id === active.id);
         const newIndex = allColumns.findIndex((c) => c.id === over.id);
 
@@ -63,16 +57,15 @@ export default function ColumnsSection({
             (column, i) => ({ ...column, position: i + 1 }),
         );
 
-        onColumnsChange(
-            reordered.filter((value) =>
-                columns.some((column) => column.id === value.id),
+        onFormDataChange({
+            ...formData,
+            columns: reordered.filter((value) =>
+                formData.columns.some((column) => column.id === value.id),
             ) as Column[],
-        );
-        onNewColumnsChange(
-            reordered.filter((value) =>
-                newColumns.some((column) => column.id === value.id),
+            newColumns: reordered.filter((value) =>
+                formData.newColumns.some((column) => column.id === value.id),
             ),
-        );
+        });
     };
 
     const addColumn = () => {
@@ -80,33 +73,41 @@ export default function ColumnsSection({
             return;
         }
 
-        onNewColumnsChange([
-            ...newColumns,
-            {
-                id: new Date().getTime(),
-                name: newColumnName,
-                position: columns.length - 1,
-            },
-        ]);
+        onFormDataChange({
+            ...formData,
+            newColumns: [
+                ...formData.newColumns,
+                {
+                    id: new Date().getTime(),
+                    name: newColumnName,
+                    position: formData.columns.length - 1,
+                    wip_limit: null,
+                },
+            ],
+        });
         onColumnNameChange("");
     };
 
     const updateColumn = (id: number, patch: Partial<Column>) => {
-        onColumnsChange(
-            columns.map((value) =>
-                value.id === id ? { ...value, ...patch } : value,
+        onFormDataChange({
+            ...formData,
+            columns: formData.columns.map((column) =>
+                column.id === id ? { ...column, ...patch } : column,
             ),
-        );
-        onNewColumnsChange(
-            newColumns.map((value) =>
-                value.id === id ? { ...value, ...patch } : value,
+            newColumns: formData.newColumns.map((newColumn) =>
+                newColumn.id === id ? { ...newColumn, ...patch } : newColumn,
             ),
-        );
+        });
     };
 
     const removeColumn = (id: number) => {
-        onColumnsChange(columns.filter((value) => value.id !== id));
-        onNewColumnsChange(newColumns.filter((value) => value.id !== id));
+        onFormDataChange({
+            ...formData,
+            columns: formData.columns.filter((column) => column.id !== id),
+            newColumns: formData.newColumns.filter(
+                (column) => column.id !== id,
+            ),
+        });
     };
 
     return (
@@ -120,10 +121,13 @@ export default function ColumnsSection({
                         onDragEnd={handleDragEnd}
                     >
                         <SortableContext
-                            items={[...columns, ...newColumns].map((c) => c.id)}
+                            items={[
+                                ...formData.columns,
+                                ...formData.newColumns,
+                            ].map((column) => column.id)}
                             strategy={verticalListSortingStrategy}
                         >
-                            {columns.map((column) => (
+                            {formData.columns.map((column) => (
                                 <SortableColumnRow
                                     key={column.id}
                                     column={column}
@@ -135,7 +139,7 @@ export default function ColumnsSection({
                                     onColumnRemove={removeColumn}
                                 />
                             ))}
-                            {newColumns.map((column) => (
+                            {formData.newColumns.map((column) => (
                                 <SortableColumnRow
                                     key={column.id}
                                     column={column}

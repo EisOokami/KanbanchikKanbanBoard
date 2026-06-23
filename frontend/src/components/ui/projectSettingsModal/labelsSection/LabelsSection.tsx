@@ -10,38 +10,32 @@ import { Input } from "../../shadcn/input";
 import { cn } from "@/libs/utils";
 import { PALETTE } from "@/constants/constants";
 import { useState } from "react";
-import { Label } from "@/types/types";
+import { Label, ProjectSettingsFormData } from "@/types/types";
 import { BaseAction } from "@/types/actions";
 import { ZodErrors } from "../../zodErrors/ZodErrors";
 
 interface LabelsSectionProps {
-    labels: Label[];
-    newLabels: Omit<Label, "created_at" | "updated_at">[];
+    formData: ProjectSettingsFormData;
     labelInputValues: {
         name: string;
         color: string;
     };
     formState: BaseAction | undefined;
     isPending: boolean;
-    onLabelsChange: (labelsValue: Label[]) => void;
-    onNewLabelsChange: (
-        newLabelsValue: Omit<Label, "created_at" | "updated_at">[],
-    ) => void;
     onLabelInputValuesChange: (inputValues: {
         name: string;
         color: string;
     }) => void;
+    onFormDataChange: (formData: ProjectSettingsFormData) => void;
 }
 
 export default function LabelsSection({
-    labels,
-    newLabels,
+    formData,
     labelInputValues,
     formState,
     isPending,
-    onLabelsChange,
-    onNewLabelsChange,
     onLabelInputValuesChange,
+    onFormDataChange,
 }: Readonly<LabelsSectionProps>) {
     const [editingLabel, setEditingLabel] = useState<number | null>(null);
 
@@ -50,33 +44,38 @@ export default function LabelsSection({
             return;
         }
 
-        onNewLabelsChange([
-            ...newLabels,
-            {
-                id: new Date().getTime(),
-                name: labelInputValues.name.trim(),
-                color: labelInputValues.color,
-            },
-        ]);
+        onFormDataChange({
+            ...formData,
+            newLabels: [
+                ...formData.newLabels,
+                {
+                    id: new Date().getTime(),
+                    name: labelInputValues.name.trim(),
+                    color: labelInputValues.color,
+                },
+            ],
+        });
         onLabelInputValuesChange({ name: "", color: PALETTE[0] });
     };
 
     const updateLabel = (id: number, patch: Partial<Label>) => {
-        onLabelsChange(
-            labels.map((label) =>
+        onFormDataChange({
+            ...formData,
+            labels: formData.labels.map((label) =>
                 label.id === id ? { ...label, ...patch } : label,
             ),
-        );
-        onNewLabelsChange(
-            newLabels.map((label) =>
+            newLabels: formData.newLabels.map((label) =>
                 label.id === id ? { ...label, ...patch } : label,
             ),
-        );
+        });
     };
 
     const removeLabel = (id: number) => {
-        onLabelsChange(labels.filter((label) => label.id !== id));
-        onNewLabelsChange(newLabels.filter((label) => label.id !== id));
+        onFormDataChange({
+            ...formData,
+            labels: formData.labels.filter((label) => label.id !== id),
+            newLabels: formData.newLabels.filter((label) => label.id !== id),
+        });
     };
 
     return (
@@ -84,7 +83,7 @@ export default function LabelsSection({
             <h3 className="font-semibold">Labels</h3>
             <div className="space-y-4">
                 <div className="space-y-2">
-                    {labels.map((label) => (
+                    {formData.labels.map((label) => (
                         <div
                             key={label.id}
                             className="flex items-center gap-3 rounded-md border px-3 py-2.5 transition-colors hover:bg-gray-50"
@@ -170,7 +169,7 @@ export default function LabelsSection({
                             </div>
                         </div>
                     ))}
-                    {newLabels.map((label) => (
+                    {formData.newLabels.map((label) => (
                         <div
                             key={label.id}
                             className="flex items-center gap-3 rounded-md border px-3 py-2.5 transition-colors hover:bg-gray-50"

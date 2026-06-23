@@ -160,6 +160,17 @@ export interface NewProjectFormData {
     labels: Omit<Label, "created_at" | "updated_at">[];
 }
 
+export interface ProjectSettingsFormData {
+    categories: Category[];
+    newCategories: Omit<Category, "created_at" | "updated_at">[];
+    columns: Column[];
+    newColumns: Omit<Column, "created_at" | "updated_at" | "tasks">[];
+    labels: Label[];
+    newLabels: Omit<Label, "created_at" | "updated_at">[];
+    members: Omit<User, "email">[];
+    emails: string[];
+}
+
 export interface CreateTaskFormData {
     categories: Category[];
     newCategories: Omit<Category, "created_at" | "updated_at">[];

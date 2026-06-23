@@ -11,7 +11,12 @@ import { ScrollArea } from "@/components/ui/shadcn/scroll-area";
 import { cn } from "@/libs/utils";
 import { NavSection } from "@/types/projectSettingsDialog";
 import { NAV_ITEMS } from "@/constants/projectSettingsDialog";
-import { Project, Column, Category, Label, User, Status } from "@/types/types";
+import {
+    Project,
+    Column,
+    Status,
+    ProjectSettingsFormData,
+} from "@/types/types";
 import { CaretRightIcon, CheckIcon } from "@phosphor-icons/react";
 import GeneralSection from "./generalSection/GeneralSection";
 import ColumnsSection from "./columnsSection/ColumnsSection";
@@ -54,17 +59,7 @@ export function ProjectSettingsModal({
     const [description, setDescription] = useState<string>(
         projectData.description,
     );
-    const [columns, setColumns] = useState<Column[]>(columnsData);
     const [newColumnName, setNewColumnName] = useState<string>("");
-    const [newColumns, setNewColumns] = useState<
-        Omit<Column, "created_at" | "updated_at" | "tasks">[]
-    >([]);
-    const [categories, setCategories] = useState<Category[]>(
-        projectData.categories,
-    );
-    const [newCategories, setNewCategories] = useState<
-        Omit<Category, "created_at" | "updated_at">[]
-    >([]);
     const [categoryInputValues, setCategoryInputValues] = useState<{
         name: string;
         color: string;
@@ -72,10 +67,6 @@ export function ProjectSettingsModal({
         name: "",
         color: PALETTE[0],
     });
-    const [labels, setLabels] = useState<Label[]>(projectData.labels);
-    const [newLabels, setNewLabels] = useState<
-        Omit<Label, "created_at" | "updated_at">[]
-    >([]);
     const [labelInputValues, setLabelInputValues] = useState<{
         name: string;
         color: string;
@@ -83,27 +74,20 @@ export function ProjectSettingsModal({
         name: "",
         color: PALETTE[0],
     });
-    const [members, setMembers] = useState<Omit<User, "email">[]>(
-        projectData.members,
-    );
-    const [emails, setEmails] = useState<string[]>([]);
     const [status, setStatus] = useState<Status>(projectData.status);
     const pathname = usePathname();
+    const [formData, setFormData] = useState<ProjectSettingsFormData>({
+        categories: projectData.categories,
+        newCategories: [],
+        columns: columnsData,
+        newColumns: [],
+        labels: projectData.labels,
+        newLabels: [],
+        members: projectData.members,
+        emails: [],
+    });
     const [formState, formAction, isPending] = useActionState(
-        updateProjectAction.bind(
-            null,
-            {
-                categories: categories,
-                newCategories: newCategories,
-                columns: columns,
-                newColumns: newColumns,
-                labels: labels,
-                newLabels: newLabels,
-                members: members,
-                emails: emails,
-            },
-            pathname,
-        ),
+        updateProjectAction.bind(null, formData, pathname),
         INITIAL_STATE,
     );
 
@@ -188,54 +172,46 @@ export function ProjectSettingsModal({
                                 )}
                                 {activeSection === "columns" && (
                                     <ColumnsSection
-                                        columns={columns}
-                                        newColumns={newColumns}
+                                        formData={formData}
                                         newColumnName={newColumnName}
                                         formState={formState}
                                         isPending={isPending}
-                                        onColumnsChange={setColumns}
                                         onColumnNameChange={setNewColumnName}
-                                        onNewColumnsChange={setNewColumns}
+                                        onFormDataChange={setFormData}
                                     />
                                 )}
                                 {activeSection === "categories" && (
                                     <CategoriesSection
-                                        categories={categories}
-                                        newCategories={newCategories}
+                                        formData={formData}
                                         categoryInputValues={
                                             categoryInputValues
                                         }
                                         formState={formState}
                                         isPending={isPending}
-                                        onCategoriesChange={setCategories}
-                                        onNewCategoriesChange={setNewCategories}
                                         onCategoryInputValuesChange={
                                             setCategoryInputValues
                                         }
+                                        onFormDataChange={setFormData}
                                     />
                                 )}
                                 {activeSection === "labels" && (
                                     <LabelsSection
-                                        labels={labels}
-                                        newLabels={newLabels}
+                                        formData={formData}
                                         labelInputValues={labelInputValues}
                                         formState={formState}
                                         isPending={isPending}
-                                        onLabelsChange={setLabels}
-                                        onNewLabelsChange={setNewLabels}
                                         onLabelInputValuesChange={
                                             setLabelInputValues
                                         }
+                                        onFormDataChange={setFormData}
                                     />
                                 )}
                                 {activeSection === "members" && (
                                     <MembersSection
-                                        members={members}
-                                        emails={emails}
+                                        formData={formData}
                                         formState={formState}
                                         isPending={isPending}
-                                        onMembersChange={setMembers}
-                                        onEmailsChange={setEmails}
+                                        onFormDataChange={setFormData}
                                     />
                                 )}
                                 {activeSection === "danger" && (
