@@ -4,12 +4,14 @@ import type { Response } from "express";
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import { ZodError } from "zod";
 import type {
+    Attachment,
     Category,
     Column,
     Comment,
     IGetUserRequest,
     Label,
     Project,
+    ProjectMember,
     ProjectSlugHistory,
     Subtask,
     Task,
@@ -60,7 +62,9 @@ export const getProjects = async (req: IGetUserRequest, res: Response) => {
 
         const enrichedProjects = await Promise.all(
             projects.map(async (project) => {
-                const [owner] = await pool.execute<User[]>(
+                const [owner] = await pool.execute<
+                    (Pick<User, "id" | "name" | "avatar_url"> & RowDataPacket)[]
+                >(
                     `
                         SELECT id, name, avatar_url
                         FROM users
@@ -69,7 +73,14 @@ export const getProjects = async (req: IGetUserRequest, res: Response) => {
                     [project.owner_id],
                 );
 
-                const [members] = await pool.execute<User[]>(
+                const [members] = await pool.execute<
+                    (Pick<
+                        User,
+                        "id" | "name" | "surname" | "avatar_url" | "color"
+                    > &
+                        Pick<ProjectMember, "role" | "status" | "joined_at"> &
+                        RowDataPacket)[]
+                >(
                     `
                         SELECT 
                             u.id,
@@ -88,7 +99,18 @@ export const getProjects = async (req: IGetUserRequest, res: Response) => {
                     [project.id],
                 );
 
-                const [columns] = await pool.execute<Column[]>(
+                const [columns] = await pool.execute<
+                    (Pick<
+                        Column,
+                        | "id"
+                        | "name"
+                        | "position"
+                        | "wip_limit"
+                        | "created_at"
+                        | "updated_at"
+                    > &
+                        RowDataPacket)[]
+                >(
                     `
                         SELECT 
                             c.id,
@@ -104,7 +126,13 @@ export const getProjects = async (req: IGetUserRequest, res: Response) => {
                     [project.id],
                 );
 
-                const [categories] = await pool.execute<Category[]>(
+                const [categories] = await pool.execute<
+                    (Pick<
+                        Category,
+                        "id" | "name" | "color" | "created_at" | "updated_at"
+                    > &
+                        RowDataPacket)[]
+                >(
                     `
                 SELECT id, name, color, created_at, updated_at
                 FROM categories
@@ -114,7 +142,9 @@ export const getProjects = async (req: IGetUserRequest, res: Response) => {
                     [project.id],
                 );
 
-                const [labels] = await pool.execute<Label[]>(
+                const [labels] = await pool.execute<
+                    (Pick<Label, "id" | "name" | "color"> & RowDataPacket)[]
+                >(
                     `
                 SELECT id, name, color
                 FROM labels
@@ -125,7 +155,7 @@ export const getProjects = async (req: IGetUserRequest, res: Response) => {
                 );
 
                 const [taskStats] = await pool.execute<
-                    ({ total: number; done: boolean } & RowDataPacket)[]
+                    ({ total: number; done: number } & RowDataPacket)[]
                 >(
                     `
                         SELECT 
@@ -234,7 +264,11 @@ export const getProject = async (req: IGetUserRequest, res: Response) => {
         );
 
         if (!projects.length || !projects[0]) {
-            const [history] = await pool.execute<ProjectSlugHistory[]>(
+            const [history] = await pool.execute<
+                (Pick<ProjectSlugHistory, "project_id"> & {
+                    current_slug: string;
+                } & RowDataPacket)[]
+            >(
                 `
                     SELECT 
                         h.project_id, 
@@ -263,7 +297,18 @@ export const getProject = async (req: IGetUserRequest, res: Response) => {
 
         const project = projects[0];
 
-        const [columns] = await pool.execute<Column[]>(
+        const [columns] = await pool.execute<
+            (Pick<
+                Column,
+                | "id"
+                | "name"
+                | "position"
+                | "wip_limit"
+                | "created_at"
+                | "updated_at"
+            > &
+                RowDataPacket)[]
+        >(
             `
                 SELECT id, name, position, wip_limit, created_at, updated_at
                 FROM columns
@@ -273,7 +318,13 @@ export const getProject = async (req: IGetUserRequest, res: Response) => {
             [project.id],
         );
 
-        const [categories] = await pool.execute<Category[]>(
+        const [categories] = await pool.execute<
+            (Pick<
+                Category,
+                "id" | "name" | "color" | "created_at" | "updated_at"
+            > &
+                RowDataPacket)[]
+        >(
             `
                 SELECT id, name, color, created_at, updated_at
                 FROM categories
@@ -283,7 +334,9 @@ export const getProject = async (req: IGetUserRequest, res: Response) => {
             [project.id],
         );
 
-        const [labels] = await pool.execute<Label[]>(
+        const [labels] = await pool.execute<
+            (Pick<Label, "id" | "name" | "color"> & RowDataPacket)[]
+        >(
             `
                 SELECT id, name, color
                 FROM labels
@@ -293,7 +346,11 @@ export const getProject = async (req: IGetUserRequest, res: Response) => {
             [project.id],
         );
 
-        const [members] = await pool.execute<User[]>(
+        const [members] = await pool.execute<
+            (Pick<User, "id" | "name" | "surname" | "avatar_url" | "color"> &
+                Pick<ProjectMember, "role" | "status" | "joined_at"> &
+                RowDataPacket)[]
+        >(
             `
                 SELECT 
                     u.id,
@@ -312,7 +369,13 @@ export const getProject = async (req: IGetUserRequest, res: Response) => {
             [project.id],
         );
 
-        const [ownerData] = await pool.execute<User[]>(
+        const [ownerData] = await pool.execute<
+            (Pick<
+                User,
+                "id" | "name" | "surname" | "email" | "avatar_url" | "color"
+            > &
+                RowDataPacket)[]
+        >(
             `
                 SELECT id, name, surname, email, avatar_url, color
                 FROM users
@@ -323,7 +386,9 @@ export const getProject = async (req: IGetUserRequest, res: Response) => {
 
         const enrichedColumns = await Promise.all(
             columns.map(async (column) => {
-                const [tasks] = await pool.execute<Task[]>(
+                const [tasks] = await pool.execute<
+                    (Task & { column_name: string })[]
+                >(
                     `
                         SELECT
                             t.id,
@@ -349,7 +414,22 @@ export const getProject = async (req: IGetUserRequest, res: Response) => {
 
                 const enrichedTasks = await Promise.all(
                     tasks.map(async (task) => {
-                        const [members] = await pool.execute<User[]>(
+                        const [members] = await pool.execute<
+                            (Pick<
+                                User,
+                                | "id"
+                                | "name"
+                                | "surname"
+                                | "avatar_url"
+                                | "color"
+                                | "email"
+                            > &
+                                Pick<
+                                    ProjectMember,
+                                    "role" | "status" | "joined_at"
+                                > &
+                                RowDataPacket)[]
+                        >(
                             `
                                 SELECT DISTINCT
                                     u.id,
@@ -373,7 +453,10 @@ export const getProject = async (req: IGetUserRequest, res: Response) => {
                             [task.id],
                         );
 
-                        const [taskLabels] = await pool.execute<Label[]>(
+                        const [taskLabels] = await pool.execute<
+                            (Pick<Label, "id" | "name" | "color"> &
+                                RowDataPacket)[]
+                        >(
                             `
                                 SELECT l.id, l.name, l.color
                                 FROM task_labels tl
@@ -383,7 +466,10 @@ export const getProject = async (req: IGetUserRequest, res: Response) => {
                             [task.id],
                         );
 
-                        const [taskCategories] = await pool.execute<Category[]>(
+                        const [taskCategories] = await pool.execute<
+                            (Pick<Category, "id" | "name" | "color"> &
+                                RowDataPacket)[]
+                        >(
                             `
                                 SELECT c.id, c.name, c.color
                                 FROM task_categories tc
@@ -393,7 +479,17 @@ export const getProject = async (req: IGetUserRequest, res: Response) => {
                             [task.id],
                         );
 
-                        const [subtasks] = await pool.execute<Subtask[]>(
+                        const [subtasks] = await pool.execute<
+                            (Pick<
+                                Subtask,
+                                | "id"
+                                | "title"
+                                | "position"
+                                | "is_done"
+                                | "created_at"
+                            > &
+                                RowDataPacket)[]
+                        >(
                             `
                                 SELECT id, title, position, is_done, created_at
                                 FROM subtasks
@@ -403,7 +499,16 @@ export const getProject = async (req: IGetUserRequest, res: Response) => {
                             [task.id],
                         );
 
-                        const [comments] = await pool.execute<Comment[]>(
+                        const [comments] = await pool.execute<
+                            (Pick<
+                                Comment,
+                                "id" | "body" | "created_at" | "updated_at"
+                            > & { user_id: string } & Pick<
+                                    User,
+                                    "name" | "surname" | "avatar_url" | "color"
+                                > &
+                                RowDataPacket)[]
+                        >(
                             `
                                 SELECT
                                     c.id,
@@ -423,7 +528,22 @@ export const getProject = async (req: IGetUserRequest, res: Response) => {
                             [task.id],
                         );
 
-                        const [attachments] = await pool.execute<any[]>(
+                        const [attachments] = await pool.execute<
+                            (Pick<
+                                Attachment,
+                                | "id"
+                                | "filename"
+                                | "file_url"
+                                | "mime_type"
+                                | "size_bytes"
+                                | "created_at"
+                            > & {
+                                uploader_id: number;
+                                uploader_name: string;
+                                uploader_surname: string;
+                                uploader_avatar: string;
+                            } & RowDataPacket)[]
+                        >(
                             `
                                 SELECT
                                     a.id,
@@ -579,7 +699,9 @@ export const createProject = async (req: IGetUserRequest, res: Response) => {
 
         validateSlugSchema.parse({ slug: baseSlug });
 
-        const [slugRows] = await pool.execute<Project[]>(
+        const [slugRows] = await pool.execute<
+            (Pick<Project, "slug"> & RowDataPacket)[]
+        >(
             `
                 SELECT slug
                 FROM projects
@@ -799,10 +921,9 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
-        const [projects] = await pool.execute<Project[]>(
-            `SELECT id, name, owner_id FROM projects WHERE slug = ?`,
-            [slug],
-        );
+        const [projects] = await pool.execute<
+            (Pick<Project, "id" | "name" | "owner_id"> & RowDataPacket)[]
+        >(`SELECT id, name, owner_id FROM projects WHERE slug = ?`, [slug]);
 
         if (!projects.length) {
             res.status(404).json({
@@ -866,7 +987,9 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
 
             validateSlugSchema.parse({ slug: baseSlug });
 
-            const [slugRows] = await pool.execute<Project[]>(
+            const [slugRows] = await pool.execute<
+                (Pick<Project, "slug"> & RowDataPacket)[]
+            >(
                 `
                     SELECT slug
                     FROM projects
@@ -1185,10 +1308,9 @@ export const deleteProject = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
-        const [projects] = await pool.execute<Project[]>(
-            `SELECT id, owner_id FROM projects WHERE slug = ?`,
-            [slug],
-        );
+        const [projects] = await pool.execute<
+            (Pick<Project, "id" | "owner_id"> & RowDataPacket)[]
+        >(`SELECT id, owner_id FROM projects WHERE slug = ?`, [slug]);
 
         if (projects.length === 0) {
             res.status(404).json({

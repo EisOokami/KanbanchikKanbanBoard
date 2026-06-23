@@ -10,7 +10,7 @@ import {
     resetPasswordSchema,
 } from "../validation/validation";
 import { ZodError } from "zod";
-import type { ResultSetHeader } from "mysql2";
+import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import { transporter } from "../utils/email";
 import {
     createAccessToken,
@@ -18,7 +18,7 @@ import {
     revokeAllUserTokens,
 } from "../utils/jwt";
 import { jwtVerify } from "jose";
-import type { User } from "../types/types";
+import type { RefreshTokens, User } from "../types/types";
 
 dotenv.config();
 
@@ -31,10 +31,9 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         const { name, surname, email, password, color, avatar_url } =
             validateData;
 
-        const [existingEmailUser] = await pool.execute<User[]>(
-            "SELECT id FROM users WHERE email = ?",
-            [email],
-        );
+        const [existingEmailUser] = await pool.execute<
+            (Pick<User, "id"> & RowDataPacket)[]
+        >("SELECT id FROM users WHERE email = ?", [email]);
 
         if (existingEmailUser.length) {
             res.status(409).json({
@@ -74,7 +73,19 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
         const userId = result.insertId;
 
-        const [rows] = await pool.execute<User[]>(
+        const [rows] = await pool.execute<
+            (Pick<
+                User,
+                | "id"
+                | "name"
+                | "surname"
+                | "email"
+                | "avatar_url"
+                | "color"
+                | "created_at"
+            > &
+                RowDataPacket)[]
+        >(
             `
                 SELECT id, name, surname, email, avatar_url, color, created_at
                 FROM users
@@ -148,7 +159,19 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
         const { email, password } = validateData;
 
-        const [rows] = await pool.execute<User[]>(
+        const [rows] = await pool.execute<
+            (Pick<
+                User,
+                | "id"
+                | "name"
+                | "surname"
+                | "email"
+                | "password"
+                | "avatar_url"
+                | "color"
+            > &
+                RowDataPacket)[]
+        >(
             "SELECT id, name, surname, email, password, avatar_url, color FROM users WHERE email = ?",
             [email],
         );
@@ -219,10 +242,9 @@ export const forgotPassword = async (
 
         const { email } = validateData;
 
-        const [rows] = await pool.execute<User[]>(
-            "SELECT id, name FROM users WHERE email = ?",
-            [email],
-        );
+        const [rows] = await pool.execute<
+            (Pick<User, "id" | "name"> & RowDataPacket)[]
+        >("SELECT id, name FROM users WHERE email = ?", [email]);
 
         const user = rows[0];
 
@@ -331,10 +353,10 @@ export const resetPassword = async (
 
         const { token, password, id } = validateData;
 
-        const [rows] = await pool.execute<User[]>(
-            "SELECT id, email, name, reset_token FROM users WHERE id = ?",
-            [id],
-        );
+        const [rows] = await pool.execute<
+            (Pick<User, "id" | "email" | "name" | "reset_token"> &
+                RowDataPacket)[]
+        >("SELECT id, email, name, reset_token FROM users WHERE id = ?", [id]);
 
         if (!rows.length) {
             res.status(401).json({
@@ -384,10 +406,9 @@ export const resetPassword = async (
             return;
         }
 
-        const [currentUser] = await pool.execute<User[]>(
-            "SELECT password FROM users WHERE id = ?",
-            [id],
-        );
+        const [currentUser] = await pool.execute<
+            (Pick<User, "password"> & RowDataPacket)[]
+        >("SELECT password FROM users WHERE id = ?", [id]);
 
         if (!currentUser || !currentUser[0]) {
             res.status(401).json({
@@ -519,7 +540,7 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
         const jti = payload.jti;
         const userId = payload.sub;
 
-        const [refreshTokenRows] = await pool.execute<User[]>(
+        const [refreshTokenRows] = await pool.execute<RefreshTokens[]>(
             "SELECT * FROM refresh_tokens WHERE id = ?",
             [jti ?? null],
         );

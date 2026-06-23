@@ -3,6 +3,7 @@ import type { Request, Response } from "express";
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import { ZodError } from "zod";
 import type {
+    Attachment,
     Category,
     Column,
     Comment,
@@ -10,6 +11,7 @@ import type {
     IGetUserRequest,
     Label,
     Project,
+    ProjectMember,
     Subtask,
     Task,
     User,
@@ -83,11 +85,27 @@ export const getTasks = async (req: IGetUserRequest, res: Response) => {
 
         query += ` ORDER BY t.position ASC, t.created_at DESC`;
 
-        const [tasks] = await pool.execute<Task[]>(query, params);
+        const [tasks] = await pool.execute<
+            (Task & {
+                column_id: number;
+                column_name: string;
+                column_position: number;
+                column_wip_limit: number;
+            } & {
+                project_id: number;
+                project_icon: string;
+                project_color: string;
+                project_slug: string;
+            })[]
+        >(query, params);
 
         const enrichedTasks = await Promise.all(
             tasks.map(async (task) => {
-                const [members] = await pool.execute<User[]>(
+                const [members] = await pool.execute<
+                    (Pick<User, "id" | "name" | "surname" | "color" | "email"> &
+                        Pick<ProjectMember, "role" | "status" | "joined_at"> &
+                        RowDataPacket)[]
+                >(
                     `
                         SELECT DISTINCT
                             u.id,
@@ -111,7 +129,9 @@ export const getTasks = async (req: IGetUserRequest, res: Response) => {
                     [task.id],
                 );
 
-                const [labels] = await pool.execute<Label[]>(
+                const [labels] = await pool.execute<
+                    (Pick<Label, "id" | "name" | "color"> & RowDataPacket)[]
+                >(
                     `
                         SELECT l.id, l.name, l.color
                         FROM task_labels tl
@@ -121,7 +141,9 @@ export const getTasks = async (req: IGetUserRequest, res: Response) => {
                     [task.id],
                 );
 
-                const [categories] = await pool.execute<Category[]>(
+                const [categories] = await pool.execute<
+                    (Pick<Category, "id" | "name" | "color"> & RowDataPacket)[]
+                >(
                     `
                         SELECT c.id, c.name, c.color
                         FROM task_categories tc
@@ -131,7 +153,13 @@ export const getTasks = async (req: IGetUserRequest, res: Response) => {
                     [task.id],
                 );
 
-                const [subtasks] = await pool.execute<Subtask[]>(
+                const [subtasks] = await pool.execute<
+                    (Pick<
+                        Subtask,
+                        "id" | "title" | "position" | "is_done" | "created_at"
+                    > &
+                        RowDataPacket)[]
+                >(
                     `
                         SELECT id, title, position, is_done, created_at
                         FROM subtasks
@@ -141,7 +169,16 @@ export const getTasks = async (req: IGetUserRequest, res: Response) => {
                     [task.id],
                 );
 
-                const [comments] = await pool.execute<any[]>(
+                const [comments] = await pool.execute<
+                    (Pick<
+                        Comment,
+                        "id" | "body" | "created_at" | "updated_at"
+                    > & { user_id: string } & Pick<
+                            User,
+                            "name" | "surname" | "avatar_url" | "color"
+                        > &
+                        RowDataPacket)[]
+                >(
                     `
                         SELECT
                             c.id,
@@ -161,7 +198,22 @@ export const getTasks = async (req: IGetUserRequest, res: Response) => {
                     [task.id],
                 );
 
-                const [attachments] = await pool.execute<any[]>(
+                const [attachments] = await pool.execute<
+                    (Pick<
+                        Attachment,
+                        | "id"
+                        | "filename"
+                        | "file_url"
+                        | "mime_type"
+                        | "size_bytes"
+                        | "created_at"
+                    > & {
+                        uploader_id: number;
+                        uploader_name: string;
+                        uploader_surname: string;
+                        uploader_avatar: string;
+                    } & RowDataPacket)[]
+                >(
                     `
                         SELECT
                             a.id,
@@ -197,7 +249,7 @@ export const getTasks = async (req: IGetUserRequest, res: Response) => {
                     due_date: task.due_date,
                     start_date: task.start_date,
                     priority: task.priority,
-                    show_progress: task.show_progress === true,
+                    show_progress: task.show_progress === 1,
                     project: {
                         id: task.project_id,
                         name: task.project_name,
@@ -278,7 +330,19 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
-        const [tasks] = await pool.execute<Task[]>(
+        const [tasks] = await pool.execute<
+            (Task & {
+                column_id: number;
+                column_name: string;
+                column_position: number;
+                column_wip_limit: number;
+            } & {
+                project_id: number;
+                project_icon: string;
+                project_color: string;
+                project_slug: string;
+            })[]
+        >(
             `
                 SELECT 
                     t.id,
@@ -335,7 +399,11 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
-        const [members] = await pool.execute<User[]>(
+        const [members] = await pool.execute<
+            (Pick<User, "id" | "name" | "surname" | "color" | "email"> &
+                Pick<ProjectMember, "role" | "status" | "joined_at"> &
+                RowDataPacket)[]
+        >(
             `
                 SELECT DISTINCT
                     u.id,
@@ -359,7 +427,9 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
             [id],
         );
 
-        const [labels] = await pool.execute<Label[]>(
+        const [labels] = await pool.execute<
+            (Pick<Label, "id" | "name" | "color"> & RowDataPacket)[]
+        >(
             `
                 SELECT l.id, l.name, l.color
                 FROM task_labels tl
@@ -369,7 +439,9 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
             [id],
         );
 
-        const [categories] = await pool.execute<Category[]>(
+        const [categories] = await pool.execute<
+            (Pick<Category, "id" | "name" | "color"> & RowDataPacket)[]
+        >(
             `
                 SELECT c.id, c.name, c.color
                 FROM task_categories tc
@@ -379,7 +451,13 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
             [id],
         );
 
-        const [subtasks] = await pool.execute<Subtask[]>(
+        const [subtasks] = await pool.execute<
+            (Pick<
+                Subtask,
+                "id" | "title" | "position" | "is_done" | "created_at"
+            > &
+                RowDataPacket)[]
+        >(
             `
                 SELECT id, title, position, is_done, created_at
                 FROM subtasks
@@ -389,7 +467,12 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
             [id],
         );
 
-        const [comments] = await pool.execute<Comment[]>(
+        const [comments] = await pool.execute<
+            (Pick<Comment, "id" | "body" | "created_at" | "updated_at"> & {
+                user_id: string;
+            } & Pick<User, "name" | "surname" | "avatar_url" | "color"> &
+                RowDataPacket)[]
+        >(
             `
                 SELECT 
                     c.id,
@@ -409,7 +492,22 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
             [id],
         );
 
-        const [attachments] = await pool.execute<any[]>(
+        const [attachments] = await pool.execute<
+            (Pick<
+                Attachment,
+                | "id"
+                | "filename"
+                | "file_url"
+                | "mime_type"
+                | "size_bytes"
+                | "created_at"
+            > & {
+                uploader_id: number;
+                uploader_name: string;
+                uploader_surname: string;
+                uploader_avatar: string;
+            } & RowDataPacket)[]
+        >(
             `
                 SELECT
                     a.id,
@@ -445,7 +543,7 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
             due_date: task.due_date,
             start_date: task.start_date,
             priority: task.priority,
-            show_progress: task.show_progress === true,
+            show_progress: task.show_progress === 1,
             project: {
                 id: task.project_id,
                 name: task.project_name,
@@ -514,7 +612,9 @@ export const createTask = async (req: IGetUserRequest, res: Response) => {
 
         const validatedData = createTaskSchema.parse(req.body);
 
-        const [projects] = await pool.execute<Project[]>(
+        const [projects] = await pool.execute<
+            (Pick<Project, "id" | "owner_id"> & RowDataPacket)[]
+        >(
             `
                 SELECT id, owner_id
                 FROM projects
@@ -536,7 +636,11 @@ export const createTask = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
-        const [columns] = await pool.execute<Column[]>(
+        const [columns] = await pool.execute<
+            (Pick<Column, "id" | "name" | "wip_limit"> & {
+                task_count: number;
+            } & RowDataPacket)[]
+        >(
             `
                 SELECT
                     c.id,
@@ -807,7 +911,9 @@ export const updateTask = async (req: IGetUserRequest, res: Response) => {
 
         const validatedData = updateTaskSchema.parse(req.body);
 
-        const [tasks] = await pool.execute<Task[]>(
+        const [tasks] = await pool.execute<
+            (Pick<Task, "id"> & Pick<Column, "project_id"> & RowDataPacket)[]
+        >(
             `
                 SELECT t.id, c.project_id
                 FROM tasks t
@@ -1047,7 +1153,9 @@ export const deleteTask = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
-        const [tasks] = await pool.execute<Task[]>(
+        const [tasks] = await pool.execute<
+            (Pick<Task, "id"> & Pick<Column, "project_id"> & RowDataPacket)[]
+        >(
             `
                 SELECT t.id, c.project_id
                 FROM tasks t
@@ -1197,7 +1305,11 @@ export const moveTask = async (req: IGetUserRequest, res: Response) => {
 
         const validatedData = moveTaskSchema.parse(req.body);
 
-        const [columns] = await pool.execute<Column[]>(
+        const [columns] = await pool.execute<
+            (Pick<Column, "name" | "wip_limit"> & {
+                task_count: number;
+            } & RowDataPacket)[]
+        >(
             `
                 SELECT
                     c.name,
@@ -1267,7 +1379,9 @@ export const moveTask = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
-        const [rows] = await pool.execute<Task[]>(
+        const [rows] = await pool.execute<
+            (Pick<Task, "position"> & RowDataPacket)[]
+        >(
             `
                 (SELECT position FROM tasks
                 WHERE column_id = ? AND id != ?

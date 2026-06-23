@@ -2,124 +2,106 @@ import type { RowDataPacket } from "mysql2";
 import type { Request } from "express";
 
 export type Priority = "low" | "medium" | "high" | "critical";
-
-export interface PriorityConfig {
-    id: number;
-    label: string;
-    order?: number;
-    color?: string;
-}
-
 export type Status = "active" | "paused" | "completed" | "archived";
-export type Columns = "todo" | "in_progress" | "in_review" | "done";
-
-export interface ColumnConfig {
-    id: number;
-    label: string;
-    order?: number;
-    color?: string;
-}
-
 export type Role = "owner" | "admin" | "member" | "viewer";
 
-export interface Base extends RowDataPacket {
+export interface User extends RowDataPacket {
     id: number;
-    created_at: string | Date;
-}
-
-export interface ExtendedBase extends Base {
-    updated_at: string | Date | null;
-}
-
-export interface SimpleBase extends RowDataPacket {
-    id: number;
-}
-
-export interface User extends SimpleBase {
     name: string;
     surname: string;
     email: string;
-    avatar_url: string;
-    role: Role;
-    joined_at: string | Date;
+    password: string;
+    avatar_url: string | null;
     color: string;
-    status: "active" | "pending";
-    reset_token: string;
-    reset_token_expires_at: Date | string;
+    created_at: string;
+    updated_at: string;
+    reset_token: string | null;
+    reset_token_expires_at: string | null;
 }
 
-export interface Project extends ExtendedBase {
+export interface Project extends RowDataPacket {
+    id: number;
+    owner_id: number;
     name: string;
-    description: string;
-    owner: Pick<User, "name" | "avatar_url">;
-    members: Omit<User, "email">[];
-    status: Status;
-    categories: Category[];
-    labels: Label[];
-    tasks_total?: number;
-    tasks_done?: number;
+    slug: string;
     icon: string;
     color: string;
-    columns?: (ColumnConfig & Column)[];
-    slug: string;
+    description: string | null;
+    status: Status;
+    created_at: string;
+    updated_at: string;
 }
 
-export interface Subtask extends Base {
+export interface Subtask extends RowDataPacket {
+    id: number;
+    task_id: number;
     title: string;
     position: number;
-    is_done: boolean;
+    created_at: string;
+    is_done: number | null;
 }
 
-export interface Attachment extends Base {
+export interface Attachment extends RowDataPacket {
+    id: number;
+    task_id: number | null;
     uploader_id: number;
-    task_id: number;
     filename: string;
     file_url: string;
-    mime_type: string;
-    size_bytes: number;
+    mime_type: string | null;
+    size_bytes: number | null;
+    created_at: number;
 }
 
-export interface Comment extends ExtendedBase {
-    member: Omit<User, "email">;
+export interface Comment extends RowDataPacket {
+    id: number;
+    task_id: number;
+    user_id: number;
     body: string;
+    created_at: string;
+    updated_at: string;
 }
 
-export interface Category extends ExtendedBase {
-    name: string;
-    description: string;
-    color: string;
-}
-
-export interface Label extends ExtendedBase {
+export interface Category extends RowDataPacket {
+    id: number;
+    project_id: number;
     name: string;
     color: string;
+    created_at: string;
+    updated_at: string;
 }
 
-export interface Task extends ExtendedBase {
+export interface Label extends RowDataPacket {
+    id: number;
+    project_id: number;
+    name: string;
+    color: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface Task extends RowDataPacket {
+    id: number;
+    column_id: number;
+    creator_id: number;
     title: string;
-    description: string;
+    description: string | null;
     position: number;
-    due_date: string | Date;
-    start_date: string | Date;
+    due_date: string | null;
+    start_date: string | null;
     priority: Priority;
-    column: Columns;
-    labels: string[];
-    categories: Category[];
-    members: Omit<User, "email">[];
-    subtasks: Subtask[];
-    subtasks_done?: number;
-    subtasks_total?: number;
-    show_progress: boolean;
-    attachments: Attachment[];
-    comments: Comment[];
-    project: Pick<Project, "id" | "name" | "color" | "icon">;
+    show_progress: number;
+    created_at: string;
+    updated_at: string;
 }
 
-export interface Column extends ExtendedBase {
+export interface Column extends RowDataPacket {
+    id: number;
+    project_id: number;
     name: string;
     position: number;
-    wip_limit: number;
-    tasks: Task[];
+    wip_limit: number | null;
+    created_at: string;
+    updated_at: string;
 }
 
 export interface IGetUserRequest extends Request {
@@ -142,9 +124,11 @@ export interface ProjectInvite extends RowDataPacket {
 }
 
 export interface ProjectMember extends RowDataPacket {
-    id: number;
     project_id: number;
     user_id: number;
+    role: Role;
+    status: "active" | "pending";
+    joined_at: string;
 }
 
 export interface ProjectSlugHistory extends RowDataPacket {
@@ -152,4 +136,17 @@ export interface ProjectSlugHistory extends RowDataPacket {
     project_id: number;
     old_slug: string;
     created_at: string;
+}
+
+export interface RefreshTokens extends RowDataPacket {
+    id: string | number;
+    user_id: number;
+    revoked: number;
+    created_at: string;
+    revoked_at: string | null;
+}
+
+export interface TaskMembers extends RowDataPacket {
+    task_id: number;
+    user_id: number;
 }

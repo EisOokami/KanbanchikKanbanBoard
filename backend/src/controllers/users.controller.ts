@@ -7,7 +7,7 @@ import {
 import { pool } from "../db/pool";
 import { ZodError } from "zod";
 import bcrypt from "bcryptjs";
-import type { ResultSetHeader } from "mysql2";
+import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import type { IGetUserRequest, User } from "../types/types";
 
 export const me = async (
@@ -17,7 +17,20 @@ export const me = async (
     try {
         const { id } = req.user;
 
-        const [rows] = await pool.execute<User[]>(
+        const [rows] = await pool.execute<
+            (Pick<
+                User,
+                | "id"
+                | "name"
+                | "surname"
+                | "email"
+                | "avatar_url"
+                | "color"
+                | "created_at"
+                | "updated_at"
+            > &
+                RowDataPacket)[]
+        >(
             `
                 SELECT 
                     id,
@@ -87,10 +100,9 @@ export const updateProfile = async (
             return;
         }
 
-        const [existingUser] = await pool.execute<User[]>(
-            "SELECT id FROM users WHERE email = ? AND id != ?",
-            [email, id],
-        );
+        const [existingUser] = await pool.execute<
+            (Pick<User, "id"> & RowDataPacket)[]
+        >("SELECT id FROM users WHERE email = ? AND id != ?", [email, id]);
 
         if (existingUser.length) {
             res.status(409).json({
@@ -158,7 +170,20 @@ export const updateProfile = async (
             return;
         }
 
-        const [updatedUser] = await pool.execute<User[]>(
+        const [updatedUser] = await pool.execute<
+            (Pick<
+                User,
+                | "id"
+                | "name"
+                | "surname"
+                | "email"
+                | "avatar_url"
+                | "color"
+                | "created_at"
+                | "updated_at"
+            > &
+                RowDataPacket)[]
+        >(
             `
                 SELECT 
                     id,
@@ -214,12 +239,22 @@ export const changePassword = async (
         const { currentPassword, newPassword } = validateData;
         const { id } = req.user;
 
-        const [user] = await pool.execute<any[]>(
-            "SELECT id, password FROM users WHERE id = ?",
-            [id],
-        );
+        const [users] = await pool.execute<
+            (Pick<User, "id" | "password"> & RowDataPacket)[]
+        >("SELECT id, password FROM users WHERE id = ?", [id]);
 
-        if (!user.length) {
+        if (!users.length) {
+            res.status(404).json({
+                status: "error",
+                message: "User not found",
+            });
+
+            return;
+        }
+
+        const user = users[0];
+
+        if (!user) {
             res.status(404).json({
                 status: "error",
                 message: "User not found",
@@ -230,7 +265,7 @@ export const changePassword = async (
 
         const isPasswordValid = await bcrypt.compare(
             currentPassword,
-            user[0].password,
+            user.password,
         );
 
         if (!isPasswordValid) {
@@ -242,10 +277,7 @@ export const changePassword = async (
             return;
         }
 
-        const isSamePassword = await bcrypt.compare(
-            newPassword,
-            user[0].password,
-        );
+        const isSamePassword = await bcrypt.compare(newPassword, user.password);
 
         if (isSamePassword) {
             res.status(400).json({
@@ -327,7 +359,7 @@ export const deleteAccount = async (
             return;
         }
 
-        const [user] = await pool.execute<User[]>(
+        const [user] = await pool.execute<(Pick<User, "id"> & RowDataPacket)[]>(
             "SELECT id FROM users WHERE id = ?",
             [paramId],
         );
@@ -341,12 +373,17 @@ export const deleteAccount = async (
             return;
         }
 
-        const [ownedProjects] = await pool.execute<any[]>(
-            "SELECT COUNT(*) as count FROM projects WHERE owner_id = ?",
-            [paramId],
-        );
+        const [ownedProjects] = await pool.execute<
+            ({ count: number } & RowDataPacket)[]
+        >("SELECT COUNT(*) as count FROM projects WHERE owner_id = ?", [
+            paramId,
+        ]);
 
-        if (ownedProjects[0].count > 0) {
+        if (
+            !ownedProjects.length ||
+            !ownedProjects[0] ||
+            ownedProjects[0].count > 0
+        ) {
             res.status(400).json({
                 status: "error",
                 message:

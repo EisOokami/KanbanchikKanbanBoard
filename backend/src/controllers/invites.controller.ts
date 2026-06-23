@@ -8,7 +8,7 @@ import type {
     ProjectInvite,
     ProjectMember,
 } from "../types/types";
-import type { ResultSetHeader } from "mysql2";
+import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import { memberInviteSchema } from "../validation/validation";
 import { ZodError } from "zod";
 import { transporter } from "../utils/email";
@@ -36,7 +36,9 @@ export const generateInvite = async (
 
         const projectId = Number(req.params.id);
 
-        const [members] = await pool.execute<ProjectMember[]>(
+        const [members] = await pool.execute<
+            (Pick<ProjectMember, "id"> & RowDataPacket)[]
+        >(
             `
                 SELECT id
                 FROM project_members
@@ -232,10 +234,11 @@ export const memberInvite = async (
 
         const validatedData = memberInviteSchema.parse(req.body);
 
-        const [projects] = await pool.execute<Project[]>(
-            `SELECT id, name FROM projects WHERE id = ?`,
-            [validatedData.projectId],
-        );
+        const [projects] = await pool.execute<
+            (Pick<Project, "id" | "name"> & RowDataPacket)[]
+        >(`SELECT id, name FROM projects WHERE id = ?`, [
+            validatedData.projectId,
+        ]);
 
         if (!projects.length) {
             res.status(404).json({

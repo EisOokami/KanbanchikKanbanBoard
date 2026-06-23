@@ -6,6 +6,7 @@ import type {
     Role,
     Status,
     Task,
+    TaskMembers,
 } from "../types/types";
 import {
     deleteAvatarSchema,
@@ -34,7 +35,7 @@ export const getAttachments = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
-        const [taskMembers] = await pool.execute<Task[]>(
+        const [taskMembers] = await pool.execute<TaskMembers[]>(
             `
                 SELECT task_id, user_id 
                 FROM task_members 
@@ -52,7 +53,7 @@ export const getAttachments = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
-        const [rows] = await pool.execute(
+        const [rows] = await pool.execute<Attachment[]>(
             "SELECT * FROM attachments WHERE task_id = ?",
             [validatedData.taskId],
         );
@@ -100,7 +101,7 @@ export const uploadSingle = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
-        const [taskMembers] = await pool.execute<Task[]>(
+        const [taskMembers] = await pool.execute<TaskMembers[]>(
             `
                 SELECT task_id, user_id 
                 FROM task_members 
@@ -305,7 +306,7 @@ export const uploadMultiple = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
-        const [taskMembers] = await pool.execute<Task[]>(
+        const [taskMembers] = await pool.execute<TaskMembers[]>(
             `
                 SELECT task_id, user_id 
                 FROM task_members 
@@ -421,7 +422,10 @@ export const deleteAttachment = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
-        const [attachments] = await pool.execute<Attachment[]>(
+        const [attachments] = await pool.execute<
+            (Pick<Attachment, "id" | "file_url" | "uploader_id" | "task_id"> &
+                RowDataPacket)[]
+        >(
             "SELECT id, file_url, uploader_id, task_id FROM attachments WHERE id = ?",
             [id],
         );
@@ -584,7 +588,10 @@ export const deleteAvatar = async (req: IGetUserRequest, res: Response) => {
         const url = new URL(validatedData.avatar_url);
         const pathname = url.pathname;
 
-        const [attachments] = await pool.execute<Attachment[]>(
+        const [attachments] = await pool.execute<
+            (Pick<Attachment, "id" | "file_url" | "uploader_id" | "task_id"> &
+                RowDataPacket)[]
+        >(
             `
                 SELECT id, file_url, uploader_id, task_id 
                 FROM attachments 
