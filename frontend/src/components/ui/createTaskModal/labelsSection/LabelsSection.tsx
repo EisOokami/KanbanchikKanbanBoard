@@ -3,7 +3,6 @@
 import { BaseAction } from "@/types/actions";
 import { CreateTaskFormData } from "@/types/types";
 import Chip from "../chip/Chip";
-import ColorDotPicker from "../colorDotPicker/ColorDotPicker";
 import { PlusIcon } from "@phosphor-icons/react";
 import { Button } from "../../shadcn/button";
 import { ZodErrors } from "../../zodErrors/ZodErrors";
@@ -12,6 +11,7 @@ import { useState } from "react";
 import { PALETTE } from "@/constants/constants";
 import { Input } from "../../shadcn/input";
 import { cn } from "@/libs/utils";
+import ColorPicker from "../../colorPicker/ColorPicker";
 
 interface LabelsSectionProps {
     formState: BaseAction | undefined;
@@ -134,13 +134,12 @@ export default function LabelsSection({
                             </button>
                         ))}
                 </div>
-                <div className="space-y-4">
-                    <ColorDotPicker
+                <div className="flex items-center gap-2">
+                    <ColorPicker
                         value={newLabelColor}
                         onChange={setNewLabelColor}
-                        colors={PALETTE}
                     />
-                    <div className="flex gap-2">
+                    <div className="flex w-full gap-2">
                         <Input
                             id="label"
                             name="label"
