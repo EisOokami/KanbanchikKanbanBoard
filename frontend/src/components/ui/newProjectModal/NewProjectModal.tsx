@@ -378,11 +378,15 @@ export default function NewProjectModal({
                             )}
                         </div>
                         <div>
-                            <label className="mb-2 block font-semibold">
+                            <label
+                                className="mb-2 block font-semibold"
+                                htmlFor="name"
+                            >
                                 Project name{" "}
                                 <span className="text-red-500">*</span>
                             </label>
                             <Input
+                                id="name"
                                 name="name"
                                 placeholder="e.g. Website Redesign"
                                 defaultValue={
@@ -401,12 +405,16 @@ export default function NewProjectModal({
                             <ZodErrors error={formState?.zodErrors?.name} />
                         </div>
                         <div>
-                            <label className="mb-2 block font-semibold">
+                            <label
+                                className="mb-2 block font-semibold"
+                                htmlFor="description"
+                            >
                                 Description
                             </label>
                             <Textarea
-                                placeholder="What is this project about?"
+                                id="description"
                                 name="description"
+                                placeholder="What is this project about?"
                                 defaultValue={
                                     formState?.formData
                                         ?.get("description")
@@ -425,9 +433,7 @@ export default function NewProjectModal({
                             />
                         </div>
                         <div>
-                            <label className="mb-2 block font-semibold">
-                                Status
-                            </label>
+                            <h3 className="mb-2 block font-semibold">Status</h3>
                             <div className="flex flex-wrap gap-1.5">
                                 {(Object.keys(STATUS_CONFIG) as Status[]).map(
                                     (statusConfig) => (
@@ -462,7 +468,9 @@ export default function NewProjectModal({
                             <ZodErrors error={formState?.zodErrors?.status} />
                         </div>
                         <div className="space-y-1">
-                            <h3 className="font-semibold">Members</h3>
+                            <label className="font-semibold" htmlFor="members">
+                                Members
+                            </label>
                             <div className="space-y-3">
                                 {members.length > 0 && (
                                     <div className="flex flex-wrap gap-2">
@@ -507,8 +515,10 @@ export default function NewProjectModal({
                                             className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
                                         />
                                         <Input
-                                            placeholder="Invite by email…"
+                                            id="members"
                                             name="email"
+                                            type="email"
+                                            placeholder="Invite by email…"
                                             value={emailInput}
                                             defaultValue={
                                                 formState?.formData
@@ -553,7 +563,9 @@ export default function NewProjectModal({
                             </div>
                         </div>
                         <div className="space-y-1">
-                            <h3 className="font-semibold">Project Columns</h3>
+                            <label className="font-semibold" htmlFor="column">
+                                Project Columns
+                            </label>
                             <div className="space-y-5">
                                 <div className="space-y-1.5">
                                     <DndContext
@@ -597,8 +609,9 @@ export default function NewProjectModal({
                                 <div className=" space-y-1">
                                     <div className="flex gap-2">
                                         <Input
-                                            placeholder="Column name…"
+                                            id="column"
                                             name="column"
+                                            placeholder="Column name…"
                                             value={newColumnName}
                                             onChange={(e) =>
                                                 setNewColumnName(e.target.value)
@@ -637,7 +650,12 @@ export default function NewProjectModal({
                             </div>
                         </div>
                         <div className="space-y-1">
-                            <h3 className="font-semibold">Categories</h3>
+                            <label
+                                className="font-semibold"
+                                htmlFor="categories"
+                            >
+                                Categories
+                            </label>
                             <div className="space-y-3">
                                 {categories.length > 0 && (
                                     <div className="flex flex-wrap gap-1.5">
@@ -673,9 +691,10 @@ export default function NewProjectModal({
                                     />
                                     <div className="flex gap-2">
                                         <Input
+                                            id="categories"
+                                            name="category"
                                             placeholder="Category name…"
                                             value={newCatName}
-                                            name="category"
                                             onChange={(e) =>
                                                 setNewCatName(e.target.value)
                                             }
@@ -713,7 +732,9 @@ export default function NewProjectModal({
                             </div>
                         </div>
                         <div className="space-y-1">
-                            <h3 className="font-semibold">Labels</h3>
+                            <label className="font-semibold" htmlFor="labels">
+                                Labels
+                            </label>
                             <div className="space-y-3">
                                 {labels.length > 0 && (
                                     <div className="flex flex-wrap gap-1.5">
@@ -747,8 +768,9 @@ export default function NewProjectModal({
                                     />
                                     <div className="flex gap-2">
                                         <Input
-                                            placeholder="Label name…"
+                                            id="labels"
                                             name="label"
+                                            placeholder="Label name…"
                                             value={newLabelName}
                                             onChange={(e) =>
                                                 setNewLabelName(e.target.value)
