@@ -1,13 +1,18 @@
 "use client";
 
-import { HashIcon, PlusIcon, XIcon } from "@phosphor-icons/react";
+import {
+    PencilSimpleIcon,
+    PlusIcon,
+    TrashSimpleIcon,
+} from "@phosphor-icons/react";
 import { Input } from "../../shadcn/input";
 import { Button } from "../../shadcn/button";
 import { Category, ProjectSettingsFormData } from "@/types/types";
 import { BaseAction } from "@/types/actions";
 import { ZodErrors } from "../../zodErrors/ZodErrors";
 import { PALETTE } from "@/constants/constants";
-import { cn } from "@/libs/utils";
+import ColorPicker from "../../colorPicker/ColorPicker";
+import { useState } from "react";
 
 interface CategoriesSectionProps {
     formData: ProjectSettingsFormData;
@@ -29,6 +34,8 @@ export default function CategoriesSection({
     onCategoryInputValuesChange,
     onFormDataChange,
 }: Readonly<CategoriesSectionProps>) {
+    const [editingCategory, setEditingCategory] = useState<number | null>(null);
+
     const addCategory = () => {
         if (!categoryInputValues.name.trim()) {
             return;
@@ -76,123 +83,158 @@ export default function CategoriesSection({
         <div className="space-y-2">
             <h3 className="font-semibold">Categories</h3>
             <div className="space-y-4">
-                <div className="flex flex-wrap gap-2">
+                <div className="space-y-2">
                     {formData.categories.map((category) => (
                         <div
                             key={category.id}
-                            className="flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium"
+                            className="flex items-center gap-3 rounded-md border px-3 py-2.5 transition-colors hover:bg-gray-50"
                         >
-                            <HashIcon
-                                weight="duotone"
-                                size={12}
-                                style={{ color: category.color || undefined }}
+                            <ColorPicker
+                                value={category.color}
+                                onChange={(color) =>
+                                    updateCategory(category.id, { color })
+                                }
+                                isPending={isPending}
+                                buttonClassName="size-6"
                             />
-                            {category.name}
-                            <div className="ml-1 flex items-center gap-0.5">
-                                {PALETTE.map((color) => (
-                                    <button
-                                        key={color}
-                                        type="button"
-                                        onClick={() =>
-                                            updateCategory(category.id, {
-                                                color: color,
-                                            })
-                                        }
-                                        className={cn(
-                                            "size-3 rounded-full transition-transform hover:scale-110",
-                                            category.color === color
-                                                ? "ring-2 ring-gray-400 ring-offset-1"
-                                                : "",
-                                        )}
-                                        style={{ background: color }}
-                                        disabled={isPending}
+                            {editingCategory === category.id ? (
+                                <Input
+                                    name="editing-category"
+                                    autoFocus
+                                    value={category.name}
+                                    defaultValue={
+                                        formState?.formData
+                                            ?.get("editing-category")
+                                            ?.toString() ?? undefined
+                                    }
+                                    onChange={(e) =>
+                                        updateCategory(category.id, {
+                                            name: e.target.value,
+                                        })
+                                    }
+                                    onBlur={() => setEditingCategory(null)}
+                                    onKeyDown={(e) =>
+                                        e.key === "Enter" &&
+                                        setEditingCategory(null)
+                                    }
+                                    className="h-7 flex-1 rounded-md px-2 text-sm focus-visible:ring-1 focus-visible:ring-bright-blue"
+                                    disabled={isPending}
+                                />
+                            ) : (
+                                <span className="flex-1 text-sm font-medium">
+                                    {category.name}
+                                </span>
+                            )}
+                            <div className="flex items-center gap-1">
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setEditingCategory(category.id)
+                                    }
+                                    className="ml-1 flex size-6 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100"
+                                    disabled={isPending}
+                                >
+                                    <PencilSimpleIcon
+                                        weight="duotone"
+                                        size={16}
                                     />
-                                ))}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => removeCategory(category.id)}
+                                    className="flex size-6 items-center justify-center rounded-md text-gray-500 hover:bg-red-50 hover:text-red-400"
+                                    disabled={isPending}
+                                >
+                                    <TrashSimpleIcon
+                                        weight="duotone"
+                                        size={16}
+                                    />
+                                </button>
                             </div>
-                            <button
-                                type="button"
-                                onClick={() => removeCategory(category.id)}
-                                className="ml-0.5 text-gray-500 transition-all hover:text-red-500"
-                                disabled={isPending}
-                            >
-                                <XIcon weight="duotone" size={11} />
-                            </button>
                         </div>
                     ))}
                     {formData.newCategories.map((category) => (
                         <div
                             key={category.id}
-                            className="flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium"
+                            className="flex items-center gap-3 rounded-md border px-3 py-2.5 transition-colors hover:bg-gray-50"
                         >
-                            <HashIcon
-                                weight="duotone"
-                                size={12}
-                                style={{ color: category.color || undefined }}
+                            <ColorPicker
+                                value={category.color}
+                                onChange={(color) =>
+                                    updateCategory(category.id, { color })
+                                }
+                                isPending={isPending}
+                                buttonClassName="size-6"
                             />
-                            {category.name}
-                            <div className="ml-1 flex items-center gap-0.5">
-                                {PALETTE.map((color) => (
-                                    <button
-                                        key={color}
-                                        type="button"
-                                        onClick={() =>
-                                            updateCategory(category.id, {
-                                                color: color,
-                                            })
-                                        }
-                                        className={cn(
-                                            "size-3 rounded-full transition-transform hover:scale-110",
-                                            category.color === color
-                                                ? "ring-2 ring-gray-400 ring-offset-1"
-                                                : "",
-                                        )}
-                                        style={{ background: color }}
-                                        disabled={isPending}
+                            {editingCategory === category.id ? (
+                                <Input
+                                    name="editing-category"
+                                    autoFocus
+                                    value={category.name}
+                                    defaultValue={
+                                        formState?.formData
+                                            ?.get("editing-category")
+                                            ?.toString() ?? undefined
+                                    }
+                                    onChange={(e) =>
+                                        updateCategory(category.id, {
+                                            name: e.target.value,
+                                        })
+                                    }
+                                    onBlur={() => setEditingCategory(null)}
+                                    onKeyDown={(e) =>
+                                        e.key === "Enter" &&
+                                        setEditingCategory(null)
+                                    }
+                                    className="h-7 flex-1 rounded-md px-2 text-sm focus-visible:ring-1 focus-visible:ring-bright-blue"
+                                    disabled={isPending}
+                                />
+                            ) : (
+                                <span className="flex-1 text-sm font-medium">
+                                    {category.name}
+                                </span>
+                            )}
+                            <div className="flex items-center gap-1">
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setEditingCategory(category.id)
+                                    }
+                                    className="ml-1 flex size-6 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100"
+                                    disabled={isPending}
+                                >
+                                    <PencilSimpleIcon
+                                        weight="duotone"
+                                        size={16}
                                     />
-                                ))}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => removeCategory(category.id)}
+                                    className="flex size-6 items-center justify-center rounded-md text-gray-500 hover:bg-red-50 hover:text-red-400"
+                                    disabled={isPending}
+                                >
+                                    <TrashSimpleIcon
+                                        weight="duotone"
+                                        size={16}
+                                    />
+                                </button>
                             </div>
-                            <button
-                                type="button"
-                                onClick={() => removeCategory(category.id)}
-                                className="ml-0.5 text-gray-500 transition-all hover:text-red-500"
-                                disabled={isPending}
-                            >
-                                <XIcon weight="duotone" size={11} />
-                            </button>
                         </div>
                     ))}
                 </div>
-                <div className="space-y-2 rounded-md border p-3">
-                    <div className="flex flex-wrap gap-1.5">
-                        {PALETTE.map((color) => (
-                            <button
-                                key={color}
-                                type="button"
-                                onClick={() =>
-                                    onCategoryInputValuesChange({
-                                        ...categoryInputValues,
-                                        color: color,
-                                    })
-                                }
-                                className={cn(
-                                    "size-5 rounded-full transition-transform hover:scale-110",
-                                    categoryInputValues.color === color
-                                        ? "ring-2 ring-bright-blue ring-offset-1"
-                                        : "",
-                                )}
-                                style={{ background: color }}
-                                disabled={isPending}
-                            />
-                        ))}
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <HashIcon
-                            weight="duotone"
-                            size={13}
-                            style={{
-                                color: categoryInputValues.color || undefined,
-                            }}
-                        />
+                <div className="flex items-center gap-2 rounded-md border p-3">
+                    <ColorPicker
+                        value={categoryInputValues.color}
+                        onChange={(color) =>
+                            onCategoryInputValuesChange({
+                                ...categoryInputValues,
+                                color: color,
+                            })
+                        }
+                        isPending={isPending}
+                    />
+                    <div className="flex w-full items-center gap-2">
                         <Input
                             name="category"
                             placeholder="New category…"
