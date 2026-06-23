@@ -305,23 +305,23 @@ export default function NewProjectModal({
                             <ZodErrors error={formState?.zodErrors?.color} />
                             {iconPickerOpen && (
                                 <div className="flex flex-wrap gap-1.5 rounded-md border bg-gray-50 p-3">
-                                    {PROJECT_ICONS.map((ic) => (
+                                    {PROJECT_ICONS.map((projectIcon) => (
                                         <button
                                             type="button"
-                                            key={ic}
+                                            key={projectIcon}
                                             onClick={() => {
-                                                setIcon(ic);
+                                                setIcon(projectIcon);
                                                 setIconPickerOpen(false);
                                             }}
                                             className={cn(
                                                 "flex size-9 items-center justify-center rounded-md text-xl transition-all hover:bg-white",
-                                                icon === ic
+                                                icon === projectIcon
                                                     ? "bg-white ring-2 ring-bright-blue"
                                                     : "",
                                             )}
                                             disabled={isPending}
                                         >
-                                            {ic}
+                                            {projectIcon}
                                         </button>
                                     ))}
                                 </div>
