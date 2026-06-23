@@ -11,8 +11,8 @@ interface ChipProps {
 export default function Chip({ label, color, onRemove }: Readonly<ChipProps>) {
     return (
         <span
-            className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium"
-            style={{ backgroundColor: color + "22", color }}
+            className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium text-white"
+            style={{ backgroundColor: color }}
         >
             {label}
             {onRemove && (
