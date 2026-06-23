@@ -5,7 +5,7 @@ import { Button } from "../../shadcn/button";
 import { Input } from "../../shadcn/input";
 import { ZodErrors } from "../../zodErrors/ZodErrors";
 import Chip from "../chip/Chip";
-import ColorDotPicker from "../colorDotPicker/ColorDotPicker";
+import ColorPicker from "../../colorPicker/ColorPicker";
 import { CreateTaskFormData } from "@/types/types";
 import { BaseAction } from "@/types/actions";
 import { Category, Project } from "@/types/types";
@@ -136,13 +136,12 @@ export default function CategoriesSection({
                             </button>
                         ))}
                 </div>
-                <div className="space-y-4">
-                    <ColorDotPicker
+                <div className="flex items-center gap-2">
+                    <ColorPicker
                         value={newCategoryColor}
                         onChange={setNewCategoryColor}
-                        colors={PALETTE}
                     />
-                    <div className="flex gap-2">
+                    <div className="flex w-full gap-2">
                         <Input
                             id="category"
                             name="category"
