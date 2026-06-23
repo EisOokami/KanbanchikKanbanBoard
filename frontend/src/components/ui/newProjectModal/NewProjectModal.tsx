@@ -11,7 +11,6 @@ import {
     DialogTitle,
     DialogFooter,
 } from "@/components/ui/shadcn/dialog";
-import ColorDotPicker from "./colorDotPicker/ColorDotPicker";
 import Chip from "./chip/Chip";
 import { Category, Label, NewProjectFormData, Status } from "@/types/types";
 import {
@@ -23,7 +22,6 @@ import {
 } from "@/constants/constants";
 import { cn } from "@/libs/utils";
 import {
-    CheckIcon,
     EnvelopeIcon,
     PencilSimpleIcon,
     PlusIcon,
@@ -48,6 +46,8 @@ import {
     verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import SortableColumnRow from "./sortableColumnRow/SortableColumnRow";
+import ColorPicker from "../colorPicker/ColorPicker";
+import ProjectColorPicker from "../projectColorPicker/ProjectColorPicker";
 
 interface NewProjectModalProps {
     open: boolean;
@@ -78,7 +78,6 @@ export default function NewProjectModal({
     const [newLabelName, setNewLabelName] = useState<string>("");
     const [newLabelColor, setNewLabelColor] = useState(COLUMN_COLORS[5]);
     const [iconPickerOpen, setIconPickerOpen] = useState<boolean>(false);
-    const [colorPickerOpen, setColorPickerOpen] = useState<boolean>(false);
     const [formData, setFormData] = useState<NewProjectFormData>({
         members: [],
         categories: [],
@@ -282,13 +281,12 @@ export default function NewProjectModal({
                     <div className="flex-1 space-y-8 overflow-y-auto px-6 py-5">
                         <div className="relative space-y-1">
                             <h3 className="font-semibold">Project icon</h3>
-                            <div className="flex items-start gap-6">
+                            <div className="relative flex items-start gap-6">
                                 <div className="flex items-start gap-3">
                                     <button
                                         type="button"
                                         onClick={() => {
                                             setIconPickerOpen(!iconPickerOpen);
-                                            setColorPickerOpen(false);
                                         }}
                                         className="relative flex size-14 items-center justify-center rounded-md border text-2xl transition-all hover:brightness-95"
                                         style={{
@@ -306,35 +304,11 @@ export default function NewProjectModal({
                                             />
                                         </span>
                                     </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setColorPickerOpen(
-                                                !colorPickerOpen,
-                                            );
-                                            setIconPickerOpen(false);
-                                        }}
-                                        className="relative flex size-14 items-center justify-center rounded-md border transition-all hover:brightness-95"
-                                        style={{
-                                            background: `${projectColor}20`,
-                                            borderColor: `${projectColor}40`,
-                                        }}
-                                        disabled={isPending}
-                                    >
-                                        <div
-                                            className="size-6 rounded-full shadow-sm"
-                                            style={{
-                                                background: projectColor,
-                                            }}
-                                        />
-                                        <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-bright-blue">
-                                            <PencilSimpleIcon
-                                                weight="duotone"
-                                                size={9}
-                                                className="text-white"
-                                            />
-                                        </span>
-                                    </button>
+                                    <ProjectColorPicker
+                                        projectColor={projectColor}
+                                        onProjectColorChange={setProjectColor}
+                                        isPending={isPending}
+                                    />
                                 </div>
                             </div>
                             <ZodErrors error={formState?.zodErrors?.icon} />
@@ -360,56 +334,6 @@ export default function NewProjectModal({
                                             {projectIcon}
                                         </button>
                                     ))}
-                                </div>
-                            )}
-                            {colorPickerOpen && (
-                                <div className="rounded-md border bg-gray-50 p-3">
-                                    <p className="mb-2.5 text-xs font-medium text-gray-500">
-                                        Select color
-                                    </p>
-                                    <div className="flex flex-wrap gap-2">
-                                        {PROJECT_COLORS.map((color) => (
-                                            <button
-                                                type="button"
-                                                key={color}
-                                                onClick={() => {
-                                                    setProjectColor(color);
-                                                    setColorPickerOpen(false);
-                                                }}
-                                                className={cn(
-                                                    "flex size-8 items-center justify-center rounded-full transition-all hover:brightness-90",
-                                                    projectColor === color
-                                                        ? "ring-2 ring-offset-2"
-                                                        : "",
-                                                )}
-                                                style={{
-                                                    background: color,
-                                                    ...(projectColor === color
-                                                        ? {
-                                                              ringColor: color,
-                                                          }
-                                                        : {}),
-                                                    outline:
-                                                        projectColor === color
-                                                            ? `2px solid ${color}`
-                                                            : "none",
-                                                    outlineOffset:
-                                                        projectColor === color
-                                                            ? "2px"
-                                                            : "0",
-                                                }}
-                                                disabled={isPending}
-                                            >
-                                                {projectColor === color && (
-                                                    <CheckIcon
-                                                        weight="duotone"
-                                                        size={13}
-                                                        className="text-white"
-                                                    />
-                                                )}
-                                            </button>
-                                        ))}
-                                    </div>
                                 </div>
                             )}
                         </div>
@@ -697,14 +621,13 @@ export default function NewProjectModal({
                                         ))}
                                     </div>
                                 )}
-                                <div className="space-y-1">
-                                    <ColorDotPicker
+                                <div className="flex items-center gap-2">
+                                    <ColorPicker
                                         value={newCatColor}
                                         onChange={setNewCatColor}
-                                        colors={COLUMN_COLORS}
                                         isPending={isPending}
                                     />
-                                    <div className="flex gap-2">
+                                    <div className="flex w-full gap-2">
                                         <Input
                                             id="categories"
                                             name="category"
@@ -769,14 +692,13 @@ export default function NewProjectModal({
                                         ))}
                                     </div>
                                 )}
-                                <div className="space-y-1">
-                                    <ColorDotPicker
+                                <div className="flex items-center gap-2">
+                                    <ColorPicker
                                         value={newLabelColor}
                                         onChange={setNewLabelColor}
-                                        colors={COLUMN_COLORS}
                                         isPending={isPending}
                                     />
-                                    <div className="flex gap-2">
+                                    <div className="flex w-full gap-2">
                                         <Input
                                             id="labels"
                                             name="label"
