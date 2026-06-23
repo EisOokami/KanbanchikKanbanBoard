@@ -20,7 +20,7 @@ export default async function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="en">
+        <html lang="en" className="h-svh">
             <body
                 className={cn(
                     "font-montserrat",
