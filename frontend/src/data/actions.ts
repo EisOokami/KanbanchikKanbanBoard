@@ -730,12 +730,9 @@ export async function updateProjectAction(
         columns: Omit<Column, "tasks">[];
         newColumns: Omit<
             Column,
-            "tasks" | "updated_at" | "created_at" | "wip_limit"
+            "tasks" | "updated_at" | "created_at"
         >[];
-        categories: Omit<
-            Category,
-            "updated_at" | "updated_at" | "created_at" | "id"
-        >[];
+        categories: Category[];
         newCategories: Omit<Category, "updated_at" | "created_at">[];
         members: Omit<User, "email">[];
         emails: string[];

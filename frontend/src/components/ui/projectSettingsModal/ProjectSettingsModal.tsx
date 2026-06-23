@@ -57,17 +57,13 @@ export function ProjectSettingsModal({
     const [columns, setColumns] = useState<Column[]>(columnsData);
     const [newColumnName, setNewColumnName] = useState<string>("");
     const [newColumns, setNewColumns] = useState<
-        { id: number; name: string; position: number }[]
+        Omit<Column, "created_at" | "updated_at" | "tasks">[]
     >([]);
     const [categories, setCategories] = useState<Category[]>(
         projectData.categories,
     );
     const [newCategories, setNewCategories] = useState<
-        {
-            id: number;
-            name: string;
-            color: string;
-        }[]
+        Omit<Category, "created_at" | "updated_at">[]
     >([]);
     const [categoryInputValues, setCategoryInputValues] = useState<{
         name: string;
@@ -78,11 +74,7 @@ export function ProjectSettingsModal({
     });
     const [labels, setLabels] = useState<Label[]>(projectData.labels);
     const [newLabels, setNewLabels] = useState<
-        {
-            id: number;
-            name: string;
-            color: string;
-        }[]
+        Omit<Label, "created_at" | "updated_at">[]
     >([]);
     const [labelInputValues, setLabelInputValues] = useState<{
         name: string;

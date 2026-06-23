@@ -24,14 +24,14 @@ import {
 
 interface ColumnsSectionProps {
     columns: Column[];
-    newColumns: { id: number; name: string; position: number }[];
+    newColumns: Omit<Column, "created_at" | "updated_at" | "tasks">[];
     newColumnName: string;
     formState: BaseAction | undefined;
     isPending: boolean;
     onColumnsChange: (columnsValue: Column[]) => void;
     onColumnNameChange: (nameValue: string) => void;
     onNewColumnsChange: (
-        newColumnsValue: { id: number; name: string; position: number }[],
+        newColumnsValue: Omit<Column, "created_at" | "updated_at" | "tasks">[],
     ) => void;
 }
 

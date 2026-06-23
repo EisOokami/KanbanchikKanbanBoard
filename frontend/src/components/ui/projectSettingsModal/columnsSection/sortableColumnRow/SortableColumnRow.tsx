@@ -13,11 +13,7 @@ import {
 interface SortableColumnRowProps {
     column:
         | Column
-        | {
-              id: number;
-              name: string;
-              position: number;
-          };
+        | Omit<Column, "created_at" | "updated_at" | "tasks">;
     editingColumn: number | null;
     isPending: boolean;
     formState: BaseAction | undefined;

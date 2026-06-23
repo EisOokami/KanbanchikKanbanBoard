@@ -16,7 +16,7 @@ import { ZodErrors } from "../../zodErrors/ZodErrors";
 
 interface LabelsSectionProps {
     labels: Label[];
-    newLabels: { id: number; name: string; color: string }[];
+    newLabels: Omit<Label, "created_at" | "updated_at">[];
     labelInputValues: {
         name: string;
         color: string;
@@ -25,11 +25,7 @@ interface LabelsSectionProps {
     isPending: boolean;
     onLabelsChange: (labelsValue: Label[]) => void;
     onNewLabelsChange: (
-        newLabelsValue: {
-            id: number;
-            name: string;
-            color: string;
-        }[],
+        newLabelsValue: Omit<Label, "created_at" | "updated_at">[],
     ) => void;
     onLabelInputValuesChange: (inputValues: {
         name: string;

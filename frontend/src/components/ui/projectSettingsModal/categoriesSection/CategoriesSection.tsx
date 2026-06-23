@@ -11,13 +11,13 @@ import { cn } from "@/libs/utils";
 
 interface CategoriesSectionProps {
     categories: Category[];
-    newCategories: { id: number; name: string; color: string }[];
+    newCategories: Omit<Category, "created_at" | "updated_at">[];
     categoryInputValues: { name: string; color: string };
     formState: BaseAction | undefined;
     isPending: boolean;
     onCategoriesChange: (categoriesValue: Category[]) => void;
     onNewCategoriesChange: (
-        newCategoriesValue: { id: number; name: string; color: string }[],
+        newCategoriesValue: Omit<Category, "created_at" | "updated_at">[],
     ) => void;
     onCategoryInputValuesChange: (categoryValue: {
         name: string;
