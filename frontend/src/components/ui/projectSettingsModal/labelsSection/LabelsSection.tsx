@@ -7,12 +7,12 @@ import {
 } from "@phosphor-icons/react";
 import { Button } from "../../shadcn/button";
 import { Input } from "../../shadcn/input";
-import { cn } from "@/libs/utils";
 import { PALETTE } from "@/constants/constants";
 import { useState } from "react";
 import { Label, ProjectSettingsFormData } from "@/types/types";
 import { BaseAction } from "@/types/actions";
 import { ZodErrors } from "../../zodErrors/ZodErrors";
+import ColorPicker from "../../colorPicker/ColorPicker";
 
 interface LabelsSectionProps {
     formData: ProjectSettingsFormData;
@@ -88,11 +88,15 @@ export default function LabelsSection({
                             key={label.id}
                             className="flex items-center gap-3 rounded-md border px-3 py-2.5 transition-colors hover:bg-gray-50"
                         >
-                            <div
-                                className="size-5 shrink-0 rounded-full border-2 border-white shadow-sm"
-                                style={{
-                                    background: label.color,
-                                }}
+                            <ColorPicker
+                                value={label.color}
+                                onChange={(color) =>
+                                    updateLabel(label.id, {
+                                        color: color,
+                                    })
+                                }
+                                isPending={isPending}
+                                buttonClassName="size-6"
                             />
                             {editingLabel === label.id ? (
                                 <Input
@@ -123,27 +127,6 @@ export default function LabelsSection({
                                 </span>
                             )}
                             <div className="flex items-center gap-1">
-                                {PALETTE.map((c) => (
-                                    <button
-                                        key={c}
-                                        type="button"
-                                        onClick={() =>
-                                            updateLabel(label.id, {
-                                                color: c,
-                                            })
-                                        }
-                                        className={cn(
-                                            "size-4 rounded-full transition-transform hover:scale-110",
-                                            label.color === c
-                                                ? "ring-2 ring-gray-400 ring-offset-1"
-                                                : "",
-                                        )}
-                                        style={{
-                                            background: c,
-                                        }}
-                                        disabled={isPending}
-                                    />
-                                ))}
                                 <button
                                     type="button"
                                     onClick={() => setEditingLabel(label.id)}
@@ -152,7 +135,7 @@ export default function LabelsSection({
                                 >
                                     <PencilSimpleIcon
                                         weight="duotone"
-                                        size={11}
+                                        size={16}
                                     />
                                 </button>
                                 <button
@@ -163,7 +146,7 @@ export default function LabelsSection({
                                 >
                                     <TrashSimpleIcon
                                         weight="duotone"
-                                        size={11}
+                                        size={16}
                                     />
                                 </button>
                             </div>
@@ -174,11 +157,15 @@ export default function LabelsSection({
                             key={label.id}
                             className="flex items-center gap-3 rounded-md border px-3 py-2.5 transition-colors hover:bg-gray-50"
                         >
-                            <div
-                                className="size-5 shrink-0 rounded-full border-2 border-white shadow-sm"
-                                style={{
-                                    background: label.color,
-                                }}
+                            <ColorPicker
+                                value={label.color}
+                                onChange={(color) =>
+                                    updateLabel(label.id, {
+                                        color: color,
+                                    })
+                                }
+                                isPending={isPending}
+                                buttonClassName="size-6"
                             />
                             {editingLabel === label.id ? (
                                 <Input
@@ -209,27 +196,6 @@ export default function LabelsSection({
                                 </span>
                             )}
                             <div className="flex items-center gap-1">
-                                {PALETTE.map((c) => (
-                                    <button
-                                        key={c}
-                                        type="button"
-                                        onClick={() =>
-                                            updateLabel(label.id, {
-                                                color: c,
-                                            })
-                                        }
-                                        className={cn(
-                                            "size-4 rounded-full transition-transform hover:scale-110",
-                                            label.color === c
-                                                ? "ring-2 ring-gray-400 ring-offset-1"
-                                                : "",
-                                        )}
-                                        style={{
-                                            background: c,
-                                        }}
-                                        disabled={isPending}
-                                    />
-                                ))}
                                 <button
                                     type="button"
                                     onClick={() => setEditingLabel(label.id)}
@@ -238,7 +204,7 @@ export default function LabelsSection({
                                 >
                                     <PencilSimpleIcon
                                         weight="duotone"
-                                        size={11}
+                                        size={16}
                                     />
                                 </button>
                                 <button
@@ -249,7 +215,7 @@ export default function LabelsSection({
                                 >
                                     <TrashSimpleIcon
                                         weight="duotone"
-                                        size={11}
+                                        size={16}
                                     />
                                 </button>
                             </div>
@@ -257,36 +223,16 @@ export default function LabelsSection({
                     ))}
                 </div>
                 <div className="space-y-2 rounded-md border p-3">
-                    <div className="flex flex-wrap gap-1.5">
-                        {PALETTE.map((c) => (
-                            <button
-                                key={c}
-                                type="button"
-                                onClick={() =>
-                                    onLabelInputValuesChange({
-                                        ...labelInputValues,
-                                        color: c,
-                                    })
-                                }
-                                className={cn(
-                                    "size-5 rounded-full transition-transform hover:scale-110",
-                                    labelInputValues.color === c
-                                        ? "ring-2 ring-bright-blue ring-offset-1"
-                                        : "",
-                                )}
-                                style={{
-                                    background: c,
-                                }}
-                                disabled={isPending}
-                            />
-                        ))}
-                    </div>
                     <div className="flex gap-2">
-                        <div
-                            className="size-5 shrink-0 self-center rounded-full border-2 border-white shadow"
-                            style={{
-                                background: labelInputValues.color,
-                            }}
+                        <ColorPicker
+                            value={labelInputValues.color}
+                            onChange={(color) =>
+                                onLabelInputValuesChange({
+                                    ...labelInputValues,
+                                    color: color,
+                                })
+                            }
+                            isPending={isPending}
                         />
                         <Input
                             name="label"
