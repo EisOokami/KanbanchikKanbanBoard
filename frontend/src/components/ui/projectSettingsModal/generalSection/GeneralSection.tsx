@@ -1,18 +1,15 @@
 "use client";
 
-import { CheckIcon, PencilSimpleIcon } from "@phosphor-icons/react";
+import { PencilSimpleIcon } from "@phosphor-icons/react";
 import { Textarea } from "../../shadcn/textarea";
 import { Input } from "../../shadcn/input";
-import {
-    PROJECT_COLORS,
-    PROJECT_ICONS,
-    STATUS_CONFIG,
-} from "@/constants/constants";
+import { PROJECT_ICONS, STATUS_CONFIG } from "@/constants/constants";
 import { useState } from "react";
 import { Status } from "@/types/types";
 import { cn } from "@/libs/utils";
 import { BaseAction } from "@/types/actions";
 import { ZodErrors } from "../../zodErrors/ZodErrors";
+import ProjectColorPicker from "../../projectColorPicker/ProjectColorPicker";
 
 interface GeneralSectionProps {
     icon: string;
@@ -44,7 +41,6 @@ export default function GeneralSection({
     onStatusChange,
 }: Readonly<GeneralSectionProps>) {
     const [iconPickerOpen, setIconPickerOpen] = useState<boolean>(false);
-    const [colorPickerOpen, setColorPickerOpen] = useState<boolean>(false);
 
     return (
         <div className="space-y-5">
@@ -56,7 +52,6 @@ export default function GeneralSection({
                             type="button"
                             onClick={() => {
                                 setIconPickerOpen(!iconPickerOpen);
-                                setColorPickerOpen(false);
                             }}
                             className="relative flex size-14 items-center justify-center rounded-md border text-2xl transition-all hover:brightness-95"
                             style={{
@@ -74,33 +69,11 @@ export default function GeneralSection({
                                 />
                             </span>
                         </button>
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setColorPickerOpen(!colorPickerOpen);
-                                setIconPickerOpen(false);
-                            }}
-                            className="relative flex size-14 items-center justify-center rounded-md border transition-all hover:brightness-95"
-                            style={{
-                                background: `${color}20`,
-                                borderColor: `${color}40`,
-                            }}
-                            disabled={isPending}
-                        >
-                            <div
-                                className="size-6 rounded-full shadow-sm"
-                                style={{
-                                    background: color,
-                                }}
-                            />
-                            <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-bright-blue">
-                                <PencilSimpleIcon
-                                    weight="duotone"
-                                    size={9}
-                                    className="text-white"
-                                />
-                            </span>
-                        </button>
+                        <ProjectColorPicker
+                            projectColor={color}
+                            onProjectColorChange={onColorChange}
+                            isPending={isPending}
+                        />
                     </div>
                     <ZodErrors error={formState?.zodErrors?.icon} />
                     <ZodErrors error={formState?.zodErrors?.color} />
@@ -127,54 +100,6 @@ export default function GeneralSection({
                             {projectIcon}
                         </button>
                     ))}
-                </div>
-            )}
-            {colorPickerOpen && (
-                <div className="rounded-md border bg-gray-50 p-3">
-                    <p className="mb-2.5 text-xs font-medium text-gray-500">
-                        Select color
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                        {PROJECT_COLORS.map((projectIcon) => (
-                            <button
-                                type="button"
-                                key={projectIcon}
-                                onClick={() => {
-                                    onColorChange(projectIcon);
-                                    setColorPickerOpen(false);
-                                }}
-                                className={cn(
-                                    "flex size-8 items-center justify-center rounded-full transition-all hover:brightness-90",
-                                    color === projectIcon
-                                        ? "ring-2 ring-offset-2"
-                                        : "",
-                                )}
-                                style={{
-                                    background: projectIcon,
-                                    ...(color === projectIcon
-                                        ? {
-                                              ringColor: projectIcon,
-                                          }
-                                        : {}),
-                                    outline:
-                                        color === projectIcon
-                                            ? `2px solid ${projectIcon}`
-                                            : "none",
-                                    outlineOffset:
-                                        color === projectIcon ? "2px" : "0",
-                                }}
-                                disabled={isPending}
-                            >
-                                {color === projectIcon && (
-                                    <CheckIcon
-                                        weight="duotone"
-                                        size={13}
-                                        className="text-white"
-                                    />
-                                )}
-                            </button>
-                        ))}
-                    </div>
                 </div>
             )}
             <div className="space-y-1">
