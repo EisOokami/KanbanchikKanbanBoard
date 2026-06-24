@@ -581,6 +581,7 @@ export default function Tasks({
             </div>
             {selectedTask && projectData && (
                 <TaskDetailsSheet
+                    key={selectedTask.id}
                     open={showTaskDetailsSheet}
                     onOpenChange={handleShowTaskDetailsSheet}
                     selectedTask={selectedTask}

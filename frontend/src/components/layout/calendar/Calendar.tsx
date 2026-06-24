@@ -453,6 +453,7 @@ export default function Calendar({
             />
             {selectedTask && projectData && (
                 <TaskDetailsSheet
+                    key={selectedTask.id}
                     open={showTaskDetailsSheet}
                     onOpenChange={handleShowTaskDetailsSheet}
                     selectedTask={selectedTask}

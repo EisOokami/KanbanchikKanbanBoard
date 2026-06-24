@@ -616,6 +616,7 @@ export default function Project({
             />
             {selectedTask && (
                 <TaskDetailsSheet
+                    key={selectedTask.id}
                     open={showTaskDetails}
                     onOpenChange={handleShowTaskDetails}
                     selectedTask={selectedTask}
