@@ -129,7 +129,7 @@ export const uploadSingle = async (req: IGetUserRequest, res: Response) => {
                 validatedData.taskId,
                 userId,
                 req.file.originalname,
-                `/files/${req.file.filename}`,
+                `${process.env.BACKEND_URL}/files/${req.file.filename}`,
                 req.file.mimetype,
                 req.file.size,
             ],
@@ -211,7 +211,7 @@ export const uploadAvatar = async (req: IGetUserRequest, res: Response) => {
             [
                 userId,
                 req.file.originalname,
-                `/files/${req.file.filename}`,
+                `${process.env.BACKEND_URL}/files/${req.file.filename}`,
                 req.file.mimetype,
                 req.file.size,
             ],
@@ -329,7 +329,7 @@ export const uploadMultiple = async (req: IGetUserRequest, res: Response) => {
                 validatedData.taskId,
                 userId,
                 file.originalname,
-                `/files/${file.filename}`,
+                `${process.env.BACKEND_URL}/files/${file.filename}`,
                 file.mimetype,
                 file.size,
             ];
@@ -360,7 +360,7 @@ export const uploadMultiple = async (req: IGetUserRequest, res: Response) => {
             message: "File uploaded successfully",
             data: files.map((file) => ({
                 filename: file.originalname,
-                url: `/files/${file.filename}`,
+                url: `${process.env.BACKEND_URL}/files/${file.filename}`,
                 size: file.size,
             })),
         });

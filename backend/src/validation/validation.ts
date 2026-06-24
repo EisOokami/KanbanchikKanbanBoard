@@ -398,7 +398,57 @@ export const createTaskSchema = z
             .min(1, "At least one member is required"),
         labels: z.array(namedColorSchema),
         newLabels: z.array(namedColorSchema),
-        // attachments: z.array(attachmentSchema),
+        attachments: z
+            .preprocess(
+                (value) => {
+                    if (!value) return [undefined];
+
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    return Array.from(value as Iterable<any>).filter(
+                        (file) =>
+                            file instanceof File &&
+                            file.name !== "" &&
+                            file.size > 0,
+                    );
+                },
+                z
+                    .array(
+                        z
+                            .instanceof(File, {
+                                message: "Attachment is required",
+                            })
+                            .refine((file) => file.size <= 5 * 1024 * 1024, {
+                                message: "Maximum file size is 5MB",
+                            })
+                            .refine(
+                                (file) =>
+                                    [
+                                        "image/jpeg",
+                                        "image/png",
+                                        "image/svg+xml",
+                                        "image/webp",
+                                        "image/gif",
+                                        "image/avif",
+                                        "application/pdf",
+                                        "video/mp4",
+                                        "video/webm",
+                                        "video/mpeg",
+                                        "application/msword",
+                                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                        "text/plain",
+                                        "application/vnd.ms-",
+                                        "application/vnd.openxmlformats-",
+                                    ].some((type) =>
+                                        file.type.startsWith(type),
+                                    ),
+                                {
+                                    message: "File type is not allowed",
+                                },
+                            ),
+                    )
+                    .max(3, "Attachments must be less than 3"),
+            )
+            .optional(),
         subtasks: z.array(subtaskSchema),
     })
     .superRefine((data, ctx) => {
@@ -463,7 +513,55 @@ export const updateTaskSchema = z.object({
     members: z.array(memberSchema).min(1, "At least one member is required"),
     labels: z.array(namedColorSchema).min(1, "At least one label is required"),
     // attachments: z.array(attachmentSchema),
-    // newAttachments: z.array(attachmentSchema),
+    newAttachments: z
+        .preprocess(
+            (value) => {
+                if (!value) return [undefined];
+
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                return Array.from(value as Iterable<any>).filter(
+                    (file) =>
+                        file instanceof File &&
+                        file.name !== "" &&
+                        file.size > 0,
+                );
+            },
+            z
+                .array(
+                    z
+                        .instanceof(File, {
+                            message: "Attachment is required",
+                        })
+                        .refine((file) => file.size <= 5 * 1024 * 1024, {
+                            message: "Maximum file size is 5MB",
+                        })
+                        .refine(
+                            (file) =>
+                                [
+                                    "image/jpeg",
+                                    "image/png",
+                                    "image/svg+xml",
+                                    "image/webp",
+                                    "image/gif",
+                                    "image/avif",
+                                    "application/pdf",
+                                    "video/mp4",
+                                    "video/webm",
+                                    "video/mpeg",
+                                    "application/msword",
+                                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                    "text/plain",
+                                    "application/vnd.ms-",
+                                    "application/vnd.openxmlformats-",
+                                ].some((type) => file.type.startsWith(type)),
+                            {
+                                message: "File type is not allowed",
+                            },
+                        ),
+                )
+                .max(3, "Attachments must be less than 3"),
+        )
+        .optional(),
     subtasks: z.array(subtaskSchema),
     newSubtasks: z.array(subtaskSchema),
 });

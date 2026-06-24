@@ -21,9 +21,19 @@ const upload = multer({
         const allowedTypes = [
             "image/jpeg",
             "image/png",
-            "application/pdf",
             "image/svg+xml",
             "image/webp",
+            "image/gif",
+            "image/avif",
+            "application/pdf",
+            "video/mp4",
+            "video/webm",
+            "video/mpeg",
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "text/plain",
+            "application/vnd.ms-",
+            "application/vnd.openxmlformats-",
         ];
 
         if (allowedTypes.includes(file.mimetype)) {
