@@ -119,7 +119,7 @@ export default function AccountSettingsModal({
                                 <Avatar className="size-7">
                                     <AvatarImage src={user.avatar_url} />
                                     <AvatarFallback
-                                        className="text-[10px] font-bold text-white"
+                                        className="text-[10px] font-medium text-white"
                                         style={{
                                             backgroundColor: user.color,
                                         }}

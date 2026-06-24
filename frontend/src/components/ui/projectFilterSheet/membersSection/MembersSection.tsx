@@ -46,30 +46,20 @@ export default function MembersSection({
                                     : "text-foreground hover:bg-muted/60",
                             )}
                         >
-                            {member.avatar_url ? (
-                                <Avatar key={member.id} className="size-6">
-                                    <AvatarImage
-                                        src={member.avatar_url}
-                                        alt={member.name}
-                                    />
-                                    <AvatarFallback>
-                                        {getInitials(
-                                            member.name,
-                                            member.surname,
-                                        )}
-                                    </AvatarFallback>
-                                </Avatar>
-                            ) : (
-                                <div
-                                    className="flex size-6 items-center justify-center rounded-full text-[10px] font-semibold text-white"
+                            <Avatar key={member.id} className="size-6">
+                                <AvatarImage
+                                    src={member.avatar_url}
+                                    alt={member.name}
+                                />
+                                <AvatarFallback
+                                    className="text-[10px] font-medium text-white"
                                     style={{
                                         backgroundColor: member.color,
                                     }}
                                 >
-                                    {member.name[0]}
-                                    {member.surname[0]}
-                                </div>
-                            )}
+                                    {getInitials(member.name, member.surname)}
+                                </AvatarFallback>
+                            </Avatar>
                             <span className="flex-1 truncate text-left font-medium">
                                 {member.name} {member.surname}
                             </span>

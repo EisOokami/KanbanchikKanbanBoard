@@ -148,21 +148,22 @@ export default function ProjectCard({
                     <CardFooter className="flex items-center justify-between border-t border-border/50 p-3">
                         <div className="flex items-center">
                             <div className="flex -space-x-2">
-                                {visibleMembers.map((m) => (
+                                {visibleMembers.map((member) => (
                                     <Avatar
-                                        key={m.id}
+                                        key={member.id}
                                         className="size-6 border-2 border-background"
                                     >
-                                        <AvatarImage src={m.avatar_url} />
+                                        <AvatarImage src={member.avatar_url} />
                                         <AvatarFallback
-                                            className="text-[9px] font-semibold"
+                                            className="text-[9px] font-semibold text-white"
                                             style={{
-                                                background:
-                                                    project.color + "33",
-                                                color: project.color,
+                                                background: member.color,
                                             }}
                                         >
-                                            {getInitials(m.name, m.surname)}
+                                            {getInitials(
+                                                member.name,
+                                                member.surname,
+                                            )}
                                         </AvatarFallback>
                                     </Avatar>
                                 ))}

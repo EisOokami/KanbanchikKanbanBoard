@@ -47,7 +47,12 @@ export default function MembersSection({
                                     }}
                                 >
                                     <AvatarImage src={member.avatar_url} />
-                                    <AvatarFallback className="text-[10px] font-bold text-white">
+                                    <AvatarFallback
+                                        className="text-[10px] font-medium text-white"
+                                        style={{
+                                            background: member.color,
+                                        }}
+                                    >
                                         {getInitials(
                                             member.name,
                                             member.surname,
@@ -91,7 +96,12 @@ export default function MembersSection({
                                     }}
                                 >
                                     <AvatarImage src={member.avatar_url} />
-                                    <AvatarFallback className="text-[10px] font-bold text-white">
+                                    <AvatarFallback
+                                        className="text-[10px] font-medium text-white"
+                                        style={{
+                                            background: member.color,
+                                        }}
+                                    >
                                         {getInitials(
                                             member.name,
                                             member.surname,

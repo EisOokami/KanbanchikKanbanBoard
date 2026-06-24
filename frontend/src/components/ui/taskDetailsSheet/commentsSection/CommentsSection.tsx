@@ -57,7 +57,7 @@ export default function CommentsSection({
                 <Avatar className="mt-1 size-7 shrink-0">
                     <AvatarImage src={userData.avatar_url} />
                     <AvatarFallback
-                        className="text-[10px] font-bold text-white"
+                        className="text-[10px] font-medium text-white"
                         style={{ background: userData.color }}
                     >
                         {getInitials(userData.name, userData.surname)}

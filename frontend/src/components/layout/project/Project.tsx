@@ -423,7 +423,12 @@ export default function Project({
                                         src={member.avatar_url}
                                         alt={member.name}
                                     />
-                                    <AvatarFallback>
+                                    <AvatarFallback
+                                        className="text-xs font-semibold text-white"
+                                        style={{
+                                            background: member.color,
+                                        }}
+                                    >
                                         {getInitials(
                                             member.name,
                                             member.surname,

@@ -349,7 +349,7 @@ export function TaskFilterSheet({
                                                         alt={member.name}
                                                     />
                                                     <AvatarFallback
-                                                        className="text-[10px] font-bold text-white"
+                                                        className="text-[10px] font-medium text-white"
                                                         style={{
                                                             background:
                                                                 member.color,

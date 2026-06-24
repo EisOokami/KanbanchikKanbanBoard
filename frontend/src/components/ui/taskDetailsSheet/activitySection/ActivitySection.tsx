@@ -37,7 +37,7 @@ export default function ActivitySection({
                             <Avatar className="mt-0.5 size-7 shrink-0">
                                 <AvatarImage src={entry.author.avatar_url} />
                                 <AvatarFallback
-                                    className="text-[10px] font-bold text-white"
+                                    className="text-[10px] font-medium text-white"
                                     style={{
                                         background: entry.author.color,
                                     }}

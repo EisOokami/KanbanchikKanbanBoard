@@ -25,7 +25,7 @@ export default function MemberRow({
                 <Avatar className="size-9 ring-2 ring-white">
                     <AvatarImage src={member.avatar_url} />
                     <AvatarFallback
-                        className="text-xs font-bold text-white"
+                        className="text-xs font-semibold text-white"
                         style={{ background: member.color }}
                     >
                         {getInitials(member.name, member.surname)}

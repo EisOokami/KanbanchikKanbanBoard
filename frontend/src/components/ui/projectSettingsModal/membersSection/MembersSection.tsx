@@ -159,7 +159,7 @@ export default function MembersSection({
                             <Avatar className="size-8 shrink-0">
                                 <AvatarImage src={member.avatar_url} />
                                 <AvatarFallback
-                                    className="text-xs font-bold text-white"
+                                    className="text-xs font-semibold text-white"
                                     style={{
                                         backgroundColor: member.color,
                                     }}

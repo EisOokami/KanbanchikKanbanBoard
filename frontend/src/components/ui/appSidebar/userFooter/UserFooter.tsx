@@ -51,7 +51,7 @@ export default function UserFooter({ userData }: Readonly<UserFooterProps>) {
                                 className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                             >
                                 <Avatar className="size-8 rounded-lg">
-                                    <AvatarFallback className="rounded-lg bg-zinc-700 text-xs font-bold text-white">
+                                    <AvatarFallback className="rounded-lg bg-zinc-700 text-xs font-semibold text-white">
                                         ?
                                     </AvatarFallback>
                                 </Avatar>
@@ -118,7 +118,7 @@ export default function UserFooter({ userData }: Readonly<UserFooterProps>) {
                             <Avatar className="size-8 rounded-lg">
                                 <AvatarImage src={user.avatar_url} />
                                 <AvatarFallback
-                                    className="rounded-lg text-xs font-bold text-white"
+                                    className="rounded-lg text-xs font-semibold text-white"
                                     style={{ backgroundColor: user.color }}
                                 >
                                     {getInitials(user.name, user.surname)}

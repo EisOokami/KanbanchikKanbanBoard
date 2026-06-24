@@ -61,7 +61,7 @@ export default function MembersSection({
                                 <Avatar className="size-7 cursor-pointer ring-2 ring-white">
                                     <AvatarImage src={member.avatar_url} />
                                     <AvatarFallback
-                                        className="text-[10px] font-bold text-white"
+                                        className="text-[10px] font-semibold text-white"
                                         style={{
                                             background: member.color,
                                         }}
@@ -128,7 +128,7 @@ export default function MembersSection({
                                     <Avatar className="size-6">
                                         <AvatarImage src={member.avatar_url} />
                                         <AvatarFallback
-                                            className="text-[10px] font-bold text-white"
+                                            className="text-[9px] font-medium text-white"
                                             style={{
                                                 background: member.color,
                                             }}
