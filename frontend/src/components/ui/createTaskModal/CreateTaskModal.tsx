@@ -128,6 +128,15 @@ export function CreateTaskModal({
     };
 
     const handleClose = () => {
+        setFormData({
+            categories: [],
+            newCategories: [],
+            members: [],
+            subtasks: [],
+            attachments: [],
+            labels: [],
+            newLabels: [],
+        });
         onOpenChange(false);
     };
 
