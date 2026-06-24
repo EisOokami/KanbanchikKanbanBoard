@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
     reactCompiler: true,
     experimental: {
         optimizePackageImports: ["@phosphor-icons/react"],
+        serverActions: {
+            bodySizeLimit: "5mb",
+        },
     },
     images: {
         remotePatterns: [
@@ -15,6 +18,7 @@ const nextConfig: NextConfig = {
                 pathname: "/files/**",
             },
         ],
+        dangerouslyAllowLocalIP: true,
     },
 };
 
