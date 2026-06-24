@@ -958,11 +958,24 @@ const createTaskSchema = z
                                     [
                                         "image/jpeg",
                                         "image/png",
+                                        "image/svg+xml",
                                         "image/webp",
-                                    ].includes(file.type),
+                                        "image/gif",
+                                        "image/avif",
+                                        "application/pdf",
+                                        "video/mp4",
+                                        "video/webm",
+                                        "video/mpeg",
+                                        "application/msword",
+                                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                        "text/plain",
+                                        "application/vnd.ms-",
+                                        "application/vnd.openxmlformats-",
+                                    ].some((type) =>
+                                        file.type.startsWith(type),
+                                    ),
                                 {
-                                    message:
-                                        "Only JPG, PNG and WEBP are allowed",
+                                    message: "File type is not allowed",
                                 },
                             ),
                     )
@@ -1225,10 +1238,22 @@ const updateTaskSchema = z.object({
                                 [
                                     "image/jpeg",
                                     "image/png",
+                                    "image/svg+xml",
                                     "image/webp",
-                                ].includes(file.type),
+                                    "image/gif",
+                                    "image/avif",
+                                    "application/pdf",
+                                    "video/mp4",
+                                    "video/webm",
+                                    "video/mpeg",
+                                    "application/msword",
+                                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                    "text/plain",
+                                    "application/vnd.ms-",
+                                    "application/vnd.openxmlformats-",
+                                ].some((type) => file.type.startsWith(type)),
                             {
-                                message: "Only JPG, PNG and WEBP are allowed",
+                                message: "File type is not allowed",
                             },
                         ),
                 )
