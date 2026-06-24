@@ -1,9 +1,7 @@
 "use client";
 
-import { useState, useActionState, useEffect, useCallback } from "react";
+import { useState, useActionState, useEffect } from "react";
 import { Button } from "@/components/ui/shadcn/button";
-import { Input } from "@/components/ui/shadcn/input";
-import { Textarea } from "@/components/ui/shadcn/textarea";
 import {
     Dialog,
     DialogContent,
@@ -11,43 +9,22 @@ import {
     DialogTitle,
     DialogFooter,
 } from "@/components/ui/shadcn/dialog";
-import Chip from "./chip/Chip";
-import { Category, Label, NewProjectFormData, Status } from "@/types/types";
-import {
-    COLUMN_COLORS,
-    COLUMNS_CONFIG,
-    PROJECT_COLORS,
-    PROJECT_ICONS,
-    STATUS_CONFIG,
-} from "@/constants/constants";
+import { NewProjectFormData } from "@/types/types";
+import { COLUMNS_CONFIG } from "@/constants/constants";
 import { cn } from "@/libs/utils";
-import {
-    EnvelopeIcon,
-    PencilSimpleIcon,
-    PlusIcon,
-    XIcon,
-} from "@phosphor-icons/react";
+import { PlusIcon } from "@phosphor-icons/react";
 import { BaseAction } from "@/types/actions";
 import { createProjectAction } from "@/data/actions";
-import { ZodErrors } from "../zodErrors/ZodErrors";
 import { Info, Loader2 } from "lucide-react";
 import { DetailsErrors } from "../detailsErrors/DetailsErrors";
-import {
-    closestCenter,
-    DndContext,
-    DragEndEvent,
-    PointerSensor,
-    useSensor,
-    useSensors,
-} from "@dnd-kit/core";
-import {
-    arrayMove,
-    SortableContext,
-    verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import SortableColumnRow from "./sortableColumnRow/SortableColumnRow";
-import ColorPicker from "../colorPicker/ColorPicker";
-import ProjectColorPicker from "../projectColorPicker/ProjectColorPicker";
+import IconSection from "./iconSection/IconSection";
+import NameSection from "./nameSection/NameSection";
+import DescriptionSection from "./descriptionSection/DescriptionSection";
+import StatusSection from "./statusSection/StatusSection";
+import MemberSection from "./memberSection/MemberSection";
+import ColumnsSection from "./columnsSection/ColumnsSection";
+import CategoriesSection from "./categoriesSection/CategoriesSection";
+import LabelsSection from "./labelsSection/LabelsSection";
 
 interface NewProjectModalProps {
     open: boolean;
@@ -67,17 +44,6 @@ export default function NewProjectModal({
     open,
     onClose,
 }: Readonly<NewProjectModalProps>) {
-    const [icon, setIcon] = useState("🚀");
-    const [status, setStatus] = useState<Status>("active");
-    const [projectColor, setProjectColor] = useState(PROJECT_COLORS[0]);
-    const [emailInput, setEmailInput] = useState<string>("");
-    const [emailError, setEmailError] = useState<string>("");
-    const [newColumnName, setNewColumnName] = useState<string>("");
-    const [newCatName, setNewCatName] = useState("");
-    const [newCatColor, setNewCatColor] = useState(COLUMN_COLORS[4]);
-    const [newLabelName, setNewLabelName] = useState<string>("");
-    const [newLabelColor, setNewLabelColor] = useState(COLUMN_COLORS[5]);
-    const [iconPickerOpen, setIconPickerOpen] = useState<boolean>(false);
     const [formData, setFormData] = useState<NewProjectFormData>({
         members: [],
         categories: [],
@@ -88,7 +54,6 @@ export default function NewProjectModal({
         createProjectAction.bind(null, formData),
         INITIAL_STATE,
     );
-    const sensors = useSensors(useSensor(PointerSensor));
 
     useEffect(() => {
         if (formState && formState.status === "success") {
@@ -97,167 +62,8 @@ export default function NewProjectModal({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [formState]);
 
-    const inviteMember = () => {
-        const email = emailInput.trim();
-
-        if (!email) {
-            return;
-        }
-
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            setEmailError("Enter a valid email address");
-
-            return;
-        }
-
-        if (formData.members.find((member) => member === email)) {
-            setEmailError("Already added");
-
-            return;
-        }
-
-        setFormData({ ...formData, members: [...formData.members, email] });
-        setEmailInput("");
-        setEmailError("");
-    };
-
-    const addColumn = () => {
-        if (!newColumnName.trim()) {
-            return;
-        }
-
-        setFormData({
-            ...formData,
-            columns: [
-                ...formData.columns,
-                {
-                    id: Object.keys(formData.columns).length + 1,
-                    name: newColumnName.trim(),
-                    position: Object.keys(formData.columns).length,
-                    wip_limit: null,
-                },
-            ],
-        });
-        setNewColumnName("");
-    };
-
-    const handleDragEnd = (event: DragEndEvent) => {
-        const { active, over } = event;
-
-        if (!over || active.id === over.id) {
-            return;
-        }
-
-        const oldIndex = formData.columns.findIndex(
-            (column) => column.id === active.id,
-        );
-        const newIndex = formData.columns.findIndex(
-            (column) => column.id === over.id,
-        );
-
-        setFormData({
-            ...formData,
-            columns: arrayMove(formData.columns, oldIndex, newIndex).map(
-                (column, i) => ({
-                    ...column,
-                    position: i + 1,
-                }),
-            ),
-        });
-    };
-
-    const addCategory = () => {
-        if (!newCatName.trim()) {
-            return;
-        }
-
-        setFormData({
-            ...formData,
-            categories: [
-                ...formData.categories,
-                {
-                    id: formData.categories.length + 1,
-                    name: newCatName.trim(),
-                    color: newCatColor,
-                },
-            ],
-        });
-        setNewCatName("");
-    };
-
-    const addLabel = () => {
-        if (!newLabelName.trim()) {
-            return;
-        }
-
-        setFormData({
-            ...formData,
-            labels: [
-                ...formData.labels,
-                {
-                    id: new Date().getTime(),
-                    name: newLabelName.trim(),
-                    color: newLabelColor,
-                },
-            ],
-        });
-        setNewLabelName("");
-    };
-
     const handleClose = () => {
         onClose();
-    };
-
-    const handleChangeWipLimit = useCallback(
-        (wipLimit: number | null, id: number) => {
-            setFormData({
-                ...formData,
-                columns: formData.columns.map((column) =>
-                    column.id === id
-                        ? { ...column, wip_limit: wipLimit }
-                        : column,
-                ),
-            });
-        },
-        [formData],
-    );
-
-    const handleRemoveMember = (member: string) => {
-        setFormData({
-            ...formData,
-            members: formData.members.filter((value) => value !== member),
-        });
-    };
-
-    const handleRemoveColumn = (id: number) => {
-        setFormData({
-            ...formData,
-            columns: formData.columns.filter(
-                (columnsState) => columnsState.id !== id,
-            ),
-        });
-    };
-
-    const handleRemoveCategory = (
-        category: Omit<Category, "updated_at" | "created_at">,
-    ) => {
-        setFormData({
-            ...formData,
-            categories: formData.categories.filter(
-                (categoriesState) => categoriesState.id !== category.id,
-            ),
-        });
-    };
-
-    const handleRemoveLabel = (
-        label: Omit<Label, "updated_at" | "created_at">,
-    ) => {
-        setFormData({
-            ...formData,
-            labels: formData.labels.filter(
-                (labelState) => labelState.id !== label.id,
-            ),
-        });
     };
 
     return (
@@ -279,466 +85,46 @@ export default function NewProjectModal({
                         </div>
                     </DialogHeader>
                     <div className="flex-1 space-y-8 overflow-y-auto px-6 py-5">
-                        <div className="relative space-y-1">
-                            <h3 className="font-semibold">Project icon</h3>
-                            <div className="relative flex items-start gap-6">
-                                <div className="flex items-start gap-3">
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setIconPickerOpen(!iconPickerOpen);
-                                        }}
-                                        className="relative flex size-14 items-center justify-center rounded-md border text-2xl transition-all hover:brightness-95"
-                                        style={{
-                                            background: `${projectColor}15`,
-                                            borderColor: `${projectColor}30`,
-                                        }}
-                                        disabled={isPending}
-                                    >
-                                        {icon}
-                                        <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-bright-blue">
-                                            <PencilSimpleIcon
-                                                weight="duotone"
-                                                size={9}
-                                                className="text-white"
-                                            />
-                                        </span>
-                                    </button>
-                                    <ProjectColorPicker
-                                        projectColor={projectColor}
-                                        onProjectColorChange={setProjectColor}
-                                        isPending={isPending}
-                                    />
-                                </div>
-                            </div>
-                            <ZodErrors error={formState?.zodErrors?.icon} />
-                            <ZodErrors error={formState?.zodErrors?.color} />
-                            {iconPickerOpen && (
-                                <div className="flex flex-wrap gap-1.5 rounded-md border bg-gray-50 p-3">
-                                    {PROJECT_ICONS.map((projectIcon) => (
-                                        <button
-                                            type="button"
-                                            key={projectIcon}
-                                            onClick={() => {
-                                                setIcon(projectIcon);
-                                                setIconPickerOpen(false);
-                                            }}
-                                            className={cn(
-                                                "flex size-9 items-center justify-center rounded-md text-xl transition-all hover:bg-white",
-                                                icon === projectIcon
-                                                    ? "bg-white ring-2 ring-bright-blue"
-                                                    : "",
-                                            )}
-                                            disabled={isPending}
-                                        >
-                                            {projectIcon}
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                        <div>
-                            <label
-                                className="mb-2 block font-semibold"
-                                htmlFor="name"
-                            >
-                                Project name{" "}
-                                <span className="text-red-500">*</span>
-                            </label>
-                            <Input
-                                id="name"
-                                name="name"
-                                placeholder="e.g. Website Redesign"
-                                defaultValue={
-                                    formState?.formData
-                                        ?.get("name")
-                                        ?.toString() ?? undefined
-                                }
-                                className={cn(
-                                    "h-9 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue",
-                                    formState?.zodErrors?.name
-                                        ? "border-red-500"
-                                        : "",
-                                )}
-                                disabled={isPending}
-                            />
-                            <ZodErrors error={formState?.zodErrors?.name} />
-                        </div>
-                        <div>
-                            <label
-                                className="mb-2 block font-semibold"
-                                htmlFor="description"
-                            >
-                                Description
-                            </label>
-                            <Textarea
-                                id="description"
-                                name="description"
-                                placeholder="What is this project about?"
-                                defaultValue={
-                                    formState?.formData
-                                        ?.get("description")
-                                        ?.toString() ?? undefined
-                                }
-                                className={cn(
-                                    "min-h-[72px] resize-none bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue",
-                                    formState?.zodErrors?.description
-                                        ? "border-red-500"
-                                        : "",
-                                )}
-                                disabled={isPending}
-                            />
-                            <ZodErrors
-                                error={formState?.zodErrors?.description}
-                            />
-                        </div>
-                        <div>
-                            <h3 className="mb-2 block font-semibold">Status</h3>
-                            <div className="flex flex-wrap gap-1.5">
-                                {(Object.keys(STATUS_CONFIG) as Status[]).map(
-                                    (statusConfig) => (
-                                        <button
-                                            key={statusConfig}
-                                            type="button"
-                                            onClick={() =>
-                                                setStatus(statusConfig)
-                                            }
-                                            className={cn(
-                                                "flex items-center gap-1.5 rounded-md bg-muted/60 px-2.5 py-1 text-xs font-medium transition-all hover:bg-muted",
-                                                status === statusConfig
-                                                    ? "bg-muted ring-1 ring-border"
-                                                    : "opacity-60 hover:opacity-100",
-                                            )}
-                                            disabled={isPending}
-                                        >
-                                            <span
-                                                className="size-1.5 rounded-full"
-                                                style={{
-                                                    backgroundColor:
-                                                        STATUS_CONFIG[
-                                                            statusConfig
-                                                        ].dot,
-                                                }}
-                                            />
-                                            {STATUS_CONFIG[statusConfig].label}
-                                        </button>
-                                    ),
-                                )}
-                            </div>
-                            <ZodErrors error={formState?.zodErrors?.status} />
-                        </div>
-                        <div className="space-y-1">
-                            <label className="font-semibold" htmlFor="members">
-                                Members
-                            </label>
-                            <div className="space-y-3">
-                                {formData.members.length > 0 && (
-                                    <div className="flex flex-wrap gap-2">
-                                        {formData.members.map((member) => (
-                                            <div
-                                                key={member}
-                                                className="flex items-center gap-2 rounded-md border border-border/60 bg-muted/40 px-2.5 py-1.5"
-                                            >
-                                                <div className="min-w-0">
-                                                    <p className="mt-0.5 max-w-[140px] truncate text-[10px] text-muted-foreground">
-                                                        {member}
-                                                    </p>
-                                                </div>
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        handleRemoveMember(
-                                                            member,
-                                                        )
-                                                    }
-                                                    className="ml-1 text-muted-foreground transition-colors hover:text-foreground"
-                                                    disabled={isPending}
-                                                >
-                                                    <XIcon
-                                                        weight="duotone"
-                                                        className="size-4"
-                                                    />
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                                <div className="flex gap-2">
-                                    <div className="relative flex-1">
-                                        <EnvelopeIcon
-                                            weight="duotone"
-                                            className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-                                        />
-                                        <Input
-                                            id="members"
-                                            name="email"
-                                            type="email"
-                                            placeholder="Invite by email…"
-                                            value={emailInput}
-                                            defaultValue={
-                                                formState?.formData
-                                                    ?.get("email")
-                                                    ?.toString() ?? undefined
-                                            }
-                                            onChange={(e) => {
-                                                setEmailInput(e.target.value);
-                                                setEmailError("");
-                                            }}
-                                            onKeyDown={(e) =>
-                                                e.key === "Enter" &&
-                                                (e.preventDefault(),
-                                                inviteMember())
-                                            }
-                                            className={cn(
-                                                "h-9 bg-white pl-8 text-sm focus-visible:ring-1 focus-visible:ring-bright-blue",
-                                                emailError
-                                                    ? "border-red-400"
-                                                    : "",
-                                            )}
-                                            disabled={isPending}
-                                        />
-                                    </div>
-                                    <Button
-                                        type="button"
-                                        size="sm"
-                                        onClick={inviteMember}
-                                        className="h-9 gap-1.5 bg-bright-blue text-white hover:bg-blue-600 [&_svg]:size-4"
-                                        disabled={isPending}
-                                    >
-                                        <PlusIcon
-                                            weight="duotone"
-                                            className="size-4"
-                                        />{" "}
-                                        Invite
-                                    </Button>
-                                </div>
-                                <ZodErrors
-                                    error={formState?.zodErrors?.members}
-                                />
-                            </div>
-                        </div>
-                        <div className="space-y-1">
-                            <label className="font-semibold" htmlFor="column">
-                                Project Columns
-                            </label>
-                            <div className="space-y-5">
-                                <div className="space-y-1.5">
-                                    <DndContext
-                                        sensors={sensors}
-                                        collisionDetection={closestCenter}
-                                        onDragEnd={handleDragEnd}
-                                    >
-                                        <SortableContext
-                                            items={formData.columns.map(
-                                                (column) => column.id,
-                                            )}
-                                            strategy={
-                                                verticalListSortingStrategy
-                                            }
-                                        >
-                                            {formData.columns.map((column) => (
-                                                <SortableColumnRow
-                                                    key={column.id}
-                                                    column={column}
-                                                    isPending={isPending}
-                                                    onWipLimitChange={
-                                                        handleChangeWipLimit
-                                                    }
-                                                    onRemove={
-                                                        handleRemoveColumn
-                                                    }
-                                                />
-                                            ))}
-                                        </SortableContext>
-                                    </DndContext>
-                                </div>
-                                <div className=" space-y-1">
-                                    <div className="flex gap-2">
-                                        <Input
-                                            id="column"
-                                            name="column"
-                                            placeholder="Column name…"
-                                            value={newColumnName}
-                                            onChange={(e) =>
-                                                setNewColumnName(e.target.value)
-                                            }
-                                            onKeyDown={(e) =>
-                                                e.key === "Enter" &&
-                                                (e.preventDefault(),
-                                                addColumn())
-                                            }
-                                            className={cn(
-                                                "h-8 flex-1 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue",
-                                                formState?.zodErrors?.columns
-                                                    ? "border-red-500"
-                                                    : "",
-                                            )}
-                                            disabled={isPending}
-                                        />
-                                        <Button
-                                            type="button"
-                                            size="sm"
-                                            onClick={addColumn}
-                                            className="h-8 gap-1 bg-bright-blue text-white hover:bg-blue-600 [&_svg]:size-4"
-                                            disabled={isPending}
-                                        >
-                                            <PlusIcon
-                                                weight="duotone"
-                                                className="size-4"
-                                            />{" "}
-                                            Add
-                                        </Button>
-                                    </div>
-                                    <ZodErrors
-                                        error={formState?.zodErrors?.columns}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                        <div className="space-y-1">
-                            <label
-                                className="font-semibold"
-                                htmlFor="categories"
-                            >
-                                Categories
-                            </label>
-                            <div className="space-y-3">
-                                {formData.categories.length > 0 && (
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {formData.categories.map((category) => (
-                                            <Chip
-                                                key={category.id}
-                                                label={category.name}
-                                                color={category.color}
-                                                onRemove={() =>
-                                                    isPending
-                                                        ? null
-                                                        : handleRemoveCategory(
-                                                              category,
-                                                          )
-                                                }
-                                            />
-                                        ))}
-                                    </div>
-                                )}
-                                <div className="flex items-center gap-2">
-                                    <ColorPicker
-                                        value={newCatColor}
-                                        onChange={setNewCatColor}
-                                        isPending={isPending}
-                                    />
-                                    <div className="flex w-full gap-2">
-                                        <Input
-                                            id="categories"
-                                            name="category"
-                                            placeholder="Category name…"
-                                            value={newCatName}
-                                            onChange={(e) =>
-                                                setNewCatName(e.target.value)
-                                            }
-                                            onKeyDown={(e) =>
-                                                e.key === "Enter" &&
-                                                (e.preventDefault(),
-                                                addCategory())
-                                            }
-                                            className={cn(
-                                                "h-8 flex-1 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue",
-                                                formState?.zodErrors?.categories
-                                                    ? "border-red-500"
-                                                    : "",
-                                            )}
-                                            disabled={isPending}
-                                        />
-                                        <Button
-                                            type="button"
-                                            size="sm"
-                                            onClick={addCategory}
-                                            className="h-8 gap-1 bg-bright-blue text-white hover:bg-blue-600 [&_svg]:size-4"
-                                            disabled={isPending}
-                                        >
-                                            <PlusIcon
-                                                weight="duotone"
-                                                className="size-4"
-                                            />{" "}
-                                            Add
-                                        </Button>
-                                    </div>
-                                    <ZodErrors
-                                        error={formState?.zodErrors?.categories}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                        <div className="space-y-1">
-                            <label className="font-semibold" htmlFor="labels">
-                                Labels
-                            </label>
-                            <div className="space-y-3">
-                                {formData.labels.length > 0 && (
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {formData.labels.map((label) => (
-                                            <Chip
-                                                key={label.id}
-                                                label={label.name}
-                                                color={label.color}
-                                                onRemove={() =>
-                                                    isPending
-                                                        ? null
-                                                        : handleRemoveLabel(
-                                                              label,
-                                                          )
-                                                }
-                                            />
-                                        ))}
-                                    </div>
-                                )}
-                                <div className="flex items-center gap-2">
-                                    <ColorPicker
-                                        value={newLabelColor}
-                                        onChange={setNewLabelColor}
-                                        isPending={isPending}
-                                    />
-                                    <div className="flex w-full gap-2">
-                                        <Input
-                                            id="labels"
-                                            name="label"
-                                            placeholder="Label name…"
-                                            value={newLabelName}
-                                            onChange={(e) =>
-                                                setNewLabelName(e.target.value)
-                                            }
-                                            onKeyDown={(e) =>
-                                                e.key === "Enter" &&
-                                                (e.preventDefault(), addLabel())
-                                            }
-                                            className={cn(
-                                                "h-8 flex-1 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue",
-                                                formState?.zodErrors?.labels
-                                                    ? "border-red-500"
-                                                    : "",
-                                            )}
-                                            disabled={isPending}
-                                        />
-                                        <Button
-                                            type="button"
-                                            size="sm"
-                                            onClick={addLabel}
-                                            className="h-8 gap-1 bg-bright-blue text-white hover:bg-blue-600 [&_svg]:size-4"
-                                            disabled={isPending}
-                                        >
-                                            <PlusIcon
-                                                weight="duotone"
-                                                className="size-4"
-                                            />{" "}
-                                            Add
-                                        </Button>
-                                    </div>
-                                    <ZodErrors
-                                        error={formState?.zodErrors?.labels}
-                                    />
-                                </div>
-                            </div>
-                        </div>
+                        <IconSection
+                            formState={formState}
+                            isPending={isPending}
+                        />
+                        <NameSection
+                            formState={formState}
+                            isPending={isPending}
+                        />
+                        <DescriptionSection
+                            formState={formState}
+                            isPending={isPending}
+                        />
+                        <StatusSection
+                            formState={formState}
+                            isPending={isPending}
+                        />
+                        <MemberSection
+                            formData={formData}
+                            formState={formState}
+                            isPending={isPending}
+                            onFormDataChange={setFormData}
+                        />
+                        <ColumnsSection
+                            formData={formData}
+                            formState={formState}
+                            isPending={isPending}
+                            onFormDataChange={setFormData}
+                        />
+                        <CategoriesSection
+                            formData={formData}
+                            formState={formState}
+                            isPending={isPending}
+                            onFormDataChange={setFormData}
+                        />
+                        <LabelsSection
+                            formData={formData}
+                            formState={formState}
+                            isPending={isPending}
+                            onFormDataChange={setFormData}
+                        />
                     </div>
                     <DialogFooter className="flex flex-shrink-0 items-center justify-between gap-3 border-t border-border/60 px-6 py-4">
                         {formState?.message && (
@@ -798,9 +184,6 @@ export default function NewProjectModal({
                             </Button>
                         </div>
                     </DialogFooter>
-                    <input type="hidden" name="icon" value={icon} />
-                    <input type="hidden" name="color" value={projectColor} />
-                    <input type="hidden" name="status" value={status} />
                 </form>
             </DialogContent>
         </Dialog>

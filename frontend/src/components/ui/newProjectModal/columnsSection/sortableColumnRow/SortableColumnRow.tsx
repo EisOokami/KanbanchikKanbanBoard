@@ -3,7 +3,7 @@ import { Column } from "@/types/types";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { DotsSixVerticalIcon, XIcon } from "@phosphor-icons/react";
-import { Input } from "../../shadcn/input";
+import { Input } from "../../../shadcn/input";
 
 interface SortableColumnRowProps {
     column: Omit<Column, "tasks" | "created_at" | "updated_at">;
