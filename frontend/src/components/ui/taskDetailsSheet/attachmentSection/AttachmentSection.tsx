@@ -2,15 +2,15 @@
 
 import { BaseAction } from "@/types/actions";
 import { UpdateTaskFormData, User } from "@/types/types";
-import {
-    FileIcon,
-    PaperclipIcon,
-    TrashSimpleIcon,
-    UploadSimpleIcon,
-} from "@phosphor-icons/react";
-import { useRef } from "react";
+import { PaperclipIcon, UploadSimpleIcon } from "@phosphor-icons/react";
+import { useRef, useState } from "react";
 import { ZodErrors } from "../../zodErrors/ZodErrors";
 import { deleteAttachmentAction } from "@/data/actions";
+import Lightbox from "yet-another-react-lightbox";
+import { buildSlides, isImage, isPdf, isVideo } from "@/libs/taskDetailsSheet";
+import AttachmentRow from "./attachmentRow/AttachmentRow";
+import Video from "yet-another-react-lightbox/plugins/video";
+import "yet-another-react-lightbox/styles.css";
 
 interface AttachmentSectionProps {
     formState: BaseAction | undefined;
@@ -28,16 +28,63 @@ export default function AttachmentSection({
     onFormDataChange,
 }: Readonly<AttachmentSectionProps>) {
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [lightboxOpen, setLightboxOpen] = useState<boolean>(false);
+    const [lightboxIndex, setLightboxIndex] = useState<number>(0);
+
+    const allAttachments = [
+        ...formData.attachments,
+        ...formData.newAttachments,
+    ];
+    const lightboxSlides = buildSlides(allAttachments);
+    const slideIndexMap = (() => {
+        const map: Record<number, number> = {};
+
+        let slideIdx = 0;
+
+        for (const attachment of allAttachments) {
+            if (
+                isImage(attachment.mime_type) ||
+                isVideo(attachment.mime_type)
+            ) {
+                map[attachment.id] = slideIdx++;
+            }
+        }
+
+        return map;
+    })();
+
+    const handlePreview = (id: number) => {
+        const attachment = allAttachments.find(
+            (attachment) => attachment.id === id,
+        );
+
+        if (!attachment) {
+            return;
+        }
+
+        if (isPdf(attachment.mime_type)) {
+            window.open(attachment.file_url, "_blank", "noopener,noreferrer");
+
+            return;
+        }
+
+        const idx = slideIndexMap[id];
+
+        if (idx !== undefined) {
+            setLightboxIndex(idx);
+            setLightboxOpen(true);
+        }
+    };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files ?? []);
-        const newAttachments = files.map((f) => ({
+        const newAttachments = files.map((file) => ({
             id: Date.now() + Math.random(),
             uploader_id: userData.id,
-            filename: f.name,
-            file_url: URL.createObjectURL(f),
-            mime_type: f.type,
-            size_bytes: f.size,
+            filename: file.name,
+            file_url: URL.createObjectURL(file),
+            mime_type: file.type,
+            size_bytes: file.size,
             created_at: new Date(),
         }));
 
@@ -54,14 +101,16 @@ export default function AttachmentSection({
             onFormDataChange({
                 ...formData,
                 attachments: formData.attachments.filter(
-                    (attachment) => attachment.id !== id,
+                    (attachments) => attachments.id !== id,
                 ),
                 newAttachments: formData.newAttachments.filter(
-                    (attachment) => attachment.id !== id,
+                    (attachments) => attachments.id !== id,
                 ),
             });
         }
     };
+
+    const total = formData.attachments.length + formData.newAttachments.length;
 
     return (
         <div className="mb-5">
@@ -74,13 +123,9 @@ export default function AttachmentSection({
                 <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Attachments
                 </span>
-                {formData.attachments.length ||
-                formData.newAttachments.length ? (
-                    <span className="text-xs text-gray-500">
-                        {formData.attachments.length +
-                            formData.newAttachments.length}
-                    </span>
-                ) : null}
+                {total > 0 && (
+                    <span className="text-xs text-gray-500">{total}</span>
+                )}
             </div>
             <input
                 name="attachments"
@@ -95,82 +140,27 @@ export default function AttachmentSection({
                 onChange={handleFileChange}
                 disabled={isPending}
             />
-            {formData.attachments.length || formData.newAttachments.length ? (
+            {total > 0 && (
                 <div className="mb-2 space-y-2">
-                    {formData.attachments.map((attachment) => (
-                        <div
-                            key={attachment.id}
-                            className="group/att flex items-center gap-3 rounded-md border px-3 py-2 transition-colors hover:bg-gray-50"
-                        >
-                            <div
-                                className="flex size-8 shrink-0 items-center justify-center rounded-md"
-                                style={{
-                                    background: "#EDE9FD",
-                                }}
-                            >
-                                <FileIcon
-                                    weight="duotone"
-                                    size={16}
-                                    className="text-violet-600"
-                                />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                                <p className="truncate text-xs font-medium">
-                                    {attachment.filename}
-                                </p>
-                                <p className="text-xs text-gray-500">
-                                    {(attachment.size_bytes / 1024).toFixed(1)}{" "}
-                                    KB
-                                </p>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => removeAttachment(attachment.id)}
-                                className="shrink-0 text-gray-300 opacity-0 transition-all hover:text-red-400 group-hover/att:opacity-100"
-                                disabled={isPending}
-                            >
-                                <TrashSimpleIcon weight="duotone" size={16} />
-                            </button>
-                        </div>
-                    ))}
-                    {formData.newAttachments.map((attachment) => (
-                        <div
-                            key={attachment.id}
-                            className="group/att flex items-center gap-3 rounded-md border px-3 py-2 transition-colors hover:bg-gray-50"
-                        >
-                            <div
-                                className="flex size-8 shrink-0 items-center justify-center rounded-md"
-                                style={{
-                                    background: "#EDE9FD",
-                                }}
-                            >
-                                <FileIcon
-                                    weight="duotone"
-                                    size={16}
-                                    className="text-violet-600"
-                                />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                                <p className="truncate text-xs font-medium">
-                                    {attachment.filename}
-                                </p>
-                                <p className="text-xs text-gray-500">
-                                    {(attachment.size_bytes / 1024).toFixed(1)}{" "}
-                                    KB
-                                </p>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => removeAttachment(attachment.id)}
-                                className="shrink-0 text-gray-300 opacity-0 transition-all hover:text-red-400 group-hover/att:opacity-100"
-                                disabled={isPending}
-                            >
-                                <TrashSimpleIcon weight="duotone" size={16} />
-                            </button>
-                        </div>
-                    ))}
+                    {allAttachments.map((attachment) => {
+                        const canPreview =
+                            isImage(attachment.mime_type) ||
+                            isVideo(attachment.mime_type) ||
+                            isPdf(attachment.mime_type);
+
+                        return (
+                            <AttachmentRow
+                                key={attachment.id}
+                                attachment={attachment}
+                                onRemove={removeAttachment}
+                                onPreview={handlePreview}
+                                isPending={isPending}
+                                canPreview={canPreview}
+                            />
+                        );
+                    })}
                 </div>
-            ) : null}
+            )}
             <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
@@ -182,6 +172,16 @@ export default function AttachmentSection({
             </button>
             <ZodErrors error={formState?.zodErrors?.attachments} />
             <ZodErrors error={formState?.zodErrors?.newAttachments} />
+            <Lightbox
+                open={lightboxOpen}
+                close={() => setLightboxOpen(false)}
+                index={lightboxIndex}
+                slides={lightboxSlides}
+                plugins={[Video]}
+                styles={{
+                    container: { backgroundColor: "rgba(0,0,0,0.85)" },
+                }}
+            />
         </div>
     );
 }
