@@ -46,10 +46,9 @@ export default function OverlayTask({ task }: Readonly<OverlayTaskProps>) {
                     {task.categories.map((category) => (
                         <span
                             key={category.id}
-                            className="rounded-md px-1.5 py-0.5 text-[10px] font-medium capitalize"
+                            className="rounded-md px-1.5 py-0.5 text-[10px] font-medium capitalize text-white"
                             style={{
-                                background: category.color + "22",
-                                color: category.color,
+                                background: category.color,
                             }}
                         >
                             {category.name}
