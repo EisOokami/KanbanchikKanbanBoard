@@ -748,35 +748,41 @@ export const createProject = async (req: IGetUserRequest, res: Response) => {
             [projectId, userId],
         );
 
-        validatedData.columns.forEach(async (column) => {
-            await pool.execute<ResultSetHeader>(
-                `
-                        INSERT INTO columns (project_id, name, position, wip_limit)
-                        VALUES (?, ?, ?, ?)
-                    `,
-                [projectId, column.name, column.position, column.wip_limit],
-            );
-        });
+        await Promise.all(
+            validatedData.columns.map(async (column) => {
+                await pool.execute<ResultSetHeader>(
+                    `
+                            INSERT INTO columns (project_id, name, position, wip_limit)
+                            VALUES (?, ?, ?, ?)
+                        `,
+                    [projectId, column.name, column.position, column.wip_limit],
+                );
+            }),
+        );
 
-        validatedData.labels.forEach(async (label) => {
-            await pool.execute<ResultSetHeader>(
-                `
+        await Promise.all(
+            validatedData.labels.map(async (label) => {
+                await pool.execute<ResultSetHeader>(
+                    `
                     INSERT INTO labels (project_id, name, color)
                     VALUES (?, ?, ?)
                 `,
-                [projectId, label.name, label.color],
-            );
-        });
+                    [projectId, label.name, label.color],
+                );
+            }),
+        );
 
-        validatedData.categories.forEach(async (category) => {
-            await pool.execute<ResultSetHeader>(
-                `
+        await Promise.all(
+            validatedData.categories.map(async (category) => {
+                await pool.execute<ResultSetHeader>(
+                    `
                     INSERT INTO categories (project_id, name, color)
                     VALUES (?, ?, ?)
                 `,
-                [projectId, category.name, category.color],
-            );
-        });
+                    [projectId, category.name, category.color],
+                );
+            }),
+        );
 
         if (validatedData.members.length > 0) {
             await Promise.all(
@@ -1067,102 +1073,116 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
         }
 
         if (validatedData.columns && validatedData.columns.length) {
-            validatedData.columns.forEach(async (column) => {
-                if (column.id) {
-                    await pool.execute<ResultSetHeader>(
-                        `
-                            UPDATE columns 
-                            SET name = ?, position = ?, wip_limit = ?, updated_at = CURRENT_TIMESTAMP
-                            WHERE id = ?
-                        `,
-                        [
-                            column.name,
-                            column.position,
-                            column.wip_limit,
-                            column.id,
-                        ],
-                    );
-                }
-            });
+            await Promise.all(
+                validatedData.columns.map(async (column) => {
+                    if (column.id) {
+                        await pool.execute<ResultSetHeader>(
+                            `
+                                UPDATE columns 
+                                SET name = ?, position = ?, wip_limit = ?, updated_at = CURRENT_TIMESTAMP
+                                WHERE id = ?
+                            `,
+                            [
+                                column.name,
+                                column.position,
+                                column.wip_limit,
+                                column.id,
+                            ],
+                        );
+                    }
+                }),
+            );
         }
 
         if (validatedData.labels && validatedData.labels.length) {
-            validatedData.labels.forEach(async (label) => {
-                if (label.id) {
-                    await pool.execute<ResultSetHeader>(
-                        `
-                            UPDATE labels 
-                            SET name = ?, color = ?, updated_at = CURRENT_TIMESTAMP
-                            WHERE id = ?
-                        `,
-                        [label.name, label.color, label.id],
-                    );
-                }
-            });
+            await Promise.all(
+                validatedData.labels.map(async (label) => {
+                    if (label.id) {
+                        await pool.execute<ResultSetHeader>(
+                            `
+                                UPDATE labels 
+                                SET name = ?, color = ?, updated_at = CURRENT_TIMESTAMP
+                                WHERE id = ?
+                            `,
+                            [label.name, label.color, label.id],
+                        );
+                    }
+                }),
+            );
         }
 
         if (validatedData.categories && validatedData.categories.length) {
-            validatedData.categories.forEach(async (category) => {
-                if (category.id) {
-                    await pool.execute<ResultSetHeader>(
-                        `
-                            UPDATE categories 
-                            SET name = ?, color = ?, updated_at = CURRENT_TIMESTAMP
-                            WHERE id = ?
-                        `,
-                        [category.name, category.color, category.id],
-                    );
-                }
-            });
+            await Promise.all(
+                validatedData.categories.map(async (category) => {
+                    if (category.id) {
+                        await pool.execute<ResultSetHeader>(
+                            `
+                                UPDATE categories 
+                                SET name = ?, color = ?, updated_at = CURRENT_TIMESTAMP
+                                WHERE id = ?
+                            `,
+                            [category.name, category.color, category.id],
+                        );
+                    }
+                }),
+            );
         }
 
         if (validatedData.members && validatedData.members.length) {
-            validatedData.members.forEach(async (member) => {
-                await pool.execute<ResultSetHeader>(
-                    `
-                        UPDATE project_members 
-                        SET role = ?
-                        WHERE user_id = ? AND project_id = ?
-                    `,
-                    [member.role, member.id, project.id],
-                );
-            });
+            await Promise.all(
+                validatedData.members.map(async (member) => {
+                    await pool.execute<ResultSetHeader>(
+                        `
+                            UPDATE project_members 
+                            SET role = ?
+                            WHERE user_id = ? AND project_id = ?
+                        `,
+                        [member.role, member.id, project.id],
+                    );
+                }),
+            );
         }
 
         if (validatedData.newColumns && validatedData.newColumns.length) {
-            validatedData.newColumns.forEach(async (column) => {
-                await pool.execute<ResultSetHeader>(
-                    `
-                        INSERT INTO columns (project_id, name, position)
-                        VALUES (?, ?, ?)
-                    `,
-                    [project.id, column.name, column.position],
-                );
-            });
+            await Promise.all(
+                validatedData.newColumns.map(async (column) => {
+                    await pool.execute<ResultSetHeader>(
+                        `
+                            INSERT INTO columns (project_id, name, position)
+                            VALUES (?, ?, ?)
+                        `,
+                        [project.id, column.name, column.position],
+                    );
+                }),
+            );
         }
 
         if (validatedData.newLabels && validatedData.newLabels.length) {
-            validatedData.newLabels.forEach(async (label) => {
-                await pool.execute<ResultSetHeader>(
-                    `
-                        INSERT INTO labels (project_id, name, color)
-                        VALUES (?, ?, ?)
-                    `,
-                    [project.id, label.name, label.color],
-                );
-            });
+            await Promise.all(
+                validatedData.newLabels.map(async (label) => {
+                    await pool.execute<ResultSetHeader>(
+                        `
+                            INSERT INTO labels (project_id, name, color)
+                            VALUES (?, ?, ?)
+                        `,
+                        [project.id, label.name, label.color],
+                    );
+                }),
+            );
         }
 
         if (validatedData.newCategories && validatedData.newCategories.length) {
-            validatedData.newCategories.forEach(async (category) => {
-                await pool.execute<ResultSetHeader>(
-                    `
-                        INSERT INTO categories (project_id, name, color)
-                        VALUES (?, ?, ?)
-                    `,
-                    [project.id, category.name, category.color],
-                );
-            });
+            await Promise.all(
+                validatedData.newCategories.map(async (category) => {
+                    await pool.execute<ResultSetHeader>(
+                        `
+                            INSERT INTO categories (project_id, name, color)
+                            VALUES (?, ?, ?)
+                        `,
+                        [project.id, category.name, category.color],
+                    );
+                }),
+            );
         }
 
         if (validatedData.emails && validatedData.emails.length) {

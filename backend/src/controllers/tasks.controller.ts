@@ -761,80 +761,102 @@ export const createTask = async (req: IGetUserRequest, res: Response) => {
         const taskId = result.insertId;
 
         if (validatedData.newCategories && validatedData.newCategories.length) {
-            validatedData.newCategories.forEach(async (category) => {
-                const [categoriesResult] = await pool.execute<ResultSetHeader>(
-                    `
-                        INSERT INTO categories (project_id, name, color)
-                        VALUES (?, ?, ?)
-                    `,
-                    [validatedData.projectId, category.name, category.color],
-                );
+            await Promise.all(
+                validatedData.newCategories.map(async (category) => {
+                    const [categoriesResult] =
+                        await pool.execute<ResultSetHeader>(
+                            `
+                            INSERT INTO categories (project_id, name, color)
+                            VALUES (?, ?, ?)
+                        `,
+                            [
+                                validatedData.projectId,
+                                category.name,
+                                category.color,
+                            ],
+                        );
 
-                await pool.execute<ResultSetHeader>(
-                    `INSERT INTO task_categories (task_id, category_id) VALUES (?, ?)`,
-                    [taskId, categoriesResult.insertId],
-                );
-            });
+                    await pool.execute<ResultSetHeader>(
+                        `INSERT INTO task_categories (task_id, category_id) VALUES (?, ?)`,
+                        [taskId, categoriesResult.insertId],
+                    );
+                }),
+            );
         }
 
         if (validatedData.newLabels && validatedData.newLabels.length) {
-            validatedData.newLabels.forEach(async (label) => {
-                const [labelsResult] = await pool.execute<ResultSetHeader>(
-                    `
-                        INSERT INTO labels (project_id, name, color)
-                        VALUES (?, ?, ?)
-                    `,
-                    [validatedData.projectId, label.name, label.color],
-                );
+            await Promise.all(
+                validatedData.newLabels.map(async (label) => {
+                    const [labelsResult] = await pool.execute<ResultSetHeader>(
+                        `
+                            INSERT INTO labels (project_id, name, color)
+                            VALUES (?, ?, ?)
+                        `,
+                        [validatedData.projectId, label.name, label.color],
+                    );
 
-                await pool.execute<ResultSetHeader>(
-                    `INSERT INTO task_labels (task_id, label_id) VALUES (?, ?)`,
-                    [taskId, labelsResult.insertId],
-                );
-            });
+                    await pool.execute<ResultSetHeader>(
+                        `INSERT INTO task_labels (task_id, label_id) VALUES (?, ?)`,
+                        [taskId, labelsResult.insertId],
+                    );
+                }),
+            );
         }
 
         if (validatedData.subtasks && validatedData.subtasks.length) {
-            validatedData.subtasks.forEach(async (subtask) => {
-                await pool.execute<ResultSetHeader>(
-                    `
-                        INSERT INTO subtasks (task_id, title, position, is_done)
-                        VALUES (?, ?, ?, ?)
-                    `,
-                    [taskId, subtask.title, subtask.position, subtask.is_done],
-                );
-            });
+            await Promise.all(
+                validatedData.subtasks.map(async (subtask) => {
+                    await pool.execute<ResultSetHeader>(
+                        `
+                            INSERT INTO subtasks (task_id, title, position, is_done)
+                            VALUES (?, ?, ?, ?)
+                        `,
+                        [
+                            taskId,
+                            subtask.title,
+                            subtask.position,
+                            subtask.is_done,
+                        ],
+                    );
+                }),
+            );
         }
 
         if (validatedData.categories && validatedData.categories.length) {
-            validatedData.categories.forEach(async (category) => {
-                if (category.id) {
-                    await pool.execute<ResultSetHeader>(
-                        `INSERT INTO task_categories (task_id, category_id) VALUES (?, ?)`,
-                        [taskId, category.id],
-                    );
-                }
-            });
+            await Promise.all(
+                validatedData.categories.map(async (category) => {
+                    if (category.id) {
+                        await pool.execute<ResultSetHeader>(
+                            `INSERT INTO task_categories (task_id, category_id) VALUES (?, ?)`,
+                            [taskId, category.id],
+                        );
+                    }
+                }),
+            );
         }
 
         if (validatedData.members && validatedData.members.length) {
-            validatedData.members.forEach(async (member) => {
-                await pool.execute<ResultSetHeader>(
-                    `INSERT INTO task_members (task_id, user_id) VALUES (?, ?)`,
-                    [taskId, member.id],
-                );
-            });
+            await Promise.all(
+                validatedData.members.map(async (member) => {
+                    await pool.execute<ResultSetHeader>(
+                        `INSERT INTO task_members (task_id, user_id) VALUES (?, ?)`,
+                        [taskId, member.id],
+                    );
+                }),
+            );
         }
 
         if (validatedData.labels && validatedData.labels.length) {
-            validatedData.labels.forEach(async (label) => {
-                if (label.id) {
-                    await pool.execute<ResultSetHeader>(
-                        `INSERT INTO task_labels (task_id, label_id) VALUES (?, ?)`,
-                        [taskId, label.id],
-                    );
-                }
-            });
+            await Promise.all(
+                validatedData.labels.map(async (label) => {
+                    if (label.id) {
+                        await pool.execute<ResultSetHeader>(
+                            `INSERT INTO task_labels (task_id, label_id) VALUES (?, ?)`,
+                            [taskId, label.id],
+                        );
+                    }
+                }),
+            );
         }
 
         const [newTasks] = await pool.execute<Task[]>(
@@ -1012,14 +1034,16 @@ export const updateTask = async (req: IGetUserRequest, res: Response) => {
                 [id],
             );
 
-            validatedData.categories.forEach(async (category) => {
-                if (category.id) {
-                    await pool.execute<ResultSetHeader>(
-                        `INSERT INTO task_categories (task_id, category_id) VALUES (?, ?)`,
-                        [id, category.id],
-                    );
-                }
-            });
+            await Promise.all(
+                validatedData.categories.map(async (category) => {
+                    if (category.id) {
+                        await pool.execute<ResultSetHeader>(
+                            `INSERT INTO task_categories (task_id, category_id) VALUES (?, ?)`,
+                            [id, category.id],
+                        );
+                    }
+                }),
+            );
         }
 
         if (validatedData.members && validatedData.members.length) {
@@ -1028,12 +1052,14 @@ export const updateTask = async (req: IGetUserRequest, res: Response) => {
                 [id],
             );
 
-            validatedData.members.forEach(async (member) => {
-                await pool.execute<ResultSetHeader>(
-                    `INSERT INTO task_members (task_id, user_id) VALUES (?, ?)`,
-                    [id, member.id],
-                );
-            });
+            await Promise.all(
+                validatedData.members.map(async (member) => {
+                    await pool.execute<ResultSetHeader>(
+                        `INSERT INTO task_members (task_id, user_id) VALUES (?, ?)`,
+                        [id, member.id],
+                    );
+                }),
+            );
         }
 
         if (validatedData.labels && validatedData.labels.length) {
@@ -1042,14 +1068,16 @@ export const updateTask = async (req: IGetUserRequest, res: Response) => {
                 [id],
             );
 
-            validatedData.labels.forEach(async (label) => {
-                if (label.id) {
-                    await pool.execute<ResultSetHeader>(
-                        `INSERT INTO task_labels (task_id, label_id) VALUES (?, ?)`,
-                        [id, label.id],
-                    );
-                }
-            });
+            await Promise.all(
+                validatedData.labels.map(async (label) => {
+                    if (label.id) {
+                        await pool.execute<ResultSetHeader>(
+                            `INSERT INTO task_labels (task_id, label_id) VALUES (?, ?)`,
+                            [id, label.id],
+                        );
+                    }
+                }),
+            );
         }
 
         if (validatedData.subtasks && validatedData.subtasks.length) {
@@ -1058,27 +1086,31 @@ export const updateTask = async (req: IGetUserRequest, res: Response) => {
                 [id],
             );
 
-            validatedData.subtasks.forEach(async (subtask) => {
-                await pool.execute<ResultSetHeader>(
-                    `
-                        INSERT INTO subtasks (task_id, title, position, is_done) 
-                        VALUES (?, ?, ?, ?)
-                    `,
-                    [id, subtask.title, subtask.position, subtask.is_done],
-                );
-            });
+            await Promise.all(
+                validatedData.subtasks.map(async (subtask) => {
+                    await pool.execute<ResultSetHeader>(
+                        `
+                            INSERT INTO subtasks (task_id, title, position, is_done) 
+                            VALUES (?, ?, ?, ?)
+                        `,
+                        [id, subtask.title, subtask.position, subtask.is_done],
+                    );
+                }),
+            );
         }
 
         if (validatedData.subtasks && validatedData.subtasks.length) {
-            validatedData.newSubtasks.forEach(async (subtask) => {
-                await pool.execute<ResultSetHeader>(
-                    `
-                        INSERT INTO subtasks (task_id, title, position, is_done)
-                        VALUES (?, ?, ?, ?)
-                    `,
-                    [id, subtask.title, subtask.position, subtask.is_done],
-                );
-            });
+            await Promise.all(
+                validatedData.newSubtasks.map(async (subtask) => {
+                    await pool.execute<ResultSetHeader>(
+                        `
+                            INSERT INTO subtasks (task_id, title, position, is_done)
+                            VALUES (?, ?, ?, ?)
+                        `,
+                        [id, subtask.title, subtask.position, subtask.is_done],
+                    );
+                }),
+            );
         }
 
         const [updatedTasks] = await pool.execute<Task[]>(
