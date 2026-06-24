@@ -2,7 +2,6 @@
 
 import { BaseAction } from "@/types/actions";
 import { CreateTaskFormData } from "@/types/types";
-import { Attachment } from "@/types/types";
 import {
     PaperclipIcon,
     TrashSimpleIcon,
@@ -10,6 +9,7 @@ import {
 } from "@phosphor-icons/react";
 import { useRef } from "react";
 import { ZodErrors } from "../../zodErrors/ZodErrors";
+import { formatSize } from "@/libs/utils";
 
 interface AttachmentsSectionProps {
     formState: BaseAction | undefined;
@@ -35,18 +35,20 @@ export default function AttachmentsSection({
                 ...formData.attachments,
                 ...files.map((file) => ({
                     id: new Date().getTime(),
-                    uploader_id: new Date().getTime(),
-                    filename: file.name,
-                    file_url: "",
-                    mime_type: file.type,
-                    size_bytes: file.size,
-                    created_at: new Date(),
+                    file: file,
                 })),
             ],
         });
+
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
     };
 
-    const onAttachmentRemove = (attachmentValue: Attachment) => {
+    const onAttachmentRemove = (attachmentValue: {
+        id: number | string;
+        file: File;
+    }) => {
         onFormDataChange({
             ...formData,
             attachments: formData.attachments.filter(
@@ -63,12 +65,7 @@ export default function AttachmentsSection({
             <div className="space-y-1">
                 <input
                     id="attachments"
-                    name="attachments"
                     ref={fileInputRef}
-                    defaultValue={
-                        formState?.formData?.get("attachments")?.toString() ??
-                        undefined
-                    }
                     type="file"
                     multiple
                     className="hidden"
@@ -98,10 +95,10 @@ export default function AttachmentsSection({
                                 </div>
                                 <div className="min-w-0 flex-1">
                                     <p className="truncate text-xs font-medium">
-                                        {attachment.filename}
+                                        {attachment.file.name}
                                     </p>
                                     <p className="text-[10px] text-muted-foreground">
-                                        {attachment.size_bytes}
+                                        {formatSize(attachment.file.size)}
                                     </p>
                                 </div>
                                 <button

@@ -1,6 +1,7 @@
 "use client";
 
-import { formatSize, getFileIcon, isImage } from "@/libs/taskDetailsSheet";
+import { getFileIcon, isImage } from "@/libs/taskDetailsSheet";
+import { formatSize } from "@/libs/utils";
 import { Attachment } from "@/types/types";
 import { ArrowLineDownIcon, TrashSimpleIcon } from "@phosphor-icons/react";
 import Image from "next/image";

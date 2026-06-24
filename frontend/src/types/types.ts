@@ -176,7 +176,7 @@ export interface CreateTaskFormData {
     newCategories: Omit<Category, "created_at" | "updated_at">[];
     members: Omit<User, "email">[];
     subtasks: Omit<Subtask, "created_at">[];
-    attachments: Attachment[];
+    attachments: { id: number | string; file: File }[];
     labels: Label[];
     newLabels: Omit<Label, "created_at" | "updated_at">[];
 }

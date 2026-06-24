@@ -78,18 +78,6 @@ export function isPdf(mime: string) {
     return mime === "application/pdf";
 }
 
-export function formatSize(bytes: number) {
-    if (bytes < 1024) {
-        return `${bytes} B`;
-    }
-
-    if (bytes < 1024 * 1024) {
-        return `${(bytes / 1024).toFixed(1)} KB`;
-    }
-
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
 export function getFileIcon(mime: string) {
     if (isImage(mime))
         return (

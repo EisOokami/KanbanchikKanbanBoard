@@ -1008,7 +1008,7 @@ export async function createTaskAction(
         categories: Category[];
         newCategories: Omit<Category, "created_at" | "updated_at">[];
         subtasks: Omit<Subtask, "created_at">[];
-        attachments: Attachment[];
+        attachments: { id: number | string; file: File }[];
         labels: Label[];
         newLabels: Omit<Label, "created_at" | "updated_at">[];
     },
@@ -1030,7 +1030,7 @@ export async function createTaskAction(
         categories: data.categories,
         newCategories: data.newCategories,
         subtasks: data.subtasks,
-        attachments: formData.getAll("attachments"),
+        attachments: data.attachments.map((attachment) => attachment.file),
         labels: data.labels,
         newLabels: data.newLabels,
     });
@@ -1099,8 +1099,8 @@ export async function createTaskAction(
         "status" in responseData &&
         responseData.data
     ) {
-        validatedFields.data.attachments.forEach((file) => {
-            body.append("files", file);
+        validatedFields.data.attachments.forEach((attachment) => {
+            body.append("files", attachment);
         });
 
         body.append("taskId", responseData.data.id);
@@ -1157,7 +1157,7 @@ export async function createTaskAction(
 
     if ("status" in responseData && responseData.status === "success") {
         return {
-            formData,
+            formData: null,
             zodErrors: null,
             error: null,
             status: responseData.status,

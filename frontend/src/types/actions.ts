@@ -90,6 +90,7 @@ export interface UpdateTaskZodErrors extends BaseZodErrors {
     newSubtasks?: string[];
     attachments?: string[];
     newAttachments?: string[];
+    newAttachmentFiles?: string[];
     comments?: string[];
     newComments?: string[];
 }

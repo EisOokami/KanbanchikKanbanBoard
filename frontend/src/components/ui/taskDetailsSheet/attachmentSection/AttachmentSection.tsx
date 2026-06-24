@@ -68,10 +68,10 @@ export default function AttachmentSection({
             return;
         }
 
-        const idx = slideIndexMap[id];
+        const index = slideIndexMap[id];
 
-        if (idx !== undefined) {
-            setLightboxIndex(idx);
+        if (index !== undefined) {
+            setLightboxIndex(index);
             setLightboxOpen(true);
         }
     };
@@ -132,10 +132,6 @@ export default function AttachmentSection({
                 ref={fileInputRef}
                 type="file"
                 multiple
-                defaultValue={
-                    formState?.formData?.get("attachments")?.toString() ??
-                    undefined
-                }
                 className="hidden"
                 onChange={handleFileChange}
                 disabled={isPending}
