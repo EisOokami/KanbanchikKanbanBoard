@@ -50,7 +50,16 @@ export default function DaySidebar({
 
                   return accumulator;
               },
-              {} as Record<number, { project: Project; tasks: Task[] }>,
+              {} as Record<
+                  number,
+                  {
+                      project: Pick<
+                          Project,
+                          "id" | "name" | "color" | "icon" | "slug"
+                      >;
+                      tasks: Task[];
+                  }
+              >,
           )
         : null;
 
