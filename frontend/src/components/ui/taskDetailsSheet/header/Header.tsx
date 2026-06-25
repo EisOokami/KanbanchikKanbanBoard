@@ -17,7 +17,7 @@ import { PRIORITY_CONFIG } from "@/constants/constants";
 import { Column, Priority, Project, Task } from "@/types/types";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../../shadcn/tooltip";
 import { useState } from "react";
-import { deleteTaskAction } from "@/data/actions";
+import { deleteTaskAction, generateInviteAction } from "@/data/actions";
 
 interface HeaderProps {
     isPending: boolean;
@@ -36,10 +36,14 @@ export default function Header({
     const [priority, setPriority] = useState<Priority>(task.priority);
     const [linkCopied, setLinkCopied] = useState<boolean>(false);
 
-    const handleCopyLink = () => {
-        navigator.clipboard
-            .writeText(`https://app.kanban.io/task/${task.id}`)
-            .catch(() => {});
+    const handleCopyLink = async () => {
+        const result = await generateInviteAction(projectData.id);
+
+        if (!result || !result.ok || !result.inviteUrl) {
+            return;
+        }
+
+        navigator.clipboard.writeText(result.inviteUrl);
         setLinkCopied(true);
         setTimeout(() => setLinkCopied(false), 2000);
     };
