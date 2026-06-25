@@ -1998,10 +1998,10 @@ export async function generateInviteAction(
         "message" in responseData &&
         "status" in responseData &&
         responseData.message &&
-        responseData.status
+        responseData.status === "error"
     ) {
         return {
-            ok: responseData.status === "error" ? false : true,
+            ok: false,
             message: responseData.message,
         };
     }
@@ -2015,22 +2015,13 @@ export async function generateInviteAction(
         };
     }
 
-    if (
-        "data" in responseData &&
-        responseData.data &&
-        "inviteUrl" in responseData.data
-    ) {
+    if ("data" in responseData && responseData.data) {
         return {
             ok: true,
             message: "Invitation accepted",
             inviteUrl: responseData.data.inviteUrl,
         };
     }
-
-    return {
-        ok: true,
-        message: "Invitation accepted",
-    };
 }
 
 export async function acceptInviteAction(

@@ -40,7 +40,7 @@ export const generateInvite = async (
             (Pick<ProjectMember, "id"> & RowDataPacket)[]
         >(
             `
-                SELECT id
+                SELECT *
                 FROM project_members
                 WHERE project_id = ?
                 AND user_id = ?
