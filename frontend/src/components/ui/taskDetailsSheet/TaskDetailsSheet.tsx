@@ -11,12 +11,12 @@ import { Button } from "@/components/ui/shadcn/button";
 import { ScrollArea } from "@/components/ui/shadcn/scroll-area";
 import { Separator } from "@/components/ui/shadcn/separator";
 import { formatDistanceToNow } from "date-fns";
-import { toDate } from "@/libs/utils";
+import { cn, toDate } from "@/libs/utils";
 import { commentsToActivity } from "@/libs/taskDetailsSheet";
 import FieldRow from "../fieldRow/FieldRow";
 import { User, Task, Project, UpdateTaskFormData } from "@/types/types";
 import { ActivityEntry } from "@/types/taskDetailsSheet";
-import { CheckIcon, ClockIcon } from "@phosphor-icons/react";
+import { CheckIcon, ClockIcon, InfoIcon } from "@phosphor-icons/react";
 import { BaseAction } from "@/types/actions";
 import { updateTaskAction } from "@/data/actions";
 import TitleSection from "./titleSection/TitleSection";
@@ -32,6 +32,7 @@ import Header from "./header/Header";
 import CategoriesSection from "./categoriesSection/CategoriesSection";
 import { ZodErrors } from "../zodErrors/ZodErrors";
 import { getTaskData } from "@/data/loaders";
+import { DetailsErrors } from "../detailsErrors/DetailsErrors";
 
 interface TaskDetailsSheetProps {
     open: boolean;
@@ -207,23 +208,63 @@ export function TaskDetailsSheet({
                             />
                         </div>
                     </ScrollArea>
-                    <div className="flex shrink-0 items-center justify-end gap-2 border-t px-6 py-3.5">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => onOpenChange(false)}
-                            className="h-8 rounded-md px-4 text-sm hover:bg-gray-200"
-                        >
-                            Discard
-                        </Button>
-                        <Button
-                            type="submit"
-                            disabled={!task.title.trim()}
-                            className="h-8 gap-1.5 rounded-md bg-bright-blue px-4 text-xs font-semibold text-white hover:bg-blue-600 disabled:opacity-40 [&_svg]:size-4"
-                        >
-                            <CheckIcon weight="duotone" size={16} />
-                            Save
-                        </Button>
+                    <div
+                        className={cn(
+                            "flex border-t px-6 py-3.5",
+                            formState?.status === "error" ||
+                                formState?.status === "success" ||
+                                (formState?.details &&
+                                    formState?.details?.length)
+                                ? "justify-between gap-3"
+                                : "justify-end",
+                        )}
+                    >
+                        <div>
+                            {formState?.message && (
+                                <div
+                                    className={cn(
+                                        "flex items-center gap-1 rounded-md text-sm",
+                                        formState?.status === "error"
+                                            ? "text-red-500"
+                                            : formState?.status === "success"
+                                              ? "text-green-500"
+                                              : "text-yellow-300",
+                                    )}
+                                >
+                                    <InfoIcon
+                                        weight="duotone"
+                                        className="size-4"
+                                    />
+                                    <p>{formState?.message}</p>
+                                </div>
+                            )}
+                            {formState?.details &&
+                                formState?.details?.length &&
+                                formState.details.map((error) => (
+                                    <DetailsErrors
+                                        key={error.message + error.field}
+                                        error={error}
+                                    />
+                                ))}
+                        </div>
+                        <div className="flex shrink-0 items-center justify-end gap-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => onOpenChange(false)}
+                                className="h-8 rounded-md px-4 text-sm hover:bg-gray-200"
+                            >
+                                Discard
+                            </Button>
+                            <Button
+                                type="submit"
+                                disabled={!task.title.trim()}
+                                className="h-8 gap-1.5 rounded-md bg-bright-blue px-4 text-xs font-semibold text-white hover:bg-blue-600 disabled:opacity-40 [&_svg]:size-4"
+                            >
+                                <CheckIcon weight="duotone" size={16} />
+                                Save
+                            </Button>
+                        </div>
                     </div>
                     <input type="hidden" name="task-id" value={task.id} />
                 </form>

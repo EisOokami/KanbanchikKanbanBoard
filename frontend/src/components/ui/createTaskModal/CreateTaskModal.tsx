@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/shadcn/button";
 import { format } from "date-fns";
 import { PRIORITY_CONFIG } from "@/constants/constants";
 import { CreateTaskFormData, Project, Task, User } from "@/types/types";
-import { PlusIcon } from "@phosphor-icons/react";
+import { InfoIcon, PlusIcon } from "@phosphor-icons/react";
 import { getProjectsData, getTaskData } from "@/data/loaders";
 import { BaseAction } from "@/types/actions";
 import { createTaskAction } from "@/data/actions";
@@ -27,6 +27,8 @@ import CategoriesSection from "./categoriesSection/CategoriesSection";
 import LabelsSection from "./labelsSection/LabelsSection";
 import SubtasksSection from "./subtasksSection/SubtasksSection";
 import AttachmentsSection from "./attachmentsSection/AttachmentsSection";
+import { cn } from "@/libs/utils";
+import { DetailsErrors } from "../detailsErrors/DetailsErrors";
 
 interface CreateTaskModalProps {
     open: boolean;
@@ -288,7 +290,35 @@ export function CreateTaskModal({
                             />
                         </div>
                     )}
-                    <DialogFooter className="flex flex-shrink-0 items-center justify-between gap-3 border-t border-border/60 px-6 py-4">
+                    <DialogFooter className="flex items-center !justify-between gap-3 border-t border-border/60 px-6 py-4">
+                        <div>
+                            {formState?.message && (
+                                <div
+                                    className={cn(
+                                        "flex items-center gap-2 rounded-md text-sm",
+                                        formState?.status === "error"
+                                            ? "text-red-500"
+                                            : formState?.status === "success"
+                                              ? "text-green-500"
+                                              : "text-yellow-300",
+                                    )}
+                                >
+                                    <InfoIcon
+                                        weight="duotone"
+                                        className="size-4"
+                                    />
+                                    <p>{formState?.message}</p>
+                                </div>
+                            )}
+                            {formState?.details &&
+                                formState?.details?.length &&
+                                formState.details.map((error) => (
+                                    <DetailsErrors
+                                        key={error.message + error.field}
+                                        error={error}
+                                    />
+                                ))}
+                        </div>
                         <div className="flex gap-2">
                             <Button
                                 type="button"

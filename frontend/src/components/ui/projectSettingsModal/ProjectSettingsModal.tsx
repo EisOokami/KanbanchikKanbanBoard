@@ -17,7 +17,7 @@ import {
     Status,
     ProjectSettingsFormData,
 } from "@/types/types";
-import { CaretRightIcon, CheckIcon } from "@phosphor-icons/react";
+import { CaretRightIcon, CheckIcon, InfoIcon } from "@phosphor-icons/react";
 import GeneralSection from "./generalSection/GeneralSection";
 import ColumnsSection from "./columnsSection/ColumnsSection";
 import CategoriesSection from "./categoriesSection/CategoriesSection";
@@ -29,6 +29,7 @@ import { BaseAction } from "@/types/actions";
 import { PALETTE } from "@/constants/constants";
 import { usePathname } from "next/navigation";
 import { getProjectData } from "@/data/loaders";
+import { DetailsErrors } from "../detailsErrors/DetailsErrors";
 
 interface ProjectSettingsModalProps {
     open: boolean;
@@ -226,24 +227,64 @@ export function ProjectSettingsModal({
                             </div>
                         </ScrollArea>
                     </div>
-                    <div className="flex shrink-0 items-center justify-end gap-2 border-t px-6 py-4">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => onOpenChange(false)}
-                            className="h-9 rounded-md px-4 text-sm hover:bg-gray-100"
-                            disabled={isPending}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            type="submit"
-                            disabled={!name.trim() || isPending}
-                            className="h-9 rounded-md bg-bright-blue text-sm font-semibold text-white hover:bg-blue-600 disabled:opacity-40"
-                        >
-                            <CheckIcon weight="duotone" size={14} />
-                            Save changes
-                        </Button>
+                    <div
+                        className={cn(
+                            "flex border-t px-6 py-3.5",
+                            formState?.status === "error" ||
+                                formState?.status === "success" ||
+                                (formState?.details &&
+                                    formState?.details?.length)
+                                ? "justify-between gap-3"
+                                : "justify-end",
+                        )}
+                    >
+                        <div>
+                            {formState?.message && (
+                                <div
+                                    className={cn(
+                                        "flex items-center gap-2 rounded-md text-sm",
+                                        formState?.status === "error"
+                                            ? "text-red-500"
+                                            : formState?.status === "success"
+                                              ? "text-green-500"
+                                              : "text-yellow-300",
+                                    )}
+                                >
+                                    <InfoIcon
+                                        weight="duotone"
+                                        className="size-4"
+                                    />
+                                    <p>{formState?.message}</p>
+                                </div>
+                            )}
+                            {formState?.details &&
+                                formState?.details?.length &&
+                                formState.details.map((error) => (
+                                    <DetailsErrors
+                                        key={error.message + error.field}
+                                        error={error}
+                                    />
+                                ))}
+                        </div>
+                        <div className="flex shrink-0 items-center justify-end gap-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => onOpenChange(false)}
+                                className="h-9 rounded-md px-4 text-sm hover:bg-gray-100"
+                                disabled={isPending}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="submit"
+                                disabled={!name.trim() || isPending}
+                                className="h-9 rounded-md bg-bright-blue text-sm font-semibold text-white hover:bg-blue-600 disabled:opacity-40"
+                            >
+                                <CheckIcon weight="duotone" size={14} />
+                                Save changes
+                            </Button>
+                        </div>
                     </div>
                     <input type="hidden" name="slug" value={projectData.slug} />
                     <input type="hidden" name="icon" value={icon} />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { Info, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { forgotPasswordAction } from "@/data/actions";
 import { BaseAction } from "@/types/actions";
 
@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/shadcn/button";
 import { ZodErrors } from "@/components/ui/zodErrors/ZodErrors";
 import { DetailsErrors } from "@/components/ui/detailsErrors/DetailsErrors";
 import { cn } from "@/libs/utils";
+import { InfoIcon } from "@phosphor-icons/react";
 
 const INITIAL_STATE: BaseAction = {
     zodErrors: null,
@@ -75,7 +76,7 @@ export default function ForgotPasswordForm() {
                                       : "text-yellow-300",
                             )}
                         >
-                            <Info className="h-4 w-4" />
+                            <InfoIcon weight="duotone" className="size-4" />
                             <p>{formState?.message}</p>
                         </div>
                     )}

@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
-import { Info, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { registerAction } from "@/data/actions";
 import { BaseAction } from "@/types/actions";
 
@@ -21,6 +21,7 @@ import { ZodErrors } from "@/components/ui/zodErrors/ZodErrors";
 import { DetailsErrors } from "@/components/ui/detailsErrors/DetailsErrors";
 import { PasswordInput } from "@/components/ui/shadcn/password-input";
 import { cn } from "@/libs/utils";
+import { InfoIcon } from "@phosphor-icons/react";
 
 const INITIAL_STATE: BaseAction = {
     zodErrors: null,
@@ -136,7 +137,7 @@ export default function SignUpForm() {
                                       : "text-yellow-300",
                             )}
                         >
-                            <Info className="h-4 w-4" />
+                            <InfoIcon weight="duotone" className="size-4" />
                             <p>{formState?.message}</p>
                         </div>
                     )}

@@ -7,12 +7,13 @@ import { Button } from "../../shadcn/button";
 import FieldRow from "../fieldRow/FieldRow";
 import { Input } from "../../shadcn/input";
 import SaveBar from "../saveBar/SaveBar";
-import { CameraIcon } from "@phosphor-icons/react";
+import { CameraIcon, InfoIcon } from "@phosphor-icons/react";
 import { BaseAction } from "@/types/actions";
 import { deleteAvatarAction, updateProfileAction } from "@/data/actions";
 import { ZodErrors } from "../../zodErrors/ZodErrors";
 import { User } from "@/types/types";
-import { getInitials } from "@/libs/utils";
+import { cn, getInitials } from "@/libs/utils";
+import { DetailsErrors } from "../../detailsErrors/DetailsErrors";
 
 const INITIAL_STATE: BaseAction = {
     zodErrors: null,
@@ -227,6 +228,31 @@ export default function ProfileSection({
                         <ZodErrors error={formState?.zodErrors?.email} />
                     </FieldRow>
                 </div>
+            </div>
+            <div>
+                {formState?.message && (
+                    <div
+                        className={cn(
+                            "flex items-center gap-2 rounded-md text-sm",
+                            formState?.status === "error"
+                                ? "text-red-500"
+                                : formState?.status === "success"
+                                  ? "text-green-500"
+                                  : "text-yellow-300",
+                        )}
+                    >
+                        <InfoIcon weight="duotone" className="size-4" />
+                        <p>{formState?.message}</p>
+                    </div>
+                )}
+                {formState?.details &&
+                    formState?.details?.length &&
+                    formState.details.map((error) => (
+                        <DetailsErrors
+                            key={error.message + error.field}
+                            error={error}
+                        />
+                    ))}
             </div>
             <SaveBar
                 isChanged={isChanged}

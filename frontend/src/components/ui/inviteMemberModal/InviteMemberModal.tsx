@@ -23,6 +23,7 @@ import {
     CheckIcon,
     CopyIcon,
     EnvelopeIcon,
+    InfoIcon,
     LinkIcon,
     MagnifyingGlassIcon,
     PaperPlaneTiltIcon,
@@ -33,6 +34,7 @@ import {
 import { generateInviteAction, inviteMemberAction } from "@/data/actions";
 import { BaseAction } from "@/types/actions";
 import { ZodErrors } from "../zodErrors/ZodErrors";
+import { DetailsErrors } from "../detailsErrors/DetailsErrors";
 
 interface InviteMemberModalProps {
     open: boolean;
@@ -360,6 +362,34 @@ export function InviteMemberModal({
                                 </div>
                             </div>
                         )}
+                        <div className="mt-3">
+                            {formState?.message && (
+                                <div
+                                    className={cn(
+                                        "flex items-center gap-2 rounded-md text-sm",
+                                        formState?.status === "error"
+                                            ? "text-red-500"
+                                            : formState?.status === "success"
+                                              ? "text-green-500"
+                                              : "text-yellow-300",
+                                    )}
+                                >
+                                    <InfoIcon
+                                        weight="duotone"
+                                        className="size-4"
+                                    />
+                                    <p>{formState?.message}</p>
+                                </div>
+                            )}
+                            {formState?.details &&
+                                formState?.details?.length &&
+                                formState.details.map((error) => (
+                                    <DetailsErrors
+                                        key={error.message + error.field}
+                                        error={error}
+                                    />
+                                ))}
+                        </div>
                     </div>
                     <div className="flex items-center justify-between border-t px-6 py-3">
                         <p className="text-xs text-gray-500">
