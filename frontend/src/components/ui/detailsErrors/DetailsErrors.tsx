@@ -1,5 +1,5 @@
-import { TriangleAlert } from "lucide-react";
 import { DetailsError } from "@/types/actions";
+import { WarningIcon } from "@phosphor-icons/react";
 
 interface DetailsErrorsProps {
     error: DetailsError | null | undefined;
@@ -12,7 +12,7 @@ export function DetailsErrors({ error }: Readonly<DetailsErrorsProps>) {
 
     return (
         <div className="flex items-center gap-1 py-1 text-sm text-red-500">
-            <TriangleAlert className="text-lg" />
+            <WarningIcon weight="duotone" className="size-4" />
             <p>{error.message}</p>
         </div>
     );
