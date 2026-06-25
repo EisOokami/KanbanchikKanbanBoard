@@ -57,7 +57,6 @@ export function InviteMemberModal({
     const [members, setMembers] = useState<Omit<User, "email">[]>(
         projectData.members,
     );
-    // const [invites, setInvites] = useState<Invite[]>([]);
     const [invites, setInvites] = useState<string[]>([]);
     const [search, setSearch] = useState("");
     const [linkCopied, setLinkCopied] = useState(false);
@@ -65,7 +64,6 @@ export function InviteMemberModal({
         "invite",
     );
     const [inviteEmail, setInviteEmail] = useState("");
-    // const [inviteRole, setInviteRole] = useState<Role>("viewer");
     const [formState, formAction, isPending] = useActionState(
         inviteMemberAction.bind(null, invites),
         INITIAL_STATE,
@@ -95,48 +93,26 @@ export function InviteMemberModal({
         setTimeout(() => setLinkCopied(false), 2000);
     };
 
-    const handleSend = () => {
-        // const valid = invites.filter((invite) => invite.email.trim());
-        // const valid = invites.filter((invite) => invite.trim());
-        // if (!valid.length) {
-        //     return;
-        // }
-        // setInvites([{ email: "", role: "viewer" }]);
-        // setInvites([]);
-    };
-
     const handleAddInvite = () => {
         if (!inviteEmail.trim()) {
             return;
         }
 
-        // setInvites((prevState) => [
-        //     ...prevState,
-        //     {
-        //         email: inviteEmail,
-        //         role: inviteRole,
-        //     },
-        // ]);
         setInvites((prevState) => [...prevState, inviteEmail]);
 
         setInviteEmail("");
-        // setInviteRole("viewer");
     };
 
     const removeInvite = (email: string) => {
         setInvites((prevState) =>
-            // prevState.filter((invite) => invite.email !== email),
             prevState.filter((invite) => invite !== email),
         );
     };
 
-    const filteredMembers = members.filter(
-        (member) => member.name.toLowerCase().includes(search.toLowerCase()),
-        // ||
-        //     member.email.toLowerCase().includes(search.toLowerCase()),
+    const filteredMembers = members.filter((member) =>
+        member.name.toLowerCase().includes(search.toLowerCase()),
     );
 
-    // const hasValidInvite = invites.some((invite) => invite.email.trim());
     const hasValidInvite = invites.some((invite) => invite.trim());
 
     return (
@@ -222,11 +198,6 @@ export function InviteMemberModal({
                                             disabled={isPending}
                                         />
                                     </div>
-                                    {/* <RoleSelect
-                                        value={inviteRole}
-                                        onChange={setInviteRole}
-                                        isPending={isPending}
-                                    /> */}
                                     <Button
                                         type="button"
                                         onClick={handleAddInvite}
@@ -239,34 +210,6 @@ export function InviteMemberModal({
                                     </Button>
                                 </div>
                                 <div className="space-y-2">
-                                    {/* {invites.map((invite) => (
-                                        <div
-                                            key={invite.email}
-                                            className="flex items-center justify-between rounded-md border p-2"
-                                        >
-                                            <div className="flex flex-col">
-                                                <span className="text-sm font-medium">
-                                                    {invite.email}
-                                                </span>
-                                                <span className="text-xs text-muted-foreground">
-                                                    {invite.role}
-                                                </span>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    removeInvite(invite.email)
-                                                }
-                                                className="text-red-500"
-                                                disabled={isPending}
-                                            >
-                                                <XIcon
-                                                    weight="duotone"
-                                                    size={14}
-                                                />
-                                            </button>
-                                        </div>
-                                    ))} */}
                                     {invites.map((invite) => (
                                         <div
                                             key={invite}
@@ -402,25 +345,6 @@ export function InviteMemberModal({
                                     )}
                                 </ScrollArea>
                                 <div className="flex items-center justify-between rounded-md border bg-gray-50 px-3 py-2 text-xs">
-                                    {/* <div>
-                                    <span className="font-semibold">
-                                        {
-                                            members.filter(
-                                                (member) => member.status === "active",
-                                            ).length
-                                        }
-                                    </span>{" "}
-                                    active
-                                    {" · "}
-                                    <span className="font-semibold">
-                                        {
-                                            members.filter(
-                                                (member) => member.status === "pending",
-                                            ).length
-                                        }
-                                    </span>{" "}
-                                    pending
-                                </div> */}
                                     <button
                                         type="button"
                                         onClick={() => setSelectedTab("invite")}
@@ -456,7 +380,6 @@ export function InviteMemberModal({
                             {selectedTab === "invite" && (
                                 <Button
                                     type="submit"
-                                    onClick={handleSend}
                                     disabled={!hasValidInvite || isPending}
                                     className="flex h-9 items-center gap-2 bg-bright-blue px-5 text-sm font-semibold text-white hover:bg-blue-600 disabled:opacity-40"
                                 >
