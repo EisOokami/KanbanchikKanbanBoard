@@ -25,11 +25,15 @@ interface GridCell {
 interface ProjectCalendarViewProps {
     columns: Column[];
     onOpenDetails: (task: Task) => void;
+    onOpenCreateTask: (columnId?: number) => void;
+    onSelectedDateChange: (date: string) => void;
 }
 
 export default function ProjectCalendarView({
     columns,
     onOpenDetails,
+    onOpenCreateTask,
+    onSelectedDateChange,
 }: Readonly<ProjectCalendarViewProps>) {
     const now = new Date();
     const [year, setYear] = useState<number>(now.getFullYear());
@@ -219,148 +223,161 @@ export default function ProjectCalendarView({
     ];
 
     return (
-        <div className="flex h-full w-full overflow-hidden rounded-xl bg-white">
-            <div className="flex w-56 flex-shrink-0 flex-col border-r">
-                <MiniCalendar
-                    viewYear={year}
-                    viewMonth={month}
-                    selectedDate={selectedDate}
-                    onSelectDate={setSelected}
-                    eventDates={taskDates}
-                />
-                <Separator />
-                <div className="space-y-3 px-4 py-4">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                        This Month
-                    </p>
-                    <div className="space-y-2">
-                        {statRows.map(({ label, value, color }) => (
-                            <div
-                                key={label}
-                                className="flex items-center justify-between"
-                            >
-                                <span className="text-xs text-gray-500">
-                                    {label}
-                                </span>
-                                <span
-                                    className={cn("text-xs font-bold", color)}
-                                >
-                                    {value}
-                                </span>
-                            </div>
-                        ))}
-                        {monthTasks.length > 0 && (
-                            <div className="pt-0.5">
-                                <div className="mb-1 flex justify-between text-[10px] text-gray-400">
-                                    <span>Progress</span>
-                                    <span>{progress}%</span>
-                                </div>
-                                <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
-                                    <div
-                                        className="h-full rounded-full bg-blue-500 transition-all duration-500"
-                                        style={{ width: `${progress}%` }}
-                                    />
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </div>
-            <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-                <div className="flex flex-shrink-0 items-center gap-3 border-b px-5 py-3">
-                    <div className="flex items-center gap-0.5">
-                        <button
-                            onClick={prevMonth}
-                            className="rounded-md p-1.5 text-gray-500 transition-colors hover:bg-gray-100"
-                        >
-                            <CaretLeftIcon
-                                weight="duotone"
-                                className="size-4"
-                            />
-                        </button>
-                        <button
-                            onClick={nextMonth}
-                            className="rounded-md p-1.5 text-gray-500 transition-colors hover:bg-gray-100"
-                        >
-                            <CaretRightIcon
-                                weight="duotone"
-                                className="size-4"
-                            />
-                        </button>
-                    </div>
-                    <h2 className="min-w-0 text-base font-black tracking-tight text-gray-800">
-                        {MONTHS[month]}{" "}
-                        <span className="font-normal text-gray-400">
-                            {year}
-                        </span>
-                    </h2>
-                    <button
-                        onClick={goToday}
-                        className="rounded-md border bg-white px-2.5 py-1 text-xs font-semibold text-gray-600 transition-colors hover:bg-gray-50"
-                    >
-                        Today
-                    </button>
-                    <button
-                        onClick={() => setShowGantt((s) => !s)}
-                        className={cn(
-                            "ml-2 rounded-md border px-2.5 py-1 text-xs font-semibold transition-colors",
-                            showGantt
-                                ? "bg-bright-blue text-white hover:bg-blue-600"
-                                : "bg-white text-gray-600 hover:bg-gray-50",
-                        )}
-                    >
-                        Gantt bars: {showGantt ? "ON" : "OFF"}
-                    </button>
-                </div>
-                <div className="flex min-h-0 flex-1 overflow-hidden">
-                    <div className="flex flex-1 flex-col overflow-hidden">
-                        <div className="grid flex-shrink-0 grid-cols-7 border-b">
-                            {WEEKDAYS.map((d, i) => (
+        <>
+            <div className="flex h-full w-full overflow-hidden rounded-xl bg-white">
+                <div className="flex w-56 flex-shrink-0 flex-col border-r">
+                    <MiniCalendar
+                        viewYear={year}
+                        viewMonth={month}
+                        selectedDate={selectedDate}
+                        onSelectDate={setSelected}
+                        eventDates={taskDates}
+                    />
+                    <Separator />
+                    <div className="space-y-3 px-4 py-4">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                            This Month
+                        </p>
+                        <div className="space-y-2">
+                            {statRows.map(({ label, value, color }) => (
                                 <div
-                                    key={d}
-                                    className={cn(
-                                        "border-r py-2.5 text-center text-xs font-bold uppercase tracking-wider last:border-r-0",
-                                        i === 0 || i === 6
-                                            ? "text-gray-300"
-                                            : "text-gray-500",
-                                    )}
+                                    key={label}
+                                    className="flex items-center justify-between"
                                 >
-                                    {d}
+                                    <span className="text-xs text-gray-500">
+                                        {label}
+                                    </span>
+                                    <span
+                                        className={cn(
+                                            "text-xs font-bold",
+                                            color,
+                                        )}
+                                    >
+                                        {value}
+                                    </span>
                                 </div>
                             ))}
-                        </div>
-                        <div className="flex-1 overflow-y-auto">
-                            <div className="grid grid-cols-7">
-                                {cells.map((cell) => (
-                                    <DayCell
-                                        key={cell.dateStr}
-                                        day={cell.day}
-                                        dateStr={cell.dateStr}
-                                        tasks={tasksByDate[cell.dateStr] ?? []}
-                                        isToday={cell.dateStr === todayStr()}
-                                        isSelected={
-                                            cell.dateStr === selectedDate
-                                        }
-                                        isOtherMonth={cell.isOtherMonth}
-                                        onClick={setSelected}
-                                        onTaskClick={() =>
-                                            setSelected(cell.dateStr)
-                                        }
-                                        showGantt={showGantt}
-                                        taskLanes={taskLanes}
-                                    />
-                                ))}
-                            </div>
+                            {monthTasks.length > 0 && (
+                                <div className="pt-0.5">
+                                    <div className="mb-1 flex justify-between text-[10px] text-gray-400">
+                                        <span>Progress</span>
+                                        <span>{progress}%</span>
+                                    </div>
+                                    <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
+                                        <div
+                                            className="h-full rounded-full bg-blue-500 transition-all duration-500"
+                                            style={{ width: `${progress}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
-                    <DaySidebar
-                        dateStr={selectedDate}
-                        tasks={tasksByDate[selectedDate] ?? []}
-                        columns={columns}
-                        onOpenDetails={onOpenDetails}
-                    />
+                </div>
+                <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+                    <div className="flex flex-shrink-0 items-center gap-3 border-b px-5 py-3">
+                        <div className="flex items-center gap-0.5">
+                            <button
+                                onClick={prevMonth}
+                                className="rounded-md p-1.5 text-gray-500 transition-colors hover:bg-gray-100"
+                            >
+                                <CaretLeftIcon
+                                    weight="duotone"
+                                    className="size-4"
+                                />
+                            </button>
+                            <button
+                                onClick={nextMonth}
+                                className="rounded-md p-1.5 text-gray-500 transition-colors hover:bg-gray-100"
+                            >
+                                <CaretRightIcon
+                                    weight="duotone"
+                                    className="size-4"
+                                />
+                            </button>
+                        </div>
+                        <h2 className="min-w-0 text-base font-black tracking-tight text-gray-800">
+                            {MONTHS[month]}{" "}
+                            <span className="font-normal text-gray-400">
+                                {year}
+                            </span>
+                        </h2>
+                        <button
+                            onClick={goToday}
+                            className="rounded-md border bg-white px-2.5 py-1 text-xs font-semibold text-gray-600 transition-colors hover:bg-gray-50"
+                        >
+                            Today
+                        </button>
+                        <button
+                            onClick={() => setShowGantt((s) => !s)}
+                            className={cn(
+                                "ml-2 rounded-md border px-2.5 py-1 text-xs font-semibold transition-colors",
+                                showGantt
+                                    ? "bg-bright-blue text-white hover:bg-blue-600"
+                                    : "bg-white text-gray-600 hover:bg-gray-50",
+                            )}
+                        >
+                            Gantt bars: {showGantt ? "ON" : "OFF"}
+                        </button>
+                    </div>
+                    <div className="flex min-h-0 flex-1 overflow-hidden">
+                        <div className="flex flex-1 flex-col overflow-hidden">
+                            <div className="grid flex-shrink-0 grid-cols-7 border-b">
+                                {WEEKDAYS.map((d, i) => (
+                                    <div
+                                        key={d}
+                                        className={cn(
+                                            "border-r py-2.5 text-center text-xs font-bold uppercase tracking-wider last:border-r-0",
+                                            i === 0 || i === 6
+                                                ? "text-gray-300"
+                                                : "text-gray-500",
+                                        )}
+                                    >
+                                        {d}
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="flex-1 overflow-y-auto">
+                                <div className="grid grid-cols-7">
+                                    {cells.map((cell) => (
+                                        <DayCell
+                                            key={cell.dateStr}
+                                            day={cell.day}
+                                            dateStr={cell.dateStr}
+                                            tasks={
+                                                tasksByDate[cell.dateStr] ?? []
+                                            }
+                                            isToday={
+                                                cell.dateStr === todayStr()
+                                            }
+                                            isSelected={
+                                                cell.dateStr === selectedDate
+                                            }
+                                            isOtherMonth={cell.isOtherMonth}
+                                            onClick={setSelected}
+                                            onTaskClick={() =>
+                                                setSelected(cell.dateStr)
+                                            }
+                                            showGantt={showGantt}
+                                            taskLanes={taskLanes}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                        <DaySidebar
+                            dateStr={selectedDate}
+                            tasks={tasksByDate[selectedDate] ?? []}
+                            columns={columns}
+                            onOpenDetails={onOpenDetails}
+                            onOpenCreate={() => {
+                                onOpenCreateTask();
+                                onSelectedDateChange(selectedDate);
+                            }}
+                        />
+                    </div>
                 </div>
             </div>
-        </div>
+        </>
     );
 }

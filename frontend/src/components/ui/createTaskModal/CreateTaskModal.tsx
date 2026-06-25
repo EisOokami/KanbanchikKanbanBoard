@@ -35,6 +35,7 @@ interface CreateTaskModalProps {
     showProjectSelect?: boolean;
     columnId?: number;
     currentPath?: string;
+    date?: string;
 }
 
 const INITIAL_STATE: BaseAction = {
@@ -53,6 +54,7 @@ export function CreateTaskModal({
     showProjectSelect = false,
     columnId,
     currentPath,
+    date,
 }: Readonly<CreateTaskModalProps>) {
     const [projectsData, setProjectsData] = useState<Project[] | null>(null);
     const [selectedProject, setSelectedProject] = useState<Project | undefined>(
@@ -82,6 +84,16 @@ export function CreateTaskModal({
         createTaskAction.bind(null, formData, currentPath),
         INITIAL_STATE,
     );
+
+    useEffect(() => {
+        if (date) {
+            const parsedDate = new Date(date);
+
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setStartDate(parsedDate);
+            setDueDate(parsedDate);
+        }
+    }, [date]);
 
     useEffect(() => {
         if (columnId) {

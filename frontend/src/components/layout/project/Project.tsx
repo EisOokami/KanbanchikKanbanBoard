@@ -85,6 +85,7 @@ export default function Project({
         isOpen: boolean;
         columnId: number | undefined;
     }>({ isOpen: false, columnId: undefined });
+    const [selectedDate, setSelectedDate] = useState<string>();
     const dragSnapshot = useRef<{ columnId: number; position: number } | null>(
         null,
     );
@@ -581,6 +582,8 @@ export default function Project({
                                         handleShowTaskDetails();
                                         setSelectedTask(task);
                                     }}
+                                    onOpenCreateTask={handleToggleCreateTask}
+                                    onSelectedDateChange={setSelectedDate}
                                 />
                             )}
                         </>
@@ -638,6 +641,7 @@ export default function Project({
                 projectData={projectData}
                 columnId={createTaskState.columnId}
                 currentPath="/project/[slug]"
+                date={selectedDate}
             />
         </div>
     );

@@ -450,6 +450,7 @@ export default function Calendar({
                 onOpenChange={handleShowNewTaskModal}
                 showProjectSelect
                 currentPath="/calendar"
+                date={selectedDate}
             />
             {selectedTask && projectData && (
                 <TaskDetailsSheet
