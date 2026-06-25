@@ -673,55 +673,85 @@ const memberSchema = z.object({
     }),
 });
 
-const updateProjectSchema = z.object({
-    slug: z
-        .string()
-        .min(1, "Slug must be at least 1 characters")
-        .max(200, "Slug must be 200 characters or less")
-        .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
-            message:
-                "Slug can only contain lowercase letters, numbers, and single hyphens",
-        }),
-    icon: z.string().trim().min(1, "Invalid emoji").max(10, "Invalid emoji"),
-    color: z
-        .string()
-        .trim()
-        .length(7, { message: "Color must be a valid HEX value" })
-        .regex(/^#[0-9A-Fa-f]{6}$/, {
-            message: "Color must be a valid HEX value",
-        }),
-    name: z
-        .string()
-        .trim()
-        .min(1, "Name must be at least 1 characters")
-        .max(150, "Name must be less than 150 characters"),
-    description: z
-        .string()
-        .trim()
-        .max(500, "Description must be less than 500 characters long")
-        .nullable()
-        .optional(),
-    status: z.enum(["active", "paused", "completed", "archived"], {
-        message: "Invalid project status",
-    }),
-    labels: z.array(namedColorSchema).min(1, "At least one label is required"),
-    newLabels: z.array(namedColorSchema),
-    categories: z
-        .array(namedColorSchema)
-        .min(1, "At least one category is required"),
-    newCategories: z.array(namedColorSchema),
-    emails: z.array(
-        z
-            .email("Invalid email")
+const updateProjectSchema = z
+    .object({
+        slug: z
+            .string()
+            .min(1, "Slug must be at least 1 characters")
+            .max(200, "Slug must be 200 characters or less")
+            .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
+                message:
+                    "Slug can only contain lowercase letters, numbers, and single hyphens",
+            }),
+        icon: z
+            .string()
             .trim()
-            .toLowerCase()
-            .min(1, "Email is required")
-            .max(255, "Email must be less than 255 characters long"),
-    ),
-    columns: z.array(columnSchema).min(1, "At least one column is required"),
-    newColumns: z.array(columnSchema),
-    members: z.array(memberSchema).min(1, "At least one member is required"),
-});
+            .min(1, "Invalid emoji")
+            .max(10, "Invalid emoji"),
+        color: z
+            .string()
+            .trim()
+            .length(7, { message: "Color must be a valid HEX value" })
+            .regex(/^#[0-9A-Fa-f]{6}$/, {
+                message: "Color must be a valid HEX value",
+            }),
+        name: z
+            .string()
+            .trim()
+            .min(1, "Name must be at least 1 characters")
+            .max(150, "Name must be less than 150 characters"),
+        description: z
+            .string()
+            .trim()
+            .max(500, "Description must be less than 500 characters long")
+            .nullable()
+            .optional(),
+        status: z.enum(["active", "paused", "completed", "archived"], {
+            message: "Invalid project status",
+        }),
+        labels: z.array(namedColorSchema),
+        newLabels: z.array(namedColorSchema),
+        categories: z.array(namedColorSchema),
+        newCategories: z.array(namedColorSchema),
+        emails: z.array(
+            z
+                .email("Invalid email")
+                .trim()
+                .toLowerCase()
+                .min(1, "Email is required")
+                .max(255, "Email must be less than 255 characters long"),
+        ),
+        columns: z.array(columnSchema),
+        newColumns: z.array(columnSchema),
+        members: z
+            .array(memberSchema)
+            .min(1, "At least one member is required"),
+    })
+    .superRefine((data, ctx) => {
+        if (!data.categories.length && !data.newCategories.length) {
+            ctx.addIssue({
+                code: "custom",
+                message: "At least one category (existing or new) is required",
+                path: ["categories"],
+            });
+        }
+
+        if (!data.labels.length && !data.newLabels.length) {
+            ctx.addIssue({
+                code: "custom",
+                message: "At least one label (existing or new) is required",
+                path: ["labels"],
+            });
+        }
+
+        if (!data.columns.length && !data.newColumns.length) {
+            ctx.addIssue({
+                code: "custom",
+                message: "At least one label (existing or new) is required",
+                path: ["labels"],
+            });
+        }
+    });
 
 export async function updateProjectAction(
     data: {
