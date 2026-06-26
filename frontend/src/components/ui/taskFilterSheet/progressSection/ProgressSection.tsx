@@ -4,6 +4,7 @@ import { ChartLineIcon } from "@phosphor-icons/react";
 import FilterSection from "../filterSection/FilterSection";
 import { Slider } from "../../shadcn/slider";
 import { FilterState } from "@/types/types";
+import { useState } from "react";
 
 interface ProgressSectionProps {
     filters: FilterState;
@@ -15,6 +16,8 @@ export default function ProgressSection({
     onUpdate,
 }: Readonly<ProgressSectionProps>) {
     const progress = filters.progress!;
+    const [localProgress, setLocalProgress] =
+        useState<[number, number]>(progress);
 
     return (
         <FilterSection
@@ -28,15 +31,18 @@ export default function ProgressSection({
                         Completion range
                     </span>
                     <span className="rounded-md px-2 py-0.5 text-xs font-semibold">
-                        {progress[0]}% - {progress[1]}%
+                        {localProgress[0]}% - {progress[1]}%
                     </span>
                 </div>
                 <Slider
                     min={0}
                     max={100}
                     step={5}
-                    value={progress}
+                    value={localProgress}
                     onValueChange={(value) =>
+                        setLocalProgress(value as [number, number])
+                    }
+                    onValueCommit={(value) =>
                         onUpdate({
                             progress: value as [number, number],
                         })
