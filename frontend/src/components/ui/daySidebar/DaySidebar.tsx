@@ -11,7 +11,7 @@ interface DaySidebarProps {
     dateStr: string;
     tasks: Task[];
     columns?: Column[];
-    showPriorityEmoji: boolean;
+    showPriorityEmoji?: boolean;
     onOpenCreate: () => void;
     onOpenDetails: (task: Task) => void;
 }

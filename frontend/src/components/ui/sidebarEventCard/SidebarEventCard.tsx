@@ -7,7 +7,7 @@ import { CalendarBlankIcon } from "@phosphor-icons/react";
 
 interface SidebarEventCardProps {
     task: Task;
-    showPriorityEmoji: boolean;
+    showPriorityEmoji?: boolean;
     onOpen: () => void;
 }
 
