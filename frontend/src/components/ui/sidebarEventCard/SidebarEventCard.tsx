@@ -20,12 +20,12 @@ export default function SidebarEventCard({
 
     return (
         <button
-            className="w-full rounded-md border bg-white p-3 text-left transition-all hover:border-blue-200 hover:shadow-sm"
+            className="w-full max-w-60 rounded-md border bg-white p-3 text-left transition-all hover:border-blue-200 hover:shadow-sm"
             onClick={onOpen}
         >
             <div className="flex items-start gap-2">
                 <div className="min-w-0 flex-1">
-                    <p className="text-xs font-semibold leading-tight text-gray-800">
+                    <p className="truncate text-xs font-semibold leading-tight text-gray-800">
                         {task.title}
                     </p>
                     <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
@@ -41,7 +41,7 @@ export default function SidebarEventCard({
                         {task.categories.map((category) => (
                             <span
                                 key={category.id}
-                                className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-semibold text-white"
+                                className="flex items-center gap-1 truncate rounded-md px-1.5 py-0.5 text-[10px] font-semibold text-white"
                                 style={{
                                     backgroundColor: category.color,
                                 }}
@@ -52,7 +52,7 @@ export default function SidebarEventCard({
                         {task.labels.map((label) => (
                             <span
                                 key={label.id}
-                                className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-semibold text-white"
+                                className="flex items-center gap-1 truncate rounded-md px-1.5 py-0.5 text-[10px] font-semibold text-white"
                                 style={{
                                     backgroundColor: label.color,
                                 }}

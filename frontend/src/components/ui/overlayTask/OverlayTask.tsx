@@ -53,7 +53,7 @@ export default function OverlayTask({
                     {task.categories.map((category) => (
                         <span
                             key={category.id}
-                            className="rounded-md px-1.5 py-0.5 text-[10px] font-medium capitalize text-white"
+                            className="truncate break-words rounded-md px-1.5 py-0.5 text-[10px] font-medium capitalize text-white"
                             style={{
                                 background: category.color,
                             }}
@@ -69,10 +69,10 @@ export default function OverlayTask({
                     />
                 </button>
             </div>
-            <p className="mb-1 text-sm font-medium leading-snug">
+            <p className="mb-1 break-words text-sm font-medium leading-snug">
                 {task.title}
             </p>
-            <p className="mb-2 line-clamp-1 text-xs text-gray-500">
+            <p className="mb-2 line-clamp-1 break-words text-xs text-gray-500">
                 {task.description}
             </p>
             {(!task.show_progress || task.subtasks_total === 0) &&

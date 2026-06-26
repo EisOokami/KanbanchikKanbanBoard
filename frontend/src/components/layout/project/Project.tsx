@@ -411,7 +411,7 @@ export default function Project({
                             </h1>
                         </div>
                         {projectData.description && (
-                            <p className="min-h-14 w-3/4 rounded-md bg-gray-100 px-3 py-2 text-gray-600">
+                            <p className="min-h-14 w-3/4 text-ellipsis break-words rounded-md bg-gray-100 px-3 py-2 text-gray-600">
                                 {projectData.description}
                             </p>
                         )}

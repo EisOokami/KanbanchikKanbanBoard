@@ -124,7 +124,7 @@ export default function ProjectTaskRow({
                 {task.categories.map((category) => (
                     <span
                         key={category.id}
-                        className="inline-flex rounded-md border px-2 py-1 text-xs font-medium capitalize text-white"
+                        className="inline-flex truncate rounded-md border px-2 py-1 text-xs font-medium capitalize text-white"
                         style={{ backgroundColor: category.color }}
                     >
                         {category.name}

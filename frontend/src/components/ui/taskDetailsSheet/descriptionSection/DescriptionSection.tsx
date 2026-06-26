@@ -45,7 +45,7 @@ export default function DescriptionSection({
                     }
                     onBlur={() => setEditingDesc(false)}
                     rows={5}
-                    className="resize-none rounded-md text-sm leading-relaxed placeholder:text-gray-300 focus-visible:ring-1 focus-visible:ring-bright-blue"
+                    className="min-h-32 max-w-[550px] break-words rounded-md text-sm leading-relaxed placeholder:text-gray-300 focus-visible:ring-1 focus-visible:ring-bright-blue"
                     placeholder="Add a description…"
                     disabled={isPending}
                 />
@@ -57,19 +57,21 @@ export default function DescriptionSection({
                                 setEditingDesc(true);
                             }
                         }}
-                        className="group/desc cursor-text rounded-md border px-3 py-2.5 text-sm leading-relaxed transition-all hover:bg-gray-50"
+                        className="group/desc min-h-32 max-w-[550px] cursor-text rounded-md border px-3 py-2.5 text-sm leading-relaxed transition-all hover:bg-gray-50"
                         style={{
                             color: description ? "#374151" : "#D1D5DB",
                         }}
                     >
-                        {description || "Add a description…"}
-                        {description && (
-                            <PencilSimpleIcon
-                                weight="duotone"
-                                size={16}
-                                className="ml-2 inline text-gray-500 opacity-0 transition-opacity group-hover/desc:opacity-100"
-                            />
-                        )}
+                        <p className="whitespace-pre-wrap break-words">
+                            {description || "Add a description…"}
+                            {description && (
+                                <PencilSimpleIcon
+                                    weight="duotone"
+                                    size={16}
+                                    className="ml-2 inline text-gray-500 opacity-0 transition-opacity group-hover/desc:opacity-100"
+                                />
+                            )}
+                        </p>
                     </div>
                     <input
                         type="hidden"

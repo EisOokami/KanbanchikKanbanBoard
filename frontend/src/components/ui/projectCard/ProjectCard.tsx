@@ -129,7 +129,7 @@ export default function ProjectCard({
                         </div>
                     </CardHeader>
                     <CardContent className="flex h-full flex-1 flex-col justify-between gap-3 p-3">
-                        <p className="line-clamp-2 text-xs leading-relaxed text-muted-foreground">
+                        <p className="line-clamp-2 break-words text-xs leading-relaxed text-muted-foreground">
                             {project.description}
                         </p>
                         <div className="space-y-1.5">

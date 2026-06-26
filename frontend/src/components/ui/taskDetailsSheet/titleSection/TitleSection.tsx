@@ -41,7 +41,7 @@ export default function TitleSection({
                         }
                     }}
                     rows={2}
-                    className="resize-none rounded-none border-0 border-b bg-transparent px-0 !text-xl font-bold leading-tight transition-colors focus-visible:border-bright-blue focus-visible:ring-0"
+                    className="max-w-[550px] resize-none rounded-none border-0 border-b bg-transparent px-0 !text-xl font-bold leading-tight transition-colors focus-visible:border-bright-blue focus-visible:ring-0"
                     disabled={isPending}
                 />
             ) : (
@@ -52,9 +52,9 @@ export default function TitleSection({
                                 setEditingTitle(true);
                             }
                         }}
-                        className="group -mx-2 flex cursor-text items-center gap-2 rounded-md px-2 py-1 text-xl font-bold leading-tight transition-colors hover:bg-gray-50"
+                        className="group -mx-2 flex max-w-[550px] cursor-text items-center gap-2 rounded-md px-2 py-1 text-xl font-bold leading-tight transition-colors hover:bg-gray-50"
                     >
-                        <span className="flex-1">
+                        <span className="max-w-[95%] flex-1 break-words">
                             {title.trim() || (
                                 <span className="text-gray-300">
                                     Untitled task
