@@ -2,7 +2,7 @@
 
 import { PencilSimpleIcon } from "@phosphor-icons/react";
 import { Colorful } from "@uiw/react-color";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "../shadcn/popover";
 
 interface ProjectColorPickerProps {
@@ -17,10 +17,6 @@ export default function ProjectColorPicker({
     onProjectColorChange,
 }: Readonly<ProjectColorPickerProps>) {
     const [open, setOpen] = useState<boolean>(false);
-
-    useEffect(() => {
-        console.log(open);
-    }, [open]);
 
     return (
         <Popover onOpenChange={setOpen} open={open} modal={true}>
