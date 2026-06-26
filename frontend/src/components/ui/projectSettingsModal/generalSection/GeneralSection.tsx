@@ -1,15 +1,14 @@
 "use client";
 
-import { PencilSimpleIcon } from "@phosphor-icons/react";
 import { Textarea } from "../../shadcn/textarea";
 import { Input } from "../../shadcn/input";
-import { PROJECT_ICONS, STATUS_CONFIG } from "@/constants/constants";
-import { useState } from "react";
+import { STATUS_CONFIG } from "@/constants/constants";
 import { Status } from "@/types/types";
 import { cn } from "@/libs/utils";
 import { BaseAction } from "@/types/actions";
 import { ZodErrors } from "../../zodErrors/ZodErrors";
 import ProjectColorPicker from "../../projectColorPicker/ProjectColorPicker";
+import ProjectIconPicker from "../../projectIconPicker/ProjectIconPicker";
 
 interface GeneralSectionProps {
     icon: string;
@@ -40,35 +39,18 @@ export default function GeneralSection({
     onDescriptionChange,
     onStatusChange,
 }: Readonly<GeneralSectionProps>) {
-    const [iconPickerOpen, setIconPickerOpen] = useState<boolean>(false);
-
     return (
         <div className="space-y-5">
             <div className="flex items-start gap-6">
                 <div className="space-y-2">
                     <h3 className="font-semibold">Project Icon</h3>
                     <div className="flex items-start gap-3">
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setIconPickerOpen(!iconPickerOpen);
-                            }}
-                            className="relative flex size-14 items-center justify-center rounded-md border text-2xl transition-all hover:brightness-95"
-                            style={{
-                                background: `${color}15`,
-                                borderColor: `${color}30`,
-                            }}
-                            disabled={isPending}
-                        >
-                            {icon}
-                            <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-bright-blue">
-                                <PencilSimpleIcon
-                                    weight="duotone"
-                                    size={9}
-                                    className="text-white"
-                                />
-                            </span>
-                        </button>
+                        <ProjectIconPicker
+                            projectIcon={icon}
+                            projectColor={color}
+                            isPending={isPending}
+                            onProjectIconChange={onIconChange}
+                        />
                         <ProjectColorPicker
                             projectColor={color}
                             onProjectColorChange={onColorChange}
@@ -79,29 +61,6 @@ export default function GeneralSection({
                     <ZodErrors error={formState?.zodErrors?.color} />
                 </div>
             </div>
-            {iconPickerOpen && (
-                <div className="flex flex-wrap gap-1.5 rounded-md border bg-gray-50 p-3">
-                    {PROJECT_ICONS.map((projectIcon) => (
-                        <button
-                            type="button"
-                            key={projectIcon}
-                            onClick={() => {
-                                onIconChange(projectIcon);
-                                setIconPickerOpen(false);
-                            }}
-                            className={cn(
-                                "flex size-9 items-center justify-center rounded-md text-xl transition-all hover:bg-white",
-                                icon === projectIcon
-                                    ? "bg-white ring-2 ring-bright-blue"
-                                    : "",
-                            )}
-                            disabled={isPending}
-                        >
-                            {projectIcon}
-                        </button>
-                    ))}
-                </div>
-            )}
             <div className="space-y-1">
                 <h3 className="font-semibold">Name</h3>
                 <Input
