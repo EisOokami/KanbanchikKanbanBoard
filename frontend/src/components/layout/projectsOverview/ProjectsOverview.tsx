@@ -23,6 +23,7 @@ import {
     countActiveFilters,
 } from "@/libs/projectOverview";
 import { cn } from "@/libs/utils";
+import { useDebounce } from "use-debounce";
 
 interface ProjectsOverviewProps {
     projectsData: Project[];
@@ -40,6 +41,7 @@ export default function ProjectsOverview({
     projectsData,
 }: Readonly<ProjectsOverviewProps>) {
     const [search, setSearch] = useState<string>("");
+    const [searchValue] = useDebounce(search, 1000);
     const [view, setView] = useState<ViewMode>("grid");
     const [showNewProjectModal, setShowNewProjectModal] =
         useState<boolean>(false);
@@ -47,8 +49,8 @@ export default function ProjectsOverview({
     const [filterOpts, setFilterOpts] =
         useState<FilterSortOptions>(DEFAULT_FILTER_SORT);
     const filtered = useMemo(
-        () => applyFiltersAndSort(projectsData, search, filterOpts),
-        [projectsData, search, filterOpts],
+        () => applyFiltersAndSort(projectsData, searchValue, filterOpts),
+        [projectsData, searchValue, filterOpts],
     );
 
     const activeFilterCount = countActiveFilters(filterOpts);
@@ -84,7 +86,6 @@ export default function ProjectsOverview({
                         />
                         <Input
                             placeholder="Search projects…"
-                            value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             className="h-9 pl-9 text-sm placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-bright-blue"
                         />

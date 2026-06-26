@@ -26,6 +26,7 @@ import CategoriesSection from "./categoriesSection/CategoriesSection";
 import DueDateSection from "./dueDateSection/DueDateSection";
 import ProgressSection from "./progressSection/ProgressSection";
 import HasSection from "./hasSection/HasSection";
+import { useDebouncedCallback } from "use-debounce";
 
 interface TaskFilterSheetProps {
     open: boolean;
@@ -74,6 +75,10 @@ export function TaskFilterSheet({
         onFiltersChange?.(DEFAULT_FILTER);
     };
 
+    const debouncedSearchUpdate = useDebouncedCallback((value: string) => {
+        update({ search: value });
+    }, 1000);
+
     const activeCount = countActive(filters);
 
     return (
@@ -113,11 +118,16 @@ export function TaskFilterSheet({
                                 className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
                             />
                             <Input
-                                placeholder="Search tasks…"
                                 value={filters.search}
-                                onChange={(e) =>
-                                    update({ search: e.target.value })
-                                }
+                                placeholder="Search tasks…"
+                                onChange={(e) => {
+                                    setFilters((prev) => ({
+                                        ...prev,
+                                        search: e.target.value,
+                                    }));
+
+                                    debouncedSearchUpdate(e.target.value);
+                                }}
                                 className="h-9 rounded-md pl-9 text-sm placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-bright-blue"
                             />
                             {filters.search && (
