@@ -76,6 +76,11 @@ export default function CategoriesSection({
             newCategories: formData.newCategories.filter(
                 (category) => category.id !== id,
             ),
+            deletedCategoryIds: formData.categories.some(
+                (category) => category.id === id,
+            )
+                ? [...formData.deletedCategoryIds, id]
+                : formData.deletedCategoryIds,
         });
     };
 

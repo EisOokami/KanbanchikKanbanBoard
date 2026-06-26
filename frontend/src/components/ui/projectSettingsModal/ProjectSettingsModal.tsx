@@ -80,10 +80,13 @@ export function ProjectSettingsModal({
     const [formData, setFormData] = useState<ProjectSettingsFormData>({
         categories: projectData.categories,
         newCategories: [],
+        deletedCategoryIds: [],
         columns: columnsData,
         newColumns: [],
+        deletedColumnIds: [],
         labels: projectData.labels,
         newLabels: [],
+        deletedLabelIds: [],
         members: projectData.members,
         emails: [],
     });

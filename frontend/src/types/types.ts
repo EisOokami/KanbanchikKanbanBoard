@@ -163,10 +163,13 @@ export interface NewProjectFormData {
 export interface ProjectSettingsFormData {
     categories: Category[];
     newCategories: Omit<Category, "created_at" | "updated_at">[];
+    deletedCategoryIds: number[];
     columns: Column[];
     newColumns: Omit<Column, "created_at" | "updated_at" | "tasks">[];
+    deletedColumnIds: number[];
     labels: Label[];
     newLabels: Omit<Label, "created_at" | "updated_at">[];
+    deletedLabelIds: number[];
     members: Omit<User, "email">[];
     emails: string[];
 }

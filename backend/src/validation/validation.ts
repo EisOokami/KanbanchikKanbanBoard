@@ -290,8 +290,32 @@ export const updateProjectSchema = z
         }),
         labels: z.array(namedColorSchema),
         newLabels: z.array(namedColorSchema),
+        deletedLabelIds: z
+            .array(
+                z
+                    .number()
+                    .positive()
+                    .int("Label ID must be an integer")
+                    .refine((value) => Number.isSafeInteger(value), {
+                        message: "ID is too large a numerical value",
+                    }),
+            )
+            .optional()
+            .default([]),
         categories: z.array(namedColorSchema),
         newCategories: z.array(namedColorSchema),
+        deletedCategoryIds: z
+            .array(
+                z
+                    .number()
+                    .positive()
+                    .int("Category ID must be an integer")
+                    .refine((value) => Number.isSafeInteger(value), {
+                        message: "ID is too large a numerical value",
+                    }),
+            )
+            .optional()
+            .default([]),
         emails: z.array(
             z
                 .email("Invalid email")
@@ -302,6 +326,18 @@ export const updateProjectSchema = z
         ),
         columns: z.array(columnSchema),
         newColumns: z.array(columnSchema),
+        deletedColumnIds: z
+            .array(
+                z
+                    .number()
+                    .positive()
+                    .int("Column ID must be an integer")
+                    .refine((value) => Number.isSafeInteger(value), {
+                        message: "ID is too large a numerical value",
+                    }),
+            )
+            .optional()
+            .default([]),
         members: z
             .array(memberSchema)
             .min(1, "At least one member is required"),

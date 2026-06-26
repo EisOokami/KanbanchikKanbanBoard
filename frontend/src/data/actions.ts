@@ -711,8 +711,32 @@ const updateProjectSchema = z
         }),
         labels: z.array(namedColorSchema),
         newLabels: z.array(namedColorSchema),
+        deletedLabelIds: z
+            .array(
+                z
+                    .number()
+                    .positive()
+                    .int("Label ID must be an integer")
+                    .refine((value) => Number.isSafeInteger(value), {
+                        message: "ID is too large a numerical value",
+                    }),
+            )
+            .optional()
+            .default([]),
         categories: z.array(namedColorSchema),
         newCategories: z.array(namedColorSchema),
+        deletedCategoryIds: z
+            .array(
+                z
+                    .number()
+                    .positive()
+                    .int("Category ID must be an integer")
+                    .refine((value) => Number.isSafeInteger(value), {
+                        message: "ID is too large a numerical value",
+                    }),
+            )
+            .optional()
+            .default([]),
         emails: z.array(
             z
                 .email("Invalid email")
@@ -723,6 +747,18 @@ const updateProjectSchema = z
         ),
         columns: z.array(columnSchema),
         newColumns: z.array(columnSchema),
+        deletedColumnIds: z
+            .array(
+                z
+                    .number()
+                    .positive()
+                    .int("Column ID must be an integer")
+                    .refine((value) => Number.isSafeInteger(value), {
+                        message: "ID is too large a numerical value",
+                    }),
+            )
+            .optional()
+            .default([]),
         members: z
             .array(memberSchema)
             .min(1, "At least one member is required"),
@@ -757,10 +793,13 @@ export async function updateProjectAction(
     data: {
         labels: Label[];
         newLabels: Omit<Label, "updated_at" | "created_at">[];
+        deletedLabelIds: number[];
         columns: Omit<Column, "tasks">[];
         newColumns: Omit<Column, "tasks" | "updated_at" | "created_at">[];
+        deletedColumnIds: number[];
         categories: Category[];
         newCategories: Omit<Category, "updated_at" | "created_at">[];
+        deletedCategoryIds: number[];
         members: Omit<User, "email">[];
         emails: string[];
     },
@@ -779,10 +818,13 @@ export async function updateProjectAction(
         members: data.members,
         columns: data.columns,
         newColumns: data.newColumns,
+        deletedColumnIds: data.deletedColumnIds,
         categories: data.categories,
         newCategories: data.newCategories,
+        deletedCategoryIds: data.deletedCategoryIds,
         labels: data.labels,
         newLabels: data.newLabels,
+        deletedLabelIds: data.deletedLabelIds,
         emails: data.emails,
     });
 

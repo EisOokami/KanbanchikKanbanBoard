@@ -1094,6 +1094,20 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
             );
         }
 
+        if (
+            validatedData.deletedColumnIds &&
+            validatedData.deletedColumnIds.length
+        ) {
+            await Promise.all(
+                validatedData.deletedColumnIds.map(async (id) => {
+                    await pool.execute<ResultSetHeader>(
+                        `DELETE FROM columns WHERE id = ? AND project_id = ?`,
+                        [id, project.id],
+                    );
+                }),
+            );
+        }
+
         if (validatedData.labels && validatedData.labels.length) {
             await Promise.all(
                 validatedData.labels.map(async (label) => {
@@ -1111,6 +1125,20 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
             );
         }
 
+        if (
+            validatedData.deletedLabelIds &&
+            validatedData.deletedLabelIds.length
+        ) {
+            await Promise.all(
+                validatedData.deletedLabelIds.map(async (id) => {
+                    await pool.execute<ResultSetHeader>(
+                        `DELETE FROM labels WHERE id = ? AND project_id = ?`,
+                        [id, project.id],
+                    );
+                }),
+            );
+        }
+
         if (validatedData.categories && validatedData.categories.length) {
             await Promise.all(
                 validatedData.categories.map(async (category) => {
@@ -1124,6 +1152,20 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
                             [category.name, category.color, category.id],
                         );
                     }
+                }),
+            );
+        }
+
+        if (
+            validatedData.deletedCategoryIds &&
+            validatedData.deletedCategoryIds.length
+        ) {
+            await Promise.all(
+                validatedData.deletedCategoryIds.map(async (id) => {
+                    await pool.execute<ResultSetHeader>(
+                        `DELETE FROM categories WHERE id = ? AND project_id = ?`,
+                        [id, project.id],
+                    );
                 }),
             );
         }

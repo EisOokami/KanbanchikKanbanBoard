@@ -75,6 +75,9 @@ export default function LabelsSection({
             ...formData,
             labels: formData.labels.filter((label) => label.id !== id),
             newLabels: formData.newLabels.filter((label) => label.id !== id),
+            deletedLabelIds: formData.labels.some((label) => label.id === id)
+                ? [...formData.deletedLabelIds, id]
+                : formData.deletedLabelIds,
         });
     };
 

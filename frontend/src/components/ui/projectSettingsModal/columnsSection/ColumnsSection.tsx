@@ -107,6 +107,11 @@ export default function ColumnsSection({
             newColumns: formData.newColumns.filter(
                 (column) => column.id !== id,
             ),
+            deletedColumnIds: formData.columns.some(
+                (column) => column.id === id,
+            )
+                ? [...formData.deletedColumnIds, id]
+                : formData.deletedColumnIds,
         });
     };
 
