@@ -569,7 +569,7 @@ export const getProject = async (req: IGetUserRequest, res: Response) => {
 
                         const subtasksTotal = subtasks.length;
                         const subtasksDone = subtasks.filter(
-                            (s) => s.is_done,
+                            (subtask) => subtask.is_done,
                         ).length;
 
                         return {
