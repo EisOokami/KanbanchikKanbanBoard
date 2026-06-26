@@ -51,7 +51,7 @@ const INITIAL_STATE: BaseAction = {
     formData: null,
 };
 
-export function InviteMemberModal({
+export default function InviteMemberModal({
     open,
     onOpenChange,
     projectData,

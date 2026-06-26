@@ -30,12 +30,12 @@ import {
     AvatarImage,
 } from "@/components/ui/shadcn/avatar";
 import { ButtonGroup } from "@/components/ui/shadcn/button-group";
-import { InviteMemberModal } from "@/components/ui/inviteMemberModal/InviteMemberModal";
-import { TaskFilterSheet } from "@/components/ui/taskFilterSheet/TaskFilterSheet";
-import { ProjectSettingsModal } from "@/components/ui/projectSettingsModal/ProjectSettingsModal";
-import { ProjectListView } from "../projectListView/ProjectListView";
+import InviteMemberModal from "@/components/ui/inviteMemberModal/InviteMemberModal";
+import TaskFilterSheet from "@/components/ui/taskFilterSheet/TaskFilterSheet";
+import ProjectSettingsModal from "@/components/ui/projectSettingsModal/ProjectSettingsModal";
+import ProjectListView from "../projectListView/ProjectListView";
 import ProjectCalendarView from "../projectCalendarView/ProjectCalendarView";
-import { TaskDetailsSheet } from "@/components/ui/taskDetailsSheet/TaskDetailsSheet";
+import TaskDetailsSheet from "@/components/ui/taskDetailsSheet/TaskDetailsSheet";
 import {
     CalendarDotsIcon,
     ClipboardTextIcon,
@@ -46,7 +46,7 @@ import {
     PlusIcon,
     UserPlusIcon,
 } from "@phosphor-icons/react";
-import { CreateTaskModal } from "@/components/ui/createTaskModal/CreateTaskModal";
+import CreateTaskModal from "@/components/ui/createTaskModal/CreateTaskModal";
 import { getInitials } from "@/libs/utils";
 import { deleteTaskAction, moveTaskAction } from "@/data/actions";
 import {

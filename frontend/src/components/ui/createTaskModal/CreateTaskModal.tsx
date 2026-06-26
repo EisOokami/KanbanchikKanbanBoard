@@ -49,7 +49,7 @@ const INITIAL_STATE: BaseAction = {
     formData: null,
 };
 
-export function CreateTaskModal({
+export default function CreateTaskModal({
     open,
     onOpenChange,
     projectData,

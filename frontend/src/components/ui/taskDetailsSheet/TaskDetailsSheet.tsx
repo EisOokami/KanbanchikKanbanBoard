@@ -52,7 +52,7 @@ const INITIAL_STATE: BaseAction = {
     formData: null,
 };
 
-export function TaskDetailsSheet({
+export default function TaskDetailsSheet({
     open,
     onOpenChange,
     selectedTask,

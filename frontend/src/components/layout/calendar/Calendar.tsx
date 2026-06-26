@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { Separator } from "@/components/ui/shadcn/separator";
-import { CreateTaskModal } from "@/components/ui/createTaskModal/CreateTaskModal";
+import CreateTaskModal from "@/components/ui/createTaskModal/CreateTaskModal";
 import {
     cn,
     getDaysInMonth,
@@ -16,7 +16,7 @@ import DaySidebar from "@/components/ui/daySidebar/DaySidebar";
 import { Project, Task, User } from "@/types/types";
 import { MONTHS, WEEKDAYS } from "@/constants/constants";
 import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
-import { TaskDetailsSheet } from "@/components/ui/taskDetailsSheet/TaskDetailsSheet";
+import TaskDetailsSheet from "@/components/ui/taskDetailsSheet/TaskDetailsSheet";
 import { getProjectData } from "@/data/loaders";
 
 interface GridCell {

@@ -31,7 +31,7 @@ interface ProjectListViewProps {
     onOpenDetails: (task: Task) => void;
 }
 
-export function ProjectListView({
+export default function ProjectListView({
     columns,
     activeTask,
     showPriorityEmoji,

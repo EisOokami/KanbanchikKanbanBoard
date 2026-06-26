@@ -18,7 +18,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/shadcn/dropdown-menu";
-import { ProjectSettingsModal } from "../projectSettingsModal/ProjectSettingsModal";
+import ProjectSettingsModal from "../projectSettingsModal/ProjectSettingsModal";
 import { useState } from "react";
 import { Project } from "@/types/types";
 import { STATUS_CONFIG } from "@/constants/constants";

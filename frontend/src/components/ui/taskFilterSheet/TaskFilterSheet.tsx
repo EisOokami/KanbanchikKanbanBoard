@@ -36,7 +36,7 @@ interface TaskFilterSheetProps {
     onFiltersChange?: (f: FilterState) => void;
 }
 
-export function TaskFilterSheet({
+export default function TaskFilterSheet({
     open,
     onOpenChange,
     projectData,

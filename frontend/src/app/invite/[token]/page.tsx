@@ -1,4 +1,4 @@
-import { InviteMember } from "@/components/layout/inviteMember/InviteMember";
+import InviteMember from "@/components/layout/inviteMember/InviteMember";
 import { getUserData } from "@/data/loaders";
 import { redirect } from "next/navigation";
 

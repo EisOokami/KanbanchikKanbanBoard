@@ -11,7 +11,7 @@ interface InviteClientProps {
     token: string;
 }
 
-export function InviteMember({ token }: Readonly<InviteClientProps>) {
+export default function InviteMember({ token }: Readonly<InviteClientProps>) {
     const router = useRouter();
     const [status, setStatus] = useState<Status>("loading");
     const [errorMsg, setErrorMsg] = useState("");

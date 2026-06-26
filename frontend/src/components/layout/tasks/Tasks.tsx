@@ -11,8 +11,8 @@ import {
     DropdownMenuCheckboxItem,
     DropdownMenuLabel,
 } from "@/components/ui/shadcn/dropdown-menu";
-import { TaskDetailsSheet } from "@/components/ui/taskDetailsSheet/TaskDetailsSheet";
-import { CreateTaskModal } from "@/components/ui/createTaskModal/CreateTaskModal";
+import TaskDetailsSheet from "@/components/ui/taskDetailsSheet/TaskDetailsSheet";
+import CreateTaskModal from "@/components/ui/createTaskModal/CreateTaskModal";
 import FilterChip from "@/components/ui/filterChip/FilterChip";
 import TaskRow from "@/components/ui/taskRow/TaskRow";
 import {

@@ -47,7 +47,7 @@ const INITIAL_STATE: BaseAction = {
     formData: null,
 };
 
-export function ProjectSettingsModal({
+export default function ProjectSettingsModal({
     open,
     onOpenChange,
     columnsData,
