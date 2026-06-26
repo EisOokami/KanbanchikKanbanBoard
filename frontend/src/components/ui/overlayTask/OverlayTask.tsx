@@ -19,9 +19,13 @@ import { Progress } from "../shadcn/progress";
 
 interface OverlayTaskProps {
     task: Task;
+    showPriorityEmoji: boolean;
 }
 
-export default function OverlayTask({ task }: Readonly<OverlayTaskProps>) {
+export default function OverlayTask({
+    task,
+    showPriorityEmoji,
+}: Readonly<OverlayTaskProps>) {
     const overdue = isOverdue(task.due_date, task.column.name);
     const progress = Math.round(
         ((task.subtasks_done ? task.subtasks_done : 0) * 100) /
@@ -40,6 +44,9 @@ export default function OverlayTask({ task }: Readonly<OverlayTaskProps>) {
                                     PRIORITY_CONFIG[task.priority].color,
                             }}
                         >
+                            {showPriorityEmoji
+                                ? PRIORITY_CONFIG[task.priority].emoji + " "
+                                : ""}
                             {PRIORITY_CONFIG[task.priority].label}
                         </span>
                     </div>

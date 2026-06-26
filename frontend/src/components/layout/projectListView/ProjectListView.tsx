@@ -25,15 +25,17 @@ import DroppableTbody from "@/components/ui/droppableTbody/DroppableTbody";
 
 interface ProjectListViewProps {
     columns: Column[];
-    setColumns: Dispatch<SetStateAction<Column[]>>;
     activeTask: Task | null;
+    showPriorityEmoji: boolean;
+    setColumns: Dispatch<SetStateAction<Column[]>>;
     onOpenDetails: (task: Task) => void;
 }
 
 export function ProjectListView({
     columns,
-    setColumns,
     activeTask,
+    showPriorityEmoji,
+    setColumns,
     onOpenDetails,
 }: Readonly<ProjectListViewProps>) {
     const [sortField, setSortField] = useState<SortField>("priority");
@@ -223,6 +225,9 @@ export function ProjectListView({
                                                         key={task.id}
                                                         task={task}
                                                         column={column}
+                                                        showPriorityEmoji={
+                                                            showPriorityEmoji
+                                                        }
                                                         onDelete={
                                                             handleDeleteTask
                                                         }

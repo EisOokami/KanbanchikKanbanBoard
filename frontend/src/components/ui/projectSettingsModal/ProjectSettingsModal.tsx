@@ -76,6 +76,9 @@ export function ProjectSettingsModal({
         color: PALETTE[0],
     });
     const [status, setStatus] = useState<Status>(projectData.status);
+    const [showPriorityEmoji, setShowPriorityEmoji] = useState<boolean>(
+        projectData.show_priority_emoji,
+    );
     const pathname = usePathname();
     const [formData, setFormData] = useState<ProjectSettingsFormData>({
         categories: projectData.categories,
@@ -165,6 +168,7 @@ export function ProjectSettingsModal({
                                         name={name}
                                         description={description}
                                         status={status}
+                                        showPriorityEmoji={showPriorityEmoji}
                                         formState={formState}
                                         isPending={isPending}
                                         onIconChange={setIcon}
@@ -172,6 +176,9 @@ export function ProjectSettingsModal({
                                         onNameChange={setName}
                                         onDescriptionChange={setDescription}
                                         onStatusChange={setStatus}
+                                        onShowPriorityEmojiChange={
+                                            setShowPriorityEmoji
+                                        }
                                     />
                                 )}
                                 {activeSection === "columns" && (
@@ -294,6 +301,11 @@ export function ProjectSettingsModal({
                     <input type="hidden" name="color" value={color} />
                     <input type="hidden" name="name" value={name} />
                     <input type="hidden" name="status" value={status} />
+                    <input
+                        type="hidden"
+                        name="show-priority-emoji"
+                        value={String(!!showPriorityEmoji)}
+                    />
                 </form>
             </DialogContent>
         </Dialog>

@@ -552,6 +552,9 @@ export default function Project({
                                                 showCreateTask={
                                                     createTaskState.isOpen
                                                 }
+                                                showPriorityEmoji={
+                                                    projectData.show_priority_emoji
+                                                }
                                                 onOpenCreateTask={
                                                     handleToggleCreateTask
                                                 }
@@ -567,8 +570,11 @@ export default function Project({
                             {selectedMode === "list" && (
                                 <ProjectListView
                                     columns={filteredColumns}
-                                    setColumns={setColumns}
                                     activeTask={activeTask}
+                                    showPriorityEmoji={
+                                        projectData.show_priority_emoji
+                                    }
+                                    setColumns={setColumns}
                                     onOpenDetails={(task: Task) => {
                                         handleShowTaskDetails();
                                         setSelectedTask(task);
@@ -578,6 +584,9 @@ export default function Project({
                             {selectedMode === "calendar" && (
                                 <ProjectCalendarView
                                     columns={filteredColumns}
+                                    showPriorityEmoji={
+                                        projectData.show_priority_emoji
+                                    }
                                     onOpenDetails={(task: Task) => {
                                         handleShowTaskDetails();
                                         setSelectedTask(task);
@@ -597,7 +606,12 @@ export default function Project({
                 >
                     {activeTask ? (
                         selectedMode === "kanban" ? (
-                            <OverlayTask task={activeTask} />
+                            <OverlayTask
+                                task={activeTask}
+                                showPriorityEmoji={
+                                    projectData.show_priority_emoji
+                                }
+                            />
                         ) : (
                             <ListDragOverlay task={activeTask} />
                         )

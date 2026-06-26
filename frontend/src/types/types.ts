@@ -7,6 +7,7 @@ export interface PriorityConfig {
     label: string;
     order?: number;
     color?: string;
+    emoji: string;
 }
 
 export type Status = "active" | "paused" | "completed" | "archived";
@@ -48,6 +49,7 @@ export interface Project extends ExtendedBase {
     color: string;
     columns: Column[];
     slug: string;
+    show_priority_emoji: boolean;
 }
 
 export interface Subtask extends Base {

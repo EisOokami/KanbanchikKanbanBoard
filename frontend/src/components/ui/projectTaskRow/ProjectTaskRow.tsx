@@ -40,6 +40,7 @@ interface TaskRowProps {
     task: Task;
     column: Column;
     isDragging?: boolean;
+    showPriorityEmoji: boolean;
     onDelete: (id: number) => void;
     onOpenDetails: (task: Task) => void;
 }
@@ -48,6 +49,7 @@ export default function ProjectTaskRow({
     task,
     column,
     isDragging = false,
+    showPriorityEmoji,
     onDelete,
     onOpenDetails,
 }: Readonly<TaskRowProps>) {
@@ -139,6 +141,7 @@ export default function ProjectTaskRow({
                     className="inline-flex rounded-md border px-2.5 py-1 text-xs font-medium text-white"
                     style={{ backgroundColor: priority.color }}
                 >
+                    {showPriorityEmoji ? priority.emoji + " " : ""}
                     {priority.label}
                 </span>
             </td>

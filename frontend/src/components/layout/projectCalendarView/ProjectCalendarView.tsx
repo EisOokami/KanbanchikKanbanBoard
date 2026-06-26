@@ -24,6 +24,7 @@ interface GridCell {
 
 interface ProjectCalendarViewProps {
     columns: Column[];
+    showPriorityEmoji: boolean;
     onOpenDetails: (task: Task) => void;
     onOpenCreateTask: (columnId?: number) => void;
     onSelectedDateChange: (date: string) => void;
@@ -31,6 +32,7 @@ interface ProjectCalendarViewProps {
 
 export default function ProjectCalendarView({
     columns,
+    showPriorityEmoji,
     onOpenDetails,
     onOpenCreateTask,
     onSelectedDateChange,
@@ -369,6 +371,7 @@ export default function ProjectCalendarView({
                             dateStr={selectedDate}
                             tasks={tasksByDate[selectedDate] ?? []}
                             columns={columns}
+                            showPriorityEmoji={showPriorityEmoji}
                             onOpenDetails={onOpenDetails}
                             onOpenCreate={() => {
                                 onOpenCreateTask();

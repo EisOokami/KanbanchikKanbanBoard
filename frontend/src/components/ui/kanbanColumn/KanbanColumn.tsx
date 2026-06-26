@@ -16,6 +16,7 @@ interface KanbanColumnProps {
     onDeleteTask: (id: number) => void;
     onOpenDetails: (task: Task) => void;
     showCreateTask: boolean;
+    showPriorityEmoji: boolean;
     onOpenCreateTask: (columnId?: number) => void;
 }
 
@@ -24,6 +25,7 @@ export default function KanbanColumn({
     onDeleteTask,
     onOpenDetails,
     showCreateTask,
+    showPriorityEmoji,
     onOpenCreateTask,
 }: Readonly<KanbanColumnProps>) {
     const inputRef = useRef<HTMLInputElement | null>(null);
@@ -81,6 +83,7 @@ export default function KanbanColumn({
                             <KanbanTask
                                 key={task.id}
                                 task={task}
+                                showPriorityEmoji={showPriorityEmoji}
                                 onDelete={onDeleteTask}
                                 onOpenDetails={onOpenDetails}
                             />

@@ -545,6 +545,7 @@ const createProjectSchema = z.object({
     status: z.enum(["active", "paused", "completed", "archived"], {
         message: "Invalid project status",
     }),
+    showPriorityEmoji: z.stringbool(),
     labels: z.array(namedColorSchema).min(1, "At least one label is required"),
     categories: z
         .array(namedColorSchema)
@@ -577,6 +578,7 @@ export async function createProjectAction(
         name: formData.get("name"),
         description: formData.get("description"),
         status: formData.get("status"),
+        showPriorityEmoji: formData.get("show-priority-emoji"),
         members: data.members,
         columns: data.columns,
         categories: data.categories,
@@ -729,6 +731,7 @@ const updateProjectSchema = z
         status: z.enum(["active", "paused", "completed", "archived"], {
             message: "Invalid project status",
         }),
+        showPriorityEmoji: z.stringbool(),
         labels: z.array(namedColorSchema),
         newLabels: z.array(namedColorSchema),
         deletedLabelIds: z
@@ -835,6 +838,7 @@ export async function updateProjectAction(
         name: formData.get("name"),
         description: formData.get("description"),
         status: formData.get("status"),
+        showPriorityEmoji: formData.get("show-priority-emoji"),
         members: data.members,
         columns: data.columns,
         newColumns: data.newColumns,

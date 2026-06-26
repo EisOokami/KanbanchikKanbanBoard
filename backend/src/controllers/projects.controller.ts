@@ -49,6 +49,7 @@ export const getProjects = async (req: IGetUserRequest, res: Response) => {
                     p.description, 
                     p.status,
                     p.slug,
+                    show_priority_emoji,
                     p.created_at,
                     p.updated_at
                 FROM projects p
@@ -176,6 +177,7 @@ export const getProjects = async (req: IGetUserRequest, res: Response) => {
                     color: project.color,
                     status: project.status,
                     slug: project.slug,
+                    show_priority_emoji: project.show_priority_emoji,
                     created_at: project.created_at,
                     updated_at: project.updated_at,
                     owner:
@@ -253,6 +255,7 @@ export const getProject = async (req: IGetUserRequest, res: Response) => {
                     p.description, 
                     p.status,
                     p.slug,
+                    p.show_priority_emoji,
                     p.created_at,
                     p.updated_at
                 FROM projects p
@@ -637,6 +640,7 @@ export const getProject = async (req: IGetUserRequest, res: Response) => {
             color: project.color,
             status: project.status,
             slug: project.slug,
+            show_priority_emoji: project.show_priority_emoji,
             created_at: project.created_at,
             updated_at: project.updated_at,
             owner:
@@ -715,8 +719,8 @@ export const createProject = async (req: IGetUserRequest, res: Response) => {
 
         const [result] = await pool.execute<ResultSetHeader>(
             `
-                INSERT INTO projects (owner_id, name, icon, color, description, status, slug)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO projects (owner_id, name, icon, color, description, status, slug, show_priority_emoji)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             `,
             [
                 userId,
@@ -726,6 +730,7 @@ export const createProject = async (req: IGetUserRequest, res: Response) => {
                 validatedData.description || null,
                 validatedData.status,
                 slug,
+                validatedData.showPriorityEmoji,
             ],
         );
 
@@ -868,6 +873,7 @@ export const createProject = async (req: IGetUserRequest, res: Response) => {
                     description, 
                     status,
                     slug,
+                    show_priority_emoji,
                     created_at,
                     updated_at
                 FROM projects
@@ -1041,6 +1047,11 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
         if (validatedData.status) {
             updateFields.push("status = ?");
             updateValues.push(validatedData.status);
+        }
+
+        if (typeof validatedData.showPriorityEmoji === "boolean") {
+            updateFields.push("show_priority_emoji = ?");
+            updateValues.push(validatedData.showPriorityEmoji);
         }
 
         if (!updateFields.length) {
@@ -1311,6 +1322,7 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
                     description, 
                     status,
                     slug,
+                    show_priority_emoji,
                     created_at,
                     updated_at
                 FROM projects

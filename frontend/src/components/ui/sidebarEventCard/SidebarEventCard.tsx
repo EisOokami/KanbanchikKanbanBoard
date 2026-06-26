@@ -7,11 +7,13 @@ import { CalendarBlankIcon } from "@phosphor-icons/react";
 
 interface SidebarEventCardProps {
     task: Task;
+    showPriorityEmoji: boolean;
     onOpen: () => void;
 }
 
 export default function SidebarEventCard({
     task,
+    showPriorityEmoji,
     onOpen,
 }: Readonly<SidebarEventCardProps>) {
     const priority = PRIORITY_CONFIG[task.priority];
@@ -33,6 +35,7 @@ export default function SidebarEventCard({
                                 backgroundColor: priority.color,
                             }}
                         >
+                            {showPriorityEmoji ? priority.emoji + " " : ""}
                             {priority.label}
                         </span>
                         {task.categories.map((category) => (

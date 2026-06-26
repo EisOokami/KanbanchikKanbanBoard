@@ -25,6 +25,7 @@ import MemberSection from "./memberSection/MemberSection";
 import ColumnsSection from "./columnsSection/ColumnsSection";
 import CategoriesSection from "./categoriesSection/CategoriesSection";
 import LabelsSection from "./labelsSection/LabelsSection";
+import PrioritySection from "./prioritySection/PrioritySection";
 
 interface NewProjectModalProps {
     open: boolean;
@@ -112,6 +113,10 @@ export default function NewProjectModal({
                             formState={formState}
                             isPending={isPending}
                             onFormDataChange={setFormData}
+                        />
+                        <PrioritySection
+                            formState={formState}
+                            isPending={isPending}
                         />
                         <CategoriesSection
                             formData={formData}

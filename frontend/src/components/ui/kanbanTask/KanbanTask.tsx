@@ -28,12 +28,14 @@ import { Progress } from "../shadcn/progress";
 
 interface KanbanTaskProps {
     task: Task;
+    showPriorityEmoji: boolean;
     onDelete: (id: number) => void;
     onOpenDetails: (task: Task) => void;
 }
 
 export default function KanbanTask({
     task,
+    showPriorityEmoji,
     onDelete,
     onOpenDetails,
 }: Readonly<KanbanTaskProps>) {
@@ -77,6 +79,9 @@ export default function KanbanTask({
                                     PRIORITY_CONFIG[task.priority].color,
                             }}
                         >
+                            {showPriorityEmoji
+                                ? PRIORITY_CONFIG[task.priority].emoji + " "
+                                : ""}
                             {PRIORITY_CONFIG[task.priority].label}
                         </span>
                     </div>

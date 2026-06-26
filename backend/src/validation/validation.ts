@@ -216,6 +216,7 @@ export const createProjectSchema = z.object({
     status: z.enum(["active", "paused", "completed", "archived"], {
         message: "Invalid project status",
     }),
+    showPriorityEmoji: z.boolean(),
     labels: z.array(namedColorSchema).min(1, "At least one label is required"),
     categories: z
         .array(namedColorSchema)
@@ -308,6 +309,7 @@ export const updateProjectSchema = z
         status: z.enum(["active", "paused", "completed", "archived"], {
             message: "Invalid project status",
         }),
+        showPriorityEmoji: z.boolean(),
         labels: z.array(namedColorSchema),
         newLabels: z.array(namedColorSchema),
         deletedLabelIds: z

@@ -1062,24 +1062,28 @@ export const PRIORITY_CONFIG: Record<Priority, PriorityConfig> = {
         label: "Critical",
         order: 0,
         color: "#fb7185",
+        emoji: "🔥",
     },
     high: {
         id: 2,
         label: "High",
         order: 1,
         color: "#fb923c",
+        emoji: "⚡",
     },
     medium: {
         id: 3,
         label: "Medium",
         order: 2,
         color: "#60a5fa",
+        emoji: "📌",
     },
     low: {
         id: 4,
         label: "Low",
         order: 3,
-        color: "#d1d5db",
+        color: "#22c55e",
+        emoji: "💤",
     },
 };
 

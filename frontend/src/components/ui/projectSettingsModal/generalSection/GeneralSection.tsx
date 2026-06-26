@@ -9,6 +9,7 @@ import { BaseAction } from "@/types/actions";
 import { ZodErrors } from "../../zodErrors/ZodErrors";
 import ProjectColorPicker from "../../projectColorPicker/ProjectColorPicker";
 import ProjectIconPicker from "../../projectIconPicker/ProjectIconPicker";
+import { Checkbox } from "../../shadcn/checkbox";
 
 interface GeneralSectionProps {
     icon: string;
@@ -16,6 +17,7 @@ interface GeneralSectionProps {
     name: string;
     description: string;
     status: Status;
+    showPriorityEmoji: boolean;
     formState: BaseAction | undefined;
     isPending: boolean;
     onIconChange: (iconValue: string) => void;
@@ -23,6 +25,7 @@ interface GeneralSectionProps {
     onNameChange: (nameValue: string) => void;
     onDescriptionChange: (descriptionValue: string) => void;
     onStatusChange: (status: Status) => void;
+    onShowPriorityEmojiChange: (isChecked: boolean) => void;
 }
 
 export default function GeneralSection({
@@ -31,6 +34,7 @@ export default function GeneralSection({
     name,
     description,
     status,
+    showPriorityEmoji,
     formState,
     isPending,
     onIconChange,
@@ -38,6 +42,7 @@ export default function GeneralSection({
     onNameChange,
     onDescriptionChange,
     onStatusChange,
+    onShowPriorityEmojiChange,
 }: Readonly<GeneralSectionProps>) {
     return (
         <div className="space-y-5">
@@ -133,6 +138,33 @@ export default function GeneralSection({
                     )}
                 </div>
                 <ZodErrors error={formState?.zodErrors?.status} />
+            </div>
+            <div className="space-y-1">
+                <h3 className="font-semibold">Priority</h3>
+                <div className="flex items-center gap-2">
+                    <Checkbox
+                        id="show-priority-emoji-input"
+                        name="show-priority-emoji-input"
+                        checked={!!showPriorityEmoji}
+                        onCheckedChange={() =>
+                            onShowPriorityEmojiChange(!showPriorityEmoji)
+                        }
+                        defaultValue={
+                            formState?.formData
+                                ?.get("show-priority-emoji-input")
+                                ?.toString() ?? undefined
+                        }
+                        className="rounded-md border-border data-[state=checked]:border-bright-blue data-[state=checked]:bg-bright-blue"
+                        disabled={isPending}
+                    />
+                    <label
+                        htmlFor="show-priority-emoji-input"
+                        className="text-sm text-muted-foreground"
+                    >
+                        Show emoji in the priority
+                    </label>
+                </div>
+                <ZodErrors error={formState?.zodErrors?.showPriorityEmoji} />
             </div>
         </div>
     );

@@ -11,6 +11,7 @@ interface DaySidebarProps {
     dateStr: string;
     tasks: Task[];
     columns?: Column[];
+    showPriorityEmoji: boolean;
     onOpenCreate: () => void;
     onOpenDetails: (task: Task) => void;
 }
@@ -19,6 +20,7 @@ export default function DaySidebar({
     dateStr,
     tasks,
     columns,
+    showPriorityEmoji,
     onOpenCreate,
     onOpenDetails,
 }: Readonly<DaySidebarProps>) {
@@ -131,6 +133,9 @@ export default function DaySidebar({
                                             <SidebarEventCard
                                                 key={task.id}
                                                 task={task}
+                                                showPriorityEmoji={
+                                                    showPriorityEmoji
+                                                }
                                                 onOpen={() =>
                                                     onOpenDetails(task)
                                                 }
@@ -166,6 +171,9 @@ export default function DaySidebar({
                                             <SidebarEventCard
                                                 key={task.id}
                                                 task={task}
+                                                showPriorityEmoji={
+                                                    showPriorityEmoji
+                                                }
                                                 onOpen={() =>
                                                     onOpenDetails(task)
                                                 }
@@ -179,6 +187,7 @@ export default function DaySidebar({
                                 <SidebarEventCard
                                     key={task.id}
                                     task={task}
+                                    showPriorityEmoji={showPriorityEmoji}
                                     onOpen={() => onOpenDetails(task)}
                                 />
                             ))

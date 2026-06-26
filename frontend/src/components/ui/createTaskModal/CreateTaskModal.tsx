@@ -250,6 +250,9 @@ export function CreateTaskModal({
                                 formState={formState}
                                 isPending={isPending}
                                 priority={priority}
+                                showPriorityEmoji={
+                                    selectedProject.show_priority_emoji
+                                }
                                 onPriorityChange={setPriority}
                             />
                             <MembersSection
