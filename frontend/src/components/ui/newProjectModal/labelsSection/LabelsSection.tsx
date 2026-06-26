@@ -25,7 +25,7 @@ export default function LabelsSection({
     onFormDataChange,
 }: Readonly<LabelsSectionProps>) {
     const [newLabelName, setNewLabelName] = useState<string>("");
-    const [newLabelColor, setNewLabelColor] = useState<string>("#000");
+    const [newLabelColor, setNewLabelColor] = useState<string>("#000000");
 
     const addLabel = () => {
         if (!newLabelName.trim()) {

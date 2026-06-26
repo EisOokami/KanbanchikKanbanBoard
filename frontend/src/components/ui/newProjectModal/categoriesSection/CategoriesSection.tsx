@@ -25,7 +25,7 @@ export default function CategoriesSection({
     onFormDataChange,
 }: Readonly<CategoriesSectionProps>) {
     const [newCategoryName, setNewCategoryName] = useState<string>("");
-    const [newCatColor, setNewCatColor] = useState<string>("#000");
+    const [newCatColor, setNewCatColor] = useState<string>("#000000");
 
     const addCategory = () => {
         if (!newCategoryName.trim()) {
