@@ -156,7 +156,14 @@ export const resetPasswordSchema = z.object({
 });
 
 const namedColorSchema = z.object({
-    id: z.number().int().positive().optional(),
+    id: z
+        .number()
+        .positive()
+        .int("ID must be an integer")
+        .refine((value) => Number.isSafeInteger(value), {
+            message: "ID is too large a numerical value",
+        })
+        .optional(),
     name: z
         .string()
         .min(1, "Name is required")
@@ -171,7 +178,14 @@ const namedColorSchema = z.object({
 });
 
 const columnSchema = z.object({
-    id: z.number().int().positive().optional(),
+    id: z
+        .number()
+        .positive()
+        .int("ID must be an integer")
+        .refine((value) => Number.isSafeInteger(value), {
+            message: "ID is too large a numerical value",
+        })
+        .optional(),
     name: z
         .string()
         .min(1, "Name is required")
@@ -218,7 +232,13 @@ export const createProjectSchema = z.object({
 });
 
 const memberSchema = z.object({
-    id: z.number().int().positive(),
+    id: z
+        .number()
+        .positive()
+        .int("ID must be an integer")
+        .refine((value) => Number.isSafeInteger(value), {
+            message: "ID is too large a numerical value",
+        }),
     name: z
         .string()
         .trim()
