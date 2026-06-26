@@ -49,6 +49,7 @@ export default function StatusSection({
                 )}
             </div>
             <ZodErrors error={formState?.zodErrors?.status} />
+            <input type="hidden" name="status" value={status} />
         </div>
     );
 }
