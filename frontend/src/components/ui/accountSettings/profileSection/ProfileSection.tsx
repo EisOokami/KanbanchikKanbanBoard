@@ -229,7 +229,7 @@ export default function ProfileSection({
                     </FieldRow>
                 </div>
             </div>
-            <div>
+            <div className="!mb-4">
                 {formState?.message && (
                     <div
                         className={cn(
