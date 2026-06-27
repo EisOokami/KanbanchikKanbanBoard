@@ -639,7 +639,7 @@ export const deleteAvatar = async (req: IGetUserRequest, res: Response) => {
         }
 
         const [updateRows] = await pool.execute<ResultSetHeader>(
-            `UPDATE users SET avatar_url = "" WHERE id = ?`,
+            `UPDATE users SET avatar_url = NULL WHERE id = ?`,
             [userId],
         );
 
