@@ -28,6 +28,7 @@ export interface Project extends RowDataPacket {
     color: string;
     description: string | null;
     status: Status;
+    show_priority_emoji: number;
     created_at: string;
     updated_at: string;
 }

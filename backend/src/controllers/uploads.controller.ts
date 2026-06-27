@@ -585,8 +585,8 @@ export const deleteAvatar = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
-        const url = new URL(validatedData.avatar_url);
-        const pathname = url.pathname;
+        // const url = new URL(validatedData.avatar_url);
+        // const pathname = url.pathname;
 
         const [attachments] = await pool.execute<
             (Pick<Attachment, "id" | "file_url" | "uploader_id" | "task_id"> &
@@ -597,7 +597,7 @@ export const deleteAvatar = async (req: IGetUserRequest, res: Response) => {
                 FROM attachments 
                 WHERE file_url = ? AND uploader_id = ?
             `,
-            [pathname, userId],
+            [validatedData.avatar_url, userId],
         );
 
         if (!attachments || !attachments.length) {

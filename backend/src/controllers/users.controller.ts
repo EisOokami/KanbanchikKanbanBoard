@@ -86,10 +86,20 @@ export const updateProfile = async (
     res: Response,
 ): Promise<void> => {
     try {
+        const { id } = req.user;
+
+        if (!id) {
+            res.status(401).json({
+                status: "error",
+                message: "Unauthorized",
+            });
+
+            return;
+        }
+
         const validateData = updateProfileSchema.parse(req.body);
 
-        const { name, surname, email } = validateData;
-        const { id } = req.user;
+        const { name, surname, email, color } = validateData;
 
         if (!email) {
             res.status(400).json({
@@ -131,15 +141,10 @@ export const updateProfile = async (
             updateValues.push(email);
         }
 
-        // if (avatar_url) {
-        //     updateFields.push("avatar_url = ?");
-        //     updateValues.push(avatar_url);
-        // }
-
-        // if (color) {
-        //     updateFields.push("color = ?");
-        //     updateValues.push(color);
-        // }
+        if (color) {
+            updateFields.push("color = ?");
+            updateValues.push(color);
+        }
 
         if (updateFields.length === 0) {
             res.status(400).json({

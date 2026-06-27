@@ -18,21 +18,14 @@ export const updateProfileSchema = z
             .toLowerCase()
             .min(1, "Email is required")
             .max(255, "Email must be less than 255 characters long"),
-        // avatar_url: z
-        //     .url({ message: "Invalid avatar URL" })
-        //     .max(500, {
-        //         message: "Avatar URL must be less than 500 characters",
-        //     })
-        //     .nullable()
-        //     .optional(),
-        // color: z
-        //     .string()
-        //     .trim()
-        //     .length(7, { message: "Color must be a valid HEX value" })
-        //     .regex(/^#[0-9A-Fa-f]{6}$/, {
-        //         message: "Color must be a valid HEX value",
-        //     })
-        //     .optional(),
+        color: z
+            .string()
+            .trim()
+            .length(7, { message: "Color must be a valid HEX value" })
+            .regex(/^#[0-9A-Fa-f]{6}$/, {
+                message: "Color must be a valid HEX value",
+            })
+            .optional(),
     })
     .refine((data) => Object.values(data).some((v) => v !== undefined), {
         message: "At least one field must be provided",
