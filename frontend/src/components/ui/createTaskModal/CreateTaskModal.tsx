@@ -313,24 +313,23 @@ export default function CreateTaskModal({
                     )}
                     <DialogFooter className="flex items-center !justify-between gap-3 border-t border-border/60 px-6 py-4">
                         <div>
-                            {formState?.message && (
-                                <div
-                                    className={cn(
-                                        "flex items-center gap-2 rounded-md text-sm",
-                                        formState?.status === "error"
-                                            ? "text-red-500"
-                                            : formState?.status === "success"
-                                              ? "text-green-500"
-                                              : "text-yellow-300",
-                                    )}
-                                >
-                                    <InfoIcon
-                                        weight="duotone"
-                                        className="size-4"
-                                    />
-                                    <p>{formState?.message}</p>
-                                </div>
-                            )}
+                            {formState?.status !== "success" &&
+                                formState?.message && (
+                                    <div
+                                        className={cn(
+                                            "flex items-center gap-2 rounded-md text-sm",
+                                            formState?.status === "error"
+                                                ? "text-red-500"
+                                                : "text-yellow-300",
+                                        )}
+                                    >
+                                        <InfoIcon
+                                            weight="duotone"
+                                            className="size-4"
+                                        />
+                                        <p>{formState?.message}</p>
+                                    </div>
+                                )}
                             {formState?.details &&
                                 formState?.details?.length &&
                                 formState.details.map((error) => (
