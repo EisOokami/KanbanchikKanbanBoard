@@ -77,40 +77,45 @@ export default function LabelsSection({
                         ))}
                     </div>
                 )}
-                <div className="flex items-center gap-2">
-                    <ColorPicker
-                        value={newLabelColor}
-                        onChange={setNewLabelColor}
-                        isPending={isPending}
-                    />
-                    <div className="flex w-full gap-2">
-                        <Input
-                            id="labels"
-                            name="label"
-                            placeholder="Label name…"
-                            value={newLabelName}
-                            onChange={(e) => setNewLabelName(e.target.value)}
-                            onKeyDown={(e) =>
-                                e.key === "Enter" &&
-                                (e.preventDefault(), addLabel())
-                            }
-                            className={cn(
-                                "h-8 flex-1 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue",
-                                formState?.zodErrors?.labels
-                                    ? "border-red-500"
-                                    : "",
-                            )}
-                            disabled={isPending}
+                <div>
+                    <div className="flex items-center gap-2">
+                        <ColorPicker
+                            value={newLabelColor}
+                            onChange={setNewLabelColor}
+                            isPending={isPending}
                         />
-                        <Button
-                            type="button"
-                            size="sm"
-                            onClick={addLabel}
-                            className="h-8 gap-1 bg-bright-blue text-white hover:bg-blue-600 [&_svg]:size-4"
-                            disabled={isPending}
-                        >
-                            <PlusIcon weight="duotone" className="size-4" /> Add
-                        </Button>
+                        <div className="flex w-full gap-2">
+                            <Input
+                                id="labels"
+                                name="label"
+                                placeholder="Label name…"
+                                value={newLabelName}
+                                onChange={(e) =>
+                                    setNewLabelName(e.target.value)
+                                }
+                                onKeyDown={(e) =>
+                                    e.key === "Enter" &&
+                                    (e.preventDefault(), addLabel())
+                                }
+                                className={cn(
+                                    "h-8 flex-1 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue",
+                                    formState?.zodErrors?.labels
+                                        ? "border-red-500"
+                                        : "",
+                                )}
+                                disabled={isPending}
+                            />
+                            <Button
+                                type="button"
+                                size="sm"
+                                onClick={addLabel}
+                                className="h-8 gap-1 bg-bright-blue text-white hover:bg-blue-600 [&_svg]:size-4"
+                                disabled={isPending}
+                            >
+                                <PlusIcon weight="duotone" className="size-4" />{" "}
+                                Add
+                            </Button>
+                        </div>
                     </div>
                     <ZodErrors error={formState?.zodErrors?.labels} />
                 </div>

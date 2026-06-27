@@ -134,47 +134,55 @@ export default function LabelsSection({
                             </button>
                         ))}
                 </div>
-                <div className="flex items-center gap-2">
-                    <ColorPicker
-                        value={newLabelColor}
-                        onChange={setNewLabelColor}
-                    />
-                    <div className="flex w-full gap-2">
-                        <Input
-                            id="label"
-                            name="label"
-                            placeholder="Label name…"
-                            value={newLabelName}
-                            defaultValue={
-                                formState?.formData?.get("label")?.toString() ??
-                                undefined
-                            }
-                            onChange={(e) => setNewLabelName(e.target.value)}
-                            onKeyDown={(e) =>
-                                e.key === "Enter" &&
-                                (e.preventDefault(), onNewLabelAdd())
-                            }
-                            className={cn(
-                                "h-8 flex-1 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue",
-                                formState?.zodErrors?.labels
-                                    ? "border-red-500"
-                                    : "",
-                            )}
-                            disabled={isPending}
+                <div>
+                    <div className="flex items-center gap-2">
+                        <ColorPicker
+                            value={newLabelColor}
+                            onChange={setNewLabelColor}
                         />
-                        <Button
-                            type="button"
-                            size="sm"
-                            onClick={onNewLabelAdd}
-                            className="h-8 gap-1 bg-bright-blue text-white hover:bg-blue-600"
-                            disabled={isPending}
-                        >
-                            <PlusIcon weight="duotone" className="size-3.5" />{" "}
-                            Add
-                        </Button>
+                        <div className="flex w-full gap-2">
+                            <Input
+                                id="label"
+                                name="label"
+                                placeholder="Label name…"
+                                value={newLabelName}
+                                defaultValue={
+                                    formState?.formData
+                                        ?.get("label")
+                                        ?.toString() ?? undefined
+                                }
+                                onChange={(e) =>
+                                    setNewLabelName(e.target.value)
+                                }
+                                onKeyDown={(e) =>
+                                    e.key === "Enter" &&
+                                    (e.preventDefault(), onNewLabelAdd())
+                                }
+                                className={cn(
+                                    "h-8 flex-1 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue",
+                                    formState?.zodErrors?.labels
+                                        ? "border-red-500"
+                                        : "",
+                                )}
+                                disabled={isPending}
+                            />
+                            <Button
+                                type="button"
+                                size="sm"
+                                onClick={onNewLabelAdd}
+                                className="h-8 gap-1 bg-bright-blue text-white hover:bg-blue-600"
+                                disabled={isPending}
+                            >
+                                <PlusIcon
+                                    weight="duotone"
+                                    className="size-3.5"
+                                />{" "}
+                                Add
+                            </Button>
+                        </div>
                     </div>
+                    <ZodErrors error={formState?.zodErrors?.labels} />
                 </div>
-                <ZodErrors error={formState?.zodErrors?.labels} />
             </div>
         </div>
     );

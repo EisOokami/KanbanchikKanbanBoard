@@ -136,48 +136,55 @@ export default function CategoriesSection({
                             </button>
                         ))}
                 </div>
-                <div className="flex items-center gap-2">
-                    <ColorPicker
-                        value={newCategoryColor}
-                        onChange={setNewCategoryColor}
-                    />
-                    <div className="flex w-full gap-2">
-                        <Input
-                            id="category"
-                            name="category"
-                            placeholder="Category name…"
-                            value={newCategoryName}
-                            defaultValue={
-                                formState?.formData
-                                    ?.get("category")
-                                    ?.toString() ?? undefined
-                            }
-                            onChange={(e) => setNewCategoryName(e.target.value)}
-                            onKeyDown={(e) =>
-                                e.key === "Enter" &&
-                                (e.preventDefault(), onNewCategoryAdd())
-                            }
-                            className={cn(
-                                "h-8 flex-1 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue",
-                                formState?.zodErrors?.categories
-                                    ? "border-red-500"
-                                    : "",
-                            )}
-                            disabled={isPending}
+                <div>
+                    <div className="flex items-center gap-2">
+                        <ColorPicker
+                            value={newCategoryColor}
+                            onChange={setNewCategoryColor}
                         />
-                        <Button
-                            type="button"
-                            size="sm"
-                            onClick={onNewCategoryAdd}
-                            className="h-8 gap-1 bg-bright-blue text-white hover:bg-blue-600"
-                            disabled={isPending}
-                        >
-                            <PlusIcon weight="duotone" className="size-3.5" />{" "}
-                            Add
-                        </Button>
+                        <div className="flex w-full gap-2">
+                            <Input
+                                id="category"
+                                name="category"
+                                placeholder="Category name…"
+                                value={newCategoryName}
+                                defaultValue={
+                                    formState?.formData
+                                        ?.get("category")
+                                        ?.toString() ?? undefined
+                                }
+                                onChange={(e) =>
+                                    setNewCategoryName(e.target.value)
+                                }
+                                onKeyDown={(e) =>
+                                    e.key === "Enter" &&
+                                    (e.preventDefault(), onNewCategoryAdd())
+                                }
+                                className={cn(
+                                    "h-8 flex-1 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue",
+                                    formState?.zodErrors?.categories
+                                        ? "border-red-500"
+                                        : "",
+                                )}
+                                disabled={isPending}
+                            />
+                            <Button
+                                type="button"
+                                size="sm"
+                                onClick={onNewCategoryAdd}
+                                className="h-8 gap-1 bg-bright-blue text-white hover:bg-blue-600"
+                                disabled={isPending}
+                            >
+                                <PlusIcon
+                                    weight="duotone"
+                                    className="size-3.5"
+                                />{" "}
+                                Add
+                            </Button>
+                        </div>
                     </div>
+                    <ZodErrors error={formState?.zodErrors?.categories} />
                 </div>
-                <ZodErrors error={formState?.zodErrors?.categories} />
             </div>
         </div>
     );
