@@ -24,8 +24,9 @@ export default function DescriptionSection({
                 name="description"
                 placeholder="What is this project about?"
                 defaultValue={
-                    formState?.formData?.get("description")?.toString() ??
-                    undefined
+                    formState?.status !== "success"
+                        ? formState?.formData?.get("description")?.toString()
+                        : undefined
                 }
                 className={cn(
                     "min-h-[72px] resize-none bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue",

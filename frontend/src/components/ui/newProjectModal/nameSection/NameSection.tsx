@@ -24,7 +24,9 @@ export default function NameSection({
                 name="name"
                 placeholder="e.g. Website Redesign"
                 defaultValue={
-                    formState?.formData?.get("name")?.toString() ?? undefined
+                    formState?.status !== "success"
+                        ? formState?.formData?.get("name")?.toString()
+                        : undefined
                 }
                 className={cn(
                     "h-9 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue",
