@@ -119,6 +119,10 @@ export default function CreateTaskModal({
 
     useEffect(() => {
         (async () => {
+            if (!open) {
+                return;
+            }
+
             if (formState && formState.status === "success" && formState.data) {
                 const result = await getTaskData(formState.data.id);
 
@@ -127,6 +131,29 @@ export default function CreateTaskModal({
         })();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [formState]);
+
+    useEffect(() => {
+        if (!open) {
+            return;
+        }
+
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setFormData({
+            categories: [],
+            newCategories: [],
+            members: [],
+            subtasks: [],
+            attachments: [],
+            labels: [],
+            newLabels: [],
+        });
+        setPriority(Object.keys(PRIORITY_CONFIG)[0]);
+        setStartDate(date ? new Date(date) : undefined);
+        setDueDate(date ? new Date(date) : undefined);
+        setSelectedColumnId(columnId);
+        setProgressShow(false);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [open]);
 
     const toggleMember = (memberValue: Omit<User, "email">) => {
         setFormData((prevState) => ({
@@ -142,15 +169,6 @@ export default function CreateTaskModal({
     };
 
     const handleClose = () => {
-        setFormData({
-            categories: [],
-            newCategories: [],
-            members: [],
-            subtasks: [],
-            attachments: [],
-            labels: [],
-            newLabels: [],
-        });
         onOpenChange(false);
     };
 

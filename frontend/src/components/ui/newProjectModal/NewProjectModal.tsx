@@ -57,11 +57,29 @@ export default function NewProjectModal({
     );
 
     useEffect(() => {
+        if (!open) {
+            return;
+        }
+
         if (formState && formState.status === "success") {
             onClose();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [formState]);
+
+    useEffect(() => {
+        if (!open) {
+            return;
+        }
+
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setFormData({
+            members: [],
+            categories: [],
+            columns: Object.values(COLUMNS_CONFIG),
+            labels: [],
+        });
+    }, [open]);
 
     const handleClose = () => {
         onClose();
