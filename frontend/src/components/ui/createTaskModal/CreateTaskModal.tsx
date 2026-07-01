@@ -210,7 +210,10 @@ export default function CreateTaskModal({
 
     return (
         <Dialog open={open} onOpenChange={handleClose}>
-            <DialogContent className="flex max-h-[92vh] w-full max-w-2xl flex-col gap-0 overflow-hidden rounded-md border border-border/70 p-0 shadow-2xl">
+            <DialogContent
+                className="flex max-h-[92vh] w-full max-w-2xl flex-col gap-0 overflow-hidden rounded-md border border-border/70 p-0 shadow-2xl"
+                aria-describedby={undefined}
+            >
                 <form
                     action={formAction}
                     noValidate

@@ -119,7 +119,10 @@ export default function InviteMemberModal({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="w-[95vw] max-w-[560px] gap-0 overflow-hidden p-0 shadow-xl [&>button:first-of-type]:hidden">
+            <DialogContent
+                className="w-[95vw] max-w-[560px] gap-0 overflow-hidden p-0 shadow-xl [&>button:first-of-type]:hidden"
+                aria-describedby={undefined}
+            >
                 <form
                     action={formAction}
                     noValidate

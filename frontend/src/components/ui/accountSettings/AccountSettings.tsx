@@ -66,7 +66,10 @@ export default function AccountSettingsModal({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="flex h-[88vh] max-h-[680px] w-[95vw] max-w-[860px] flex-col gap-0 overflow-hidden rounded-md border bg-white p-0 shadow-xl [&>button:last-child]:hidden">
+            <DialogContent
+                className="flex h-[88vh] max-h-[680px] w-[95vw] max-w-[860px] flex-col gap-0 overflow-hidden rounded-md border bg-white p-0 shadow-xl [&>button:last-child]:hidden"
+                aria-describedby={undefined}
+            >
                 <DialogTitle className="hidden"></DialogTitle>
                 <div className="flex flex-1 overflow-hidden">
                     <nav className="flex w-48 shrink-0 flex-col border-r">
