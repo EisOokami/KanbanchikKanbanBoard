@@ -1619,6 +1619,13 @@ const updateProfileSchema = z.object({
         .toLowerCase()
         .min(1, "Email is required")
         .max(255, "Email must be less than 255 characters long"),
+    color: z
+        .string()
+        .trim()
+        .length(7, { message: "Color must be a valid HEX value" })
+        .regex(/^#[0-9A-Fa-f]{6}$/, {
+            message: "Color must be a valid HEX value",
+        }),
 });
 
 export async function updateProfileAction(
@@ -1631,6 +1638,7 @@ export async function updateProfileAction(
         name: formData.get("name"),
         surname: formData.get("surname"),
         email: formData.get("email"),
+        color: formData.get("color"),
     });
 
     if (!validatedFields.success) {

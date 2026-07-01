@@ -14,6 +14,7 @@ import { ZodErrors } from "../../zodErrors/ZodErrors";
 import { User } from "@/types/types";
 import { cn, getInitials } from "@/libs/utils";
 import { DetailsErrors } from "../../detailsErrors/DetailsErrors";
+import AvatarColorPicker from "./avatarColorPicker/AvatarColorPicker";
 
 const INITIAL_STATE: BaseAction = {
     zodErrors: null,
@@ -35,6 +36,7 @@ export default function ProfileSection({
         userData.avatar_url,
     );
     const [isChanged, setIsChanged] = useState<boolean>(false);
+    const [avatarColor, setAvatarColor] = useState<string>(userData.color);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [formState, formAction, isPending] = useActionState(
         updateProfileAction,
@@ -74,6 +76,11 @@ export default function ProfileSection({
         }
     };
 
+    const handleChangeAvatarColor = (color: string) => {
+        setAvatarColor(color);
+        setIsChanged(true);
+    };
+
     return (
         <form action={formAction} className="space-y-5">
             <div>
@@ -102,7 +109,7 @@ export default function ProfileSection({
                             <AvatarImage src={avatarPreview} />
                             <AvatarFallback
                                 className="text-xl font-bold text-white"
-                                style={{ backgroundColor: userData.color }}
+                                style={{ backgroundColor: avatarColor }}
                             >
                                 {getInitials(userData.name, userData.surname)}
                             </AvatarFallback>
@@ -111,6 +118,7 @@ export default function ProfileSection({
                             type="button"
                             className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
                             onClick={() => fileInputRef.current?.click()}
+                            disabled={isPending}
                         >
                             <CameraIcon
                                 weight="duotone"
@@ -125,6 +133,7 @@ export default function ProfileSection({
                             size="sm"
                             className="mr-2 h-7 text-xs"
                             onClick={() => fileInputRef.current?.click()}
+                            disabled={isPending}
                         >
                             Upload photo
                         </Button>
@@ -135,22 +144,39 @@ export default function ProfileSection({
                                 size="sm"
                                 className="h-7 text-xs text-gray-400"
                                 onClick={handleRemoveAvatar}
+                                disabled={isPending}
                             >
                                 Remove
                             </Button>
                         )}
-                        {avatarPreview === userData.avatar_url && (
-                            <Button
-                                type="button"
-                                variant="destructive"
-                                size="sm"
-                                className="h-7 text-xs"
-                                onClick={() =>
-                                    handleDeleteAvatar(userData.avatar_url)
-                                }
-                            >
-                                Delete
-                            </Button>
+                        {userData.avatar_url &&
+                            avatarPreview === userData.avatar_url && (
+                                <Button
+                                    type="button"
+                                    variant="destructive"
+                                    size="sm"
+                                    className="h-7 text-xs"
+                                    onClick={() =>
+                                        handleDeleteAvatar(userData.avatar_url)
+                                    }
+                                    disabled={isPending}
+                                >
+                                    Delete
+                                </Button>
+                            )}
+                        {!userData.avatar_url && (
+                            <>
+                                <AvatarColorPicker
+                                    value={avatarColor}
+                                    onChange={handleChangeAvatarColor}
+                                    isPending={isPending}
+                                />
+                                <input
+                                    name="color"
+                                    type="hidden"
+                                    value={avatarColor}
+                                />
+                            </>
                         )}
                         <p className="mt-1.5 text-xs text-gray-400">
                             JPG, PNG or WebP. Max 2 MB.
@@ -259,12 +285,6 @@ export default function ProfileSection({
                 onDiscard={() => setIsChanged(false)}
                 isPending={isPending}
             />
-            {/* {isChanged && (
-                <div className="mt-3 flex items-center gap-2 text-sm text-emerald-600 animate-in fade-in slide-in-from-bottom-2">
-                    <CheckCircleIcon weight="duotone" className="size-4" />{" "}
-                    Changes saved!
-                </div>
-            )} */}
         </form>
     );
 }
