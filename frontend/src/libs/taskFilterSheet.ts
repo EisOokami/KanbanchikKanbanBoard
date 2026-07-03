@@ -129,6 +129,27 @@ export function applyTaskFilters(
             tasks = tasks.filter(isDueSoon);
         }
 
+        if (filters.start_date_range?.from) {
+            const { from, to } = filters.start_date_range;
+
+            tasks = tasks.filter((task) => {
+                if (!task.start_date) {
+                    return false;
+                }
+
+                const date = new Date(task.start_date);
+
+                if (date < from) {
+                    return false;
+                }
+                if (to && date > to) {
+                    return false;
+                }
+
+                return true;
+            });
+        }
+
         if (filters.date_range?.from) {
             tasks = tasks.filter((task) => {
                 if (!task.due_date) {
@@ -183,6 +204,7 @@ export function countActive(filters: FilterState): number {
     if (filters.categories?.length) n += filters.categories.length;
     if (filters.date_range?.from) n++;
     if (filters.due_soon) n++;
+    if (filters.start_date_range?.from) n++;
     if (filters.overdue) n++;
     if (filters.has_attachment) n++;
     if (filters.has_subtasks) n++;

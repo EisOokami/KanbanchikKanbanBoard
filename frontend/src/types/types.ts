@@ -141,6 +141,7 @@ export interface FilterState {
     has_subtasks?: boolean;
     due_soon?: boolean;
     date_range?: DateRange | undefined;
+    start_date_range?: DateRange | undefined;
     sortField?: TaskSortField;
     sortDirection?: SortDirection;
 }

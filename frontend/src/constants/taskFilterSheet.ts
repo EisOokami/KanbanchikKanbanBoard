@@ -10,6 +10,7 @@ export const DEFAULT_FILTER: FilterState = {
     overdue: false,
     date_range: undefined,
     due_soon: false,
+    start_date_range: undefined,
     has_attachment: false,
     has_subtasks: false,
     progress: [0, 100],

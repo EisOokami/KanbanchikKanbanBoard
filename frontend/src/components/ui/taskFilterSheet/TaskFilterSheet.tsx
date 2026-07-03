@@ -27,6 +27,7 @@ import DueDateSection from "./dueDateSection/DueDateSection";
 import ProgressSection from "./progressSection/ProgressSection";
 import HasSection from "./hasSection/HasSection";
 import { useDebouncedCallback } from "use-debounce";
+import StartDateSection from "./startDateSection/StartDateSection";
 
 interface TaskFilterSheetProps {
     open: boolean;
@@ -169,6 +170,8 @@ export default function TaskFilterSheet({
                             <Separator />
                         </>
                     )}
+                    <StartDateSection filters={filters} onUpdate={update} />
+                    <Separator />
                     <DueDateSection filters={filters} onUpdate={update} />
                     <Separator />
                     {filters.progress && (
