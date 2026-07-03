@@ -58,6 +58,7 @@ import {
 import { DEFAULT_FILTER } from "@/constants/taskFilterSheet";
 import { applyTaskFilters } from "@/libs/taskFilterSheet";
 import ListDragOverlay from "@/components/ui/listDragOverlay/ListDragOverlay";
+import { toast } from "sonner";
 
 interface ProjectProps {
     userData: User;
@@ -321,6 +322,22 @@ export default function Project({
 
             if (!result || !result.ok) {
                 setColumns(Object.values(projectData.columns));
+
+                toast.success("Error", {
+                    description: "Something went wrong",
+                });
+            }
+
+            if (result && result.ok) {
+                toast.success("Success", {
+                    description: `Task has been deleted`,
+                });
+            }
+
+            if (result && !result.ok) {
+                toast.success("Error", {
+                    description: result.message,
+                });
             }
         },
         [projectData],

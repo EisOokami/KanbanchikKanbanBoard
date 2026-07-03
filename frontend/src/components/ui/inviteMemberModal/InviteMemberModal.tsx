@@ -35,6 +35,7 @@ import { generateInviteAction, inviteMemberAction } from "@/data/actions";
 import { BaseAction } from "@/types/actions";
 import { ZodErrors } from "../zodErrors/ZodErrors";
 import { DetailsErrors } from "../detailsErrors/DetailsErrors";
+import { toast } from "sonner";
 
 interface InviteMemberModalProps {
     open: boolean;
@@ -87,7 +88,23 @@ export default function InviteMemberModal({
         const result = await generateInviteAction(projectData.id);
 
         if (!result || !result.ok || !result.inviteUrl) {
+            toast.success("Error", {
+                description: "Something went wrong",
+            });
+
             return;
+        }
+
+        if (result && result.ok) {
+            toast.success("Success", {
+                description: `Invite has been sent`,
+            });
+        }
+
+        if (result && !result.ok) {
+            toast.success("Error", {
+                description: result.message,
+            });
         }
 
         navigator.clipboard.writeText(result.inviteUrl);

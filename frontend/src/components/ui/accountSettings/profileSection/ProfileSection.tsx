@@ -15,6 +15,7 @@ import { User } from "@/types/types";
 import { cn, getInitials } from "@/libs/utils";
 import { DetailsErrors } from "../../detailsErrors/DetailsErrors";
 import AvatarColorPicker from "./avatarColorPicker/AvatarColorPicker";
+import { toast } from "sonner";
 
 const INITIAL_STATE: BaseAction = {
     zodErrors: null,
@@ -71,7 +72,23 @@ export default function ProfileSection({
     const handleDeleteAvatar = async (avatar_url: string) => {
         const result = await deleteAvatarAction(avatar_url);
 
+        if (!result || !result.ok) {
+            toast.success("Error", {
+                description: "Something went wrong",
+            });
+        }
+
+        if (result && !result.ok) {
+            toast.success("Error", {
+                description: result.message,
+            });
+        }
+
         if (result && result.ok) {
+            toast.success("Success", {
+                description: `Avatar has been deleted`,
+            });
+
             setAvatarPreview("");
         }
     };

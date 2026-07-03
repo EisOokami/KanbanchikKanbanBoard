@@ -11,6 +11,7 @@ import { buildSlides, isImage, isPdf, isVideo } from "@/libs/taskDetailsSheet";
 import AttachmentRow from "./attachmentRow/AttachmentRow";
 import Video from "yet-another-react-lightbox/plugins/video";
 import "yet-another-react-lightbox/styles.css";
+import { toast } from "sonner";
 
 interface AttachmentSectionProps {
     formState: BaseAction | undefined;
@@ -97,7 +98,23 @@ export default function AttachmentSection({
     const removeAttachment = async (id: number) => {
         const result = await deleteAttachmentAction(id);
 
+        if (!result || !result.ok) {
+            toast.success("Error", {
+                description: "Something went wrong",
+            });
+        }
+
+        if (result && !result.ok) {
+            toast.success("Error", {
+                description: result.message,
+            });
+        }
+
         if (result && result.ok) {
+            toast.success("Success", {
+                description: `Attachment has been deleted`,
+            });
+
             onFormDataChange({
                 ...formData,
                 attachments: formData.attachments.filter(

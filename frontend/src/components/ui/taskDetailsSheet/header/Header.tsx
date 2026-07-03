@@ -18,6 +18,7 @@ import { Column, Priority, Project, Task } from "@/types/types";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../../shadcn/tooltip";
 import { useState } from "react";
 import { deleteTaskAction, generateInviteAction } from "@/data/actions";
+import { toast } from "sonner";
 
 interface HeaderProps {
     isPending: boolean;
@@ -40,12 +41,50 @@ export default function Header({
         const result = await generateInviteAction(projectData.id);
 
         if (!result || !result.ok || !result.inviteUrl) {
+            toast.success("Error", {
+                description: "Something went wrong",
+            });
+
             return;
+        }
+
+        if (result && result.ok) {
+            toast.success("Success", {
+                description: `Invite has been sent`,
+            });
+        }
+
+        if (result && !result.ok) {
+            toast.success("Error", {
+                description: result.message,
+            });
         }
 
         navigator.clipboard.writeText(result.inviteUrl);
         setLinkCopied(true);
         setTimeout(() => setLinkCopied(false), 2000);
+    };
+
+    const handleDeleteTask = async (id: number) => {
+        const result = await deleteTaskAction(id);
+
+        if (!result || !result.ok) {
+            toast.success("Error", {
+                description: "Something went wrong",
+            });
+        }
+
+        if (result && result.ok) {
+            toast.success("Success", {
+                description: `Task has been deleted`,
+            });
+        }
+
+        if (result && !result.ok) {
+            toast.success("Error", {
+                description: result.message,
+            });
+        }
     };
 
     return (
@@ -147,7 +186,7 @@ export default function Header({
                     <TooltipTrigger
                         asChild
                         disabled={isPending}
-                        onClick={async () => await deleteTaskAction(task.id)}
+                        onClick={() => handleDeleteTask(task.id)}
                     >
                         <button
                             type="button"

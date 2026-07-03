@@ -47,6 +47,7 @@ import { getProjectData } from "@/data/loaders";
 import { DEFAULT_FILTER } from "@/constants/taskFilterSheet";
 import TasksTh from "@/components/ui/tasksTh/TasksTh";
 import { deleteTaskAction } from "@/data/actions";
+import { toast } from "sonner";
 
 interface TasksProps {
     tasksData: Task[];
@@ -82,7 +83,25 @@ export default function Tasks({
 
     const deleteTask = useCallback(
         async (id: number) => {
-            await deleteTaskAction(id, "/tasks");
+            const result = await deleteTaskAction(id, "/tasks");
+
+            if (!result || !result.ok) {
+                toast.success("Error", {
+                    description: "Something went wrong",
+                });
+            }
+
+            if (result && result.ok) {
+                toast.success("Success", {
+                    description: `Task has been deleted`,
+                });
+            }
+
+            if (result && !result.ok) {
+                toast.success("Error", {
+                    description: result.message,
+                });
+            }
 
             if (selectedTask && selectedTask.id === id) {
                 setSelectedTask(null);
