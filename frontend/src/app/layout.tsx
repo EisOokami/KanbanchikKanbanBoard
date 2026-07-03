@@ -3,6 +3,7 @@ import { Montserrat } from "next/font/google";
 import { cn } from "@/libs/utils";
 import "./globals.css";
 import { Toaster } from "sonner";
+import "sonner/dist/styles.css";
 
 const montserrat = Montserrat({
     variable: "--font-montserrat",
