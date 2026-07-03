@@ -10,7 +10,6 @@ import { CreateTaskFormData } from "@/types/types";
 import { BaseAction } from "@/types/actions";
 import { Category, Project } from "@/types/types";
 import { useState } from "react";
-import { PALETTE } from "@/constants/constants";
 import { cn } from "@/libs/utils";
 
 interface CategoriesSectionProps {
@@ -29,9 +28,7 @@ export default function CategoriesSection({
     onFormDataChange,
 }: Readonly<CategoriesSectionProps>) {
     const [newCategoryName, setNewCategoryName] = useState<string>("");
-    const [newCategoryColor, setNewCategoryColor] = useState<string>(
-        PALETTE[0],
-    );
+    const [newCategoryColor, setNewCategoryColor] = useState<string>("#000000");
 
     const onNewCategoryAdd = () => {
         const category = newCategoryName.trim();

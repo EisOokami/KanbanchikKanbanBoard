@@ -1,7 +1,6 @@
 import { DateRange } from "react-day-picker";
 
 export type Priority = "low" | "medium" | "high" | "critical";
-
 export interface PriorityConfig {
     id: number;
     label: string;
@@ -9,11 +8,32 @@ export interface PriorityConfig {
     color?: string;
     emoji: string;
 }
-
 export type Status = "active" | "paused" | "completed" | "archived";
 export type Columns = "todo" | "in_progress" | "in_review" | "done";
-
 export type Role = "owner" | "admin" | "member" | "viewer";
+export type SortField =
+    | "title"
+    | "status"
+    | "priority"
+    | "dueDate"
+    | "progress"
+    | "members"
+    | "category"
+    | "project";
+export type TaskSortField =
+    | "title"
+    | "priority"
+    | "due_date"
+    | "created_at"
+    | "progress";
+export type SortDirection = "asc" | "desc";
+export type NavSection =
+    | "general"
+    | "columns"
+    | "categories"
+    | "labels"
+    | "members"
+    | "danger";
 
 export interface Base {
     id: number;
@@ -108,25 +128,6 @@ export interface Column extends ExtendedBase {
     tasks: Task[];
 }
 
-export type SortField =
-    | "title"
-    | "status"
-    | "priority"
-    | "dueDate"
-    | "progress"
-    | "members"
-    | "category"
-    | "project";
-export type SortDir = "asc" | "desc";
-
-export type TaskSortField =
-    | "title"
-    | "priority"
-    | "due_date"
-    | "created_at"
-    | "progress";
-export type SortDirection = "asc" | "desc";
-
 export interface FilterState {
     search: string;
     columns: string[];
@@ -196,4 +197,10 @@ export interface UpdateTaskFormData {
     labels: Label[];
     comments: Comment[];
     newComments: Omit<Comment, "created_at" | "updated_at">[];
+}
+
+export interface GridCell {
+    day: number;
+    dateStr: string;
+    isOtherMonth: boolean;
 }

@@ -1,6 +1,5 @@
 "use client";
 
-import { NavSection } from "@/types/projectSettingsDialog";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -16,6 +15,7 @@ import { Button } from "../../shadcn/button";
 import { ArchiveIcon, TrashSimpleIcon } from "@phosphor-icons/react";
 import { deleteProjectAction } from "@/data/actions";
 import { toast } from "sonner";
+import { NavSection } from "@/types/types";
 
 interface DangerSectionProps {
     name: string;

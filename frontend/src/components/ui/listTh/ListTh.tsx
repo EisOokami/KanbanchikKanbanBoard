@@ -1,6 +1,6 @@
 "use client";
 
-import { SortDir, SortField } from "@/types/types";
+import { SortDirection, SortField } from "@/types/types";
 import { Icon } from "@phosphor-icons/react";
 import SortIcon from "../sortIcon/SortIcon";
 import { cn } from "@/libs/utils";
@@ -18,7 +18,7 @@ export default function ListTh({
     field: SortField;
     className?: string;
     sortField: SortField;
-    sortDir: SortDir;
+    sortDir: SortDirection;
     onSort: (f: SortField) => void;
     Icon?: Icon;
 }>) {

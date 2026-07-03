@@ -7,7 +7,6 @@ import {
 } from "@phosphor-icons/react";
 import { Button } from "../../shadcn/button";
 import { Input } from "../../shadcn/input";
-import { PALETTE } from "@/constants/constants";
 import { useState } from "react";
 import { Label, ProjectSettingsFormData } from "@/types/types";
 import { BaseAction } from "@/types/actions";
@@ -55,7 +54,7 @@ export default function LabelsSection({
                 },
             ],
         });
-        onLabelInputValuesChange({ name: "", color: PALETTE[0] });
+        onLabelInputValuesChange({ name: "", color: "#000000" });
     };
 
     const updateLabel = (id: number, patch: Partial<Label>) => {

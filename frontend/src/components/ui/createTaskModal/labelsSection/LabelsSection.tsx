@@ -8,7 +8,6 @@ import { Button } from "../../shadcn/button";
 import { ZodErrors } from "../../zodErrors/ZodErrors";
 import { Label, Project } from "@/types/types";
 import { useState } from "react";
-import { PALETTE } from "@/constants/constants";
 import { Input } from "../../shadcn/input";
 import { cn } from "@/libs/utils";
 import ColorPicker from "../../colorPicker/ColorPicker";
@@ -29,7 +28,7 @@ export default function LabelsSection({
     onFormDataChange,
 }: Readonly<LabelsSectionProps>) {
     const [newLabelName, setNewLabelName] = useState<string>("");
-    const [newLabelColor, setNewLabelColor] = useState<string>(PALETTE[0]);
+    const [newLabelColor, setNewLabelColor] = useState<string>("#000000");
 
     const onNewLabelAdd = () => {
         const label = newLabelName.trim();

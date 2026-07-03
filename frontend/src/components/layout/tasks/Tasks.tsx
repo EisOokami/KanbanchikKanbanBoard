@@ -20,7 +20,7 @@ import {
     FilterState,
     Priority,
     Project,
-    SortDir,
+    SortDirection,
     SortField,
     Task,
     User,
@@ -62,7 +62,7 @@ export default function Tasks({
 }: Readonly<TasksProps>) {
     const [filter, setFilter] = useState<FilterState>(DEFAULT_FILTER);
     const [sortField, setSortField] = useState<SortField>("priority");
-    const [sortDir, setSortDir] = useState<SortDir>("asc");
+    const [sortDir, setSortDir] = useState<SortDirection>("asc");
     const [selectedTask, setSelectedTask] = useState<Task | null>(null);
     const [projectData, setProjectData] = useState<Project | null>(null);
     const [showNewTaskModal, setShowNewTaskModal] = useState<boolean>(false);

@@ -13,17 +13,11 @@ import {
 import MiniCalendar from "@/components/ui/miniCalendar/MiniCalendar";
 import DayCell from "@/components/ui/dayCell/DayCell";
 import DaySidebar from "@/components/ui/daySidebar/DaySidebar";
-import { Project, Task, User } from "@/types/types";
+import { GridCell, Project, Task, User } from "@/types/types";
 import { MONTHS, WEEKDAYS } from "@/constants/constants";
 import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
 import TaskDetailsSheet from "@/components/ui/taskDetailsSheet/TaskDetailsSheet";
 import { getProjectData } from "@/data/loaders";
-
-interface GridCell {
-    day: number;
-    dateStr: string;
-    isOtherMonth: boolean;
-}
 
 interface CalendarProps {
     tasksData: Task[];

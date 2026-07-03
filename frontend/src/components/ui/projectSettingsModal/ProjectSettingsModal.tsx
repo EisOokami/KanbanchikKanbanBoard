@@ -9,13 +9,13 @@ import {
 import { Button } from "@/components/ui/shadcn/button";
 import { ScrollArea } from "@/components/ui/shadcn/scroll-area";
 import { cn } from "@/libs/utils";
-import { NavSection } from "@/types/projectSettingsDialog";
 import { NAV_ITEMS } from "@/constants/projectSettingsDialog";
 import {
     Project,
     Column,
     Status,
     ProjectSettingsFormData,
+    NavSection,
 } from "@/types/types";
 import { CaretRightIcon, CheckIcon, InfoIcon } from "@phosphor-icons/react";
 import GeneralSection from "./generalSection/GeneralSection";
@@ -26,7 +26,6 @@ import MembersSection from "./membersSection/MembersSection";
 import DangerSection from "./dangerSection/DangerSection";
 import { updateProjectAction } from "@/data/actions";
 import { BaseAction } from "@/types/actions";
-import { PALETTE } from "@/constants/constants";
 import { usePathname } from "next/navigation";
 import { getProjectData } from "@/data/loaders";
 import { DetailsErrors } from "../detailsErrors/DetailsErrors";
@@ -66,14 +65,14 @@ export default function ProjectSettingsModal({
         color: string;
     }>({
         name: "",
-        color: PALETTE[0],
+        color: "#000000",
     });
     const [labelInputValues, setLabelInputValues] = useState<{
         name: string;
         color: string;
     }>({
         name: "",
-        color: PALETTE[0],
+        color: "#000000",
     });
     const [status, setStatus] = useState<Status>(projectData.status);
     const [showPriorityEmoji, setShowPriorityEmoji] = useState<boolean>(

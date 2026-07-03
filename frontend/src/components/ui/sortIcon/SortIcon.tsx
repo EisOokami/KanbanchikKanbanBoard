@@ -1,4 +1,4 @@
-import { SortDir, SortField } from "@/types/types";
+import { SortDirection, SortField } from "@/types/types";
 import {
     CaretDownIcon,
     CaretUpDownIcon,
@@ -8,7 +8,7 @@ import {
 interface SortIconProps {
     field: SortField;
     sortField: SortField;
-    sortDir: SortDir;
+    sortDir: SortDirection;
 }
 
 export default function SortIcon({

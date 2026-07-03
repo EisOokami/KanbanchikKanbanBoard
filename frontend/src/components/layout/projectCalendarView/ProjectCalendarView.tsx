@@ -12,15 +12,9 @@ import {
 import MiniCalendar from "@/components/ui/miniCalendar/MiniCalendar";
 import DayCell from "@/components/ui/dayCell/DayCell";
 import DaySidebar from "@/components/ui/daySidebar/DaySidebar";
-import { Column, Task } from "@/types/types";
+import { Column, GridCell, Task } from "@/types/types";
 import { MONTHS, WEEKDAYS } from "@/constants/constants";
 import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
-
-interface GridCell {
-    day: number;
-    dateStr: string;
-    isOtherMonth: boolean;
-}
 
 interface ProjectCalendarViewProps {
     columns: Column[];

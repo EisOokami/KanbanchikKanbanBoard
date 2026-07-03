@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/shadcn/card";
 import { Input } from "@/components/ui/shadcn/input";
 import ProjectCard from "@/components/ui/projectCard/ProjectCard";
 import NewProjectModal from "@/components/ui/newProjectModal/NewProjectModal";
-import { FilterSortOptions, ViewMode } from "@/types/projectsOverview";
+import { FilterSortOptions } from "@/types/projectsOverview";
 import { Project } from "@/types/types";
 import {
     FunnelIcon,
@@ -42,7 +42,7 @@ export default function ProjectsOverview({
 }: Readonly<ProjectsOverviewProps>) {
     const [search, setSearch] = useState<string>("");
     const [searchValue] = useDebounce(search, 1000);
-    const [view, setView] = useState<ViewMode>("grid");
+    const [view, setView] = useState<"grid" | "list">("grid");
     const [showNewProjectModal, setShowNewProjectModal] =
         useState<boolean>(false);
     const [showFilterSheet, setShowFilterSheet] = useState(false);
@@ -106,30 +106,32 @@ export default function ProjectsOverview({
                             )}
                         </Button>
                         <div className="flex gap-0.5 rounded-md bg-muted/60 p-1">
-                            {(["grid", "list"] as ViewMode[]).map((v) => (
-                                <button
-                                    key={v}
-                                    onClick={() => setView(v)}
-                                    className={cn(
-                                        "rounded-md p-1 transition-colors",
-                                        view === v
-                                            ? "bg-background text-foreground shadow-sm"
-                                            : "text-muted-foreground hover:text-foreground",
-                                    )}
-                                >
-                                    {v === "grid" ? (
-                                        <GridFourIcon
-                                            weight="duotone"
-                                            className="size-5"
-                                        />
-                                    ) : (
-                                        <RowsIcon
-                                            weight="duotone"
-                                            className="size-5"
-                                        />
-                                    )}
-                                </button>
-                            ))}
+                            {(["grid", "list"] as ("grid" | "list")[]).map(
+                                (v) => (
+                                    <button
+                                        key={v}
+                                        onClick={() => setView(v)}
+                                        className={cn(
+                                            "rounded-md p-1 transition-colors",
+                                            view === v
+                                                ? "bg-background text-foreground shadow-sm"
+                                                : "text-muted-foreground hover:text-foreground",
+                                        )}
+                                    >
+                                        {v === "grid" ? (
+                                            <GridFourIcon
+                                                weight="duotone"
+                                                className="size-5"
+                                            />
+                                        ) : (
+                                            <RowsIcon
+                                                weight="duotone"
+                                                className="size-5"
+                                            />
+                                        )}
+                                    </button>
+                                ),
+                            )}
                         </div>
                     </div>
                 </div>

@@ -1,15 +1,15 @@
 "use server";
 
 import {
-    IForgotPassword,
-    ILogin,
-    IRegister,
-    IResetPassword,
+    ForgotPassword,
+    Login,
+    Register,
+    ResetPassword,
 } from "@/types/services";
 
 const baseUrl = process.env.NEXT_PUBLIC_DB_URL;
 
-export async function registerService(userData: IRegister): Promise<
+export async function registerService(userData: Register): Promise<
     | {
           accessToken: string;
           refreshToken: string;
@@ -44,7 +44,7 @@ export async function registerService(userData: IRegister): Promise<
     }
 }
 
-export async function loginService(userData: ILogin): Promise<
+export async function loginService(userData: Login): Promise<
     | {
           accessToken: string;
           refreshToken: string;
@@ -81,7 +81,7 @@ export async function loginService(userData: ILogin): Promise<
     }
 }
 
-export async function forgotPasswordService(userData: IForgotPassword): Promise<
+export async function forgotPasswordService(userData: ForgotPassword): Promise<
     | { status: "error" | "message" | "success"; message: string }
     | {
           error: string;
@@ -111,7 +111,7 @@ export async function forgotPasswordService(userData: IForgotPassword): Promise<
     }
 }
 
-export async function resetPasswordService(userData: IResetPassword): Promise<
+export async function resetPasswordService(userData: ResetPassword): Promise<
     | {
           accessToken: string;
           refreshToken: string;

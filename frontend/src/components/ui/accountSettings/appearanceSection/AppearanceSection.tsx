@@ -1,26 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { DensityId, FontId, ThemeId } from "@/types/accountSettings";
-import { accents, densities, themes } from "@/constants/accountSettings";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "../../shadcn/select";
+import { ThemeId } from "@/types/accountSettings";
+import { accents, themes } from "@/constants/accountSettings";
 import SaveBar from "../saveBar/SaveBar";
 import SectionTitle from "../sectionTitle/SectionTitle";
-import FieldRow from "../fieldRow/FieldRow";
 import { CheckIcon } from "@phosphor-icons/react";
 import { cn } from "@/libs/utils";
 
 export default function AppearanceSection() {
     const [theme, setTheme] = useState<ThemeId>("system");
     const [accent, setAccent] = useState<string>("#6366f1");
-    const [density, setDensity] = useState<DensityId>("comfortable");
-    const [font, setFont] = useState<FontId>("system");
     const [dirty, setDirty] = useState<boolean>(false);
 
     return (
@@ -114,71 +104,6 @@ export default function AppearanceSection() {
                             )}
                         </button>
                     ))}
-                </div>
-            </div>
-            <div className="space-y-2">
-                <SectionTitle>Density</SectionTitle>
-                <div className="grid grid-cols-3 gap-3">
-                    {densities.map(({ id, label, sub }) => (
-                        <button
-                            key={id}
-                            onClick={() => {
-                                setDensity(id);
-                                setDirty(true);
-                            }}
-                            className={cn(
-                                "flex flex-col gap-1 rounded-md border-2 p-3.5 text-left transition-all",
-                                density === id
-                                    ? "border-blue-500 bg-blue-50"
-                                    : "bg-white hover:border-gray-300",
-                            )}
-                        >
-                            <span
-                                className={cn(
-                                    "text-xs font-bold",
-                                    density === id
-                                        ? "text-blue-600"
-                                        : "text-gray-700",
-                                )}
-                            >
-                                {label}
-                            </span>
-                            <span className="text-xs text-gray-400">{sub}</span>
-                        </button>
-                    ))}
-                </div>
-            </div>
-            <div className="space-y-2">
-                <SectionTitle>Font</SectionTitle>
-                <div className="divide-y divide-gray-100 overflow-hidden rounded-md border px-5">
-                    <FieldRow
-                        label="Interface font"
-                        hint="Applied across the entire app"
-                    >
-                        <Select
-                            value={font}
-                            onValueChange={(v: FontId) => {
-                                setFont(v);
-                                setDirty(true);
-                            }}
-                        >
-                            <SelectTrigger className="h-8 w-44 text-sm">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="system">
-                                    System default
-                                </SelectItem>
-                                <SelectItem value="geist">Geist</SelectItem>
-                                <SelectItem value="ibm">
-                                    IBM Plex Sans
-                                </SelectItem>
-                                <SelectItem value="jetbrains">
-                                    JetBrains Mono
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </FieldRow>
                 </div>
             </div>
             <SaveBar

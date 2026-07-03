@@ -1,20 +1,20 @@
-export interface IRegister {
+export interface Register {
     name: string;
     surname: string;
     password: string;
     email: string;
 }
 
-export interface ILogin {
+export interface Login {
     email: string;
     password: string;
 }
 
-export interface IForgotPassword {
+export interface ForgotPassword {
     email: string;
 }
 
-export interface IResetPassword {
+export interface ResetPassword {
     token: string;
     password: string;
     id: number;

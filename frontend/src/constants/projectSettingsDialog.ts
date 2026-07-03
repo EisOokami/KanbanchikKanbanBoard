@@ -1,4 +1,4 @@
-import { NavSection } from "@/types/projectSettingsDialog";
+import { NavSection } from "@/types/types";
 import {
     ArchiveIcon,
     ColumnsIcon,

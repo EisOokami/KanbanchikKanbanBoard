@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, Dispatch, SetStateAction } from "react";
-import { Column, SortDir, SortField, Task } from "@/types/types";
+import { Column, SortDirection, SortField, Task } from "@/types/types";
 import ProjectTaskRow from "@/components/ui/projectTaskRow/ProjectTaskRow";
 import {
     CalendarBlankIcon,
@@ -39,7 +39,7 @@ export default function ProjectListView({
     onOpenDetails,
 }: Readonly<ProjectListViewProps>) {
     const [sortField, setSortField] = useState<SortField>("priority");
-    const [sortDir, setSortDir] = useState<SortDir>("asc");
+    const [sortDir, setSortDir] = useState<SortDirection>("asc");
     const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
     const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
         new Set(),

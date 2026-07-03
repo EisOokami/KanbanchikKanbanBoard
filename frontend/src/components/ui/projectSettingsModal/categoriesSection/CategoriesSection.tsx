@@ -10,7 +10,6 @@ import { Button } from "../../shadcn/button";
 import { Category, ProjectSettingsFormData } from "@/types/types";
 import { BaseAction } from "@/types/actions";
 import { ZodErrors } from "../../zodErrors/ZodErrors";
-import { PALETTE } from "@/constants/constants";
 import ColorPicker from "../../colorPicker/ColorPicker";
 import { useState } from "react";
 
@@ -52,7 +51,7 @@ export default function CategoriesSection({
                 },
             ],
         });
-        onCategoryInputValuesChange({ name: "", color: PALETTE[0] });
+        onCategoryInputValuesChange({ name: "", color: "#000000" });
     };
 
     const updateCategory = (id: number, patch: Partial<Category>) => {

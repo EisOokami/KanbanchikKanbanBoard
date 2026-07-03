@@ -2,7 +2,6 @@
 
 import ProjectColorPicker from "../../projectColorPicker/ProjectColorPicker";
 import { ZodErrors } from "../../zodErrors/ZodErrors";
-import { PROJECT_COLORS } from "@/constants/constants";
 import { useState } from "react";
 import { BaseAction } from "@/types/actions";
 import ProjectIconPicker from "../../projectIconPicker/ProjectIconPicker";
@@ -17,7 +16,7 @@ export default function IconSection({
     isPending,
 }: Readonly<IconSectionProps>) {
     const [icon, setIcon] = useState<string>("🚀");
-    const [projectColor, setProjectColor] = useState<string>(PROJECT_COLORS[0]);
+    const [projectColor, setProjectColor] = useState<string>("#3B82F6");
 
     return (
         <div className="relative space-y-1">
