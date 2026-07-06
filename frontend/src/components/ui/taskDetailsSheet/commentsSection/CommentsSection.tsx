@@ -110,7 +110,9 @@ export default function CommentsSection({
                     )}
                 </div>
             </div>
-            <ZodErrors error={formState?.zodErrors?.comments} />
+            <div>
+                <ZodErrors error={formState?.zodErrors?.comments} />
+            </div>
         </div>
     );
 }

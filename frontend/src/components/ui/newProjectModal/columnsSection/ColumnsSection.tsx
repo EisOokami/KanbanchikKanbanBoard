@@ -135,7 +135,7 @@ export default function ColumnsSection({
                         </SortableContext>
                     </DndContext>
                 </div>
-                <div className=" space-y-1">
+                <div className="space-y-1">
                     <div className="flex gap-2">
                         <Input
                             id="column"
@@ -165,7 +165,9 @@ export default function ColumnsSection({
                             <PlusIcon weight="duotone" className="size-4" /> Add
                         </Button>
                     </div>
-                    <ZodErrors error={formState?.zodErrors?.columns} />
+                    <div>
+                        <ZodErrors error={formState?.zodErrors?.columns} />
+                    </div>
                 </div>
             </div>
         </div>

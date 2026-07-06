@@ -50,7 +50,9 @@ export default function DescriptionSection({
                     {description.length}/300
                 </span>
             </div>
-            <ZodErrors error={formState?.zodErrors?.description} />
+            <div>
+                <ZodErrors error={formState?.zodErrors?.description} />
+            </div>
         </div>
     );
 }

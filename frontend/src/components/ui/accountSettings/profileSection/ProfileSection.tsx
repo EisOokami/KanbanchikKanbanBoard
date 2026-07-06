@@ -213,7 +213,9 @@ export default function ProfileSection({
                         </p>
                     </div>
                 </div>
-                <ZodErrors error={formState?.zodErrors?.avatar} />
+                <div>
+                    <ZodErrors error={formState?.zodErrors?.avatar} />
+                </div>
             </div>
             <div className="space-y-2">
                 <SectionTitle>Personal info</SectionTitle>

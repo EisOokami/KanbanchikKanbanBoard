@@ -36,8 +36,10 @@ export default function IconSection({
                     />
                 </div>
             </div>
-            <ZodErrors error={formState?.zodErrors?.icon} />
-            <ZodErrors error={formState?.zodErrors?.color} />
+            <div>
+                <ZodErrors error={formState?.zodErrors?.icon} />
+                <ZodErrors error={formState?.zodErrors?.color} />
+            </div>
             <input type="hidden" name="icon" value={icon} />
             <input type="hidden" name="color" value={projectColor} />
         </div>

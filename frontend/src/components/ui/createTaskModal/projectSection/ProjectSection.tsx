@@ -56,7 +56,9 @@ export default function ProjectSection({
                     </SelectContent>
                 </Select>
             </div>
-            <ZodErrors error={formState?.zodErrors?.projectId} />
+            <div>
+                <ZodErrors error={formState?.zodErrors?.projectId} />
+            </div>
         </div>
     );
 }

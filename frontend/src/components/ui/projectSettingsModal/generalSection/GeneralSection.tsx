@@ -62,8 +62,10 @@ export default function GeneralSection({
                             isPending={isPending}
                         />
                     </div>
-                    <ZodErrors error={formState?.zodErrors?.icon} />
-                    <ZodErrors error={formState?.zodErrors?.color} />
+                    <div>
+                        <ZodErrors error={formState?.zodErrors?.icon} />
+                        <ZodErrors error={formState?.zodErrors?.color} />
+                    </div>
                 </div>
             </div>
             <div className="space-y-1">
@@ -81,7 +83,9 @@ export default function GeneralSection({
                     )}
                     disabled={isPending}
                 />
-                <ZodErrors error={formState?.zodErrors?.name} />
+                <div>
+                    <ZodErrors error={formState?.zodErrors?.name} />
+                </div>
             </div>
             <div className="space-y-1">
                 <h3 className="font-semibold">Description</h3>
@@ -106,7 +110,9 @@ export default function GeneralSection({
                     {description ? description.length : 0}
                     /500
                 </p>
-                <ZodErrors error={formState?.zodErrors?.description} />
+                <div>
+                    <ZodErrors error={formState?.zodErrors?.description} />
+                </div>
             </div>
             <div className="space-y-1">
                 <h3 className="font-semibold">Status</h3>
@@ -137,7 +143,9 @@ export default function GeneralSection({
                         ),
                     )}
                 </div>
-                <ZodErrors error={formState?.zodErrors?.status} />
+                <div>
+                    <ZodErrors error={formState?.zodErrors?.status} />
+                </div>
             </div>
             <div className="space-y-1">
                 <h3 className="font-semibold">Priority</h3>
@@ -164,7 +172,11 @@ export default function GeneralSection({
                         Show emoji in the priority
                     </label>
                 </div>
-                <ZodErrors error={formState?.zodErrors?.showPriorityEmoji} />
+                <div>
+                    <ZodErrors
+                        error={formState?.zodErrors?.showPriorityEmoji}
+                    />
+                </div>
             </div>
         </div>
     );

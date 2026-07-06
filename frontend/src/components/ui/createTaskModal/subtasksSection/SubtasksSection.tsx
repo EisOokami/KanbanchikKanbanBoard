@@ -199,8 +199,10 @@ export default function SubtasksSection({
                     </label>
                 </div>
             </div>
-            <ZodErrors error={formState?.zodErrors?.showProgress} />
-            <ZodErrors error={formState?.zodErrors?.subtasks} />
+            <div>
+                <ZodErrors error={formState?.zodErrors?.showProgress} />
+                <ZodErrors error={formState?.zodErrors?.subtasks} />
+            </div>
         </div>
     );
 }

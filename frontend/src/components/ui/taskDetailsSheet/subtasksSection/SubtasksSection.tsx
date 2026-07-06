@@ -254,13 +254,13 @@ export default function SubtasksSection({
                     Show progress in the task
                 </label>
             </div>
+            <ZodErrors error={formState?.zodErrors?.subtasks} />
+            <ZodErrors error={formState?.zodErrors?.newSubtasks} />
             <input
                 type="hidden"
                 name="show-progress"
                 value={String(!!progressShow)}
             />
-            <ZodErrors error={formState?.zodErrors?.subtasks} />
-            <ZodErrors error={formState?.zodErrors?.newSubtasks} />
         </div>
     );
 }

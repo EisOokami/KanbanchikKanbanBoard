@@ -128,7 +128,9 @@ export default function AttachmentsSection({
                     Upload files or drag &amp; drop
                 </button>
             </div>
-            <ZodErrors error={formState?.zodErrors?.attachments} />
+            <div>
+                <ZodErrors error={formState?.zodErrors?.attachments} />
+            </div>
         </div>
     );
 }

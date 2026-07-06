@@ -117,8 +117,10 @@ export default function TaskDetailsSheet({
                             projectData={projectData}
                             onOpenChange={onOpenChange}
                         />
-                        <ZodErrors error={formState?.zodErrors?.columnId} />
-                        <ZodErrors error={formState?.zodErrors?.priority} />
+                        <div>
+                            <ZodErrors error={formState?.zodErrors?.columnId} />
+                            <ZodErrors error={formState?.zodErrors?.priority} />
+                        </div>
                     </SheetHeader>
                     <ScrollArea className="flex-1">
                         <div className="space-y-5 px-6 pb-6 pt-4">
@@ -130,14 +132,12 @@ export default function TaskDetailsSheet({
                                 />
                                 <div className="mb-5">
                                     <CategoriesSection
-                                        formState={formState}
                                         isPending={isPending}
                                         formData={formData}
                                         projectData={projectData}
                                         onFormDataChange={setFormData}
                                     />
                                     <LabelsSection
-                                        formState={formState}
                                         isPending={isPending}
                                         formData={formData}
                                         projectData={projectData}
@@ -145,12 +145,10 @@ export default function TaskDetailsSheet({
                                     />
                                     <DateSection
                                         task={task}
-                                        formState={formState}
                                         isPending={isPending}
                                     />
                                     <MembersSection
                                         projectData={projectData}
-                                        formState={formState}
                                         isPending={isPending}
                                         formData={formData}
                                         onFormDataChange={setFormData}
@@ -170,6 +168,21 @@ export default function TaskDetailsSheet({
                                             })}
                                         </span>
                                     </FieldRow>
+                                    <ZodErrors
+                                        error={formState?.zodErrors?.categories}
+                                    />
+                                    <ZodErrors
+                                        error={formState?.zodErrors?.labels}
+                                    />
+                                    <ZodErrors
+                                        error={formState?.zodErrors?.startDate}
+                                    />
+                                    <ZodErrors
+                                        error={formState?.zodErrors?.dueDate}
+                                    />
+                                    <ZodErrors
+                                        error={formState?.zodErrors?.members}
+                                    />
                                 </div>
                             </div>
                             <Separator />

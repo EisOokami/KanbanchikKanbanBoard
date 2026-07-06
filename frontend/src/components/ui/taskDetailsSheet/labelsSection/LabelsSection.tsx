@@ -10,11 +10,8 @@ import FieldRow from "../../fieldRow/FieldRow";
 import { Popover, PopoverContent, PopoverTrigger } from "../../shadcn/popover";
 import { Label, Project, UpdateTaskFormData } from "@/types/types";
 import { useState } from "react";
-import { BaseAction } from "@/types/actions";
-import { ZodErrors } from "../../zodErrors/ZodErrors";
 
 interface LabelsSectionProps {
-    formState: BaseAction | undefined;
     isPending: boolean;
     formData: UpdateTaskFormData;
     projectData: Project;
@@ -22,7 +19,6 @@ interface LabelsSectionProps {
 }
 
 export default function LabelsSection({
-    formState,
     isPending,
     formData,
     projectData,
@@ -127,7 +123,6 @@ export default function LabelsSection({
                     <span className="text-sm text-gray-300">No labels</span>
                 )}
             </div>
-            <ZodErrors error={formState?.zodErrors?.labels} />
         </FieldRow>
     );
 }

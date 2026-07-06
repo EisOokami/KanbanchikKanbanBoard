@@ -244,7 +244,9 @@ export default function MembersSection({
                         </div>
                     ))}
                 </div>
-                <ZodErrors error={formState?.zodErrors?.members} />
+                <div>
+                    <ZodErrors error={formState?.zodErrors?.members} />
+                </div>
             </div>
         </div>
     );

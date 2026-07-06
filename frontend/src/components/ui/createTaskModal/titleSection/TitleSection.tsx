@@ -32,7 +32,9 @@ export default function TitleSection({
                 )}
                 disabled={isPending}
             />
-            <ZodErrors error={formState?.zodErrors?.title} />
+            <div>
+                <ZodErrors error={formState?.zodErrors?.title} />
+            </div>
         </div>
     );
 }

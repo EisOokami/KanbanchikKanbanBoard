@@ -64,7 +64,9 @@ export default function ColumnSection({
                         ))}
                 </SelectContent>
             </Select>
-            <ZodErrors error={formState?.zodErrors?.columnId} />
+            <div>
+                <ZodErrors error={formState?.zodErrors?.columnId} />
+            </div>
         </div>
     );
 }

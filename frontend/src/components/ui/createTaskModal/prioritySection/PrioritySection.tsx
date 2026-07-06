@@ -53,7 +53,9 @@ export default function PrioritySection({
                     ),
                 )}
             </div>
-            <ZodErrors error={formState?.zodErrors?.priority} />
+            <div>
+                <ZodErrors error={formState?.zodErrors?.priority} />
+            </div>
         </div>
     );
 }

@@ -273,7 +273,9 @@ export default function CategoriesSection({
                         </Button>
                     </div>
                 </div>
-                <ZodErrors error={formState?.zodErrors?.categories} />
+                <div>
+                    <ZodErrors error={formState?.zodErrors?.categories} />
+                </div>
             </div>
         </div>
     );

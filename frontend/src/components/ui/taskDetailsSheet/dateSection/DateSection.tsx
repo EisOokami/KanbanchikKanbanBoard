@@ -8,17 +8,13 @@ import { useState } from "react";
 import { dateMeta } from "@/libs/taskDetailsSheet";
 import { Task } from "@/types/types";
 import { format } from "date-fns";
-import { ZodErrors } from "../../zodErrors/ZodErrors";
-import { BaseAction } from "@/types/actions";
 
 interface DateSectionProps {
-    formState: BaseAction | undefined;
     isPending: boolean;
     task: Task;
 }
 
 export default function DateSection({
-    formState,
     isPending,
     task,
 }: Readonly<DateSectionProps>) {
@@ -167,8 +163,6 @@ export default function DateSection({
                     name="due-date"
                     value={dueDate ? format(dueDate, "yyyy-MM-dd") : ""}
                 />
-                <ZodErrors error={formState?.zodErrors?.startDate} />
-                <ZodErrors error={formState?.zodErrors?.dueDate} />
             </FieldRow>
         </>
     );

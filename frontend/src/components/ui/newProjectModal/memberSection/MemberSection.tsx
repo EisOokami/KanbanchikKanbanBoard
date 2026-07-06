@@ -133,7 +133,9 @@ export default function MemberSection({
                         <PlusIcon weight="duotone" className="size-4" /> Invite
                     </Button>
                 </div>
-                <ZodErrors error={formState?.zodErrors?.members} />
+                <div>
+                    <ZodErrors error={formState?.zodErrors?.members} />
+                </div>
             </div>
         </div>
     );

@@ -13,11 +13,8 @@ import { cn, getInitials } from "@/libs/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "../../shadcn/popover";
 import { Project, UpdateTaskFormData, User } from "@/types/types";
 import { useState } from "react";
-import { BaseAction } from "@/types/actions";
-import { ZodErrors } from "../../zodErrors/ZodErrors";
 
 interface MembersSectionProps {
-    formState: BaseAction | undefined;
     isPending: boolean;
     formData: UpdateTaskFormData;
     projectData: Project;
@@ -25,7 +22,6 @@ interface MembersSectionProps {
 }
 
 export default function MembersSection({
-    formState,
     isPending,
     formData,
     projectData,
@@ -158,7 +154,6 @@ export default function MembersSection({
                     <span className="text-sm text-gray-300">No members</span>
                 )}
             </div>
-            <ZodErrors error={formState?.zodErrors?.members} />
         </FieldRow>
     );
 }

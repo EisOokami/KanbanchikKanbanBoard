@@ -258,12 +258,14 @@ export default function InviteMemberModal({
                                         </div>
                                     ))}
                                 </div>
-                                <ZodErrors
-                                    error={formState?.zodErrors?.projectId}
-                                />
-                                <ZodErrors
-                                    error={formState?.zodErrors?.members}
-                                />
+                                <div>
+                                    <ZodErrors
+                                        error={formState?.zodErrors?.projectId}
+                                    />
+                                    <ZodErrors
+                                        error={formState?.zodErrors?.members}
+                                    />
+                                </div>
                                 <Separator />
                                 <div className="flex items-center gap-2 rounded-md border bg-gray-50 p-3">
                                     <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-gray-200">

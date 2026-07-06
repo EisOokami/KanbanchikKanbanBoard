@@ -183,7 +183,9 @@ export default function ColumnsSection({
                         <PlusIcon weight="duotone" size={13} />
                     </Button>
                 </div>
-                <ZodErrors error={formState?.zodErrors?.columns} />
+                <div>
+                    <ZodErrors error={formState?.zodErrors?.columns} />
+                </div>
             </div>
         </div>
     );

@@ -83,7 +83,9 @@ export default function DateSection({
                         />
                     </PopoverContent>
                 </Popover>
-                <ZodErrors error={formState?.zodErrors?.startDate} />
+                <div>
+                    <ZodErrors error={formState?.zodErrors?.startDate} />
+                </div>
             </div>
             <div className="space-y-1">
                 <label className="block font-semibold" htmlFor="due-date">
@@ -126,7 +128,9 @@ export default function DateSection({
                         />
                     </PopoverContent>
                 </Popover>
-                <ZodErrors error={formState?.zodErrors?.dueDate} />
+                <div>
+                    <ZodErrors error={formState?.zodErrors?.dueDate} />
+                </div>
             </div>
         </div>
     );

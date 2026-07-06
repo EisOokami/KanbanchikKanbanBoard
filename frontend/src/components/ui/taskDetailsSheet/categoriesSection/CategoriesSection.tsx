@@ -6,11 +6,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "../../shadcn/popover";
 import { cn } from "@/libs/utils";
 import { Category, Project, UpdateTaskFormData } from "@/types/types";
 import { useState } from "react";
-import { BaseAction } from "@/types/actions";
-import { ZodErrors } from "../../zodErrors/ZodErrors";
 
 interface CategoriesSectionProps {
-    formState: BaseAction | undefined;
     isPending: boolean;
     formData: UpdateTaskFormData;
     projectData: Project;
@@ -18,7 +15,6 @@ interface CategoriesSectionProps {
 }
 
 export default function CategoriesSection({
-    formState,
     isPending,
     formData,
     projectData,
@@ -117,7 +113,6 @@ export default function CategoriesSection({
                     <span className="text-sm text-gray-300">No categories</span>
                 )}
             </div>
-            <ZodErrors error={formState?.zodErrors?.categories} />
         </FieldRow>
     );
 }

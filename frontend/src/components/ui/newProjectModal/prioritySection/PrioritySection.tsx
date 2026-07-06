@@ -40,12 +40,14 @@ export default function PrioritySection({
                     Show emoji in the priority
                 </label>
             </div>
+            <div>
+                <ZodErrors error={formState?.zodErrors?.showPriorityEmoji} />
+            </div>
             <input
                 type="hidden"
                 name="show-priority-emoji"
                 value={String(!!isChecked)}
             />
-            <ZodErrors error={formState?.zodErrors?.showPriorityEmoji} />
         </div>
     );
 }

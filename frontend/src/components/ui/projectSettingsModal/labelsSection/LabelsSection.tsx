@@ -267,7 +267,9 @@ export default function LabelsSection({
                         </Button>
                     </div>
                 </div>
-                <ZodErrors error={formState?.zodErrors?.labels} />
+                <div>
+                    <ZodErrors error={formState?.zodErrors?.labels} />
+                </div>
             </div>
         </div>
     );
