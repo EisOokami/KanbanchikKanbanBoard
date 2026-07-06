@@ -38,6 +38,9 @@ export default function ProfileSection({
     );
     const [isChanged, setIsChanged] = useState<boolean>(false);
     const [avatarColor, setAvatarColor] = useState<string>(userData.color);
+    const [nameValue, setNameValue] = useState(userData.name);
+    const [surnameValue, setSurnameValue] = useState(userData.surname);
+    const [emailValue, setEmailValue] = useState(userData.email);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [formState, formAction, isPending] = useActionState(
         updateProfileAction,
@@ -98,6 +101,20 @@ export default function ProfileSection({
         setIsChanged(true);
     };
 
+    const handleDiscard = () => {
+        setNameValue(userData.name);
+        setSurnameValue(userData.surname);
+        setEmailValue(userData.email);
+        setAvatarColor(userData.color);
+        setAvatarPreview(userData.avatar_url);
+
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
+
+        setIsChanged(false);
+    };
+
     return (
         <form action={formAction} className="space-y-5">
             <div>
@@ -110,10 +127,6 @@ export default function ProfileSection({
                 <input
                     name="avatar"
                     ref={fileInputRef}
-                    defaultValue={
-                        formState?.formData?.get("avatar")?.toString() ??
-                        undefined
-                    }
                     type="file"
                     className="hidden"
                     disabled={isPending}
@@ -128,7 +141,7 @@ export default function ProfileSection({
                                 className="text-xl font-bold text-white"
                                 style={{ backgroundColor: avatarColor }}
                             >
-                                {getInitials(userData.name, userData.surname)}
+                                {getInitials(nameValue, surnameValue)}
                             </AvatarFallback>
                         </Avatar>
                         <button
@@ -213,32 +226,32 @@ export default function ProfileSection({
                             <Input
                                 name="name"
                                 placeholder="First"
-                                defaultValue={
-                                    formState?.formData
-                                        ?.get("name")
-                                        ?.toString() ?? userData.name
-                                }
-                                onChange={(e) =>
-                                    e.target.value !== userData.name
-                                        ? setIsChanged(true)
-                                        : setIsChanged(false)
-                                }
+                                value={nameValue}
+                                onChange={(e) => {
+                                    setNameValue(e.target.value);
+
+                                    if (e.target.value !== userData.name) {
+                                        setIsChanged(true);
+                                    } else {
+                                        setIsChanged(false);
+                                    }
+                                }}
                                 className="h-8 text-sm placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-bright-blue"
                                 disabled={isPending}
                             />
                             <Input
                                 name="surname"
                                 placeholder="Last"
-                                defaultValue={
-                                    formState?.formData
-                                        ?.get("surname")
-                                        ?.toString() ?? userData.surname
-                                }
-                                onChange={(e) =>
-                                    e.target.value !== userData.surname
-                                        ? setIsChanged(true)
-                                        : setIsChanged(false)
-                                }
+                                value={surnameValue}
+                                onChange={(e) => {
+                                    setSurnameValue(e.target.value);
+
+                                    if (e.target.value !== userData.name) {
+                                        setIsChanged(true);
+                                    } else {
+                                        setIsChanged(false);
+                                    }
+                                }}
                                 className="h-8 text-sm placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-bright-blue"
                                 disabled={isPending}
                             />
@@ -254,16 +267,16 @@ export default function ProfileSection({
                             <Input
                                 type="email"
                                 name="email"
-                                defaultValue={
-                                    formState?.formData
-                                        ?.get("email")
-                                        ?.toString() ?? userData.email
-                                }
-                                onChange={(e) =>
-                                    e.target.value !== userData.email
-                                        ? setIsChanged(true)
-                                        : setIsChanged(false)
-                                }
+                                value={emailValue}
+                                onChange={(e) => {
+                                    setEmailValue(e.target.value);
+
+                                    if (e.target.value !== userData.name) {
+                                        setIsChanged(true);
+                                    } else {
+                                        setIsChanged(false);
+                                    }
+                                }}
                                 className="h-8 flex-1 text-sm placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-bright-blue"
                                 disabled={isPending}
                             />
@@ -299,7 +312,7 @@ export default function ProfileSection({
             </div>
             <SaveBar
                 isChanged={isChanged}
-                onDiscard={() => setIsChanged(false)}
+                onDiscard={handleDiscard}
                 isPending={isPending}
             />
         </form>
