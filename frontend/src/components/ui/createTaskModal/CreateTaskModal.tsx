@@ -110,10 +110,10 @@ export default function CreateTaskModal({
         }
 
         (async () => {
-            const fetchProject = await getProjectsData();
+            const fetchProjects = await getProjectsData();
 
-            setProjectsData(fetchProject);
-            setSelectedProject(fetchProject[0]);
+            setProjectsData(fetchProjects);
+            setSelectedProject(fetchProjects[0]);
         })();
     }, [showProjectSelect]);
 

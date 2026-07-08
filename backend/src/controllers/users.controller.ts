@@ -2,7 +2,6 @@ import type { Response } from "express";
 import {
     changePasswordSchema,
     updateProfileSchema,
-    validateIdSchema,
 } from "../validation/validation";
 import { pool } from "../db/pool";
 import { ZodError } from "zod";

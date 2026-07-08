@@ -1,5 +1,5 @@
 import { pool } from "../db/pool";
-import type { Request, Response } from "express";
+import type { Response } from "express";
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import { ZodError } from "zod";
 import type {
