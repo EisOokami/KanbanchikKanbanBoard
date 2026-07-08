@@ -21,6 +21,7 @@ import {
     SortableContext,
     verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { cn } from "@/libs/utils";
 
 interface ColumnsSectionProps {
     formData: ProjectSettingsFormData;
@@ -170,7 +171,12 @@ export default function ColumnsSection({
                         }
                         onChange={(e) => onColumnNameChange(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && addColumn()}
-                        className="h-8 flex-1 rounded-md text-sm placeholder:text-gray-300 focus-visible:ring-1 focus-visible:ring-bright-blue"
+                        className={cn(
+                            "h-8 flex-1 rounded-md text-sm placeholder:text-gray-300 focus-visible:ring-1 focus-visible:ring-bright-blue",
+                            formState?.zodErrors?.columns
+                                ? "border-red-500"
+                                : "",
+                        )}
                         disabled={isPending}
                     />
                     <Button

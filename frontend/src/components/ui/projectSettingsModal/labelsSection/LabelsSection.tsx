@@ -12,6 +12,7 @@ import { Label, ProjectSettingsFormData } from "@/types/types";
 import { BaseAction } from "@/types/actions";
 import { ZodErrors } from "../../zodErrors/ZodErrors";
 import ColorPicker from "../../colorPicker/ColorPicker";
+import { cn } from "@/libs/utils";
 
 interface LabelsSectionProps {
     formData: ProjectSettingsFormData;
@@ -251,7 +252,12 @@ export default function LabelsSection({
                                 })
                             }
                             onKeyDown={(e) => e.key === "Enter" && addLabel()}
-                            className="h-8 flex-1 rounded-md text-sm placeholder:text-gray-300 focus-visible:ring-1 focus-visible:ring-bright-blue"
+                            className={cn(
+                                "h-8 flex-1 rounded-md text-sm placeholder:text-gray-300 focus-visible:ring-1 focus-visible:ring-bright-blue",
+                                formState?.zodErrors?.labels
+                                    ? "border-red-500"
+                                    : "",
+                            )}
                             disabled={isPending}
                         />
                         <Button

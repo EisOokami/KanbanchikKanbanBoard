@@ -12,6 +12,7 @@ import { BaseAction } from "@/types/actions";
 import { ZodErrors } from "../../zodErrors/ZodErrors";
 import ColorPicker from "../../colorPicker/ColorPicker";
 import { useState } from "react";
+import { cn } from "@/libs/utils";
 
 interface CategoriesSectionProps {
     formData: ProjectSettingsFormData;
@@ -257,7 +258,12 @@ export default function CategoriesSection({
                             onKeyDown={(e) =>
                                 e.key === "Enter" && addCategory()
                             }
-                            className="h-8 flex-1 rounded-md text-sm placeholder:text-gray-300 focus-visible:ring-1 focus-visible:ring-bright-blue"
+                            className={cn(
+                                "h-8 flex-1 rounded-md text-sm placeholder:text-gray-300 focus-visible:ring-1 focus-visible:ring-bright-blue",
+                                formState?.zodErrors?.categories
+                                    ? "border-red-500"
+                                    : "",
+                            )}
                             disabled={isPending}
                         />
                         <Button

@@ -141,7 +141,12 @@ export default function SubtasksSection({
                 {formData.subtasks.map((subtask) => (
                     <div
                         key={subtask.id}
-                        className="group/ci flex items-center gap-2.5 rounded-md px-1 py-0.5 transition-colors hover:bg-gray-50"
+                        className={cn(
+                            "group/ci flex items-center gap-2.5 rounded-md px-1 py-0.5 transition-colors hover:bg-gray-50",
+                            formState?.zodErrors?.subtasks
+                                ? "border-red-500"
+                                : "",
+                        )}
                     >
                         <Checkbox
                             name="subtask-checkbox"
@@ -178,7 +183,12 @@ export default function SubtasksSection({
                 {formData.newSubtasks.map((subtask) => (
                     <div
                         key={subtask.id}
-                        className="group/ci flex items-center gap-2.5 rounded-md px-1 py-0.5 transition-colors hover:bg-gray-50"
+                        className={cn(
+                            "group/ci flex items-center gap-2.5 rounded-md px-1 py-0.5 transition-colors hover:bg-gray-50",
+                            formState?.zodErrors?.newSubtasks
+                                ? "border-red-500"
+                                : "",
+                        )}
                     >
                         <Checkbox
                             name="subtask-checkbox"

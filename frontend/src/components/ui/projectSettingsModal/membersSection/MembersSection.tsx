@@ -81,7 +81,12 @@ export default function MembersSection({
                         }
                         onChange={(e) => setInviteEmail(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && handleInvite()}
-                        className="h-8 flex-1 rounded-md text-sm placeholder:text-gray-300 focus-visible:ring-1 focus-visible:ring-bright-blue"
+                        className={cn(
+                            "h-8 flex-1 rounded-md text-sm placeholder:text-gray-300 focus-visible:ring-1 focus-visible:ring-bright-blue",
+                            formState?.zodErrors?.members
+                                ? "border-red-500"
+                                : "",
+                        )}
                         disabled={isPending}
                     />
                     <div className="flex gap-1">

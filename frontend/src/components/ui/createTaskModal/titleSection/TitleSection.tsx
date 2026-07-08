@@ -28,7 +28,7 @@ export default function TitleSection({
                 }
                 className={cn(
                     "h-9 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue",
-                    formState?.zodErrors?.name ? "border-red-500" : "",
+                    formState?.zodErrors?.title ? "border-red-500" : "",
                 )}
                 disabled={isPending}
             />

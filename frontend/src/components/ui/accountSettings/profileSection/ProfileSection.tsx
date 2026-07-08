@@ -238,7 +238,12 @@ export default function ProfileSection({
                                         setIsChanged(false);
                                     }
                                 }}
-                                className="h-8 text-sm placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-bright-blue"
+                                className={cn(
+                                    "h-8 text-sm placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-bright-blue",
+                                    formState?.zodErrors?.name
+                                        ? "border-red-500"
+                                        : "",
+                                )}
                                 disabled={isPending}
                             />
                             <Input
@@ -254,7 +259,12 @@ export default function ProfileSection({
                                         setIsChanged(false);
                                     }
                                 }}
-                                className="h-8 text-sm placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-bright-blue"
+                                className={cn(
+                                    "h-8 text-sm placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-bright-blue",
+                                    formState?.zodErrors?.surname
+                                        ? "border-red-500"
+                                        : "",
+                                )}
                                 disabled={isPending}
                             />
                         </div>
@@ -279,7 +289,12 @@ export default function ProfileSection({
                                         setIsChanged(false);
                                     }
                                 }}
-                                className="h-8 flex-1 text-sm placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-bright-blue"
+                                className={cn(
+                                    "h-8 flex-1 text-sm placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-bright-blue",
+                                    formState?.zodErrors?.email
+                                        ? "border-red-500"
+                                        : "",
+                                )}
                                 disabled={isPending}
                             />
                         </div>

@@ -118,7 +118,9 @@ export default function MemberSection({
                             }
                             className={cn(
                                 "h-9 bg-white pl-8 text-sm focus-visible:ring-1 focus-visible:ring-bright-blue",
-                                emailError ? "border-red-500" : "",
+                                emailError || formState?.zodErrors?.members
+                                    ? "border-red-500"
+                                    : "",
                             )}
                             disabled={isPending}
                         />
