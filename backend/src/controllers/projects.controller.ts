@@ -107,6 +107,7 @@ export const getProjects = async (req: IGetUserRequest, res: Response) => {
                         | "name"
                         | "position"
                         | "wip_limit"
+                        | "total_tasks"
                         | "created_at"
                         | "updated_at"
                     > &
@@ -119,9 +120,12 @@ export const getProjects = async (req: IGetUserRequest, res: Response) => {
                             c.position,
                             c.wip_limit,
                             c.created_at,
-                            c.updated_at
+                            c.updated_at,
+                            COUNT(t.id) as total_tasks
                         FROM columns c
+                        LEFT JOIN tasks t ON t.column_id = c.id
                         WHERE c.project_id = ?
+                        GROUP BY c.id, c.name, c.position, c.wip_limit, c.created_at, c.updated_at
                         ORDER BY c.position ASC
                     `,
                     [project.id],

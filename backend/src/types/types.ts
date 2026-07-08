@@ -101,6 +101,7 @@ export interface Column extends RowDataPacket {
     name: string;
     position: number;
     wip_limit: number | null;
+    total_tasks?: number;
     created_at: string;
     updated_at: string;
 }

@@ -51,7 +51,8 @@ export default function ColumnSection({
                             (column) =>
                                 !column.wip_limit ||
                                 column.wip_limit === 0 ||
-                                column.tasks.length < column.wip_limit,
+                                (column.total_tasks &&
+                                    column.total_tasks < column.wip_limit),
                         )
                         .map((column) => (
                             <SelectItem

@@ -125,6 +125,7 @@ export interface Column extends ExtendedBase {
     name: string;
     position: number;
     wip_limit: number | null;
+    total_tasks?: number;
     tasks: Task[];
 }
 
