@@ -206,3 +206,20 @@ export interface GridCell {
     dateStr: string;
     isOtherMonth: boolean;
 }
+
+export interface TasksFilterState {
+    search: string;
+    columns: string[];
+    priorities: Priority[];
+    projects: string[];
+    overdue: boolean;
+}
+
+export type TasksSortField =
+    | "title"
+    | "status"
+    | "priority"
+    | "project"
+    | "members"
+    | "dueDate"
+    | "progress";

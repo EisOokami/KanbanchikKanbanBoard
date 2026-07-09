@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/libs/utils";
-import { SortDirection, SortField } from "@/types/types";
+import { SortDirection, TasksSortField } from "@/types/types";
 import { Icon } from "@phosphor-icons/react";
 import SortIcon from "../sortIcon/SortIcon";
 
@@ -15,11 +15,11 @@ export default function TasksTh({
     Icon,
 }: Readonly<{
     label: string;
-    field: SortField;
+    field: TasksSortField;
     className?: string;
-    sortField: SortField;
+    sortField: TasksSortField;
     sortDir: SortDirection;
-    onSort: (field: SortField) => void;
+    onSort: (field: TasksSortField) => void;
     Icon?: Icon;
 }>) {
     return (

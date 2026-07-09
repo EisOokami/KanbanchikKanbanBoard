@@ -17,12 +17,12 @@ import FilterChip from "@/components/ui/filterChip/FilterChip";
 import TaskRow from "@/components/ui/taskRow/TaskRow";
 import {
     FilterOptions,
-    FilterState,
     Priority,
     Project,
     SortDirection,
-    SortField,
     Task,
+    TasksFilterState,
+    TasksSortField,
     User,
 } from "@/types/types";
 import { PRIORITY_CONFIG } from "@/constants/constants";
@@ -44,10 +44,12 @@ import {
     XIcon,
 } from "@phosphor-icons/react";
 import { getProjectData } from "@/data/loaders";
-import { DEFAULT_FILTER } from "@/constants/taskFilterSheet";
 import TasksTh from "@/components/ui/tasksTh/TasksTh";
 import { deleteTaskAction } from "@/data/actions";
 import { toast } from "sonner";
+import { TASKS_DEFAULT_FILTER } from "@/constants/tasks";
+import { applyTasksFilter, countActiveFilters, sortTasks } from "@/libs/tasks";
+import { useDebounce } from "use-debounce";
 
 interface TasksProps {
     tasksData: Task[];
@@ -60,8 +62,9 @@ export default function Tasks({
     taskFilterOptionsData,
     userData,
 }: Readonly<TasksProps>) {
-    const [filter, setFilter] = useState<FilterState>(DEFAULT_FILTER);
-    const [sortField, setSortField] = useState<SortField>("priority");
+    const [filter, setFilter] =
+        useState<TasksFilterState>(TASKS_DEFAULT_FILTER);
+    const [sortField, setSortField] = useState<TasksSortField>("priority");
     const [sortDir, setSortDir] = useState<SortDirection>("asc");
     const [selectedTask, setSelectedTask] = useState<Task | null>(null);
     const [projectData, setProjectData] = useState<Project | null>(null);
@@ -110,13 +113,31 @@ export default function Tasks({
         [selectedTask],
     );
 
-    const toggleSort = (field: SortField) => {
-        if (sortField === field)
-            setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-        else {
+    const toggleSort = (field: TasksSortField) => {
+        if (sortField === field) {
+            setSortDir((dir) => (dir === "asc" ? "desc" : "asc"));
+        } else {
             setSortField(field);
             setSortDir("asc");
         }
+    };
+
+    const setF = <K extends keyof TasksFilterState>(
+        key: K,
+        val: TasksFilterState[K],
+    ) => setFilter((f) => ({ ...f, [key]: val }));
+
+    const toggleStrFilter = (
+        key: "columns" | "priorities" | "projects",
+        val: string,
+    ) => {
+        const arr = filter[key] as string[];
+        setF(
+            key,
+            (arr.includes(val)
+                ? arr.filter((x) => x !== val)
+                : [...arr, val]) as TasksFilterState[typeof key],
+        );
     };
 
     const handleShowNewTaskModal = () => {
@@ -127,40 +148,31 @@ export default function Tasks({
         setShowTaskDetailsSheet(!showTaskDetailsSheet);
     };
 
-    const setF = <K extends keyof FilterState>(key: K, val: FilterState[K]) =>
-        setFilter((f) => ({ ...f, [key]: val }));
+    const [debouncedSearch] = useDebounce(filter.search, 1000);
 
-    const toggleArrFilter = <T extends string>(
-        key: "columns" | "priorities" | "projects" | "members",
-        val: T,
-    ) => {
-        const arr = filter[key] as T[];
-        setF(
-            key,
-            arr.includes(val)
-                ? arr.filter((x) => x !== val)
-                : // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  ([...arr, val] as any),
-        );
-    };
+    const filteredTasks = useMemo(
+        () =>
+            sortTasks(
+                applyTasksFilter(tasksData, {
+                    ...filter,
+                    search: debouncedSearch,
+                }),
+                sortField,
+                sortDir,
+            ),
+        [tasksData, filter, debouncedSearch, sortField, sortDir],
+    );
 
-    const projectFilter = filter.projects ?? [];
-    const membersFilter = filter.members ?? [];
+    const activeFilterCount = useMemo(
+        () => countActiveFilters(filter),
+        [filter],
+    );
 
-    const activeFilterCount =
-        filter.columns.length +
-        filter.priorities.length +
-        projectFilter.length +
-        membersFilter.length +
-        (filter.overdue ? 1 : 0);
-
-    const clearFilters = () => setFilter(DEFAULT_FILTER);
+    const clearFilters = () => setFilter(TASKS_DEFAULT_FILTER);
 
     const stats = useMemo(
         () => ({
             total: tasksData.length,
-            todo: tasksData.filter((task) => task.column.name === "todo")
-                .length,
             inProgress: tasksData.filter(
                 (task) => task.column.name === "in_progress",
             ).length,
@@ -225,7 +237,7 @@ export default function Tasks({
                                         />
                                         Status{" "}
                                         {filter.columns.length > 0 &&
-                                            `(${filter.columns.length})`}
+                                            ` (${filter.columns.length})`}
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent className="w-44">
@@ -241,7 +253,7 @@ export default function Tasks({
                                                     status.name,
                                                 )}
                                                 onCheckedChange={() =>
-                                                    toggleArrFilter(
+                                                    toggleStrFilter(
                                                         "columns",
                                                         status.name,
                                                     )
@@ -274,7 +286,7 @@ export default function Tasks({
                                         />
                                         Priority{" "}
                                         {filter.priorities.length > 0 &&
-                                            `(${filter.priorities.length})`}
+                                            ` (${filter.priorities.length})`}
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent className="w-40">
@@ -286,14 +298,17 @@ export default function Tasks({
                                         Object.keys(
                                             PRIORITY_CONFIG,
                                         ) as Priority[]
-                                    ).map((p) => (
+                                    ).map((priority) => (
                                         <DropdownMenuCheckboxItem
-                                            key={p}
+                                            key={priority}
                                             checked={filter.priorities.includes(
-                                                p,
+                                                priority,
                                             )}
                                             onCheckedChange={() =>
-                                                toggleArrFilter("priorities", p)
+                                                toggleStrFilter(
+                                                    "priorities",
+                                                    priority,
+                                                )
                                             }
                                             className="gap-2 text-xs"
                                         >
@@ -301,11 +316,15 @@ export default function Tasks({
                                                 className="flex items-center gap-2 rounded-md px-2.5 py-1 text-white"
                                                 style={{
                                                     backgroundColor:
-                                                        PRIORITY_CONFIG[p]
-                                                            .color,
+                                                        PRIORITY_CONFIG[
+                                                            priority
+                                                        ].color,
                                                 }}
                                             >
-                                                {PRIORITY_CONFIG[p].label}
+                                                {
+                                                    PRIORITY_CONFIG[priority]
+                                                        .label
+                                                }
                                             </span>
                                         </DropdownMenuCheckboxItem>
                                     ))}
@@ -331,7 +350,7 @@ export default function Tasks({
                                                 />
                                                 Project{" "}
                                                 {filter.projects.length > 0 &&
-                                                    `(${filter.projects.length})`}
+                                                    ` (${filter.projects.length})`}
                                             </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent className="w-48">
@@ -344,7 +363,7 @@ export default function Tasks({
                                                     <DropdownMenuCheckboxItem
                                                         key={project.id}
                                                         onCheckedChange={() =>
-                                                            toggleArrFilter(
+                                                            toggleStrFilter(
                                                                 "projects",
                                                                 project.name,
                                                             )
@@ -454,33 +473,33 @@ export default function Tasks({
                         </header>
                         {activeFilterCount > 0 && (
                             <div className="flex flex-wrap gap-1.5 border-b bg-white px-8 py-2">
-                                {filter.columns.map((status) => (
+                                {filter.columns.map((column) => (
                                     <FilterChip
-                                        key={status}
-                                        label={status}
+                                        key={column}
+                                        label={column}
                                         onRemove={() =>
-                                            toggleArrFilter("columns", status)
+                                            toggleStrFilter("columns", column)
                                         }
                                     />
                                 ))}
-                                {filter.priorities.map((p) => (
+                                {filter.priorities.map((priority) => (
                                     <FilterChip
-                                        key={p}
-                                        label={PRIORITY_CONFIG[p].label}
+                                        key={priority}
+                                        label={PRIORITY_CONFIG[priority].label}
                                         onRemove={() =>
-                                            toggleArrFilter("priorities", p)
-                                        }
-                                    />
-                                ))}
-                                {projectFilter.map((project) => (
-                                    <FilterChip
-                                        key={project.name}
-                                        label={project.name}
-                                        onRemove={() =>
-                                            toggleArrFilter(
-                                                "projects",
-                                                project.name,
+                                            toggleStrFilter(
+                                                "priorities",
+                                                priority,
                                             )
+                                        }
+                                    />
+                                ))}
+                                {filter.projects.map((name) => (
+                                    <FilterChip
+                                        key={name}
+                                        label={name}
+                                        onRemove={() =>
+                                            toggleStrFilter("projects", name)
                                         }
                                     />
                                 ))}
@@ -583,17 +602,28 @@ export default function Tasks({
                             </tr>
                         </thead>
                         <tbody className="bg-white">
-                            {tasksData.map((task) => (
-                                <TaskRow
-                                    key={task.id}
-                                    task={task}
-                                    onDelete={deleteTask}
-                                    onOpenDetails={() => {
-                                        setSelectedTask(task);
-                                        handleShowTaskDetailsSheet();
-                                    }}
-                                />
-                            ))}
+                            {filteredTasks.length > 0 ? (
+                                filteredTasks.map((task) => (
+                                    <TaskRow
+                                        key={task.id}
+                                        task={task}
+                                        onDelete={deleteTask}
+                                        onOpenDetails={() => {
+                                            setSelectedTask(task);
+                                            setShowTaskDetailsSheet(true);
+                                        }}
+                                    />
+                                ))
+                            ) : (
+                                <tr>
+                                    <td
+                                        colSpan={9}
+                                        className="py-16 text-center text-sm text-gray-400"
+                                    >
+                                        No tasks match the current filters
+                                    </td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
