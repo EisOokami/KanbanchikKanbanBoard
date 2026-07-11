@@ -33,7 +33,7 @@ export default function DescriptionSection({
                 }
                 onChange={(e) => setDescription(e.target.value)}
                 className={cn(
-                    "min-h-[72px] resize-none bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue",
+                    "min-h-32 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue",
                     formState?.zodErrors?.description ? "border-red-500" : "",
                 )}
                 disabled={isPending}
