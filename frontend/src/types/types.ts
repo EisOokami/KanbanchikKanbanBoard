@@ -103,10 +103,10 @@ export interface Label extends ExtendedBase {
 
 export interface Task extends ExtendedBase {
     title: string;
-    description: string;
+    description: string | null;
     position: number;
-    due_date: string | Date;
-    start_date: string | Date;
+    due_date: string | Date | null;
+    start_date: string | Date | null;
     priority: Priority;
     column: Column;
     labels: Label[];
