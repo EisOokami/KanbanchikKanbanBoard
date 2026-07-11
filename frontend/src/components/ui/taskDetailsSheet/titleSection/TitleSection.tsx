@@ -3,22 +3,22 @@
 import { PencilSimpleIcon } from "@phosphor-icons/react";
 import { Textarea } from "../../shadcn/textarea";
 import { useState } from "react";
-import { Task } from "@/types/types";
 import { ZodErrors } from "../../zodErrors/ZodErrors";
 import { BaseAction } from "@/types/actions";
 
 interface TitleSectionProps {
     formState: BaseAction | undefined;
     isPending: boolean;
-    task: Task;
+    title: string;
+    onTitleChange: (title: string) => void;
 }
 
 export default function TitleSection({
     formState,
     isPending,
-    task,
+    title,
+    onTitleChange,
 }: Readonly<TitleSectionProps>) {
-    const [title, setTitle] = useState<string>(task.title);
     const [editingTitle, setEditingTitle] = useState<boolean>(false);
 
     return (
@@ -32,7 +32,7 @@ export default function TitleSection({
                         formState?.formData?.get("title")?.toString() ??
                         undefined
                     }
-                    onChange={(e) => setTitle(e.target.value)}
+                    onChange={(e) => onTitleChange(e.target.value)}
                     onBlur={() => setEditingTitle(false)}
                     onKeyDown={(e) => {
                         if (e.key === "Enter" && !e.shiftKey) {

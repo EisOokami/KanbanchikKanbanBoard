@@ -3,22 +3,22 @@
 import { ArticleIcon, PencilSimpleIcon } from "@phosphor-icons/react";
 import { Textarea } from "../../shadcn/textarea";
 import { useState } from "react";
-import { Task } from "@/types/types";
 import { ZodErrors } from "../../zodErrors/ZodErrors";
 import { BaseAction } from "@/types/actions";
 
 interface DescriptionSectionProps {
     formState: BaseAction | undefined;
     isPending: boolean;
-    task: Task;
+    description: string;
+    onDescriptionChange: (description: string) => void;
 }
 
 export default function DescriptionSection({
     formState,
     isPending,
-    task,
+    description,
+    onDescriptionChange,
 }: Readonly<DescriptionSectionProps>) {
-    const [description, setDescription] = useState<string>(task.description);
     const [editingDesc, setEditingDesc] = useState<boolean>(false);
 
     return (
@@ -38,7 +38,7 @@ export default function DescriptionSection({
                     name="description"
                     autoFocus
                     value={description}
-                    onChange={(e) => setDescription(e.target.value)}
+                    onChange={(e) => onDescriptionChange(e.target.value)}
                     defaultValue={
                         formState?.formData?.get("description")?.toString() ??
                         undefined

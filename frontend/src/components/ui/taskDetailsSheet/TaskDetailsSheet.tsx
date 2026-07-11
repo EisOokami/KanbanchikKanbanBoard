@@ -14,7 +14,14 @@ import { formatDistanceToNow } from "date-fns";
 import { cn, toDate } from "@/libs/utils";
 import { commentsToActivity } from "@/libs/taskDetailsSheet";
 import FieldRow from "../fieldRow/FieldRow";
-import { User, Task, Project, UpdateTaskFormData } from "@/types/types";
+import {
+    User,
+    Task,
+    Project,
+    UpdateTaskFormData,
+    Column,
+    Priority,
+} from "@/types/types";
 import { ActivityEntry } from "@/types/taskDetailsSheet";
 import { CheckIcon, ClockIcon, InfoIcon } from "@phosphor-icons/react";
 import { BaseAction } from "@/types/actions";
@@ -61,9 +68,41 @@ export default function TaskDetailsSheet({
     currentPath,
 }: Readonly<TaskDetailsSheetProps>) {
     const [task, setTask] = useState<Task>(selectedTask);
+    const [column, setColumn] = useState<Column>(task.column);
+    const [priority, setPriority] = useState<Priority>(task.priority);
+    const [title, setTitle] = useState<string>(task.title);
+    const [startDate, setStartDate] = useState<Date | undefined>(
+        task.start_date ? new Date(task.start_date) : undefined,
+    );
+    const [dueDate, setDueDate] = useState<Date | undefined>(
+        task.due_date ? new Date(task.due_date) : undefined,
+    );
+    const [description, setDescription] = useState<string>(
+        task.description ?? "",
+    );
     const [activity, setActivity] = useState<ActivityEntry[]>(() =>
         commentsToActivity(selectedTask.comments),
     );
+    const [isChanged, setIsChanged] = useState<boolean>(false);
+    const [initialValues] = useState(() => ({
+        column: task.column,
+        priority: task.priority,
+        title: task.title,
+        startDate: task.start_date ? new Date(task.start_date) : undefined,
+        dueDate: task.due_date ? new Date(task.due_date) : undefined,
+        description: task.description ?? "",
+    }));
+    const [initialFormData] = useState<UpdateTaskFormData>(() => ({
+        categories: task.categories,
+        members: task.members,
+        subtasks: task.subtasks,
+        newSubtasks: [],
+        attachments: task.attachments,
+        newAttachments: [],
+        labels: task.labels,
+        comments: task.comments,
+        newComments: [],
+    }));
     const [formData, setFormData] = useState<UpdateTaskFormData>({
         categories: task.categories,
         members: task.members,
@@ -83,7 +122,58 @@ export default function TaskDetailsSheet({
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setTask(selectedTask);
+        setIsChanged(false);
     }, [selectedTask]);
+
+    useEffect(() => {
+        if (!open) {
+            return;
+        }
+
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setColumn(task.column);
+        setPriority(task.priority);
+        setTitle(task.title);
+        setStartDate(task.start_date ? new Date(task.start_date) : undefined);
+        setDueDate(task.due_date ? new Date(task.due_date) : undefined);
+        setDescription(task.description ?? "");
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [open]);
+
+    useEffect(() => {
+        const hasInitialValuesChanged =
+            title.trim() !== initialValues.title ||
+            startDate !== initialValues.startDate ||
+            dueDate !== initialValues.dueDate ||
+            description !== initialValues.description ||
+            priority !== initialValues.priority ||
+            column.id !== initialValues.column.id;
+
+        const hasFormDataChanged =
+            formData.newSubtasks.length > 0 ||
+            formData.newAttachments.length > 0 ||
+            formData.newComments.length > 0 ||
+            formData.categories.length !== initialFormData.categories.length ||
+            formData.members.length !== initialFormData.members.length ||
+            formData.labels.length !== initialFormData.labels.length ||
+            formData.subtasks.some((subtask, i) => {
+                const orig = initialFormData.subtasks[i];
+
+                return (
+                    !orig ||
+                    subtask.title !== orig.title ||
+                    subtask.is_done !== orig.is_done
+                );
+            });
+
+        if (hasFormDataChanged || hasInitialValuesChanged) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setIsChanged(true);
+        } else {
+            setIsChanged(false);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [title, startDate, dueDate, description, priority, column, formData]);
 
     useEffect(() => {
         (async () => {
@@ -115,7 +205,11 @@ export default function TaskDetailsSheet({
                             isPending={isPending}
                             task={task}
                             projectData={projectData}
+                            column={column}
+                            priority={priority}
                             onOpenChange={onOpenChange}
+                            onColumnChange={setColumn}
+                            onPriorityChange={setPriority}
                         />
                         <div>
                             <ZodErrors error={formState?.zodErrors?.columnId} />
@@ -128,7 +222,8 @@ export default function TaskDetailsSheet({
                                 <TitleSection
                                     formState={formState}
                                     isPending={isPending}
-                                    task={task}
+                                    title={title}
+                                    onTitleChange={setTitle}
                                 />
                                 <div className="mb-5">
                                     <CategoriesSection
@@ -144,8 +239,11 @@ export default function TaskDetailsSheet({
                                         onFormDataChange={setFormData}
                                     />
                                     <DateSection
-                                        task={task}
                                         isPending={isPending}
+                                        startDate={startDate}
+                                        dueDate={dueDate}
+                                        onStartDateChange={setStartDate}
+                                        onDueDateChange={setDueDate}
                                     />
                                     <MembersSection
                                         projectData={projectData}
@@ -187,9 +285,10 @@ export default function TaskDetailsSheet({
                             </div>
                             <Separator />
                             <DescriptionSection
-                                task={task}
                                 formState={formState}
                                 isPending={isPending}
+                                description={description}
+                                onDescriptionChange={setDescription}
                             />
                             <Separator />
                             <SubtasksSection
@@ -233,24 +332,23 @@ export default function TaskDetailsSheet({
                         )}
                     >
                         <div>
-                            {formState?.message && (
-                                <div
-                                    className={cn(
-                                        "flex items-center gap-1 rounded-md text-sm",
-                                        formState?.status === "error"
-                                            ? "text-red-500"
-                                            : formState?.status === "success"
-                                              ? "text-green-500"
-                                              : "text-yellow-300",
-                                    )}
-                                >
-                                    <InfoIcon
-                                        weight="duotone"
-                                        className="size-4"
-                                    />
-                                    <p>{formState?.message}</p>
-                                </div>
-                            )}
+                            {formState?.status !== "success" &&
+                                formState?.message && (
+                                    <div
+                                        className={cn(
+                                            "flex items-center gap-1 rounded-md text-sm",
+                                            formState?.status === "error"
+                                                ? "text-red-500"
+                                                : "text-yellow-300",
+                                        )}
+                                    >
+                                        <InfoIcon
+                                            weight="duotone"
+                                            className="size-4"
+                                        />
+                                        <p>{formState?.message}</p>
+                                    </div>
+                                )}
                             {formState?.details &&
                                 formState?.details?.length &&
                                 formState.details.map((error) => (
@@ -264,6 +362,7 @@ export default function TaskDetailsSheet({
                             <Button
                                 type="button"
                                 variant="outline"
+                                disabled={isPending}
                                 onClick={() => onOpenChange(false)}
                                 className="h-8 rounded-md px-4 text-sm hover:bg-gray-200"
                             >
@@ -271,8 +370,12 @@ export default function TaskDetailsSheet({
                             </Button>
                             <Button
                                 type="submit"
-                                disabled={!task.title.trim()}
-                                className="h-8 gap-1.5 rounded-md bg-bright-blue px-4 text-xs font-semibold text-white hover:bg-blue-600 disabled:opacity-40 [&_svg]:size-4"
+                                disabled={!isChanged || isPending}
+                                className={cn(
+                                    "h-8 gap-1.5 rounded-md bg-bright-blue px-4 text-xs font-semibold text-white hover:bg-blue-600 disabled:opacity-40 [&_svg]:size-4",
+                                    !isChanged &&
+                                        "cursor-not-allowed opacity-50",
+                                )}
                             >
                                 <CheckIcon weight="duotone" size={16} />
                                 Save

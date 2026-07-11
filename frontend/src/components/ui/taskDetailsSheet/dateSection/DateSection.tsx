@@ -6,24 +6,23 @@ import { Popover, PopoverContent, PopoverTrigger } from "../../shadcn/popover";
 import { Calendar } from "../../shadcn/calendar";
 import { useState } from "react";
 import { dateMeta } from "@/libs/taskDetailsSheet";
-import { Task } from "@/types/types";
 import { format } from "date-fns";
 
 interface DateSectionProps {
     isPending: boolean;
-    task: Task;
+    startDate: Date | undefined;
+    dueDate: Date | undefined;
+    onStartDateChange: (startDate: Date | undefined) => void;
+    onDueDateChange: (dueDate: Date | undefined) => void;
 }
 
 export default function DateSection({
     isPending,
-    task,
+    startDate,
+    dueDate,
+    onStartDateChange,
+    onDueDateChange,
 }: Readonly<DateSectionProps>) {
-    const [startDate, setStartDate] = useState<Date | undefined>(
-        task.start_date ? new Date(task.start_date) : undefined,
-    );
-    const [dueDate, setDueDate] = useState<Date | undefined>(
-        task.due_date ? new Date(task.due_date) : undefined,
-    );
     const [startDateOpen, setStartDateOpen] = useState<boolean>(false);
     const [dueDateOpen, setDueDateOpen] = useState<boolean>(false);
 
@@ -72,7 +71,7 @@ export default function DateSection({
                                         if (!isPending) {
                                             e.stopPropagation();
 
-                                            setStartDate(undefined);
+                                            onStartDateChange(undefined);
                                         }
                                     }}
                                     className="text-gray-500 transition-colors hover:text-red-400"
@@ -85,7 +84,7 @@ export default function DateSection({
                             mode="single"
                             selected={startDate ?? undefined}
                             onSelect={(d) => {
-                                setStartDate(d ?? undefined);
+                                onStartDateChange(d ?? undefined);
                                 setStartDateOpen(false);
                             }}
                             disabled={isPending}
@@ -133,7 +132,7 @@ export default function DateSection({
                                         if (!isPending) {
                                             e.stopPropagation();
 
-                                            setDueDate(undefined);
+                                            onDueDateChange(undefined);
                                         }
                                     }}
                                     className="text-gray-500 transition-colors hover:text-red-400"
@@ -146,7 +145,7 @@ export default function DateSection({
                             mode="single"
                             selected={dueDate ?? undefined}
                             onSelect={(d) => {
-                                setDueDate(d ?? undefined);
+                                onDueDateChange(d ?? undefined);
                                 setDueDateOpen(false);
                             }}
                             disabled={isPending}

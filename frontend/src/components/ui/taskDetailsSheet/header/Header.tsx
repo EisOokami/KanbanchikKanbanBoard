@@ -24,17 +24,23 @@ interface HeaderProps {
     isPending: boolean;
     task: Task;
     projectData: Project;
+    column: Column;
+    priority: Priority;
     onOpenChange: (open: boolean) => void;
+    onColumnChange: (column: Column) => void;
+    onPriorityChange: (priority: Priority) => void;
 }
 
 export default function Header({
     isPending,
     task,
     projectData,
+    column,
+    priority,
     onOpenChange,
+    onColumnChange,
+    onPriorityChange,
 }: Readonly<HeaderProps>) {
-    const [column, setColumn] = useState<Column>(task.column);
-    const [priority, setPriority] = useState<Priority>(task.priority);
     const [linkCopied, setLinkCopied] = useState<boolean>(false);
 
     const handleCopyLink = async () => {
@@ -106,9 +112,7 @@ export default function Header({
                             <DropdownMenuItem
                                 key={projectColumn.id}
                                 className="cursor-pointer gap-2 text-sm"
-                                onClick={() => {
-                                    setColumn(projectColumn);
-                                }}
+                                onClick={() => onColumnChange(projectColumn)}
                                 disabled={isPending}
                             >
                                 {projectColumn.name}
@@ -140,9 +144,9 @@ export default function Header({
                                 <DropdownMenuItem
                                     key={priorityConfig}
                                     className="cursor-pointer gap-2 text-sm capitalize"
-                                    onClick={() => {
-                                        setPriority(priorityConfig);
-                                    }}
+                                    onClick={() =>
+                                        onPriorityChange(priorityConfig)
+                                    }
                                     disabled={isPending}
                                 >
                                     {priorityConfig}
