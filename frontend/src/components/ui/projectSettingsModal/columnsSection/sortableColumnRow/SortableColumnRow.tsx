@@ -75,11 +75,11 @@ export default function SortableColumnRow({
                             ?.get("editing-column")
                             ?.toString() ?? undefined
                     }
-                    onChange={(e) =>
+                    onChange={(e) => {
                         onColumnUpdate(column.id, {
                             name: e.target.value,
-                        })
-                    }
+                        });
+                    }}
                     onBlur={() => onEditingColumnChange(null)}
                     onKeyDown={(e) =>
                         e.key === "Enter" && onEditingColumnChange(null)

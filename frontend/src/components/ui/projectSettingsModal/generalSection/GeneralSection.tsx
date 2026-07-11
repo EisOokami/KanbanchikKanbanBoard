@@ -54,11 +54,15 @@ export default function GeneralSection({
                             projectIcon={icon}
                             projectColor={color}
                             isPending={isPending}
-                            onProjectIconChange={onIconChange}
+                            onProjectIconChange={(iconValue) =>
+                                onIconChange(iconValue)
+                            }
                         />
                         <ProjectColorPicker
                             projectColor={color}
-                            onProjectColorChange={onColorChange}
+                            onProjectColorChange={(colorValue) =>
+                                onColorChange(colorValue)
+                            }
                             isPending={isPending}
                         />
                     </div>

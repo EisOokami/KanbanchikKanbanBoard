@@ -1,12 +1,11 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
 import {
     Dialog,
     DialogContent,
     DialogTitle,
 } from "@/components/ui/shadcn/dialog";
-import { Button } from "@/components/ui/shadcn/button";
 import { ScrollArea } from "@/components/ui/shadcn/scroll-area";
 import { cn } from "@/libs/utils";
 import { NAV_ITEMS } from "@/constants/projectSettingsDialog";
@@ -17,7 +16,7 @@ import {
     ProjectSettingsFormData,
     NavSection,
 } from "@/types/types";
-import { CaretRightIcon, CheckIcon, InfoIcon } from "@phosphor-icons/react";
+import { CaretRightIcon } from "@phosphor-icons/react";
 import GeneralSection from "./generalSection/GeneralSection";
 import ColumnsSection from "./columnsSection/ColumnsSection";
 import CategoriesSection from "./categoriesSection/CategoriesSection";
@@ -28,7 +27,7 @@ import { updateProjectAction } from "@/data/actions";
 import { BaseAction } from "@/types/actions";
 import { usePathname } from "next/navigation";
 import { getProjectData } from "@/data/loaders";
-import { DetailsErrors } from "../detailsErrors/DetailsErrors";
+import SaveBar from "./saveBar/SaveBar";
 
 interface ProjectSettingsModalProps {
     open: boolean;
@@ -76,9 +75,31 @@ export default function ProjectSettingsModal({
     });
     const [status, setStatus] = useState<Status>(projectData.status);
     const [showPriorityEmoji, setShowPriorityEmoji] = useState<boolean>(
-        projectData.show_priority_emoji,
+        !!projectData.show_priority_emoji,
     );
     const pathname = usePathname();
+    const [initialValues, setInitialValues] = useState(() => ({
+        name: projectData.name,
+        icon: projectData.icon,
+        color: projectData.color,
+        description: projectData.description,
+        status: projectData.status,
+        showPriorityEmoji: !!projectData.show_priority_emoji,
+    }));
+    const [initialFormData, setInitialFormData] =
+        useState<ProjectSettingsFormData>(() => ({
+            categories: projectData.categories,
+            newCategories: [],
+            deletedCategoryIds: [],
+            columns: columnsData,
+            newColumns: [],
+            deletedColumnIds: [],
+            labels: projectData.labels,
+            newLabels: [],
+            deletedLabelIds: [],
+            members: projectData.members,
+            emails: [],
+        }));
     const [formData, setFormData] = useState<ProjectSettingsFormData>({
         categories: projectData.categories,
         newCategories: [],
@@ -98,6 +119,55 @@ export default function ProjectSettingsModal({
     );
 
     useEffect(() => {
+        if (!open) {
+            return;
+        }
+
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setName(projectData.name);
+        setIcon(projectData.icon);
+        setColor(projectData.color);
+        setDescription(projectData.description);
+        setStatus(projectData.status);
+        setShowPriorityEmoji(!!projectData.show_priority_emoji);
+        setFormData({
+            categories: projectData.categories,
+            newCategories: [],
+            deletedCategoryIds: [],
+            columns: columnsData,
+            newColumns: [],
+            deletedColumnIds: [],
+            labels: projectData.labels,
+            newLabels: [],
+            deletedLabelIds: [],
+            members: projectData.members,
+            emails: [],
+        });
+        setInitialValues({
+            name: projectData.name,
+            icon: projectData.icon,
+            color: projectData.color,
+            description: projectData.description,
+            status: projectData.status,
+            showPriorityEmoji: !!projectData.show_priority_emoji,
+        });
+        setInitialFormData({
+            categories: projectData.categories,
+            newCategories: [],
+            deletedCategoryIds: [],
+            columns: columnsData,
+            newColumns: [],
+            deletedColumnIds: [],
+            labels: projectData.labels,
+            newLabels: [],
+            deletedLabelIds: [],
+            members: projectData.members,
+            emails: [],
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [open]);
+
+    useEffect(() => {
         (async () => {
             if (formState && formState.status === "success") {
                 const result = await getProjectData(projectData.slug);
@@ -107,6 +177,83 @@ export default function ProjectSettingsModal({
         })();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [formState]);
+
+    const hasChanges = useMemo(() => {
+        const simpleChanged =
+            name !== initialValues.name ||
+            icon !== initialValues.icon ||
+            color !== initialValues.color ||
+            description !== initialValues.description ||
+            status !== initialValues.status ||
+            showPriorityEmoji !== initialValues.showPriorityEmoji;
+
+        const formChanged =
+            formData.newColumns.length > 0 ||
+            formData.deletedColumnIds.length > 0 ||
+            formData.newCategories.length > 0 ||
+            formData.deletedCategoryIds.length > 0 ||
+            formData.newLabels.length > 0 ||
+            formData.deletedLabelIds.length > 0 ||
+            formData.emails.length > 0 ||
+            formData.members.some((member, i) => {
+                const orig = initialFormData.members[i];
+
+                return !orig || member.role !== orig.role;
+            }) ||
+            formData.columns.some((column, i) => {
+                const orig = initialFormData.columns[i];
+
+                return (
+                    !orig ||
+                    column.id !== orig.id ||
+                    column.name !== orig.name ||
+                    column.position !== orig.position ||
+                    column.wip_limit !== orig.wip_limit
+                );
+            }) ||
+            formData.categories.some((category, i) => {
+                const orig = initialFormData.categories[i];
+
+                return (
+                    !orig ||
+                    category.name !== orig.name ||
+                    category.color !== orig.color
+                );
+            }) ||
+            formData.labels.some((label, i) => {
+                const orig = initialFormData.labels[i];
+
+                return (
+                    !orig ||
+                    label.name !== orig.name ||
+                    label.color !== orig.color
+                );
+            });
+
+        return simpleChanged || formChanged;
+    }, [
+        name,
+        initialValues.name,
+        initialValues.icon,
+        initialValues.color,
+        initialValues.description,
+        initialValues.status,
+        initialValues.showPriorityEmoji,
+        icon,
+        color,
+        description,
+        status,
+        showPriorityEmoji,
+        formData.newColumns.length,
+        formData.deletedColumnIds.length,
+        formData.newCategories.length,
+        formData.deletedCategoryIds.length,
+        formData.newLabels.length,
+        formData.deletedLabelIds.length,
+        formData.emails.length,
+        formData.columns,
+        initialFormData.columns,
+    ]);
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -239,64 +386,12 @@ export default function ProjectSettingsModal({
                             </div>
                         </ScrollArea>
                     </div>
-                    <div
-                        className={cn(
-                            "flex border-t px-6 py-3.5",
-                            formState?.status === "error" ||
-                                formState?.status === "success" ||
-                                (formState?.details &&
-                                    formState?.details?.length)
-                                ? "justify-between gap-3"
-                                : "justify-end",
-                        )}
-                    >
-                        <div>
-                            {formState?.status !== "success" &&
-                                formState?.message && (
-                                    <div
-                                        className={cn(
-                                            "flex items-center gap-2 rounded-md text-sm",
-                                            formState?.status === "error"
-                                                ? "text-red-500"
-                                                : "text-yellow-300",
-                                        )}
-                                    >
-                                        <InfoIcon
-                                            weight="duotone"
-                                            className="size-4"
-                                        />
-                                        <p>{formState?.message}</p>
-                                    </div>
-                                )}
-                            {formState?.details &&
-                                formState?.details?.length &&
-                                formState.details.map((error) => (
-                                    <DetailsErrors
-                                        key={error.message + error.field}
-                                        error={error}
-                                    />
-                                ))}
-                        </div>
-                        <div className="flex shrink-0 items-center justify-end gap-2">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => onOpenChange(false)}
-                                className="h-9 rounded-md px-4 text-sm hover:bg-gray-100"
-                                disabled={isPending}
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                type="submit"
-                                disabled={!name.trim() || isPending}
-                                className="h-9 rounded-md bg-bright-blue text-sm font-semibold text-white hover:bg-blue-600 disabled:opacity-40"
-                            >
-                                <CheckIcon weight="duotone" size={14} />
-                                Save changes
-                            </Button>
-                        </div>
-                    </div>
+                    <SaveBar
+                        formState={formState}
+                        isPending={isPending}
+                        hasChanges={hasChanges}
+                        onOpenChange={onOpenChange}
+                    />
                     <input type="hidden" name="slug" value={projectData.slug} />
                     <input type="hidden" name="icon" value={icon} />
                     <input type="hidden" name="color" value={color} />

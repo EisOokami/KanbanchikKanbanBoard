@@ -169,7 +169,9 @@ export default function ColumnsSection({
                             formState?.formData?.get("column")?.toString() ??
                             undefined
                         }
-                        onChange={(e) => onColumnNameChange(e.target.value)}
+                        onChange={(e) => {
+                            onColumnNameChange(e.target.value);
+                        }}
                         onKeyDown={(e) => e.key === "Enter" && addColumn()}
                         className={cn(
                             "h-8 flex-1 rounded-md text-sm placeholder:text-gray-300 focus-visible:ring-1 focus-visible:ring-bright-blue",
