@@ -22,6 +22,7 @@ import {
     verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import DroppableTbody from "@/components/ui/droppableTbody/DroppableTbody";
+import { getSortedTasks } from "@/libs/project";
 
 interface ProjectListViewProps {
     columns: Column[];
@@ -65,6 +66,8 @@ export default function ProjectListView({
         if (sortField !== field) {
             setSortField(field);
             setSortDir("asc");
+
+            return;
         }
 
         setSortDir((prevState) => (prevState === "asc" ? "desc" : "asc"));
@@ -80,8 +83,10 @@ export default function ProjectListView({
                         }
 
                         const collapsed = collapsedGroups.has(column.name);
-                        const sortedTasks = [...column.tasks].sort(
-                            (a, b) => a.position - b.position,
+                        const sortedTasks = getSortedTasks(
+                            column.tasks,
+                            sortField,
+                            sortDir,
                         );
 
                         return (

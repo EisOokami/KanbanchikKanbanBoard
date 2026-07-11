@@ -1,12 +1,6 @@
-import { Column, FilterState, Priority, Task } from "@/types/types";
+import { PRIORITY_ORDER } from "@/constants/constants";
+import { Column, FilterState, Task } from "@/types/types";
 import { isAfter, isBefore, addDays, startOfDay } from "date-fns";
-
-const PRIORITY_ORDER: Record<Priority, number> = {
-    low: 0,
-    medium: 1,
-    high: 2,
-    critical: 3,
-};
 
 export function isOverdue(task: Task): boolean {
     if (!task.due_date) {

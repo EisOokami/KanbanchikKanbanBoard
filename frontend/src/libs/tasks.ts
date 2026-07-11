@@ -1,4 +1,4 @@
-import { PRIORITY_ORDER } from "@/constants/tasks";
+import { PRIORITY_ORDER } from "@/constants/constants";
 import {
     SortDirection,
     Task,
