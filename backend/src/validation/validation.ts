@@ -728,3 +728,16 @@ export const validateSlugSchema = z.object({
                 "Slug can only contain lowercase letters, numbers, and single hyphens",
         }),
 });
+
+export const changeRoleSchema = z.object({
+    memberId: z
+        .number()
+        .positive()
+        .int("Member ID must be an integer")
+        .refine((value) => Number.isSafeInteger(value), {
+            message: "ID is too large a numerical value",
+        }),
+    role: z.enum(["owner", "admin", "member", "viewer"], {
+        message: "Invalid member role",
+    }),
+});

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+    changeRole,
     createProject,
     deleteProject,
     getProject,
@@ -8,6 +9,7 @@ import {
 } from "../controllers/projects.controller";
 import { authenticateToken } from "../middleware/auth.middleware";
 import {
+    changeRoleSchema,
     createProjectSchema,
     updateProjectSchema,
 } from "../validation/validation";
@@ -30,5 +32,11 @@ router.put(
     updateProject,
 );
 router.delete("/:slug", authenticateToken, deleteProject);
+router.put(
+    "/change-role/:slug",
+    authenticateToken,
+    validateData(changeRoleSchema),
+    changeRole,
+);
 
 export default router;
