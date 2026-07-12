@@ -596,6 +596,7 @@ export const getProject = async (req: IGetUserRequest, res: Response) => {
                             start_date: task.start_date,
                             priority: task.priority,
                             show_progress: task.show_progress,
+                            creator_id: task.creator_id,
                             created_at: task.created_at,
                             updated_at: task.updated_at,
                             column: {
@@ -959,7 +960,24 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
 
         const [projects] = await pool.execute<
             (Pick<Project, "id" | "name" | "owner_id"> & RowDataPacket)[]
-        >(`SELECT id, name, owner_id FROM projects WHERE slug = ?`, [slug]);
+        >(
+            `
+                SELECT 
+                    p.id, 
+                    p.name, 
+                    p.owner_id 
+                FROM projects p
+                WHERE p.slug = ? AND (
+                    p.id IN (
+                        SELECT 
+                            project_id 
+                        FROM project_members 
+                        WHERE user_id = ? AND role IN ("owner", "admin")
+                    ) OR p.owner_id = ?
+                )
+            `,
+            [slug, userId, userId],
+        );
 
         if (!projects.length) {
             res.status(404).json({
