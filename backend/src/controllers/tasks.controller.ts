@@ -101,6 +101,24 @@ export const getTasks = async (req: IGetUserRequest, res: Response) => {
 
         const enrichedTasks = await Promise.all(
             tasks.map(async (task) => {
+                const [projectMembers] = await pool.execute<
+                    (Pick<User, "id"> &
+                        Pick<ProjectMember, "role" | "joined_at"> &
+                        RowDataPacket)[]
+                >(
+                    `
+                        SELECT 
+                            u.id,
+                            pm.role,
+                            pm.joined_at
+                        FROM project_members pm
+                        JOIN users u ON pm.user_id = u.id
+                        WHERE pm.project_id = ?
+                        AND pm.user_id = ?
+                    `,
+                    [task.project_id, userId],
+                );
+
                 const [members] = await pool.execute<
                     (Pick<User, "id" | "name" | "surname" | "color" | "email"> &
                         Pick<ProjectMember, "role" | "status" | "joined_at"> &
@@ -250,12 +268,14 @@ export const getTasks = async (req: IGetUserRequest, res: Response) => {
                     start_date: task.start_date,
                     priority: task.priority,
                     show_progress: task.show_progress === 1,
+                    creator_id: task.creator_id,
                     project: {
                         id: task.project_id,
                         name: task.project_name,
                         icon: task.project_icon,
                         color: task.project_color,
                         slug: task.project_slug,
+                        members: projectMembers,
                     },
                     members,
                     labels,
@@ -544,6 +564,7 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
             start_date: task.start_date,
             priority: task.priority,
             show_progress: task.show_progress === 1,
+            creator_id: task.creator_id,
             project: {
                 id: task.project_id,
                 name: task.project_name,
