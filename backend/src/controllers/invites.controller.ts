@@ -9,7 +9,7 @@ import type {
     ProjectMember,
 } from "../types/types";
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
-import { memberInviteSchema } from "../validation/validation";
+import { memberInviteSchema, validateIdSchema } from "../validation/validation";
 import { ZodError } from "zod";
 import { transporter } from "../utils/email";
 
@@ -23,6 +23,9 @@ export const generateInvite = async (
     res: Response,
 ): Promise<void> => {
     try {
+        validateIdSchema.parse(req.params);
+
+        const { id } = req.params;
         const userId = req.user.id;
 
         if (!userId) {
@@ -34,13 +37,22 @@ export const generateInvite = async (
             return;
         }
 
-        const projectId = Number(req.params.id);
+        if (!id) {
+            res.status(400).json({
+                status: "error",
+                message: "Invalid project ID",
+            });
+
+            return;
+        }
+
+        const projectId = +id;
 
         const [members] = await pool.execute<
             (Pick<ProjectMember, "id"> & RowDataPacket)[]
         >(
             `
-                SELECT *
+                SELECT id
                 FROM project_members
                 WHERE project_id = ?
                 AND user_id = ?
