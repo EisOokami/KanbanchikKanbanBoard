@@ -616,21 +616,38 @@ export const createTask = async (req: IGetUserRequest, res: Response) => {
             (Pick<Project, "id" | "owner_id"> & RowDataPacket)[]
         >(
             `
-                SELECT id, owner_id
-                FROM projects
-                WHERE id = ? AND (
-                    id IN (
-                        SELECT project_id FROM project_members WHERE user_id = ?
-                    ) OR owner_id = ?
+                SELECT 
+                    p.id, 
+                    p.name, 
+                    p.owner_id 
+                FROM projects p
+                WHERE p.slug = ? AND (
+                    p.id IN (
+                        SELECT 
+                            project_id 
+                        FROM project_members 
+                        WHERE user_id = ? AND role IN ("owner", "admin", "member")
+                    ) OR p.owner_id = ?
                 )
             `,
-            [validatedData.projectId, userId, userId],
+            [validatedData.slug, userId, userId],
         );
 
         if (!projects.length) {
             res.status(403).json({
                 status: "error",
                 message: "Access denied or project not found",
+            });
+
+            return;
+        }
+
+        const project = projects[0];
+
+        if (!project) {
+            res.status(404).json({
+                status: "error",
+                message: "Project not found or access denied",
             });
 
             return;
@@ -657,12 +674,12 @@ export const createTask = async (req: IGetUserRequest, res: Response) => {
                     OR p.id IN (
                         SELECT project_id
                         FROM project_members
-                        WHERE user_id = ?
+                        WHERE user_id = ? AND role IN ("owner", "admin", "member")
                     )
                 )
                 GROUP BY c.id, c.name, c.wip_limit, p.id
             `,
-            [validatedData.columnId, validatedData.projectId, userId, userId],
+            [validatedData.columnId, project.id, userId, userId],
         );
 
         if (!columns.length) {
@@ -769,11 +786,7 @@ export const createTask = async (req: IGetUserRequest, res: Response) => {
                             INSERT INTO categories (project_id, name, color)
                             VALUES (?, ?, ?)
                         `,
-                            [
-                                validatedData.projectId,
-                                category.name,
-                                category.color,
-                            ],
+                            [project.id, category.name, category.color],
                         );
 
                     await pool.execute<ResultSetHeader>(
@@ -792,7 +805,7 @@ export const createTask = async (req: IGetUserRequest, res: Response) => {
                             INSERT INTO labels (project_id, name, color)
                             VALUES (?, ?, ?)
                         `,
-                        [validatedData.projectId, label.name, label.color],
+                        [project.id, label.name, label.color],
                     );
 
                     await pool.execute<ResultSetHeader>(
@@ -943,11 +956,14 @@ export const updateTask = async (req: IGetUserRequest, res: Response) => {
                 JOIN projects p ON c.project_id = p.id
                 WHERE t.id = ? AND (
                     p.id IN (
-                        SELECT project_id FROM project_members WHERE user_id = ?
-                    ) OR p.owner_id = ?
+                        SELECT 
+                            project_id 
+                            FROM project_members 
+                            WHERE user_id = ? AND role IN ("owner", "admin")
+                    ) OR p.owner_id = ? OR t.creator_id = ?
                 )
             `,
-            [id, userId, userId],
+            [id, userId, userId, userId],
         );
 
         if (!tasks.length) {
@@ -1195,11 +1211,14 @@ export const deleteTask = async (req: IGetUserRequest, res: Response) => {
                 JOIN projects p ON c.project_id = p.id
                 WHERE t.id = ? AND (
                     p.id IN (
-                        SELECT project_id FROM project_members WHERE user_id = ?
-                    ) OR p.owner_id = ?
+                        SELECT 
+                            project_id 
+                        FROM project_members 
+                        WHERE user_id = ? AND role IN ("owner", "admin")
+                    ) OR p.owner_id = ? OR t.creator_id = ?
                 )
             `,
-            [id, userId, userId],
+            [id, userId, userId, userId],
         );
 
         if (!tasks.length) {
@@ -1338,7 +1357,7 @@ export const moveTask = async (req: IGetUserRequest, res: Response) => {
         const validatedData = moveTaskSchema.parse(req.body);
 
         const [columns] = await pool.execute<
-            (Pick<Column, "name" | "wip_limit"> & {
+            (Pick<Column, "name" | "wip_limit" | "project_id"> & {
                 task_count: number;
             } & RowDataPacket)[]
         >(
@@ -1346,13 +1365,20 @@ export const moveTask = async (req: IGetUserRequest, res: Response) => {
                 SELECT
                     c.name,
                     c.wip_limit,
-                    COUNT(t.id) AS task_count
+                    COUNT(t.id) AS task_count,
+                    c.project_id
                 FROM columns c
                 LEFT JOIN tasks t ON t.column_id = c.id
-                WHERE c.id = ?
-                GROUP BY c.id, c.name, c.wip_limit;
+                JOIN projects p ON c.project_id = p.id
+                WHERE c.id = ? AND p.id IN (
+                    SELECT 
+                        project_id 
+                    FROM project_members 
+                    WHERE user_id = ? AND role IN ("owner", "admin", "member")
+                )
+                GROUP BY c.id, c.name, c.wip_limit, c.project_id;
             `,
-            [validatedData.columnId],
+            [validatedData.columnId, userId],
         );
 
         if (!columns.length) {
@@ -1389,16 +1415,26 @@ export const moveTask = async (req: IGetUserRequest, res: Response) => {
 
         const [result] = await pool.execute<ResultSetHeader>(
             `
-                UPDATE tasks
-                    SET column_id = ?,
-                        position  = ?,
-                        updated_at = NOW()
-                WHERE id = ?
+                UPDATE tasks t
+                JOIN projects p ON p.id = ?
+                SET t.column_id = ?, t.position = ?, t.updated_at = NOW()
+                WHERE t.id = ? AND (
+                    p.id IN (
+                        SELECT 
+                            project_id 
+                            FROM project_members 
+                            WHERE user_id = ? AND role IN ("owner", "admin")
+                    ) OR p.owner_id = ? OR t.creator_id = ?
+                )
             `,
             [
+                column.project_id,
                 validatedData.columnId,
                 validatedData.position,
                 validatedData.taskId,
+                userId,
+                userId,
+                userId,
             ],
         );
 
