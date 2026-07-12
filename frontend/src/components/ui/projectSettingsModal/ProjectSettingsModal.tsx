@@ -234,35 +234,8 @@ export default function ProjectSettingsModal({
             });
 
         return simpleChanged || formChanged;
-    }, [
-        name,
-        initialValues.name,
-        initialValues.icon,
-        initialValues.color,
-        initialValues.description,
-        initialValues.status,
-        initialValues.showPriorityEmoji,
-        icon,
-        color,
-        description,
-        status,
-        showPriorityEmoji,
-        formData.newColumns.length,
-        formData.deletedColumnIds.length,
-        formData.newCategories.length,
-        formData.deletedCategoryIds.length,
-        formData.newLabels.length,
-        formData.deletedLabelIds.length,
-        formData.emails.length,
-        formData.members,
-        formData.columns,
-        formData.categories,
-        formData.labels,
-        initialFormData.members,
-        initialFormData.columns,
-        initialFormData.categories,
-        initialFormData.labels,
-    ]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [name, icon, color, description, status, showPriorityEmoji]);
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>

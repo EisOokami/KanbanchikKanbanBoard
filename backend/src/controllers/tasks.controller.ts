@@ -965,8 +965,6 @@ export const updateTask = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
-        const validatedData = updateTaskSchema.parse(req.body);
-
         const [tasks] = await pool.execute<
             (Pick<Task, "id"> & Pick<Column, "project_id"> & RowDataPacket)[]
         >(
@@ -995,6 +993,8 @@ export const updateTask = async (req: IGetUserRequest, res: Response) => {
 
             return;
         }
+
+        const validatedData = updateTaskSchema.parse(req.body);
 
         const updateFields: string[] = [];
         const updateValues: any[] = [];
@@ -1136,7 +1136,7 @@ export const updateTask = async (req: IGetUserRequest, res: Response) => {
             );
         }
 
-        if (validatedData.subtasks && validatedData.subtasks.length) {
+        if (validatedData.newSubtasks && validatedData.newSubtasks.length) {
             await Promise.all(
                 validatedData.newSubtasks.map(async (subtask) => {
                     await pool.execute<ResultSetHeader>(

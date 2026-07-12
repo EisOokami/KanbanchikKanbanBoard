@@ -83,26 +83,32 @@ export default function TaskDetailsSheet({
     const [activity, setActivity] = useState<ActivityEntry[]>(() =>
         commentsToActivity(selectedTask.comments),
     );
+    const [showProgress, setShowProgress] = useState<boolean>(
+        !!task.show_progress,
+    );
     const [isChanged, setIsChanged] = useState<boolean>(false);
-    const [initialValues] = useState(() => ({
+    const [initialValues, setInitialValues] = useState(() => ({
         column: task.column,
         priority: task.priority,
         title: task.title,
         startDate: task.start_date ? new Date(task.start_date) : undefined,
         dueDate: task.due_date ? new Date(task.due_date) : undefined,
         description: task.description ?? "",
+        showProgress: !!task.show_progress,
     }));
-    const [initialFormData] = useState<UpdateTaskFormData>(() => ({
-        categories: task.categories,
-        members: task.members,
-        subtasks: task.subtasks,
-        newSubtasks: [],
-        attachments: task.attachments,
-        newAttachments: [],
-        labels: task.labels,
-        comments: task.comments,
-        newComments: [],
-    }));
+    const [initialFormData, setInitialFormData] = useState<UpdateTaskFormData>(
+        () => ({
+            categories: task.categories,
+            members: task.members,
+            subtasks: task.subtasks,
+            newSubtasks: [],
+            attachments: task.attachments,
+            newAttachments: [],
+            labels: task.labels,
+            comments: task.comments,
+            newComments: [],
+        }),
+    );
     const [formData, setFormData] = useState<UpdateTaskFormData>({
         categories: task.categories,
         members: task.members,
@@ -118,6 +124,16 @@ export default function TaskDetailsSheet({
         updateTaskAction.bind(null, formData, currentPath),
         INITIAL_STATE,
     );
+
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setShowProgress(!!task.show_progress);
+        setInitialValues({
+            ...initialValues,
+            showProgress: !!task.show_progress,
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [task.show_progress]);
 
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -137,6 +153,27 @@ export default function TaskDetailsSheet({
         setStartDate(task.start_date ? new Date(task.start_date) : undefined);
         setDueDate(task.due_date ? new Date(task.due_date) : undefined);
         setDescription(task.description ?? "");
+        setShowProgress(!!task.show_progress);
+        setInitialValues({
+            column: task.column,
+            priority: task.priority,
+            title: task.title,
+            startDate: task.start_date ? new Date(task.start_date) : undefined,
+            dueDate: task.due_date ? new Date(task.due_date) : undefined,
+            description: task.description ?? "",
+            showProgress: !!task.show_progress,
+        });
+        setInitialFormData({
+            categories: task.categories,
+            members: task.members,
+            subtasks: task.subtasks,
+            newSubtasks: [],
+            attachments: task.attachments,
+            newAttachments: [],
+            labels: task.labels,
+            comments: task.comments,
+            newComments: [],
+        });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open]);
 
@@ -147,7 +184,8 @@ export default function TaskDetailsSheet({
             dueDate !== initialValues.dueDate ||
             description !== initialValues.description ||
             priority !== initialValues.priority ||
-            column.id !== initialValues.column.id;
+            column.id !== initialValues.column.id ||
+            showProgress !== initialValues.showProgress;
 
         const hasFormDataChanged =
             formData.newSubtasks.length > 0 ||
@@ -173,7 +211,16 @@ export default function TaskDetailsSheet({
             setIsChanged(false);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [title, startDate, dueDate, description, priority, column, formData]);
+    }, [
+        title,
+        startDate,
+        dueDate,
+        description,
+        priority,
+        column,
+        formData,
+        showProgress,
+    ]);
 
     useEffect(() => {
         (async () => {
@@ -311,9 +358,10 @@ export default function TaskDetailsSheet({
                                         formState={formState}
                                         isPending={isPending}
                                         formData={formData}
-                                        task={task}
+                                        showProgress={showProgress}
                                         hasPermission={hasPermission}
                                         onFormDataChange={setFormData}
+                                        onShowProgressChange={setShowProgress}
                                     />
                                     <Separator />
                                 </>

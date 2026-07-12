@@ -5,7 +5,7 @@ import { Checkbox } from "../../shadcn/checkbox";
 import { Input } from "../../shadcn/input";
 import { cn } from "@/libs/utils";
 import { Button } from "../../shadcn/button";
-import { Task, UpdateTaskFormData } from "@/types/types";
+import { UpdateTaskFormData } from "@/types/types";
 import { useState } from "react";
 import { BaseAction } from "@/types/actions";
 import { ZodErrors } from "../../zodErrors/ZodErrors";
@@ -14,23 +14,22 @@ interface SubtasksSectionProps {
     formState: BaseAction | undefined;
     isPending: boolean;
     formData: UpdateTaskFormData;
-    task: Task;
+    showProgress: boolean;
     hasPermission: boolean;
     onFormDataChange: (formData: UpdateTaskFormData) => void;
+    onShowProgressChange: (showProgress: boolean) => void;
 }
 
 export default function SubtasksSection({
     formData,
     formState,
     isPending,
-    task,
+    showProgress,
     hasPermission,
     onFormDataChange,
+    onShowProgressChange,
 }: Readonly<SubtasksSectionProps>) {
     const [newSubtaskText, setNewSubtaskText] = useState<string>("");
-    const [progressShow, setProgressShow] = useState<boolean>(
-        task.show_progress,
-    );
 
     const toggleSubtask = (id: number) => {
         onFormDataChange({
@@ -292,8 +291,10 @@ export default function SubtasksSection({
                     <Checkbox
                         id="show-progress-input"
                         name="show-progress-input"
-                        checked={!!progressShow}
-                        onCheckedChange={() => setProgressShow(!progressShow)}
+                        checked={!!showProgress}
+                        onCheckedChange={() =>
+                            onShowProgressChange(!showProgress)
+                        }
                         defaultValue={
                             formState?.formData
                                 ?.get("show-progress-input")
@@ -315,7 +316,7 @@ export default function SubtasksSection({
             <input
                 type="hidden"
                 name="show-progress"
-                value={String(!!progressShow)}
+                value={String(!!showProgress)}
             />
         </div>
     );
