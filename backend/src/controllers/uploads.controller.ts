@@ -34,16 +34,19 @@ export const getAttachments = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
-        const [taskMembers] = await pool.execute<TaskMembers[]>(
+        const [projectMember] = await pool.execute<TaskMembers[]>(
             `
-                SELECT task_id, user_id 
-                FROM task_members 
-                WHERE user_id = ? AND task_id = ?
+                SELECT pm.*
+                FROM tasks t
+                JOIN columns c ON c.id = t.column_id
+                JOIN project_members pm ON pm.project_id = c.project_id
+                WHERE t.id = ? AND pm.user_id = ?
+                LIMIT 1
             `,
-            [userId, validatedData.taskId],
+            [validatedData.taskId, userId],
         );
 
-        if (!taskMembers || !taskMembers.length) {
+        if (!projectMember || !projectMember.length) {
             res.status(403).json({
                 status: "error",
                 message: "Access denied or task not found",
@@ -102,11 +105,23 @@ export const uploadSingle = async (req: IGetUserRequest, res: Response) => {
 
         const [taskMembers] = await pool.execute<TaskMembers[]>(
             `
-                SELECT task_id, user_id 
-                FROM task_members 
-                WHERE user_id = ? AND task_id = ?
+                SELECT tm.task_id, tm.user_id 
+                FROM task_members tm
+                JOIN tasks t ON t.id = tm.task_id
+                JOIN columns c ON c.id = t.column_id
+                JOIN project_members pm ON pm.project_id = c.project_id
+                WHERE
+                        pm.user_id = ?
+                        AND tm.task_id = ?
+                        AND (
+                            pm.role != 'viewer'
+                            AND (
+                                tm.user_id = ?
+                                OR pm.role IN ('owner', 'admin')
+                            )
+                        )
             `,
-            [userId, validatedData.taskId],
+            [userId, validatedData.taskId, userId],
         );
 
         if (!taskMembers || !taskMembers.length) {
@@ -307,11 +322,23 @@ export const uploadMultiple = async (req: IGetUserRequest, res: Response) => {
 
         const [taskMembers] = await pool.execute<TaskMembers[]>(
             `
-                SELECT task_id, user_id 
-                FROM task_members 
-                WHERE user_id = ? AND task_id = ?
+                SELECT tm.task_id, tm.user_id 
+                FROM task_members tm
+                JOIN tasks t ON t.id = tm.task_id
+                JOIN columns c ON c.id = t.column_id
+                JOIN project_members pm ON pm.project_id = c.project_id
+                WHERE
+                        pm.user_id = ?
+                        AND tm.task_id = ?
+                        AND (
+                            pm.role != 'viewer'
+                            AND (
+                                tm.user_id = ?
+                                OR pm.role IN ('owner', 'admin')
+                            )
+                        )
             `,
-            [userId, validatedData.taskId],
+            [userId, validatedData.taskId, userId],
         );
 
         if (!taskMembers || !taskMembers.length) {
