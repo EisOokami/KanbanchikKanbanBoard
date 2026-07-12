@@ -8,7 +8,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "../shadcn/dropdown-menu";
-import { Task } from "@/types/types";
+import { Task, User } from "@/types/types";
 import { PRIORITY_CONFIG } from "@/constants/constants";
 import {
     Avatar,
@@ -29,6 +29,7 @@ import { Progress } from "../shadcn/progress";
 interface KanbanTaskProps {
     task: Task;
     showPriorityEmoji: boolean;
+    userData: User;
     onDelete: (id: number) => void;
     onOpenDetails: (task: Task) => void;
 }
@@ -36,6 +37,7 @@ interface KanbanTaskProps {
 export default function KanbanTask({
     task,
     showPriorityEmoji,
+    userData,
     onDelete,
     onOpenDetails,
 }: Readonly<KanbanTaskProps>) {
@@ -46,7 +48,14 @@ export default function KanbanTask({
         transform,
         transition,
         isDragging,
-    } = useSortable({ id: task.id });
+    } = useSortable({
+        id: task.id,
+        disabled:
+            userData.role === "viewer" ||
+            (userData.role === "member" &&
+                userData.id !== task.creator_id &&
+                !task.members.some((member) => member.id === userData.id)),
+    });
 
     const style = {
         transform: CSS.Transform.toString(transform),
@@ -54,7 +63,7 @@ export default function KanbanTask({
         opacity: isDragging ? 0.3 : 1,
     };
 
-    const overdue = isOverdue(task.due_date, task.column.name);
+    const overdue = isOverdue(task.due_date ?? undefined, task.column.name);
     const progress = Math.round(
         ((task.subtasks_done ? task.subtasks_done : 0) * 100) /
             (task.subtasks_total ? task.subtasks_total : 1),
@@ -67,7 +76,17 @@ export default function KanbanTask({
             onClick={() => onOpenDetails(task)}
             {...attributes}
             {...listeners}
-            className="group relative cursor-default select-none rounded-xl border bg-white p-3 text-left transition-shadow duration-150 hover:border-gray-300 hover:shadow-md"
+            className={cn(
+                "group relative cursor-default select-none rounded-xl border bg-white p-3 text-left",
+                userData.role === "viewer" ||
+                    (userData.role === "member" &&
+                        userData.id !== task.creator_id &&
+                        !task.members.some(
+                            (member) => member.id === userData.id,
+                        ))
+                    ? "cursor-pointer"
+                    : "cursor-grab transition-shadow duration-150 hover:border-gray-300 hover:shadow-md",
+            )}
         >
             <div className="mb-2.5 flex items-center justify-between gap-2">
                 <div className="flex flex-wrap items-center gap-1.5">
@@ -97,31 +116,43 @@ export default function KanbanTask({
                         </span>
                     ))}
                 </div>
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <button
-                            onClick={(e) => e.stopPropagation()}
-                            className="ml-auto flex-shrink-0 rounded p-0.5 opacity-0 transition-opacity hover:bg-gray-100 hover:!opacity-100 group-hover:opacity-50"
+                {!(
+                    userData.role === "viewer" ||
+                    (userData.role === "member" &&
+                        userData.id !== task.creator_id)
+                ) && (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <button
+                                onClick={(e) => e.stopPropagation()}
+                                className="ml-auto flex-shrink-0 rounded p-0.5 opacity-0 transition-opacity hover:bg-gray-100 hover:!opacity-100 group-hover:opacity-50"
+                            >
+                                <DotsThreeOutlineIcon
+                                    weight="duotone"
+                                    className="size-3.5 text-gray-400"
+                                />
+                            </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                            align="end"
+                            className="w-36 border"
                         >
-                            <DotsThreeOutlineIcon
-                                weight="duotone"
-                                className="size-3.5 text-gray-400"
-                            />
-                        </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-36 border">
-                        <DropdownMenuItem
-                            className="cursor-pointer gap-2 text-xs text-red-400 focus:bg-red-500/10 focus:text-red-400"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onDelete(task.id);
-                            }}
-                        >
-                            <TrashIcon weight="duotone" className="size-3" />{" "}
-                            Delete task
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                            <DropdownMenuItem
+                                className="cursor-pointer gap-2 text-xs text-red-400 focus:bg-red-500/10 focus:text-red-400"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDelete(task.id);
+                                }}
+                            >
+                                <TrashIcon
+                                    weight="duotone"
+                                    className="size-3"
+                                />{" "}
+                                Delete task
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                )}
             </div>
             <p className="mb-1 break-words text-sm font-medium leading-snug">
                 {task.title}

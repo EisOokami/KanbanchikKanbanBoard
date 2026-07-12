@@ -1,3 +1,5 @@
+"use client";
+
 import { DetailsError } from "@/types/actions";
 import { WarningIcon } from "@phosphor-icons/react";
 

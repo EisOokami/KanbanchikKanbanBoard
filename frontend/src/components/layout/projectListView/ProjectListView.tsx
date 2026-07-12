@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, Dispatch, SetStateAction } from "react";
-import { Column, SortDirection, SortField, Task } from "@/types/types";
+import { Column, SortDirection, SortField, Task, User } from "@/types/types";
 import ProjectTaskRow from "@/components/ui/projectTaskRow/ProjectTaskRow";
 import {
     CalendarBlankIcon,
@@ -28,6 +28,7 @@ interface ProjectListViewProps {
     columns: Column[];
     activeTask: Task | null;
     showPriorityEmoji: boolean;
+    userData: User;
     setColumns: Dispatch<SetStateAction<Column[]>>;
     onOpenDetails: (task: Task) => void;
 }
@@ -36,6 +37,7 @@ export default function ProjectListView({
     columns,
     activeTask,
     showPriorityEmoji,
+    userData,
     setColumns,
     onOpenDetails,
 }: Readonly<ProjectListViewProps>) {
@@ -233,6 +235,7 @@ export default function ProjectListView({
                                                         showPriorityEmoji={
                                                             showPriorityEmoji
                                                         }
+                                                        userData={userData}
                                                         onDelete={
                                                             handleDeleteTask
                                                         }

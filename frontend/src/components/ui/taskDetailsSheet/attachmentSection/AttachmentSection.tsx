@@ -18,6 +18,7 @@ interface AttachmentSectionProps {
     isPending: boolean;
     formData: UpdateTaskFormData;
     userData: Omit<User, "email">;
+    hasPermission: boolean;
     onFormDataChange: (formData: UpdateTaskFormData) => void;
 }
 
@@ -26,6 +27,7 @@ export default function AttachmentSection({
     isPending,
     formData,
     userData,
+    hasPermission,
     onFormDataChange,
 }: Readonly<AttachmentSectionProps>) {
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -165,24 +167,27 @@ export default function AttachmentSection({
                             <AttachmentRow
                                 key={attachment.id}
                                 attachment={attachment}
-                                onRemove={removeAttachment}
-                                onPreview={handlePreview}
                                 isPending={isPending}
                                 canPreview={canPreview}
+                                hasPermission={hasPermission}
+                                onRemove={removeAttachment}
+                                onPreview={handlePreview}
                             />
                         );
                     })}
                 </div>
             )}
-            <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-gray-300 py-2 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-50"
-                disabled={isPending}
-            >
-                <UploadSimpleIcon weight="duotone" size={14} />
-                Upload file
-            </button>
+            {hasPermission && (
+                <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-gray-300 py-2 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-50"
+                    disabled={isPending}
+                >
+                    <UploadSimpleIcon weight="duotone" size={14} />
+                    Upload file
+                </button>
+            )}
             <ZodErrors error={formState?.zodErrors?.attachments} />
             <ZodErrors error={formState?.zodErrors?.newAttachments} />
             <Lightbox

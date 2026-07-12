@@ -8,18 +8,20 @@ import Image from "next/image";
 
 interface AttachmentRowProps {
     attachment: Attachment;
-    onRemove: (id: number) => void;
-    onPreview: (id: number) => void;
     isPending: boolean;
     canPreview: boolean;
+    hasPermission: boolean;
+    onRemove: (id: number) => void;
+    onPreview: (id: number) => void;
 }
 
 export default function AttachmentRow({
     attachment,
-    onRemove,
-    onPreview,
     isPending,
     canPreview,
+    hasPermission,
+    onRemove,
+    onPreview,
 }: Readonly<AttachmentRowProps>) {
     const handleDownload = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -62,31 +64,33 @@ export default function AttachmentRow({
                     {formatSize(attachment.size_bytes)}
                 </p>
             </div>
-            <div className="flex shrink-0 items-center gap-1 opacity-0 transition-all group-hover/att:opacity-100">
-                {!canPreview && (
+            {hasPermission && (
+                <div className="flex shrink-0 items-center gap-1 opacity-0 transition-all group-hover/att:opacity-100">
+                    {!canPreview && (
+                        <button
+                            type="button"
+                            onClick={handleDownload}
+                            className="text-gray-300 transition-colors hover:text-violet-500"
+                            disabled={isPending}
+                            title="Download"
+                        >
+                            <ArrowLineDownIcon weight="duotone" size={16} />
+                        </button>
+                    )}
                     <button
                         type="button"
-                        onClick={handleDownload}
-                        className="text-gray-300 transition-colors hover:text-violet-500"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onRemove(attachment.id);
+                        }}
+                        className="text-gray-300 transition-colors hover:text-red-400"
                         disabled={isPending}
-                        title="Download"
+                        title="Remove"
                     >
-                        <ArrowLineDownIcon weight="duotone" size={16} />
+                        <TrashSimpleIcon weight="duotone" size={16} />
                     </button>
-                )}
-                <button
-                    type="button"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onRemove(attachment.id);
-                    }}
-                    className="text-gray-300 transition-colors hover:text-red-400"
-                    disabled={isPending}
-                    title="Remove"
-                >
-                    <TrashSimpleIcon weight="duotone" size={16} />
-                </button>
-            </div>
+                </div>
+            )}
         </div>
     );
 }

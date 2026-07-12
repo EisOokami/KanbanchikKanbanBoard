@@ -36,7 +36,8 @@ export function applyTasksFilter(
         }
 
         if (filter.overdue) {
-            if (!isOverdue(task.due_date, task.column.name)) return false;
+            if (!isOverdue(task.due_date ?? undefined, task.column.name))
+                return false;
         }
 
         return true;

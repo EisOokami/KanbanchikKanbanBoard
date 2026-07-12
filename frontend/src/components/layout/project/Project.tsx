@@ -44,6 +44,7 @@ import {
     KanbanIcon,
     ListIcon,
     PlusIcon,
+    UserIcon,
     UserPlusIcon,
 } from "@phosphor-icons/react";
 import CreateTaskModal from "@/components/ui/createTaskModal/CreateTaskModal";
@@ -94,6 +95,11 @@ export default function Project({
         () => applyTaskFilters(columns, filters),
         [columns, filters],
     );
+    const updatedUserData = {
+        ...userData,
+        role: projectData.members.find((member) => member.id === userData.id)
+            ?.role,
+    };
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -462,17 +468,30 @@ export default function Project({
                             variant="outline"
                             onClick={() => setShowInvite(true)}
                         >
-                            <UserPlusIcon weight="duotone" />
-                            Invite
+                            {updatedUserData.role === "admin" ||
+                            updatedUserData.role === "owner" ? (
+                                <>
+                                    <UserPlusIcon weight="duotone" />
+                                    Invite
+                                </>
+                            ) : (
+                                <>
+                                    <UserIcon weight="duotone" />
+                                    Members
+                                </>
+                            )}
                         </Button>
-                        <Button
-                            size="icon"
-                            variant="ghost"
-                            className="[&_svg]:size-5"
-                            onClick={() => handleShowProjectSettings(true)}
-                        >
-                            <GearSixIcon weight="duotone" />
-                        </Button>
+                        {(updatedUserData.role === "admin" ||
+                            updatedUserData.role === "owner") && (
+                            <Button
+                                size="icon"
+                                variant="ghost"
+                                className="[&_svg]:size-5"
+                                onClick={() => handleShowProjectSettings(true)}
+                            >
+                                <GearSixIcon weight="duotone" />
+                            </Button>
+                        )}
                     </div>
                 </div>
                 <div className="flex justify-between">
@@ -507,13 +526,20 @@ export default function Project({
                             <FunnelIcon weight="duotone" />
                             Filter
                         </Button>
-                        <Button
-                            className="gap-1.5 bg-bright-blue px-3 text-xs hover:bg-blue-600"
-                            onClick={() => handleToggleCreateTask()}
-                        >
-                            <PlusIcon weight="duotone" className="size-3.5" />{" "}
-                            New Task
-                        </Button>
+                        {(updatedUserData.role === "admin" ||
+                            updatedUserData.role === "owner" ||
+                            updatedUserData.role === "member") && (
+                            <Button
+                                className="gap-1.5 bg-bright-blue px-3 text-xs hover:bg-blue-600"
+                                onClick={() => handleToggleCreateTask()}
+                            >
+                                <PlusIcon
+                                    weight="duotone"
+                                    className="size-3.5"
+                                />{" "}
+                                New Task
+                            </Button>
+                        )}
                     </div>
                 </div>
             </header>
@@ -572,6 +598,7 @@ export default function Project({
                                                 showPriorityEmoji={
                                                     projectData.show_priority_emoji
                                                 }
+                                                userData={updatedUserData}
                                                 onOpenCreateTask={
                                                     handleToggleCreateTask
                                                 }
@@ -591,6 +618,7 @@ export default function Project({
                                     showPriorityEmoji={
                                         projectData.show_priority_emoji
                                     }
+                                    userData={updatedUserData}
                                     setColumns={setColumns}
                                     onOpenDetails={(task: Task) => {
                                         handleShowTaskDetails();
@@ -604,6 +632,7 @@ export default function Project({
                                     showPriorityEmoji={
                                         projectData.show_priority_emoji
                                     }
+                                    userData={updatedUserData}
                                     onOpenDetails={(task: Task) => {
                                         handleShowTaskDetails();
                                         setSelectedTask(task);
@@ -639,6 +668,7 @@ export default function Project({
                 open={showInvite}
                 onOpenChange={() => setShowInvite(!showInvite)}
                 projectData={projectData}
+                userData={updatedUserData}
             />
             <TaskFilterSheet
                 open={showFilters}
@@ -652,6 +682,7 @@ export default function Project({
                 onOpenChange={handleShowProjectSettings}
                 columnsData={columns}
                 projectData={projectData}
+                userData={updatedUserData}
             />
             {selectedTask && (
                 <TaskDetailsSheet
@@ -660,7 +691,7 @@ export default function Project({
                     onOpenChange={handleShowTaskDetails}
                     selectedTask={selectedTask}
                     projectData={projectData}
-                    userData={userData}
+                    userData={updatedUserData}
                     currentPath="/project/[slug]"
                 />
             )}

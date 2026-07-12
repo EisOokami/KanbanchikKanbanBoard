@@ -49,7 +49,7 @@ export interface User extends Omit<Base, "created_at"> {
     surname: string;
     email: string;
     avatar_url: string;
-    role: Role;
+    role?: Role;
     joined_at: string | Date;
     color: string;
     status: "active" | "pending";
@@ -118,7 +118,11 @@ export interface Task extends ExtendedBase {
     show_progress: boolean;
     attachments: Attachment[];
     comments: Comment[];
-    project: Pick<Project, "id" | "name" | "color" | "icon" | "slug">;
+    project: Pick<
+        Project,
+        "id" | "name" | "color" | "icon" | "slug" | "members"
+    >;
+    creator_id: number;
 }
 
 export interface Column extends ExtendedBase {

@@ -15,6 +15,7 @@ import {
     Status,
     ProjectSettingsFormData,
     NavSection,
+    User,
 } from "@/types/types";
 import { CaretRightIcon } from "@phosphor-icons/react";
 import GeneralSection from "./generalSection/GeneralSection";
@@ -34,6 +35,7 @@ interface ProjectSettingsModalProps {
     onOpenChange: (open: boolean, data?: Project) => void;
     columnsData: Column[];
     projectData: Project;
+    userData: User;
 }
 
 const INITIAL_STATE: BaseAction = {
@@ -50,6 +52,7 @@ export default function ProjectSettingsModal({
     onOpenChange,
     columnsData,
     projectData,
+    userData,
 }: Readonly<ProjectSettingsModalProps>) {
     const [activeSection, setActiveSection] = useState<NavSection>("general");
     const [name, setName] = useState<string>(projectData.name);
@@ -251,8 +254,14 @@ export default function ProjectSettingsModal({
         formData.newLabels.length,
         formData.deletedLabelIds.length,
         formData.emails.length,
+        formData.members,
         formData.columns,
+        formData.categories,
+        formData.labels,
+        initialFormData.members,
         initialFormData.columns,
+        initialFormData.categories,
+        initialFormData.labels,
     ]);
 
     return (
@@ -271,6 +280,13 @@ export default function ProjectSettingsModal({
                         <nav className="flex w-48 shrink-0 flex-col gap-0.5 border-r px-2 py-3">
                             {NAV_ITEMS.map((item) => {
                                 const Icon = item.icon;
+
+                                if (
+                                    item.id === "danger" &&
+                                    userData.role !== "owner"
+                                ) {
+                                    return null;
+                                }
 
                                 return (
                                     <button
@@ -374,15 +390,16 @@ export default function ProjectSettingsModal({
                                         onFormDataChange={setFormData}
                                     />
                                 )}
-                                {activeSection === "danger" && (
-                                    <DangerSection
-                                        name={name}
-                                        slug={projectData.slug}
-                                        isPending={isPending}
-                                        onOpenChange={onOpenChange}
-                                        onSectionChange={setActiveSection}
-                                    />
-                                )}
+                                {activeSection === "danger" &&
+                                    userData.role === "owner" && (
+                                        <DangerSection
+                                            name={name}
+                                            slug={projectData.slug}
+                                            isPending={isPending}
+                                            onOpenChange={onOpenChange}
+                                            onSectionChange={setActiveSection}
+                                        />
+                                    )}
                             </div>
                         </ScrollArea>
                     </div>

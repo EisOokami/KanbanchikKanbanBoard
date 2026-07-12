@@ -5,11 +5,13 @@ import { Textarea } from "../../shadcn/textarea";
 import { useState } from "react";
 import { ZodErrors } from "../../zodErrors/ZodErrors";
 import { BaseAction } from "@/types/actions";
+import { cn } from "@/libs/utils";
 
 interface TitleSectionProps {
     formState: BaseAction | undefined;
     isPending: boolean;
     title: string;
+    hasPermission: boolean;
     onTitleChange: (title: string) => void;
 }
 
@@ -17,6 +19,7 @@ export default function TitleSection({
     formState,
     isPending,
     title,
+    hasPermission,
     onTitleChange,
 }: Readonly<TitleSectionProps>) {
     const [editingTitle, setEditingTitle] = useState<boolean>(false);
@@ -48,11 +51,15 @@ export default function TitleSection({
                 <>
                     <h1
                         onClick={() => {
-                            if (!isPending) {
+                            if (!isPending && hasPermission) {
                                 setEditingTitle(true);
                             }
                         }}
-                        className="group -mx-2 flex max-w-[550px] cursor-text items-center gap-2 rounded-md px-2 py-1 text-xl font-bold leading-tight transition-colors hover:bg-gray-50"
+                        className={cn(
+                            "group -mx-2 flex max-w-[550px] items-center gap-2 rounded-md px-2 py-1 text-xl font-bold leading-tight",
+                            hasPermission &&
+                                "cursor-text transition-colors hover:bg-gray-50",
+                        )}
                     >
                         <span className="max-w-[95%] flex-1 break-words">
                             {title.trim() || (
@@ -64,7 +71,11 @@ export default function TitleSection({
                         <PencilSimpleIcon
                             weight="duotone"
                             size={16}
-                            className="text-gray-500 opacity-0 transition-opacity group-hover:opacity-100"
+                            className={cn(
+                                "text-gray-500 opacity-0",
+                                hasPermission &&
+                                    "transition-opacity group-hover:opacity-100",
+                            )}
                         />
                     </h1>
                     <input type="hidden" name="title" value={title} />

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/shadcn/button";
 import { ScrollArea } from "@/components/ui/shadcn/scroll-area";
 import { cn, todayStr } from "@/libs/utils";
 import SidebarEventCard from "@/components/ui/sidebarEventCard/SidebarEventCard";
-import { Column, Project, Task } from "@/types/types";
+import { Column, Project, Task, User } from "@/types/types";
 import { CalendarCheckIcon, PlusIcon } from "@phosphor-icons/react";
 
 interface DaySidebarProps {
@@ -12,6 +12,7 @@ interface DaySidebarProps {
     tasks: Task[];
     columns?: Column[];
     showPriorityEmoji?: boolean;
+    userData: User;
     onOpenCreate: () => void;
     onOpenDetails: (task: Task) => void;
 }
@@ -21,6 +22,7 @@ export default function DaySidebar({
     tasks,
     columns,
     showPriorityEmoji,
+    userData,
     onOpenCreate,
     onOpenDetails,
 }: Readonly<DaySidebarProps>) {
@@ -92,16 +94,20 @@ export default function DaySidebar({
                         })}
                     </p>
                 </div>
-                <div className="border-b px-4 py-3">
-                    <Button
-                        onClick={onOpenCreate}
-                        size="sm"
-                        className="h-8 w-full gap-1.5 bg-bright-blue text-xs hover:bg-blue-600"
-                    >
-                        <PlusIcon weight="duotone" className="size-3.5" /> Add
-                        Task
-                    </Button>
-                </div>
+                {(userData.role === "admin" ||
+                    userData.role === "owner" ||
+                    userData.role === "member") && (
+                    <div className="border-b px-4 py-3">
+                        <Button
+                            onClick={onOpenCreate}
+                            size="sm"
+                            className="h-8 w-full gap-1.5 bg-bright-blue text-xs hover:bg-blue-600"
+                        >
+                            <PlusIcon weight="duotone" className="size-3.5" />{" "}
+                            Add Task
+                        </Button>
+                    </div>
+                )}
                 <ScrollArea className="flex-1">
                     <div className="space-y-5 px-4 py-3">
                         {tasks.length === 0 ? (

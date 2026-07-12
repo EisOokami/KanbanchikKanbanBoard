@@ -31,7 +31,11 @@ import {
     UsersIcon,
     XIcon,
 } from "@phosphor-icons/react";
-import { generateInviteAction, inviteMemberAction } from "@/data/actions";
+import {
+    changeRoleAction,
+    generateInviteAction,
+    inviteMemberAction,
+} from "@/data/actions";
 import { BaseAction } from "@/types/actions";
 import { ZodErrors } from "../zodErrors/ZodErrors";
 import { DetailsErrors } from "../detailsErrors/DetailsErrors";
@@ -41,6 +45,7 @@ interface InviteMemberModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     projectData: Project;
+    userData: User;
 }
 
 const INITIAL_STATE: BaseAction = {
@@ -56,6 +61,7 @@ export default function InviteMemberModal({
     open,
     onOpenChange,
     projectData,
+    userData,
 }: Readonly<InviteMemberModalProps>) {
     const [members, setMembers] = useState<Omit<User, "email">[]>(
         projectData.members,
@@ -64,20 +70,42 @@ export default function InviteMemberModal({
     const [search, setSearch] = useState("");
     const [linkCopied, setLinkCopied] = useState(false);
     const [selectedTab, setSelectedTab] = useState<"members" | "invite">(
-        "invite",
+        userData.role === "admin" || userData.role === "owner"
+            ? "invite"
+            : "members",
     );
     const [inviteEmail, setInviteEmail] = useState("");
     const [formState, formAction, isPending] = useActionState(
         inviteMemberAction.bind(null, invites),
         INITIAL_STATE,
     );
+    const updateRole = async (id: number, role: Role) => {
+        const result = await changeRoleAction(projectData.slug, id, role);
 
-    const updateRole = (id: number, role: Role) =>
-        setMembers((prevState) =>
-            prevState.map((member) =>
-                member.id === id ? { ...member, role } : member,
-            ),
-        );
+        if (!result || !result.ok) {
+            toast.success("Error", {
+                description: "Something went wrong",
+            });
+        }
+
+        if (result && result.ok) {
+            toast.success("Success", {
+                description: `Role has been changed`,
+            });
+
+            setMembers((prevState) =>
+                prevState.map((member) =>
+                    member.id === id ? { ...member, role } : member,
+                ),
+            );
+        }
+
+        if (result && !result.ok) {
+            toast.success("Error", {
+                description: result.message,
+            });
+        }
+    };
 
     const removeMember = (id: number) =>
         setMembers((prevState) =>
@@ -146,15 +174,31 @@ export default function InviteMemberModal({
                     className="flex min-h-0 flex-1 flex-col"
                 >
                     <DialogHeader className="gap-3 px-6 pt-5">
-                        <div className="flex items-start justify-between gap-3">
+                        <div
+                            className={cn(
+                                "flex justify-between gap-3",
+                                userData.role === "admin" ||
+                                    userData.role === "owner"
+                                    ? "items-start"
+                                    : "items-center",
+                            )}
+                        >
                             <div className="grid gap-1">
                                 <DialogTitle className="font-semibold">
-                                    Invite to your Project
+                                    {userData.role === "admin" ||
+                                    userData.role === "owner" ? (
+                                        <>Invite to your Project</>
+                                    ) : (
+                                        <>Members</>
+                                    )}
                                 </DialogTitle>
-                                <p className="max-w-[300px] text-xs text-gray-500">
-                                    We&apos;ll email them instructions and a
-                                    link to join your Project
-                                </p>
+                                {(userData.role === "admin" ||
+                                    userData.role === "owner") && (
+                                    <p className="max-w-[300px] text-xs text-gray-500">
+                                        We&apos;ll email them instructions and a
+                                        link to join your Project
+                                    </p>
+                                )}
                             </div>
                             <button
                                 type="button"
@@ -165,34 +209,40 @@ export default function InviteMemberModal({
                                 <XIcon weight="duotone" size={16} />
                             </button>
                         </div>
-                        <div className="flex gap-1.5 rounded-xl bg-gray-100 p-1.5">
-                            {(["invite", "members"] as const).map((tab) => (
-                                <button
-                                    key={tab}
-                                    type="button"
-                                    onClick={() => setSelectedTab(tab)}
-                                    className={cn(
-                                        "flex flex-1 items-center justify-center gap-2 rounded-md py-2 text-sm font-medium transition-all",
-                                        tab === selectedTab
-                                            ? "bg-white shadow-sm"
-                                            : "text-gray-500 hover:bg-white/60",
-                                    )}
-                                    disabled={isPending}
-                                >
-                                    {tab === "invite" ? (
-                                        <UserPlusIcon
-                                            weight="duotone"
-                                            size={13}
-                                        />
-                                    ) : (
-                                        <UsersIcon weight="duotone" size={13} />
-                                    )}
-                                    {tab === "invite"
-                                        ? "Invite people"
-                                        : `Members (${members.length})`}
-                                </button>
-                            ))}
-                        </div>
+                        {(userData.role === "admin" ||
+                            userData.role === "owner") && (
+                            <div className="flex gap-1.5 rounded-xl bg-gray-100 p-1.5">
+                                {(["invite", "members"] as const).map((tab) => (
+                                    <button
+                                        key={tab}
+                                        type="button"
+                                        onClick={() => setSelectedTab(tab)}
+                                        className={cn(
+                                            "flex flex-1 items-center justify-center gap-2 rounded-md py-2 text-sm font-medium transition-all",
+                                            tab === selectedTab
+                                                ? "bg-white shadow-sm"
+                                                : "text-gray-500 hover:bg-white/60",
+                                        )}
+                                        disabled={isPending}
+                                    >
+                                        {tab === "invite" ? (
+                                            <UserPlusIcon
+                                                weight="duotone"
+                                                size={13}
+                                            />
+                                        ) : (
+                                            <UsersIcon
+                                                weight="duotone"
+                                                size={13}
+                                            />
+                                        )}
+                                        {tab === "invite"
+                                            ? "Invite people"
+                                            : `Members (${members.length})`}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
                     </DialogHeader>
                     <div className="px-6 py-4">
                         {selectedTab === "invite" && (
@@ -348,6 +398,7 @@ export default function InviteMemberModal({
                                                     key={member.id}
                                                     member={member}
                                                     isPending={isPending}
+                                                    userData={userData}
                                                     onRoleChange={updateRole}
                                                     onRemove={removeMember}
                                                 />
@@ -368,20 +419,25 @@ export default function InviteMemberModal({
                                         </div>
                                     )}
                                 </ScrollArea>
-                                <div className="flex items-center justify-between rounded-md border bg-gray-50 px-3 py-2 text-xs">
-                                    <button
-                                        type="button"
-                                        onClick={() => setSelectedTab("invite")}
-                                        className="flex items-center gap-1 font-medium text-bright-blue transition-colors hover:opacity-80"
-                                        disabled={isPending}
-                                    >
-                                        <UserPlusIcon
-                                            weight="duotone"
-                                            size={12}
-                                        />
-                                        Add more
-                                    </button>
-                                </div>
+                                {(userData.role === "admin" ||
+                                    userData.role === "owner") && (
+                                    <div className="flex items-center justify-between rounded-md border bg-gray-50 px-3 py-2 text-xs">
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setSelectedTab("invite")
+                                            }
+                                            className="flex items-center gap-1 font-medium text-bright-blue transition-colors hover:opacity-80"
+                                            disabled={isPending}
+                                        >
+                                            <UserPlusIcon
+                                                weight="duotone"
+                                                size={12}
+                                            />
+                                            Add more
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         )}
                         <div className="mt-3">

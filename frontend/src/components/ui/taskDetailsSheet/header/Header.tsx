@@ -26,6 +26,7 @@ interface HeaderProps {
     projectData: Project;
     column: Column;
     priority: Priority;
+    hasPermission: boolean;
     onOpenChange: (open: boolean) => void;
     onColumnChange: (column: Column) => void;
     onPriorityChange: (priority: Priority) => void;
@@ -37,6 +38,7 @@ export default function Header({
     projectData,
     column,
     priority,
+    hasPermission,
     onOpenChange,
     onColumnChange,
     onPriorityChange,
@@ -96,115 +98,139 @@ export default function Header({
     return (
         <div className="flex items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-2">
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild disabled={isPending}>
-                        <button
-                            type="button"
-                            className="flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors hover:brightness-95"
-                            disabled={isPending}
-                        >
+                {!hasPermission ? (
+                    <>
+                        <div className="flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors hover:brightness-95">
                             {column.name}
-                            <CaretDownIcon weight="duotone" size={12} />
-                        </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                        {projectData.columns.map((projectColumn) => (
-                            <DropdownMenuItem
-                                key={projectColumn.id}
-                                className="cursor-pointer gap-2 text-sm"
-                                onClick={() => onColumnChange(projectColumn)}
-                                disabled={isPending}
-                            >
-                                {projectColumn.name}
-                                {column.id === projectColumn.id && (
-                                    <CheckIcon
-                                        weight="duotone"
-                                        size={12}
-                                        className="ml-auto text-bright-blue"
-                                    />
-                                )}
-                            </DropdownMenuItem>
-                        ))}
-                    </DropdownMenuContent>
-                </DropdownMenu>
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild disabled={isPending}>
-                        <button
-                            type="button"
-                            className="flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium capitalize transition-colors hover:brightness-95"
-                            disabled={isPending}
-                        >
+                        </div>
+                        <div className="flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium capitalize transition-colors hover:brightness-95">
                             {priority}
-                            <CaretDownIcon weight="duotone" size={12} />
-                        </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                        {(Object.keys(PRIORITY_CONFIG) as Priority[]).map(
-                            (priorityConfig) => (
-                                <DropdownMenuItem
-                                    key={priorityConfig}
-                                    className="cursor-pointer gap-2 text-sm capitalize"
-                                    onClick={() =>
-                                        onPriorityChange(priorityConfig)
-                                    }
+                        </div>
+                    </>
+                ) : (
+                    <>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild disabled={isPending}>
+                                <button
+                                    type="button"
+                                    className="flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors hover:brightness-95"
                                     disabled={isPending}
                                 >
-                                    {priorityConfig}
-                                    {priority === priorityConfig && (
-                                        <CheckIcon
-                                            weight="duotone"
-                                            size={12}
-                                            className="ml-auto text-bright-blue"
-                                        />
-                                    )}
-                                </DropdownMenuItem>
-                            ),
-                        )}
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                                    {column.name}
+                                    <CaretDownIcon weight="duotone" size={12} />
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                {projectData.columns.map((projectColumn) => (
+                                    <DropdownMenuItem
+                                        key={projectColumn.id}
+                                        className="cursor-pointer gap-2 text-sm"
+                                        onClick={() =>
+                                            onColumnChange(projectColumn)
+                                        }
+                                        disabled={isPending}
+                                    >
+                                        {projectColumn.name}
+                                        {column.id === projectColumn.id && (
+                                            <CheckIcon
+                                                weight="duotone"
+                                                size={12}
+                                                className="ml-auto text-bright-blue"
+                                            />
+                                        )}
+                                    </DropdownMenuItem>
+                                ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild disabled={isPending}>
+                                <button
+                                    type="button"
+                                    className="flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium capitalize transition-colors hover:brightness-95"
+                                    disabled={isPending}
+                                >
+                                    {priority}
+                                    <CaretDownIcon weight="duotone" size={12} />
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                {(
+                                    Object.keys(PRIORITY_CONFIG) as Priority[]
+                                ).map((priorityConfig) => (
+                                    <DropdownMenuItem
+                                        key={priorityConfig}
+                                        className="cursor-pointer gap-2 text-sm capitalize"
+                                        onClick={() =>
+                                            onPriorityChange(priorityConfig)
+                                        }
+                                        disabled={isPending}
+                                    >
+                                        {priorityConfig}
+                                        {priority === priorityConfig && (
+                                            <CheckIcon
+                                                weight="duotone"
+                                                size={12}
+                                                className="ml-auto text-bright-blue"
+                                            />
+                                        )}
+                                    </DropdownMenuItem>
+                                ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </>
+                )}
             </div>
             <div className="ml-auto flex items-center gap-1">
-                <Tooltip>
-                    <TooltipTrigger asChild disabled={isPending}>
-                        <button
-                            type="button"
-                            onClick={handleCopyLink}
-                            className="flex size-8 items-center justify-center rounded-md transition-colors hover:bg-gray-100"
-                            style={{
-                                color: linkCopied ? "#1E7E3A" : "#6b7280",
-                            }}
-                            disabled={isPending}
-                        >
-                            {linkCopied ? (
-                                <CheckIcon weight="duotone" size={18} />
-                            ) : (
-                                <LinkIcon weight="duotone" size={16} />
-                            )}
-                        </button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        {linkCopied ? "Copied!" : "Copy link"}
-                    </TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                    <TooltipTrigger
-                        asChild
-                        disabled={isPending}
-                        onClick={() => handleDeleteTask(task.id)}
-                    >
-                        <button
-                            type="button"
-                            className="flex size-8 items-center justify-center rounded-md text-red-500 transition-colors hover:bg-red-50"
-                            onClick={() => {
-                                onOpenChange(false);
-                            }}
-                            disabled={isPending}
-                        >
-                            <TrashSimpleIcon weight="duotone" size={16} />
-                        </button>
-                    </TooltipTrigger>
-                    <TooltipContent>Delete task</TooltipContent>
-                </Tooltip>
+                {hasPermission && (
+                    <>
+                        <Tooltip>
+                            <TooltipTrigger asChild disabled={isPending}>
+                                <button
+                                    type="button"
+                                    onClick={handleCopyLink}
+                                    className="flex size-8 items-center justify-center rounded-md transition-colors hover:bg-gray-100"
+                                    style={{
+                                        color: linkCopied
+                                            ? "#1E7E3A"
+                                            : "#6b7280",
+                                    }}
+                                    disabled={isPending}
+                                >
+                                    {linkCopied ? (
+                                        <CheckIcon weight="duotone" size={18} />
+                                    ) : (
+                                        <LinkIcon weight="duotone" size={16} />
+                                    )}
+                                </button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                {linkCopied ? "Copied!" : "Copy link"}
+                            </TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                            <TooltipTrigger
+                                asChild
+                                disabled={isPending}
+                                onClick={() => handleDeleteTask(task.id)}
+                            >
+                                <button
+                                    type="button"
+                                    className="flex size-8 items-center justify-center rounded-md text-red-500 transition-colors hover:bg-red-50"
+                                    onClick={() => {
+                                        onOpenChange(false);
+                                    }}
+                                    disabled={isPending}
+                                >
+                                    <TrashSimpleIcon
+                                        weight="duotone"
+                                        size={16}
+                                    />
+                                </button>
+                            </TooltipTrigger>
+                            <TooltipContent>Delete task</TooltipContent>
+                        </Tooltip>
+                    </>
+                )}
                 <Tooltip>
                     <TooltipTrigger asChild disabled={isPending}>
                         <button

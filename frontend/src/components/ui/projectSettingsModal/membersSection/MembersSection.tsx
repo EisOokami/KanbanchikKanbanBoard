@@ -24,7 +24,6 @@ export default function MembersSection({
     isPending,
     onFormDataChange,
 }: Readonly<MembersSectionProps>) {
-    const [inviteRole, setInviteRole] = useState<User["role"]>("member");
     const [inviteEmail, setInviteEmail] = useState<string>("");
 
     const updateMemberRole = (id: number, role: User["role"]) => {
@@ -89,35 +88,6 @@ export default function MembersSection({
                         )}
                         disabled={isPending}
                     />
-                    <div className="flex gap-1">
-                        {(["admin", "member", "viewer"] as const).map(
-                            (role) => (
-                                <button
-                                    type="button"
-                                    key={role}
-                                    onClick={() => setInviteRole(role)}
-                                    className="rounded-md border px-2 py-1 text-xs font-medium transition-all"
-                                    style={
-                                        inviteRole === role
-                                            ? {
-                                                  background:
-                                                      ROLE_META[role].bg,
-                                                  color: ROLE_META[role].color,
-                                                  border: `1px solid ${ROLE_META[role].border}`,
-                                              }
-                                            : {
-                                                  background: "#F3F4F6",
-                                                  color: "#6B7280",
-                                                  border: "1px solid #E5E7EB",
-                                              }
-                                    }
-                                    disabled={isPending}
-                                >
-                                    {ROLE_META[role].label}
-                                </button>
-                            ),
-                        )}
-                    </div>
                     <Button
                         type="button"
                         size="sm"
@@ -187,8 +157,10 @@ export default function MembersSection({
                                     ] as const
                                 ).map((role) => {
                                     if (
-                                        role === "owner" &&
-                                        member.role !== "owner"
+                                        (role === "owner" &&
+                                            member.role !== "owner") ||
+                                        (member.role === "owner" &&
+                                            role !== "owner")
                                     )
                                         return null;
 

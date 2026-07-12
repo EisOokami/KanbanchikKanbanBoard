@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/shadcn/input";
 import ProjectCard from "@/components/ui/projectCard/ProjectCard";
 import NewProjectModal from "@/components/ui/newProjectModal/NewProjectModal";
 import { FilterSortOptions } from "@/types/projectsOverview";
-import { Project } from "@/types/types";
+import { Project, User } from "@/types/types";
 import {
     FunnelIcon,
     GridFourIcon,
@@ -27,6 +27,7 @@ import { useDebounce } from "use-debounce";
 
 interface ProjectsOverviewProps {
     projectsData: Project[];
+    userData: User;
 }
 
 const DEFAULT_FILTER_SORT: FilterSortOptions = {
@@ -39,6 +40,7 @@ const DEFAULT_FILTER_SORT: FilterSortOptions = {
 
 export default function ProjectsOverview({
     projectsData,
+    userData,
 }: Readonly<ProjectsOverviewProps>) {
     const [search, setSearch] = useState<string>("");
     const [searchValue] = useDebounce(search, 1000);
@@ -185,7 +187,8 @@ export default function ProjectsOverview({
                             {filtered.map((project) => (
                                 <ProjectCard
                                     key={project.id}
-                                    project={project}
+                                    projectData={project}
+                                    userData={userData}
                                     onDelete={handleDelete}
                                 />
                             ))}

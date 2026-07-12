@@ -7,13 +7,14 @@ import {
 import { redirect } from "next/navigation";
 
 export default async function TasksPage() {
-    const tasksData = await getTasksData();
-    const taskFilterOptionsData = await getTaskFilterOptionsData();
     const userData = await getUserData();
 
     if (!userData.data) {
         redirect("/signIn");
     }
+
+    const tasksData = await getTasksData();
+    const taskFilterOptionsData = await getTaskFilterOptionsData();
 
     return (
         <Tasks

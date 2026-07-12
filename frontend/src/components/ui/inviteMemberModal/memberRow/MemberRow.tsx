@@ -9,6 +9,7 @@ import { XIcon } from "@phosphor-icons/react";
 interface MemberRowProps {
     member: Omit<User, "email">;
     isPending: boolean;
+    userData: User;
     onRoleChange: (id: number, role: Role) => void;
     onRemove: (id: number) => void;
 }
@@ -16,6 +17,7 @@ interface MemberRowProps {
 export default function MemberRow({
     member,
     isPending,
+    userData,
     onRoleChange,
     onRemove,
 }: Readonly<MemberRowProps>) {
@@ -31,31 +33,19 @@ export default function MemberRow({
                         {getInitials(member.name, member.surname)}
                     </AvatarFallback>
                 </Avatar>
-                {/* {member.status === "active" && (
-                    <div className="absolute bottom-0 right-0 size-2.5 rounded-full bg-green-500 ring-2 ring-white" />
-                )} */}
             </div>
             <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                     <p className="truncate text-sm font-medium">
                         {member.name}
                     </p>
-                    {/* {member.status === "pending" && (
-                        <Badge
-                            variant="outline"
-                            className="border px-1.5 py-0 text-[10px] font-medium"
-                        >
-                            Pending
-                        </Badge>
-                    )} */}
                 </div>
-                {/* <p className="truncate text-xs text-gray-500">{member.email}</p> */}
             </div>
-            {member.role !== "owner" ? (
+            {member.role !== "owner" || userData.role === "owner" ? (
                 <div className="flex items-center gap-1.5">
                     <RoleSelect
-                        value={member.role}
-                        onChange={(r) => onRoleChange(member.id, r)}
+                        value={member.role ?? "viewer"}
+                        onChange={(role) => onRoleChange(member.id, role)}
                         compact
                         isPending={isPending}
                     />

@@ -179,7 +179,7 @@ export default function Tasks({
             done: tasksData.filter((task) => task.column.name === "done")
                 .length,
             overdue: tasksData.filter((task) =>
-                isOverdue(task.due_date, task.column.name),
+                isOverdue(task.due_date ?? undefined, task.column.name),
             ).length,
         }),
         [tasksData],
@@ -607,6 +607,7 @@ export default function Tasks({
                                     <TaskRow
                                         key={task.id}
                                         task={task}
+                                        userData={userData}
                                         onDelete={deleteTask}
                                         onOpenDetails={() => {
                                             setSelectedTask(task);
@@ -635,7 +636,12 @@ export default function Tasks({
                     onOpenChange={handleShowTaskDetailsSheet}
                     selectedTask={selectedTask}
                     projectData={projectData}
-                    userData={userData}
+                    userData={{
+                        ...userData,
+                        role: selectedTask.project.members.find(
+                            (member) => member.id === userData.id,
+                        )?.role,
+                    }}
                     currentPath="/tasks"
                 />
             )}

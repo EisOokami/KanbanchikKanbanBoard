@@ -21,7 +21,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "../shadcn/alert-dialog";
-import { Column, Task } from "@/types/types";
+import { Column, Task, User } from "@/types/types";
 import { Progress } from "../shadcn/progress";
 import { PRIORITY_CONFIG } from "@/constants/constants";
 import {
@@ -41,6 +41,7 @@ interface TaskRowProps {
     column: Column;
     isDragging?: boolean;
     showPriorityEmoji: boolean;
+    userData: User;
     onDelete: (id: number) => void;
     onOpenDetails: (task: Task) => void;
 }
@@ -50,11 +51,19 @@ export default function ProjectTaskRow({
     column,
     isDragging = false,
     showPriorityEmoji,
+    userData,
     onDelete,
     onOpenDetails,
 }: Readonly<TaskRowProps>) {
     const { attributes, listeners, setNodeRef, transform, transition } =
-        useSortable({ id: task.id });
+        useSortable({
+            id: task.id,
+            disabled:
+                userData.role === "viewer" ||
+                (userData.role === "member" &&
+                    userData.id !== task.creator_id &&
+                    !task.members.some((member) => member.id === userData.id)),
+        });
 
     const style = {
         transform: CSS.Transform.toString(transform),
@@ -62,7 +71,7 @@ export default function ProjectTaskRow({
     };
 
     const priority = PRIORITY_CONFIG[task.priority];
-    const overdue = isOverdue(task.due_date, column.name);
+    const overdue = isOverdue(task.due_date ?? undefined, column.name);
     const progress = Math.round(
         ((task.subtasks_done ? task.subtasks_done : 0) * 100) /
             (task.subtasks_total ? task.subtasks_total : 1),
@@ -84,8 +93,17 @@ export default function ProjectTaskRow({
                         {...attributes}
                         {...listeners}
                         onClick={(e) => e.stopPropagation()}
-                        className="cursor-grab touch-none opacity-0 transition-opacity active:cursor-grabbing group-hover:opacity-100"
-                        aria-label="Drag to reorder"
+                        className={cn(
+                            "touch-none opacity-0",
+                            userData.role === "viewer" ||
+                                (userData.role === "member" &&
+                                    userData.id !== task.creator_id &&
+                                    !task.members.some(
+                                        (member) => member.id === userData.id,
+                                    ))
+                                ? ""
+                                : "cursor-grab transition-opacity active:cursor-grabbing group-hover:opacity-100",
+                        )}
                     >
                         <DotsSixVerticalIcon
                             weight="duotone"
@@ -236,61 +254,71 @@ export default function ProjectTaskRow({
                     )}
                 </div>
             </td>
-            <td className="w-10 py-3 pr-3" onClick={(e) => e.stopPropagation()}>
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-6 opacity-0 transition-opacity group-hover:opacity-100"
-                        >
-                            <DotsThreeOutlineIcon
-                                weight="duotone"
-                                className="size-3.5 text-gray-400"
-                            />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-44">
-                        <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                                <DropdownMenuItem
-                                    className="cursor-pointer gap-2 text-xs text-rose-500 focus:text-rose-500"
-                                    onSelect={(e) => e.preventDefault()}
-                                >
-                                    <TrashIcon
-                                        weight="duotone"
-                                        className="size-3.5"
-                                    />{" "}
-                                    Delete
-                                </DropdownMenuItem>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle>
-                                        Delete task?
-                                    </AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                        &quot;{task.title}&quot; will be
-                                        permanently deleted. This cannot be
-                                        undone.
-                                    </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel>
-                                        Cancel
-                                    </AlertDialogCancel>
-                                    <AlertDialogAction
-                                        onClick={() => onDelete(task.id)}
-                                        className="bg-rose-600 hover:bg-rose-700"
+            {userData.role === "viewer" ||
+            (userData.role === "member" &&
+                userData.id !== task.creator_id &&
+                !task.members.some(
+                    (member) => member.id === userData.id,
+                )) ? null : (
+                <td
+                    className="w-10 py-3 pr-3"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="size-6 opacity-0 transition-opacity group-hover:opacity-100"
+                            >
+                                <DotsThreeOutlineIcon
+                                    weight="duotone"
+                                    className="size-3.5 text-gray-400"
+                                />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-44">
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <DropdownMenuItem
+                                        className="cursor-pointer gap-2 text-xs text-rose-500 focus:text-rose-500"
+                                        onSelect={(e) => e.preventDefault()}
                                     >
+                                        <TrashIcon
+                                            weight="duotone"
+                                            className="size-3.5"
+                                        />{" "}
                                         Delete
-                                    </AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            </td>
+                                    </DropdownMenuItem>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>
+                                            Delete task?
+                                        </AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            &quot;{task.title}&quot; will be
+                                            permanently deleted. This cannot be
+                                            undone.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>
+                                            Cancel
+                                        </AlertDialogCancel>
+                                        <AlertDialogAction
+                                            onClick={() => onDelete(task.id)}
+                                            className="bg-rose-600 hover:bg-rose-700"
+                                        >
+                                            Delete
+                                        </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </td>
+            )}
         </tr>
     );
 }

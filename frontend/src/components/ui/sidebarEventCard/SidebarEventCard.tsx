@@ -67,7 +67,7 @@ export default function SidebarEventCard({
                                 weight="duotone"
                                 className="size-3"
                             />{" "}
-                            {formatDate(task.due_date)}
+                            {formatDate(task.due_date!)}
                         </div>
                     </div>
                 </div>

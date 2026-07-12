@@ -12,13 +12,14 @@ import {
 import MiniCalendar from "@/components/ui/miniCalendar/MiniCalendar";
 import DayCell from "@/components/ui/dayCell/DayCell";
 import DaySidebar from "@/components/ui/daySidebar/DaySidebar";
-import { Column, GridCell, Task } from "@/types/types";
+import { Column, GridCell, Task, User } from "@/types/types";
 import { MONTHS, WEEKDAYS } from "@/constants/constants";
 import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
 
 interface ProjectCalendarViewProps {
     columns: Column[];
     showPriorityEmoji: boolean;
+    userData: User;
     onOpenDetails: (task: Task) => void;
     onOpenCreateTask: (columnId?: number) => void;
     onSelectedDateChange: (date: string) => void;
@@ -27,6 +28,7 @@ interface ProjectCalendarViewProps {
 export default function ProjectCalendarView({
     columns,
     showPriorityEmoji,
+    userData,
     onOpenDetails,
     onOpenCreateTask,
     onSelectedDateChange,
@@ -40,15 +42,19 @@ export default function ProjectCalendarView({
     const prevMonth = () => {
         if (month === 0) {
             setMonth(11);
-            setYear((y) => y - 1);
-        } else setMonth((m) => m - 1);
+            setYear((year) => year - 1);
+        } else {
+            setMonth((month) => month - 1);
+        }
     };
 
     const nextMonth = () => {
         if (month === 11) {
             setMonth(0);
-            setYear((y) => y + 1);
-        } else setMonth((m) => m + 1);
+            setYear((year) => year + 1);
+        } else {
+            setMonth((month) => month + 1);
+        }
     };
 
     const goToday = () => {
@@ -64,35 +70,48 @@ export default function ProjectCalendarView({
 
     const tasksByDate = useMemo(() => {
         const map: Record<string, Task[]> = {};
-        allTasks.forEach((t) => {
-            if (!t.start_date || !t.due_date) return;
+        allTasks.forEach((task) => {
+            if (!task.start_date || !task.due_date) {
+                return;
+            }
+
             if (showGantt) {
-                const start = new Date(t.start_date);
-                const end = new Date(t.due_date);
+                const startDate = new Date(task.start_date);
+                const dueDate = new Date(task.due_date);
+
                 for (
-                    let d = new Date(start);
-                    d <= end;
-                    d.setDate(d.getDate() + 1)
+                    let date = new Date(startDate);
+                    date <= dueDate;
+                    date.setDate(date.getDate() + 1)
                 ) {
-                    const ds = toDateStr(
-                        d.getFullYear(),
-                        d.getMonth(),
-                        d.getDate(),
+                    const dateStr = toDateStr(
+                        date.getFullYear(),
+                        date.getMonth(),
+                        date.getDate(),
                     );
-                    if (!map[ds]) map[ds] = [];
-                    map[ds].push(t);
+
+                    if (!map[dateStr]) {
+                        map[dateStr] = [];
+                    }
+
+                    map[dateStr].push(task);
                 }
             } else {
-                const end = new Date(t.due_date);
-                const ds = toDateStr(
-                    end.getFullYear(),
-                    end.getMonth(),
-                    end.getDate(),
+                const dueDate = new Date(task.due_date);
+                const dateStr = toDateStr(
+                    dueDate.getFullYear(),
+                    dueDate.getMonth(),
+                    dueDate.getDate(),
                 );
-                if (!map[ds]) map[ds] = [];
-                map[ds].push(t);
+
+                if (!map[dateStr]) {
+                    map[dateStr] = [];
+                }
+
+                map[dateStr].push(task);
             }
         });
+
         return map;
     }, [allTasks, showGantt]);
 
@@ -105,13 +124,22 @@ export default function ProjectCalendarView({
         const lanes: Record<number, number> = {};
 
         const sorted = [...allTasks]
-            .filter((t) => t.start_date && t.due_date)
+            .filter(
+                (
+                    task,
+                ): task is typeof task & {
+                    start_date: string | Date;
+                    due_date: string | Date;
+                } => task.start_date !== null && task.due_date !== null,
+            )
             .sort((a, b) => {
                 const diff =
                     new Date(a.start_date).getTime() -
                     new Date(b.start_date).getTime();
 
-                if (diff !== 0) return diff;
+                if (diff !== 0) {
+                    return diff;
+                }
 
                 return (
                     new Date(b.due_date).getTime() -
@@ -122,22 +150,28 @@ export default function ProjectCalendarView({
             });
 
         sorted.forEach((task) => {
-            const start = new Date(task.start_date).getTime();
-            const end = new Date(task.due_date).getTime();
+            const startDate = new Date(task.start_date).getTime();
+            const dueDate = new Date(task.due_date).getTime();
             const occupiedLanes = new Set<number>();
 
             sorted.forEach((other) => {
-                if (other.id === task.id || lanes[other.id] === undefined)
+                if (other.id === task.id || lanes[other.id] === undefined) {
                     return;
-                const os = new Date(other.start_date).getTime();
-                const oe = new Date(other.due_date).getTime();
-                if (start <= oe && end >= os)
+                }
+
+                const otherStartDate = new Date(other.start_date).getTime();
+                const otherDueDate = new Date(other.due_date).getTime();
+
+                if (startDate <= otherDueDate && dueDate >= otherStartDate) {
                     occupiedLanes.add(lanes[other.id]);
+                }
             });
 
             let lane = 0;
 
-            while (occupiedLanes.has(lane)) lane++;
+            while (occupiedLanes.has(lane)) {
+                lane++;
+            }
 
             lanes[task.id] = lane;
         });
@@ -151,16 +185,19 @@ export default function ProjectCalendarView({
 
     const cells = useMemo<GridCell[]>(() => {
         const result: GridCell[] = [];
+
         for (let i = firstDay - 1; i >= 0; i--) {
             const d = prevMonthDays - i;
             const m2 = month === 0 ? 11 : month - 1;
             const y2 = month === 0 ? year - 1 : year;
+
             result.push({
                 day: d,
                 dateStr: toDateStr(y2, m2, d),
                 isOtherMonth: true,
             });
         }
+
         for (let d = 1; d <= daysInMonth; d++) {
             result.push({
                 day: d,
@@ -168,40 +205,51 @@ export default function ProjectCalendarView({
                 isOtherMonth: false,
             });
         }
+
         for (let d = 1; result.length < 42; d++) {
-            const m2 = month === 11 ? 0 : month + 1;
-            const y2 = month === 11 ? year + 1 : year;
+            const month2 = month === 11 ? 0 : month + 1;
+            const year2 = month === 11 ? year + 1 : year;
+
             result.push({
                 day: d,
-                dateStr: toDateStr(y2, m2, d),
+                dateStr: toDateStr(year2, month2, d),
                 isOtherMonth: true,
             });
         }
+
         return result;
     }, [year, month, firstDay, daysInMonth, prevMonthDays]);
 
     const monthStr = `${year}-${String(month + 1).padStart(2, "0")}`;
     const monthTasks = useMemo(
         () =>
-            allTasks.filter((t) => {
-                if (!t.due_date) return false;
-                const d = new Date(t.due_date);
+            allTasks.filter((task) => {
+                if (!task.due_date) {
+                    return false;
+                }
+
+                const date = new Date(task.due_date);
+
                 return toDateStr(
-                    d.getFullYear(),
-                    d.getMonth(),
-                    d.getDate(),
+                    date.getFullYear(),
+                    date.getMonth(),
+                    date.getDate(),
                 ).startsWith(monthStr);
             }),
         [allTasks, monthStr],
     );
 
-    const doneColumn = columns.find((col) => col.name === "done");
-    const doneCnt = monthTasks.filter((t) =>
-        doneColumn ? doneColumn.tasks.some((dt) => dt.id === t.id) : false,
+    const doneColumn = columns.find((column) => column.name === "done");
+    const doneColumnTaskLength = monthTasks.filter((task) =>
+        doneColumn
+            ? doneColumn.tasks.some(
+                  (doneColumnTask) => doneColumnTask.id === task.id,
+              )
+            : false,
     ).length;
 
     const progress = monthTasks.length
-        ? Math.round((doneCnt / monthTasks.length) * 100)
+        ? Math.round((doneColumnTaskLength / monthTasks.length) * 100)
         : 0;
 
     const statRows = [
@@ -210,10 +258,14 @@ export default function ProjectCalendarView({
             value: monthTasks.length,
             color: "text-gray-700",
         },
-        { label: "Completed", value: doneCnt, color: "text-emerald-600" },
+        {
+            label: "Completed",
+            value: doneColumnTaskLength,
+            color: "text-emerald-600",
+        },
         {
             label: "Remaining",
-            value: monthTasks.length - doneCnt,
+            value: monthTasks.length - doneColumnTaskLength,
             color: "text-bright-blue",
         },
     ];
@@ -366,6 +418,7 @@ export default function ProjectCalendarView({
                             tasks={tasksByDate[selectedDate] ?? []}
                             columns={columns}
                             showPriorityEmoji={showPriorityEmoji}
+                            userData={userData}
                             onOpenDetails={onOpenDetails}
                             onOpenCreate={() => {
                                 onOpenCreateTask();

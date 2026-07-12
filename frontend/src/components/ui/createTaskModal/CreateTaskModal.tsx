@@ -364,8 +364,8 @@ export default function CreateTaskModal({
                     </DialogFooter>
                     <input
                         type="hidden"
-                        name="project-id"
-                        value={selectedProject ? selectedProject.id : -1}
+                        name="slug"
+                        value={selectedProject ? selectedProject.slug : ""}
                     />
                     <input
                         type="hidden"

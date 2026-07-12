@@ -7,25 +7,27 @@ import {
 } from "@dnd-kit/sortable";
 import { useRef } from "react";
 import KanbanTask from "../kanbanTask/KanbanTask";
-import { Column, Task } from "@/types/types";
+import { Column, Task, User } from "@/types/types";
 import { PlusIcon } from "@phosphor-icons/react";
 import { cn } from "@/libs/utils";
 
 interface KanbanColumnProps {
     column: Column;
-    onDeleteTask: (id: number) => void;
-    onOpenDetails: (task: Task) => void;
     showCreateTask: boolean;
     showPriorityEmoji: boolean;
+    userData: User;
+    onDeleteTask: (id: number) => void;
+    onOpenDetails: (task: Task) => void;
     onOpenCreateTask: (columnId?: number) => void;
 }
 
 export default function KanbanColumn({
     column,
-    onDeleteTask,
-    onOpenDetails,
     showCreateTask,
     showPriorityEmoji,
+    userData,
+    onDeleteTask,
+    onOpenDetails,
     onOpenCreateTask,
 }: Readonly<KanbanColumnProps>) {
     const inputRef = useRef<HTMLInputElement | null>(null);
@@ -61,14 +63,17 @@ export default function KanbanColumn({
                         </span>
                     )}
                 </div>
-                {!wipExceeded && (
-                    <button
-                        onClick={startAdding}
-                        className="absolute right-3 flex size-5 items-center justify-center rounded-md text-gray-600 transition-colors hover:bg-gray-200 hover:text-gray-800"
-                    >
-                        <PlusIcon weight="duotone" className="size-3.5" />
-                    </button>
-                )}
+                {!wipExceeded &&
+                    (userData.role === "admin" ||
+                        userData.role === "owner" ||
+                        userData.role === "member") && (
+                        <button
+                            onClick={startAdding}
+                            className="absolute right-3 flex size-5 items-center justify-center rounded-md text-gray-600 transition-colors hover:bg-gray-200 hover:text-gray-800"
+                        >
+                            <PlusIcon weight="duotone" className="size-3.5" />
+                        </button>
+                    )}
             </div>
             <div className="flex-1 overflow-y-auto">
                 <SortableContext
@@ -83,6 +88,7 @@ export default function KanbanColumn({
                             <KanbanTask
                                 key={task.id}
                                 task={task}
+                                userData={userData}
                                 showPriorityEmoji={showPriorityEmoji}
                                 onDelete={onDeleteTask}
                                 onOpenDetails={onOpenDetails}

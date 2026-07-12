@@ -29,6 +29,7 @@ import {
     Category,
     Column,
     Label,
+    Role,
     Subtask,
     User,
 } from "@/types/types";
@@ -1006,12 +1007,13 @@ const createTaskSchema = z
             z.iso.date().nullable().optional(),
         ),
         showProgress: z.stringbool(),
-        projectId: z
+        slug: z
             .string()
-            .regex(/^\d+$/, "Select a project")
-            .transform(Number)
-            .refine((value) => Number.isSafeInteger(value), {
-                message: "ID is too large a numerical value",
+            .min(1, "Slug must be at least 1 characters")
+            .max(200, "Slug must be 200 characters or less")
+            .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
+                message:
+                    "Slug can only contain lowercase letters, numbers, and single hyphens",
             }),
         columnId: z
             .string()
@@ -1119,7 +1121,7 @@ export async function createTaskAction(
         startDate: formData.get("start-date"),
         dueDate: formData.get("due-date"),
         priority: formData.get("priority"),
-        projectId: formData.get("project-id"),
+        slug: formData.get("slug"),
         columnId: formData.get("column-id"),
         showProgress: formData.get("show-progress"),
         members: data.members,
@@ -1405,50 +1407,6 @@ export async function updateTaskAction(
         };
     }
 
-    const responseData = await mutateData(
-        "PUT",
-        `/tasks/${validatedFields.data.taskId}`,
-        validatedFields.data,
-    );
-
-    if (!responseData) {
-        return {
-            formData,
-            zodErrors: null,
-            error: null,
-            status: null,
-            details: null,
-            message: "Ops! Something went wrong. Please try again.",
-        };
-    }
-
-    if (
-        "message" in responseData &&
-        "status" in responseData &&
-        responseData.message &&
-        responseData.status !== "success"
-    ) {
-        return {
-            formData,
-            zodErrors: null,
-            error: null,
-            status: responseData.status,
-            details: null,
-            message: responseData.message,
-        };
-    }
-
-    if ("error" in responseData && responseData.error) {
-        return {
-            formData,
-            zodErrors: null,
-            error: responseData.error,
-            status: null,
-            details: responseData.details,
-            message: null,
-        };
-    }
-
     const body = new FormData();
 
     if (
@@ -1505,6 +1463,50 @@ export async function updateTaskAction(
                 message: null,
             };
         }
+    }
+
+    const responseData = await mutateData(
+        "PUT",
+        `/tasks/${validatedFields.data.taskId}`,
+        validatedFields.data,
+    );
+
+    if (!responseData) {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: null,
+            details: null,
+            message: "Ops! Something went wrong. Please try again.",
+        };
+    }
+
+    if (
+        "message" in responseData &&
+        "status" in responseData &&
+        responseData.message &&
+        responseData.status !== "success"
+    ) {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: responseData.status,
+            details: null,
+            message: responseData.message,
+        };
+    }
+
+    if ("error" in responseData && responseData.error) {
+        return {
+            formData,
+            zodErrors: null,
+            error: responseData.error,
+            status: null,
+            details: responseData.details,
+            message: null,
+        };
     }
 
     if (currentPath) {
@@ -2270,4 +2272,54 @@ export async function inviteMemberAction(
             message: null,
         };
     }
+}
+
+export async function changeRoleAction(
+    slug: string,
+    memberId: number,
+    role: Role,
+): Promise<{ ok: boolean; message: string } | undefined> {
+    const responseData = await mutateData(
+        "PUT",
+        `/projects/change-role/${slug}`,
+        {
+            memberId,
+            role,
+        },
+    );
+
+    if (!responseData) {
+        console.error("Ops! Something went wrong. Please try again.");
+
+        return {
+            ok: false,
+            message: "Ops! Something went wrong. Please try again or later",
+        };
+    }
+
+    if (
+        "message" in responseData &&
+        "status" in responseData &&
+        responseData.message &&
+        responseData.status
+    ) {
+        return {
+            ok: responseData.status === "error" ? false : true,
+            message: responseData.message,
+        };
+    }
+
+    if ("error" in responseData && responseData.error) {
+        console.error(responseData.error);
+
+        return {
+            ok: false,
+            message: "Failed to change a role",
+        };
+    }
+
+    return {
+        ok: true,
+        message: "Role changed",
+    };
 }

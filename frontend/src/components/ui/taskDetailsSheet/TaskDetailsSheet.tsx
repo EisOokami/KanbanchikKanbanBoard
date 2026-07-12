@@ -45,7 +45,7 @@ interface TaskDetailsSheetProps {
     open: boolean;
     onOpenChange: (open: boolean, data?: Task) => void;
     selectedTask: Task;
-    userData: Omit<User, "email">;
+    userData: User;
     projectData: Project;
     currentPath?: string;
 }
@@ -187,6 +187,12 @@ export default function TaskDetailsSheet({
     }, [formState]);
 
     const createdAt = toDate(task.created_at) ?? new Date();
+    const hasPermission = !(
+        userData.role === "viewer" ||
+        (userData.role === "member" &&
+            userData.id !== task.creator_id &&
+            !task.members.some((member) => member.id === userData.id))
+    );
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
@@ -207,6 +213,7 @@ export default function TaskDetailsSheet({
                             projectData={projectData}
                             column={column}
                             priority={priority}
+                            hasPermission={hasPermission}
                             onOpenChange={onOpenChange}
                             onColumnChange={setColumn}
                             onPriorityChange={setPriority}
@@ -223,6 +230,7 @@ export default function TaskDetailsSheet({
                                     formState={formState}
                                     isPending={isPending}
                                     title={title}
+                                    hasPermission={hasPermission}
                                     onTitleChange={setTitle}
                                 />
                                 <div className="mb-5">
@@ -230,18 +238,21 @@ export default function TaskDetailsSheet({
                                         isPending={isPending}
                                         formData={formData}
                                         projectData={projectData}
+                                        hasPermission={hasPermission}
                                         onFormDataChange={setFormData}
                                     />
                                     <LabelsSection
                                         isPending={isPending}
                                         formData={formData}
                                         projectData={projectData}
+                                        hasPermission={hasPermission}
                                         onFormDataChange={setFormData}
                                     />
                                     <DateSection
                                         isPending={isPending}
                                         startDate={startDate}
                                         dueDate={dueDate}
+                                        hasPermission={hasPermission}
                                         onStartDateChange={setStartDate}
                                         onDueDateChange={setDueDate}
                                     />
@@ -249,6 +260,7 @@ export default function TaskDetailsSheet({
                                         projectData={projectData}
                                         isPending={isPending}
                                         formData={formData}
+                                        hasPermission={hasPermission}
                                         onFormDataChange={setFormData}
                                     />
                                     <FieldRow
@@ -288,100 +300,119 @@ export default function TaskDetailsSheet({
                                 formState={formState}
                                 isPending={isPending}
                                 description={description}
+                                hasPermission={hasPermission}
                                 onDescriptionChange={setDescription}
                             />
                             <Separator />
-                            <SubtasksSection
-                                formState={formState}
-                                isPending={isPending}
-                                formData={formData}
-                                task={task}
-                                onFormDataChange={setFormData}
-                            />
-                            <Separator />
-                            <AttachmentSection
-                                userData={userData}
-                                formState={formState}
-                                isPending={isPending}
-                                formData={formData}
-                                onFormDataChange={setFormData}
-                            />
-                            <Separator />
+                            {(!hasPermission && task.show_progress) ||
+                            hasPermission ? (
+                                <>
+                                    <SubtasksSection
+                                        formState={formState}
+                                        isPending={isPending}
+                                        formData={formData}
+                                        task={task}
+                                        hasPermission={hasPermission}
+                                        onFormDataChange={setFormData}
+                                    />
+                                    <Separator />
+                                </>
+                            ) : null}
+                            {(!hasPermission && formData.attachments.length) ||
+                            hasPermission ? (
+                                <>
+                                    <AttachmentSection
+                                        userData={userData}
+                                        formState={formState}
+                                        isPending={isPending}
+                                        formData={formData}
+                                        hasPermission={hasPermission}
+                                        onFormDataChange={setFormData}
+                                    />
+                                    <Separator />
+                                </>
+                            ) : null}
                             <ActivitySection activity={activity} />
-                            <Separator />
-                            <CommentsSection
-                                formState={formState}
-                                isPending={isPending}
-                                formData={formData}
-                                userData={userData}
-                                activity={activity}
-                                onActivityChange={setActivity}
-                                onFormDataChange={setFormData}
-                            />
+                            {hasPermission && (
+                                <>
+                                    <Separator />
+                                    <CommentsSection
+                                        formState={formState}
+                                        isPending={isPending}
+                                        formData={formData}
+                                        userData={userData}
+                                        activity={activity}
+                                        onActivityChange={setActivity}
+                                        onFormDataChange={setFormData}
+                                    />
+                                </>
+                            )}
                         </div>
                     </ScrollArea>
-                    <div
-                        className={cn(
-                            "flex border-t px-6 py-3.5",
-                            formState?.status === "error" ||
-                                formState?.status === "success" ||
-                                (formState?.details &&
-                                    formState?.details?.length)
-                                ? "justify-between gap-3"
-                                : "justify-end",
-                        )}
-                    >
-                        <div>
-                            {formState?.status !== "success" &&
-                                formState?.message && (
-                                    <div
-                                        className={cn(
-                                            "flex items-center gap-1 rounded-md text-sm",
-                                            formState?.status === "error"
-                                                ? "text-red-500"
-                                                : "text-yellow-300",
-                                        )}
-                                    >
-                                        <InfoIcon
-                                            weight="duotone"
-                                            className="size-4"
+                    {hasPermission && (
+                        <div
+                            className={cn(
+                                "flex border-t px-6 py-3.5",
+                                formState?.status === "error" ||
+                                    formState?.status === "success" ||
+                                    (formState?.details &&
+                                        formState?.details?.length)
+                                    ? "justify-between gap-3"
+                                    : "justify-end",
+                            )}
+                        >
+                            <div>
+                                {formState?.status !== "success" &&
+                                    formState?.message && (
+                                        <div
+                                            className={cn(
+                                                "flex items-center gap-1 rounded-md text-sm",
+                                                formState?.status === "error"
+                                                    ? "text-red-500"
+                                                    : "text-yellow-300",
+                                            )}
+                                        >
+                                            <InfoIcon
+                                                weight="duotone"
+                                                className="size-4"
+                                            />
+                                            <p>{formState?.message}</p>
+                                        </div>
+                                    )}
+                                {formState?.details &&
+                                    formState?.details?.length &&
+                                    formState.details.map((error) => (
+                                        <DetailsErrors
+                                            key={error.message + error.field}
+                                            error={error}
                                         />
-                                        <p>{formState?.message}</p>
-                                    </div>
-                                )}
-                            {formState?.details &&
-                                formState?.details?.length &&
-                                formState.details.map((error) => (
-                                    <DetailsErrors
-                                        key={error.message + error.field}
-                                        error={error}
-                                    />
-                                ))}
+                                    ))}
+                            </div>
+                            <div className="flex shrink-0 items-center justify-end gap-2">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    disabled={isPending}
+                                    onClick={() => onOpenChange(false)}
+                                    className="h-8 rounded-md px-4 text-sm hover:bg-gray-200"
+                                >
+                                    Discard
+                                </Button>
+                                <Button
+                                    type="submit"
+                                    disabled={!isChanged || isPending}
+                                    className={cn(
+                                        "h-8 gap-1.5 rounded-md bg-bright-blue px-4 text-xs font-semibold text-white hover:bg-blue-600 disabled:opacity-40 [&_svg]:size-4",
+                                        !isChanged &&
+                                            "cursor-not-allowed opacity-50",
+                                    )}
+                                >
+                                    <CheckIcon weight="duotone" size={16} />
+                                    Save
+                                </Button>
+                            </div>
                         </div>
-                        <div className="flex shrink-0 items-center justify-end gap-2">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                disabled={isPending}
-                                onClick={() => onOpenChange(false)}
-                                className="h-8 rounded-md px-4 text-sm hover:bg-gray-200"
-                            >
-                                Discard
-                            </Button>
-                            <Button
-                                type="submit"
-                                disabled={!isChanged || isPending}
-                                className={cn(
-                                    "h-8 gap-1.5 rounded-md bg-bright-blue px-4 text-xs font-semibold text-white hover:bg-blue-600 disabled:opacity-40 [&_svg]:size-4",
-                                    !isChanged &&
-                                        "cursor-not-allowed opacity-50",
-                                )}
-                            >
-                                <CheckIcon weight="duotone" size={16} />
-                                Save
-                            </Button>
-                        </div>
-                    </div>
+                    )}
                     <input type="hidden" name="task-id" value={task.id} />
                 </form>
             </SheetContent>

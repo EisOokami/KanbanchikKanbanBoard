@@ -15,6 +15,7 @@ interface SubtasksSectionProps {
     isPending: boolean;
     formData: UpdateTaskFormData;
     task: Task;
+    hasPermission: boolean;
     onFormDataChange: (formData: UpdateTaskFormData) => void;
 }
 
@@ -23,6 +24,7 @@ export default function SubtasksSection({
     formState,
     isPending,
     task,
+    hasPermission,
     onFormDataChange,
 }: Readonly<SubtasksSectionProps>) {
     const [newSubtaskText, setNewSubtaskText] = useState<string>("");
@@ -142,128 +144,172 @@ export default function SubtasksSection({
                     <div
                         key={subtask.id}
                         className={cn(
-                            "group/ci flex items-center gap-2.5 rounded-md px-1 py-0.5 transition-colors hover:bg-gray-50",
+                            "group/ci flex items-center gap-2.5 rounded-md px-1 py-0.5",
                             formState?.zodErrors?.subtasks
                                 ? "border-red-500"
                                 : "",
+                            hasPermission &&
+                                "transition-colors hover:bg-gray-50",
                         )}
                     >
                         <Checkbox
                             name="subtask-checkbox"
                             checked={!!subtask.is_done}
-                            onCheckedChange={() => toggleSubtask(subtask.id)}
-                            className="size-3.5 rounded border-gray-300 data-[state=checked]:border-bright-blue data-[state=checked]:bg-bright-blue"
-                            disabled={isPending}
-                        />
-                        <Input
-                            name="subtask-title"
-                            value={subtask.title}
-                            onChange={(e) =>
-                                updateSubtaskText(subtask.id, e.target.value)
+                            onCheckedChange={() =>
+                                hasPermission && toggleSubtask(subtask.id)
                             }
                             className={cn(
-                                "h-auto flex-1 rounded-none border-0 bg-transparent px-0 py-0 text-sm focus-visible:ring-0",
-                                subtask.is_done ? "line-through" : "",
+                                "size-3.5 rounded border-gray-300 data-[state=checked]:border-bright-blue data-[state=checked]:bg-bright-blue",
+                                hasPermission
+                                    ? "cursor-pointer"
+                                    : "cursor-default",
                             )}
-                            style={{
-                                color: subtask.is_done ? "#6b7280" : "#374151",
-                            }}
-                            disabled={isPending}
+                            disabled={isPending && !hasPermission}
                         />
-                        <button
-                            type="button"
-                            onClick={() => removeSubtask(subtask.id)}
-                            className="shrink-0 text-gray-300 opacity-0 transition-all hover:text-red-400 group-hover/ci:opacity-100"
-                            disabled={isPending}
-                        >
-                            <XIcon weight="duotone" size={16} />
-                        </button>
-                    </div>
-                ))}
-                {formData.newSubtasks.map((subtask) => (
-                    <div
-                        key={subtask.id}
-                        className={cn(
-                            "group/ci flex items-center gap-2.5 rounded-md px-1 py-0.5 transition-colors hover:bg-gray-50",
-                            formState?.zodErrors?.newSubtasks
-                                ? "border-red-500"
-                                : "",
+                        {hasPermission ? (
+                            <Input
+                                name="subtask-title"
+                                value={subtask.title}
+                                onChange={(e) =>
+                                    updateSubtaskText(
+                                        subtask.id,
+                                        e.target.value,
+                                    )
+                                }
+                                className={cn(
+                                    "h-auto flex-1 rounded-none border-0 bg-transparent px-0 py-0 text-sm focus-visible:ring-0",
+                                    subtask.is_done ? "line-through" : "",
+                                )}
+                                style={{
+                                    color: subtask.is_done
+                                        ? "#6b7280"
+                                        : "#374151",
+                                }}
+                                disabled={isPending}
+                            />
+                        ) : (
+                            <p
+                                className={cn(
+                                    "h-auto flex-1 rounded-none border-0 bg-transparent px-0 py-0 text-sm focus-visible:ring-0",
+                                    subtask.is_done ? "line-through" : "",
+                                )}
+                                style={{
+                                    color: subtask.is_done
+                                        ? "#6b7280"
+                                        : "#374151",
+                                }}
+                            >
+                                {subtask.title}
+                            </p>
                         )}
-                    >
-                        <Checkbox
-                            name="subtask-checkbox"
-                            checked={!!subtask.is_done}
-                            onCheckedChange={() => toggleSubtask(subtask.id)}
-                            className="size-3.5 rounded border-gray-300 data-[state=checked]:border-bright-blue data-[state=checked]:bg-bright-blue"
-                            disabled={isPending}
-                        />
-                        <Input
-                            name="subtask-title"
-                            value={subtask.title}
-                            onChange={(e) =>
-                                updateSubtaskText(subtask.id, e.target.value)
-                            }
-                            className={cn(
-                                "h-auto flex-1 rounded-none border-0 bg-transparent px-0 py-0 text-sm focus-visible:ring-0",
-                                subtask.is_done ? "line-through" : "",
-                            )}
-                            style={{
-                                color: subtask.is_done ? "#6b7280" : "#374151",
-                            }}
-                            disabled={isPending}
-                        />
-                        <button
-                            type="button"
-                            onClick={() => removeSubtask(subtask.id)}
-                            className="shrink-0 text-gray-300 opacity-0 transition-all hover:text-red-400 group-hover/ci:opacity-100"
-                            disabled={isPending}
-                        >
-                            <XIcon weight="duotone" size={16} />
-                        </button>
+                        {hasPermission && (
+                            <button
+                                type="button"
+                                onClick={() => removeSubtask(subtask.id)}
+                                className="shrink-0 text-gray-300 opacity-0 transition-all hover:text-red-400 group-hover/ci:opacity-100"
+                                disabled={isPending}
+                            >
+                                <XIcon weight="duotone" size={16} />
+                            </button>
+                        )}
                     </div>
                 ))}
+                {hasPermission &&
+                    formData.newSubtasks.map((subtask) => (
+                        <div
+                            key={subtask.id}
+                            className={cn(
+                                "group/ci flex items-center gap-2.5 rounded-md px-1 py-0.5 transition-colors hover:bg-gray-50",
+                                formState?.zodErrors?.newSubtasks
+                                    ? "border-red-500"
+                                    : "",
+                            )}
+                        >
+                            <Checkbox
+                                name="subtask-checkbox"
+                                checked={!!subtask.is_done}
+                                onCheckedChange={() =>
+                                    toggleSubtask(subtask.id)
+                                }
+                                className="size-3.5 rounded border-gray-300 data-[state=checked]:border-bright-blue data-[state=checked]:bg-bright-blue"
+                                disabled={isPending}
+                            />
+                            <Input
+                                name="subtask-title"
+                                value={subtask.title}
+                                onChange={(e) =>
+                                    updateSubtaskText(
+                                        subtask.id,
+                                        e.target.value,
+                                    )
+                                }
+                                className={cn(
+                                    "h-auto flex-1 rounded-none border-0 bg-transparent px-0 py-0 text-sm focus-visible:ring-0",
+                                    subtask.is_done ? "line-through" : "",
+                                )}
+                                style={{
+                                    color: subtask.is_done
+                                        ? "#6b7280"
+                                        : "#374151",
+                                }}
+                                disabled={isPending}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => removeSubtask(subtask.id)}
+                                className="shrink-0 text-gray-300 opacity-0 transition-all hover:text-red-400 group-hover/ci:opacity-100"
+                                disabled={isPending}
+                            >
+                                <XIcon weight="duotone" size={16} />
+                            </button>
+                        </div>
+                    ))}
             </div>
-            <div className="mt-3 flex gap-2">
-                <Input
-                    name="add-subtask"
-                    placeholder="Add subtask…"
-                    value={newSubtaskText}
-                    onChange={(e) => setNewSubtaskText(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && addSubtask()}
-                    className="h-8 flex-1 rounded-md text-sm placeholder:text-gray-300 focus-visible:ring-1 focus-visible:ring-bright-blue"
-                    disabled={isPending}
-                />
-                <Button
-                    type="button"
-                    size="sm"
-                    onClick={addSubtask}
-                    className="h-8 rounded-md border bg-bright-blue px-3 transition-colors hover:bg-blue-600 [&_svg]:size-4"
-                    disabled={isPending}
-                >
-                    <PlusIcon weight="duotone" size={16} />
-                </Button>
-            </div>
-            <div className="mt-2 flex items-center gap-2">
-                <Checkbox
-                    id="show-progress-input"
-                    name="show-progress-input"
-                    checked={!!progressShow}
-                    onCheckedChange={() => setProgressShow(!progressShow)}
-                    defaultValue={
-                        formState?.formData
-                            ?.get("show-progress-input")
-                            ?.toString() ?? undefined
-                    }
-                    className="rounded-md border-border data-[state=checked]:border-bright-blue data-[state=checked]:bg-bright-blue"
-                    disabled={isPending}
-                />
-                <label
-                    htmlFor="show-progress-input"
-                    className="text-sm text-muted-foreground"
-                >
-                    Show progress in the task
-                </label>
-            </div>
+            {hasPermission && (
+                <div className="mt-3 flex gap-2">
+                    <Input
+                        name="add-subtask"
+                        placeholder="Add subtask…"
+                        value={newSubtaskText}
+                        onChange={(e) => setNewSubtaskText(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && addSubtask()}
+                        className="h-8 flex-1 rounded-md text-sm placeholder:text-gray-300 focus-visible:ring-1 focus-visible:ring-bright-blue"
+                        disabled={isPending}
+                    />
+                    <Button
+                        type="button"
+                        size="sm"
+                        onClick={addSubtask}
+                        className="h-8 rounded-md border bg-bright-blue px-3 transition-colors hover:bg-blue-600 [&_svg]:size-4"
+                        disabled={isPending}
+                    >
+                        <PlusIcon weight="duotone" size={16} />
+                    </Button>
+                </div>
+            )}
+            {hasPermission && (
+                <div className="mt-2 flex items-center gap-2">
+                    <Checkbox
+                        id="show-progress-input"
+                        name="show-progress-input"
+                        checked={!!progressShow}
+                        onCheckedChange={() => setProgressShow(!progressShow)}
+                        defaultValue={
+                            formState?.formData
+                                ?.get("show-progress-input")
+                                ?.toString() ?? undefined
+                        }
+                        className="rounded-md border-border data-[state=checked]:border-bright-blue data-[state=checked]:bg-bright-blue"
+                        disabled={isPending}
+                    />
+                    <label
+                        htmlFor="show-progress-input"
+                        className="text-sm text-muted-foreground"
+                    >
+                        Show progress in the task
+                    </label>
+                </div>
+            )}
             <ZodErrors error={formState?.zodErrors?.subtasks} />
             <ZodErrors error={formState?.zodErrors?.newSubtasks} />
             <input

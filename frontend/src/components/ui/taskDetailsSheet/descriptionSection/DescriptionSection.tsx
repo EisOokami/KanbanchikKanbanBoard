@@ -5,11 +5,13 @@ import { Textarea } from "../../shadcn/textarea";
 import { useState } from "react";
 import { ZodErrors } from "../../zodErrors/ZodErrors";
 import { BaseAction } from "@/types/actions";
+import { cn } from "@/libs/utils";
 
 interface DescriptionSectionProps {
     formState: BaseAction | undefined;
     isPending: boolean;
     description: string;
+    hasPermission: boolean;
     onDescriptionChange: (description: string) => void;
 }
 
@@ -17,6 +19,7 @@ export default function DescriptionSection({
     formState,
     isPending,
     description,
+    hasPermission,
     onDescriptionChange,
 }: Readonly<DescriptionSectionProps>) {
     const [editingDesc, setEditingDesc] = useState<boolean>(false);
@@ -53,18 +56,22 @@ export default function DescriptionSection({
                 <>
                     <div
                         onClick={() => {
-                            if (!isPending) {
+                            if (!isPending && hasPermission) {
                                 setEditingDesc(true);
                             }
                         }}
-                        className="group/desc min-h-32 max-w-[550px] cursor-text rounded-md border px-3 py-2.5 text-sm leading-relaxed transition-all hover:bg-gray-50"
+                        className={cn(
+                            "group/desc min-h-32 max-w-[550px] rounded-md border px-3 py-2.5 text-sm leading-relaxed",
+                            hasPermission &&
+                                "cursor-text transition-all hover:bg-gray-50",
+                        )}
                         style={{
                             color: description ? "#374151" : "#D1D5DB",
                         }}
                     >
                         <p className="whitespace-pre-wrap break-words">
                             {description || "Add a description…"}
-                            {description && (
+                            {hasPermission && description && (
                                 <PencilSimpleIcon
                                     weight="duotone"
                                     size={16}
