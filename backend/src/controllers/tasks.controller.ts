@@ -382,7 +382,7 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
         if (!tasks.length) {
             res.status(404).json({
                 status: "error",
-                message: "Task not found",
+                message: "Task not found or access denied",
             });
 
             return;
@@ -393,7 +393,7 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
         if (!task) {
             res.status(404).json({
                 status: "error",
-                message: "Task not found",
+                message: "Task not found or access denied",
             });
 
             return;
@@ -679,7 +679,7 @@ export const createTask = async (req: IGetUserRequest, res: Response) => {
         if (!column) {
             res.status(404).json({
                 status: "error",
-                message: "Column not found",
+                message: "Column not found or access denied",
             });
 
             return;
@@ -711,7 +711,7 @@ export const createTask = async (req: IGetUserRequest, res: Response) => {
         if (!rows.length) {
             res.status(404).json({
                 status: "error",
-                message: "Tasks not found",
+                message: "Tasks not found or access denied",
             });
 
             return;
@@ -725,7 +725,7 @@ export const createTask = async (req: IGetUserRequest, res: Response) => {
         if (!position) {
             res.status(404).json({
                 status: "error",
-                message: "Tasks not found",
+                message: "Tasks not found or access denied",
             });
 
             return;
@@ -1219,7 +1219,7 @@ export const deleteTask = async (req: IGetUserRequest, res: Response) => {
         if (result.affectedRows === 0) {
             res.status(404).json({
                 status: "error",
-                message: "Task not found",
+                message: "Task not found or access denied",
             });
 
             return;
@@ -1358,7 +1358,7 @@ export const moveTask = async (req: IGetUserRequest, res: Response) => {
         if (!columns.length) {
             res.status(404).json({
                 status: "error",
-                message: "Column not found",
+                message: "Column not found or access denied",
             });
 
             return;
@@ -1369,7 +1369,7 @@ export const moveTask = async (req: IGetUserRequest, res: Response) => {
         if (!column) {
             res.status(404).json({
                 status: "error",
-                message: "Column not found",
+                message: "Column not found or access denied",
             });
 
             return;
