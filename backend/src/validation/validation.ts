@@ -458,12 +458,13 @@ export const createTaskSchema = z
             z.iso.date().nullable().optional(),
         ),
         showProgress: z.boolean(),
-        projectId: z
-            .number()
-            .positive()
-            .int("Project ID must be an integer")
-            .refine((value) => Number.isSafeInteger(value), {
-                message: "ID is too large a numerical value",
+        slug: z
+            .string()
+            .min(1, "Slug must be at least 1 characters")
+            .max(200, "Slug must be 200 characters or less")
+            .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
+                message:
+                    "Slug can only contain lowercase letters, numbers, and single hyphens",
             }),
         columnId: z
             .number()
