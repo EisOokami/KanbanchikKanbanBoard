@@ -61,6 +61,15 @@ export const getProjects = async (req: IGetUserRequest, res: Response) => {
             [userId, userId],
         );
 
+        if (!projects.length || !projects[0]) {
+            res.status(404).json({
+                status: "error",
+                message: "Project not found or access denied",
+            });
+
+            return;
+        }
+
         const enrichedProjects = await Promise.all(
             projects.map(async (project) => {
                 const [owner] = await pool.execute<
@@ -263,9 +272,11 @@ export const getProject = async (req: IGetUserRequest, res: Response) => {
                     p.created_at,
                     p.updated_at
                 FROM projects p
-                WHERE p.slug = ? AND (p.owner_id = ? OR p.id IN (
-                    SELECT project_id FROM project_members WHERE user_id = ?
-                ))
+                WHERE p.slug = ? AND (
+                    p.owner_id = ? OR p.id IN (
+                        SELECT project_id FROM project_members WHERE user_id = ?
+                    )
+                )
             `,
             [slug, userId, userId],
         );
@@ -291,7 +302,7 @@ export const getProject = async (req: IGetUserRequest, res: Response) => {
             if (!history.length || !history[0]) {
                 res.status(404).json({
                     status: "error",
-                    message: "Project not found",
+                    message: "Project not found or access denied",
                 });
 
                 return;
@@ -723,7 +734,16 @@ export const createProject = async (req: IGetUserRequest, res: Response) => {
 
         const [result] = await pool.execute<ResultSetHeader>(
             `
-                INSERT INTO projects (owner_id, name, icon, color, description, status, slug, show_priority_emoji)
+                INSERT INTO projects (
+                    owner_id, 
+                    name, 
+                    icon, 
+                    color, 
+                    description, 
+                    status, 
+                    slug, 
+                    show_priority_emoji
+                )
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             `,
             [
@@ -944,7 +964,7 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
         if (!projects.length) {
             res.status(404).json({
                 status: "error",
-                message: "Project not found",
+                message: "Project not found or access denied",
             });
 
             return;
@@ -955,16 +975,7 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
         if (!project) {
             res.status(404).json({
                 status: "error",
-                message: "Project not found",
-            });
-
-            return;
-        }
-
-        if (project.owner_id !== userId) {
-            res.status(403).json({
-                status: "error",
-                message: "Only project owner can update the project",
+                message: "Project not found or access denied",
             });
 
             return;
@@ -1393,7 +1404,7 @@ export const deleteProject = async (req: IGetUserRequest, res: Response) => {
         if (projects.length === 0) {
             res.status(404).json({
                 status: "error",
-                message: "Project not found",
+                message: "Project not found or access denied",
             });
 
             return;
@@ -1404,7 +1415,7 @@ export const deleteProject = async (req: IGetUserRequest, res: Response) => {
         if (!project) {
             res.status(404).json({
                 status: "error",
-                message: "Project not found",
+                message: "Project not found or access denied",
             });
 
             return;
@@ -1427,7 +1438,7 @@ export const deleteProject = async (req: IGetUserRequest, res: Response) => {
         if (result.affectedRows === 0) {
             res.status(404).json({
                 status: "error",
-                message: "Project not found",
+                message: "Project not found or access denied",
             });
 
             return;
