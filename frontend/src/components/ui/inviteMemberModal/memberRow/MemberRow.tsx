@@ -42,7 +42,7 @@ export default function MemberRow({
                     </p>
                 </div>
             </div>
-            {member.role !== "owner" || userData.role !== "owner" ? (
+            {member.role !== "owner" && userData.role === "owner" ? (
                 <div className="flex items-center gap-1.5">
                     <RoleSelect
                         value={member.role ?? "viewer"}
