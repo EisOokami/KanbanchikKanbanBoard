@@ -54,14 +54,14 @@ export default function SecuritySection() {
             className="mb-10 space-y-5"
         >
             <div>
-                <h2 className="text-lg font-bold text-gray-800">Security</h2>
+                <h2 className="text-lg font-bold">Security</h2>
                 <p className="mt-0.5 text-sm text-gray-400">
                     Manage your password
                 </p>
             </div>
             <div className="space-y-2">
                 <SectionTitle>Change password</SectionTitle>
-                <div className="divide-y divide-gray-100 overflow-hidden rounded-md border px-5">
+                <div className="overflow-hidden rounded-md border border-border bg-background px-5">
                     <FieldRow
                         label="Current password"
                         hint="Minimum 8 characters"
@@ -79,7 +79,7 @@ export default function SecuritySection() {
                                     setIsChanged(false);
                                 }
                             }}
-                            className="h-8 pr-9 text-sm placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-bright-blue"
+                            className="h-8 bg-control pr-9 text-sm placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue"
                             disabled={isPending}
                         />
                         <ZodErrors
@@ -100,7 +100,7 @@ export default function SecuritySection() {
                                     setIsChanged(false);
                                 }
                             }}
-                            className="h-8 pr-9 text-sm placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-bright-blue"
+                            className="h-8 bg-control pr-9 text-sm placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue"
                             disabled={isPending}
                         />
                         <ZodErrors error={formState?.zodErrors?.newPassword} />
@@ -119,7 +119,7 @@ export default function SecuritySection() {
                                     setIsChanged(false);
                                 }
                             }}
-                            className="h-8 pr-9 text-sm placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-bright-blue"
+                            className="h-8 bg-control pr-9 text-sm placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue"
                             disabled={isPending}
                         />
                         <ZodErrors

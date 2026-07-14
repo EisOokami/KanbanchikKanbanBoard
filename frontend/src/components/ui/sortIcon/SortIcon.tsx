@@ -20,14 +20,14 @@ export default function SortIcon({
         return (
             <CaretUpDownIcon
                 weight="duotone"
-                className="size-3 text-gray-300"
+                className="size-3 text-muted-foreground"
             />
         );
     }
 
     return sortDir === "asc" ? (
-        <CaretUpIcon weight="duotone" className="size-3 text-blue-500" />
+        <CaretUpIcon weight="duotone" className="size-3 text-foreground" />
     ) : (
-        <CaretDownIcon weight="duotone" className="size-3 text-blue-500" />
+        <CaretDownIcon weight="duotone" className="size-3 text-foreground" />
     );
 }

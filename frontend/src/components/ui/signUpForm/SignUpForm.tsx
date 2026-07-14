@@ -39,7 +39,7 @@ export default function SignUpForm() {
     );
 
     return (
-        <Card className="z-50 mx-auto w-full max-w-sm">
+        <Card className="z-50 mx-auto w-full max-w-sm border-border">
             <CardHeader className="pb-5">
                 <CardTitle className="text-2xl">Registration</CardTitle>
                 <CardDescription>
@@ -54,11 +54,12 @@ export default function SignUpForm() {
                             id="name"
                             name="name"
                             placeholder="Smith"
-                            className={
+                            className={cn(
+                                "bg-control placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue",
                                 formState?.zodErrors?.name
                                     ? "border-red-500"
-                                    : ""
-                            }
+                                    : "",
+                            )}
                             defaultValue={
                                 formState?.formData?.get("name")?.toString() ??
                                 undefined
@@ -73,11 +74,12 @@ export default function SignUpForm() {
                             id="surname"
                             name="surname"
                             placeholder="Winston"
-                            className={
+                            className={cn(
+                                "bg-control placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue",
                                 formState?.zodErrors?.surname
                                     ? "border-red-500"
-                                    : ""
-                            }
+                                    : "",
+                            )}
                             defaultValue={
                                 formState?.formData
                                     ?.get("surname")
@@ -94,11 +96,12 @@ export default function SignUpForm() {
                             name="email"
                             type="email"
                             placeholder="name@example.com"
-                            className={
+                            className={cn(
+                                "bg-control placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue",
                                 formState?.zodErrors?.email
                                     ? "border-red-500"
-                                    : ""
-                            }
+                                    : "",
+                            )}
                             defaultValue={
                                 formState?.formData?.get("email")?.toString() ??
                                 undefined
@@ -112,11 +115,12 @@ export default function SignUpForm() {
                         <PasswordInput
                             id="password"
                             name="password"
-                            className={
+                            className={cn(
+                                "bg-control placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue",
                                 formState?.zodErrors?.password
                                     ? "border-red-500"
-                                    : ""
-                            }
+                                    : "",
+                            )}
                             defaultValue={
                                 formState?.formData
                                     ?.get("password")

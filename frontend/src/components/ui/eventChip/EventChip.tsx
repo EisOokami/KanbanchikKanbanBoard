@@ -22,7 +22,7 @@ export default function EventChip({ task, onClick }: Readonly<EventChipProps>) {
             title={task.title}
         >
             <span className="flex-shrink-0 opacity-70">
-                {formatDate(task.due_date)}
+                {formatDate(task.due_date ?? "")}
             </span>
             <span className="truncate">{task.title}</span>
         </button>

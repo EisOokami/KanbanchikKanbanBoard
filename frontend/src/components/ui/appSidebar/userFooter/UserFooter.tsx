@@ -50,8 +50,8 @@ export default function UserFooter({ userData }: Readonly<UserFooterProps>) {
                                 size="lg"
                                 className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                             >
-                                <Avatar className="size-8 rounded-lg">
-                                    <AvatarFallback className="rounded-lg bg-zinc-700 text-xs font-semibold text-white">
+                                <Avatar className="size-8">
+                                    <AvatarFallback className="bg-zinc-700 text-xs font-semibold text-white">
                                         ?
                                     </AvatarFallback>
                                 </Avatar>
@@ -70,7 +70,7 @@ export default function UserFooter({ userData }: Readonly<UserFooterProps>) {
                             </SidebarMenuButton>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent
-                            className="w-56 rounded-lg"
+                            className="w-56"
                             side="top"
                             align="end"
                             sideOffset={4}
@@ -113,12 +113,12 @@ export default function UserFooter({ userData }: Readonly<UserFooterProps>) {
                     <DropdownMenuTrigger asChild>
                         <SidebarMenuButton
                             size="lg"
-                            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                            className="transition-colors"
                         >
-                            <Avatar className="size-8 rounded-lg">
+                            <Avatar className="size-8">
                                 <AvatarImage src={user.avatar_url} />
                                 <AvatarFallback
-                                    className="rounded-lg text-xs font-semibold text-white"
+                                    className="text-xs font-semibold text-white"
                                     style={{ backgroundColor: user.color }}
                                 >
                                     {getInitials(user.name, user.surname)}
@@ -139,7 +139,7 @@ export default function UserFooter({ userData }: Readonly<UserFooterProps>) {
                         </SidebarMenuButton>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
-                        className="w-56 rounded-lg"
+                        className="w-56 border-border"
                         side="top"
                         align="end"
                         sideOffset={4}
@@ -153,7 +153,7 @@ export default function UserFooter({ userData }: Readonly<UserFooterProps>) {
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                            className="cursor-pointer gap-2 text-red-500 focus:text-red-500"
+                            className="cursor-pointer gap-2 text-red-500 focus:text-red-500 dark:text-red-400 dark:focus:text-red-400"
                             onClick={async () => {
                                 await logoutAction();
                                 window.location.reload();

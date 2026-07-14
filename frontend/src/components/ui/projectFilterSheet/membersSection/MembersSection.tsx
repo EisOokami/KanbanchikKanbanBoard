@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "../../shadcn/avatar";
 import { cn, getInitials } from "@/libs/utils";
 import { User } from "@/types/types";
 import { FilterSortOptions } from "@/types/projectsOverview";
+import { Button } from "../../shadcn/button";
 
 interface MembersSectionProps {
     members: Omit<User, "email">[];
@@ -28,7 +29,7 @@ export default function MembersSection({
                 {members.map((member) => {
                     const active = options.memberIds.includes(member.id);
                     return (
-                        <button
+                        <Button
                             key={member.id}
                             onClick={() =>
                                 onChange({
@@ -39,11 +40,12 @@ export default function MembersSection({
                                     ),
                                 })
                             }
+                            variant="ghost"
                             className={cn(
-                                "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                                "w-full gap-3 text-sm",
                                 active
-                                    ? "bg-bright-blue/10 text-bright-blue"
-                                    : "text-foreground hover:bg-muted/60",
+                                    ? "bg-bright-blue/10 text-bright-blue hover:bg-bright-blue/10 hover:text-bright-blue"
+                                    : "text-control-text hover:bg-control-active hover:text-foreground",
                             )}
                         >
                             <Avatar key={member.id} className="size-6">
@@ -69,7 +71,7 @@ export default function MembersSection({
                                     className="size-3.5 shrink-0"
                                 />
                             )}
-                        </button>
+                        </Button>
                     );
                 })}
             </div>

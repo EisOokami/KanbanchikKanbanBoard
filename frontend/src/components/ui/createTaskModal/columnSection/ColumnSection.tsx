@@ -41,11 +41,11 @@ export default function ColumnSection({
             >
                 <SelectTrigger
                     id="column"
-                    className="focus:ring-1 focus:ring-bright-blue"
+                    className="bg-control transition-colors placeholder:text-control-text hover:bg-control-active focus:ring-1 focus:ring-bright-blue"
                 >
                     <SelectValue placeholder="Select a column" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="border-border bg-control">
                     {selectedProject.columns
                         .filter(
                             (column) =>
@@ -60,7 +60,7 @@ export default function ColumnSection({
                             <SelectItem
                                 key={column.id}
                                 value={column.id.toString()}
-                                className="rounded-md text-sm font-medium capitalize"
+                                className="rounded-md text-sm font-medium capitalize transition-colors hover:!bg-control-active"
                             >
                                 <span>{column.name}</span>
                             </SelectItem>

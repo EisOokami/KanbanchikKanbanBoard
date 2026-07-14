@@ -15,6 +15,8 @@ import DaySidebar from "@/components/ui/daySidebar/DaySidebar";
 import { Column, GridCell, Task, User } from "@/types/types";
 import { MONTHS, WEEKDAYS } from "@/constants/constants";
 import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
+import { Button } from "@/components/ui/shadcn/button";
+import { Progress } from "@/components/ui/shadcn/progress";
 
 interface ProjectCalendarViewProps {
     columns: Column[];
@@ -272,8 +274,8 @@ export default function ProjectCalendarView({
 
     return (
         <>
-            <div className="flex h-full w-full overflow-hidden rounded-xl bg-white">
-                <div className="flex w-56 flex-shrink-0 flex-col border-r">
+            <div className="flex h-full w-full overflow-hidden">
+                <div className="flex w-56 flex-shrink-0 flex-col border-r border-border">
                     <MiniCalendar
                         viewYear={year}
                         viewMonth={month}
@@ -283,7 +285,7 @@ export default function ProjectCalendarView({
                     />
                     <Separator />
                     <div className="space-y-3 px-4 py-4">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                        <p className="text-[10px] font-semibold uppercase tracking-wider">
                             This Month
                         </p>
                         <div className="space-y-2">
@@ -292,12 +294,12 @@ export default function ProjectCalendarView({
                                     key={label}
                                     className="flex items-center justify-between"
                                 >
-                                    <span className="text-xs text-gray-500">
+                                    <span className="text-xs text-muted-foreground">
                                         {label}
                                     </span>
                                     <span
                                         className={cn(
-                                            "text-xs font-bold",
+                                            "text-xs font-semibold",
                                             color,
                                         )}
                                     >
@@ -311,82 +313,80 @@ export default function ProjectCalendarView({
                                         <span>Progress</span>
                                         <span>{progress}%</span>
                                     </div>
-                                    <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
-                                        <div
-                                            className="h-full rounded-full bg-blue-500 transition-all duration-500"
-                                            style={{ width: `${progress}%` }}
-                                        />
-                                    </div>
+                                    <Progress
+                                        value={progress}
+                                        className="h-1.5 w-full [&>*]:bg-bright-blue"
+                                    />
                                 </div>
                             )}
                         </div>
                     </div>
                 </div>
                 <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-                    <div className="flex flex-shrink-0 items-center gap-3 border-b px-5 py-3">
+                    <div className="flex flex-shrink-0 items-center gap-3 border-b border-border px-5 py-3">
                         <div className="flex items-center gap-0.5">
-                            <button
+                            <Button
+                                variant="ghost"
+                                size="icon"
                                 onClick={prevMonth}
-                                className="rounded-md p-1.5 text-gray-500 transition-colors hover:bg-gray-100"
+                                className="size-6 [&_svg]:size-4"
                             >
-                                <CaretLeftIcon
-                                    weight="duotone"
-                                    className="size-4"
-                                />
-                            </button>
-                            <button
+                                <CaretLeftIcon weight="duotone" />
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="icon"
                                 onClick={nextMonth}
-                                className="rounded-md p-1.5 text-gray-500 transition-colors hover:bg-gray-100"
+                                className="size-6 [&_svg]:size-4"
                             >
-                                <CaretRightIcon
-                                    weight="duotone"
-                                    className="size-4"
-                                />
-                            </button>
+                                <CaretRightIcon weight="duotone" />
+                            </Button>
                         </div>
-                        <h2 className="min-w-0 text-base font-black tracking-tight text-gray-800">
+                        <h2 className="min-w-0 text-base font-medium tracking-tight">
                             {MONTHS[month]}{" "}
-                            <span className="font-normal text-gray-400">
+                            <span className="font-light text-muted-foreground">
                                 {year}
                             </span>
                         </h2>
-                        <button
-                            onClick={goToday}
-                            className="rounded-md border bg-white px-2.5 py-1 text-xs font-semibold text-gray-600 transition-colors hover:bg-gray-50"
-                        >
-                            Today
-                        </button>
-                        <button
-                            onClick={() => setShowGantt((s) => !s)}
-                            className={cn(
-                                "ml-2 rounded-md border px-2.5 py-1 text-xs font-semibold transition-colors",
-                                showGantt
-                                    ? "bg-bright-blue text-white hover:bg-blue-600"
-                                    : "bg-white text-gray-600 hover:bg-gray-50",
-                            )}
-                        >
-                            Gantt bars: {showGantt ? "ON" : "OFF"}
-                        </button>
+                        <div className="ml-2">
+                            <Button
+                                onClick={goToday}
+                                className="h-7 border border-border bg-control text-xs font-semibold text-control-text transition-colors hover:bg-control-active"
+                            >
+                                Today
+                            </Button>
+                            <Button
+                                onClick={() => setShowGantt((s) => !s)}
+                                className={cn(
+                                    "ml-2 h-7 rounded-md border border-border px-2.5 py-1 text-xs font-semibold transition-colors",
+                                    showGantt
+                                        ? "bg-bright-blue text-white hover:bg-blue-600"
+                                        : "bg-control text-control-text hover:bg-control-active",
+                                )}
+                            >
+                                Gantt bars: {showGantt ? "ON" : "OFF"}
+                            </Button>
+                        </div>
                     </div>
                     <div className="flex min-h-0 flex-1 overflow-hidden">
                         <div className="flex flex-1 flex-col overflow-hidden">
-                            <div className="grid flex-shrink-0 grid-cols-7 border-b">
-                                {WEEKDAYS.map((d, i) => (
+                            <div className="grid flex-shrink-0 grid-cols-7 border-b border-border">
+                                {WEEKDAYS.map((day, i) => (
                                     <div
-                                        key={d}
+                                        key={day}
                                         className={cn(
-                                            "border-r py-2.5 text-center text-xs font-bold uppercase tracking-wider last:border-r-0",
+                                            "border-r border-border py-2.5 text-center text-xs font-medium uppercase tracking-wider last:border-r-0",
                                             i === 0 || i === 6
-                                                ? "text-gray-300"
-                                                : "text-gray-500",
+                                                ? ""
+                                                : "text-muted-foreground",
                                         )}
                                     >
-                                        {d}
+                                        {day}
                                     </div>
                                 ))}
                             </div>
                             <div className="flex-1 overflow-y-auto">
-                                <div className="grid grid-cols-7">
+                                <div className="grid h-full grid-cols-7">
                                     {cells.map((cell) => (
                                         <DayCell
                                             key={cell.dateStr}

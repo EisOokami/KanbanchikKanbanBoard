@@ -29,7 +29,7 @@ export default function DescriptionSection({
                         : undefined
                 }
                 className={cn(
-                    "min-h-[72px] resize-none bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue",
+                    "min-h-[72px] resize-none bg-control text-sm placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue",
                     formState?.zodErrors?.description ? "border-red-500" : "",
                 )}
                 disabled={isPending}

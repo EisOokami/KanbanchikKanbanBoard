@@ -10,6 +10,7 @@ import KanbanTask from "../kanbanTask/KanbanTask";
 import { Column, Task, User } from "@/types/types";
 import { PlusIcon } from "@phosphor-icons/react";
 import { cn } from "@/libs/utils";
+import { Button } from "../shadcn/button";
 
 interface KanbanColumnProps {
     column: Column;
@@ -48,17 +49,17 @@ export default function KanbanColumn({
         <div
             className={cn(
                 "flex w-[320px] flex-shrink-0 flex-col rounded-xl p-2 transition-colors duration-150",
-                isOver ? "bg-gray-200" : "bg-gray-100",
+                isOver ? "bg-column-is-over" : "bg-column",
             )}
         >
-            <div className="relative mb-3 flex items-center justify-between rounded-md border bg-white px-3 py-2">
+            <div className="relative mb-3 flex items-center justify-between rounded-md border border-border bg-background-secondary px-3 py-2">
                 <div className="flex items-center gap-1.5">
                     <span className="text-sm font-medium">{column.name}</span>
                     <span className="text-center text-xs">
                         ({column.tasks.length})
                     </span>
                     {wipExceeded && (
-                        <span className="rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] font-semibold text-rose-500">
+                        <span className="rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] font-semibold text-rose-500 dark:bg-rose-900">
                             WIP
                         </span>
                     )}
@@ -67,12 +68,14 @@ export default function KanbanColumn({
                     (userData.role === "admin" ||
                         userData.role === "owner" ||
                         userData.role === "member") && (
-                        <button
+                        <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={startAdding}
-                            className="absolute right-3 flex size-5 items-center justify-center rounded-md text-gray-600 transition-colors hover:bg-gray-200 hover:text-gray-800"
+                            className="absolute right-3 size-5 text-control-text hover:bg-control-active"
                         >
                             <PlusIcon weight="duotone" className="size-3.5" />
-                        </button>
+                        </Button>
                     )}
             </div>
             <div className="flex-1 overflow-y-auto">
@@ -98,7 +101,7 @@ export default function KanbanColumn({
                 </SortableContext>
                 {column.tasks.length === 0 && !showCreateTask && (
                     <div className="flex flex-col items-center py-8 text-gray-400">
-                        <div className="mb-2 flex size-8 items-center justify-center rounded-lg border border-dashed border-gray-300">
+                        <div className="mb-2 flex size-8 items-center justify-center rounded-lg border border-dashed border-border">
                             <PlusIcon weight="duotone" className="size-4" />
                         </div>
                         <span className="text-xs">No tasks</span>

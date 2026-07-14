@@ -12,6 +12,7 @@ import AttachmentRow from "./attachmentRow/AttachmentRow";
 import Video from "yet-another-react-lightbox/plugins/video";
 import "yet-another-react-lightbox/styles.css";
 import { toast } from "sonner";
+import { Button } from "../../shadcn/button";
 
 interface AttachmentSectionProps {
     formState: BaseAction | undefined;
@@ -178,15 +179,15 @@ export default function AttachmentSection({
                 </div>
             )}
             {hasPermission && (
-                <button
+                <Button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-gray-300 py-2 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-50"
+                    className="w-full border border-dashed border-border bg-control py-2 text-xs font-medium text-control-text hover:bg-control-active hover:text-foreground"
                     disabled={isPending}
                 >
                     <UploadSimpleIcon weight="duotone" size={14} />
                     Upload file
-                </button>
+                </Button>
             )}
             <ZodErrors error={formState?.zodErrors?.attachments} />
             <ZodErrors error={formState?.zodErrors?.newAttachments} />

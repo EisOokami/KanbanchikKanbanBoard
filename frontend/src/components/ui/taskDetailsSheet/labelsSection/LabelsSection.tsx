@@ -53,25 +53,23 @@ export default function LabelsSection({
                         (projectLabel) => projectLabel.id === label.id,
                     );
 
+                    if (!selectedLabel) {
+                        return null;
+                    }
+
                     return (
                         <span
                             key={label.id}
                             className={cn(
-                                "flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium capitalize",
+                                "flex items-center gap-1 rounded-md border border-border px-2 py-0.5 text-xs font-medium capitalize text-white",
                                 hasPermission &&
                                     "cursor-pointer transition-colors hover:opacity-80",
                             )}
                             style={{
-                                borderColor: selectedLabel?.color ?? "#d1d5db",
-                                color: selectedLabel?.color ?? "#6b7280",
-                                background: selectedLabel
-                                    ? `${selectedLabel.color}18`
-                                    : "#f9fafb",
+                                background: selectedLabel.color,
                             }}
                             onClick={() =>
-                                hasPermission &&
-                                selectedLabel &&
-                                toggleLabel(selectedLabel)
+                                hasPermission && toggleLabel(selectedLabel)
                             }
                         >
                             {label.name}
@@ -86,14 +84,14 @@ export default function LabelsSection({
                         <PopoverTrigger asChild disabled={isPending}>
                             <button
                                 type="button"
-                                className="flex items-center gap-1 text-xs text-gray-500 transition-colors hover:text-gray-600"
+                                className="flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-gray-500"
                                 disabled={isPending}
                             >
                                 <PlusIcon weight="duotone" size={14} />
                                 Add
                             </button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-48 p-2">
+                        <PopoverContent className="w-48 border-border p-2">
                             <div className="flex flex-col gap-0.5">
                                 {projectData.labels.map((label) => {
                                     const selectedLabel = formData.labels.some(
@@ -106,7 +104,7 @@ export default function LabelsSection({
                                             type="button"
                                             key={label.id}
                                             onClick={() => toggleLabel(label)}
-                                            className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-xs transition-colors hover:bg-gray-50"
+                                            className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-xs transition-colors hover:bg-control-active"
                                             disabled={isPending}
                                         >
                                             <span
@@ -115,7 +113,7 @@ export default function LabelsSection({
                                                     background: label.color,
                                                 }}
                                             />
-                                            <span className="flex-1 text-left font-medium capitalize text-gray-700">
+                                            <span className="flex-1 text-left font-medium capitalize">
                                                 {label.name}
                                             </span>
                                             {selectedLabel && (

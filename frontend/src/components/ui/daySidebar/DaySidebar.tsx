@@ -69,24 +69,24 @@ export default function DaySidebar({
 
     return (
         <>
-            <div className="flex w-72 flex-shrink-0 flex-col border-l">
-                <div className="border-b p-4">
+            <div className="flex w-72 flex-shrink-0 flex-col border-l border-border">
+                <div className="border-b border-border p-4">
                     <div className="mb-0.5 flex items-center gap-2">
                         <span
                             className={cn(
-                                "text-3xl font-bold",
-                                isToday ? "text-bright-blue" : "text-gray-800",
+                                "text-3xl font-semibold",
+                                isToday ? "text-bright-blue" : "",
                             )}
                         >
                             {date.getDate()}
                         </span>
                         {isToday && (
-                            <span className="rounded-full border border-blue-200 bg-blue-100 px-1.5 py-0.5 text-[10px] font-semibold text-blue-600">
+                            <span className="rounded-full border border-blue-200 bg-blue-100 px-1.5 py-0.5 text-[10px] font-semibold text-blue-600 dark:border-blue-800 dark:bg-blue-900 dark:text-blue-400">
                                 Today
                             </span>
                         )}
                     </div>
-                    <p className="text-xs font-medium text-gray-500">
+                    <p className="text-xs font-medium text-muted-foreground">
                         {date.toLocaleDateString("en-US", {
                             weekday: "long",
                             month: "long",
@@ -97,11 +97,11 @@ export default function DaySidebar({
                 {(userData.role === "admin" ||
                     userData.role === "owner" ||
                     userData.role === "member") && (
-                    <div className="border-b px-4 py-3">
+                    <div className="border-b border-border px-4 py-3">
                         <Button
                             onClick={onOpenCreate}
                             size="sm"
-                            className="h-8 w-full gap-1.5 bg-bright-blue text-xs hover:bg-blue-600"
+                            className="h-8 w-full gap-1.5 bg-bright-blue text-xs text-white hover:bg-blue-600"
                         >
                             <PlusIcon weight="duotone" className="size-3.5" />{" "}
                             Add Task
@@ -111,7 +111,7 @@ export default function DaySidebar({
                 <ScrollArea className="flex-1">
                     <div className="space-y-5 px-4 py-3">
                         {tasks.length === 0 ? (
-                            <div className="py-10 text-center text-gray-400">
+                            <div className="py-10 text-center text-muted-foreground">
                                 <CalendarCheckIcon
                                     weight="duotone"
                                     className="mx-auto mb-2 size-8 opacity-25"
@@ -119,15 +119,15 @@ export default function DaySidebar({
                                 <p className="text-xs font-medium">
                                     No tasks scheduled
                                 </p>
-                                <p className="mt-0.5 text-xs text-gray-300">
+                                <p className="mt-0.5 text-xs text-gray-500">
                                     Press &quot;Add Task&quot; to get started
                                 </p>
                             </div>
                         ) : groupedColumns ? (
                             groupedColumns.map((column) => (
                                 <div key={column.id}>
-                                    <div className="mb-2 flex items-center gap-1.5 rounded-md px-1.5 py-0.5">
-                                        <span className="text-xs font-bold uppercase tracking-wider">
+                                    <div className="mb-2 flex gap-0.5 rounded-md px-1.5 py-0.5">
+                                        <span className="text-xs font-medium uppercase tracking-wider">
                                             {column.name}
                                         </span>
                                         <span className="ml-1 text-[10px] opacity-60">

@@ -3,7 +3,7 @@
 import EventChip from "../eventChip/EventChip";
 import GanttBar from "../ganttBar/GanttBar";
 import { Task } from "@/types/types";
-import { toDateStr } from "@/libs/utils";
+import { cn, toDateStr } from "@/libs/utils";
 
 const LANE_HEIGHT = 20;
 const LANE_GAP = 2;
@@ -38,42 +38,44 @@ export default function DayCell({
 }: Readonly<DayCellProps>) {
     const visible = tasks.slice(0, 3);
     const overflow = tasks.length - 3;
-    const ganttCellHeight =
-        DATE_HEADER_HEIGHT + maxLanes * (LANE_HEIGHT + LANE_GAP) + 8;
 
     return (
         <div
             onClick={() => onClick(dateStr)}
-            style={showGantt ? { height: ganttCellHeight } : undefined}
             className={[
-                "cursor-pointer border-b border-r transition-colors",
+                "cursor-pointer border-b border-r border-border transition-colors",
                 showGantt
                     ? "relative overflow-visible"
-                    : "flex min-h-[110px] flex-col gap-1 p-2",
-                isOtherMonth ? "bg-gray-50/50" : "bg-white hover:bg-blue-50/25",
+                    : "flex flex-col gap-1 p-2",
+                isOtherMonth
+                    ? "bg-background"
+                    : "bg-background-secondary hover:bg-blue-50/25 dark:hover:bg-blue-950/25",
                 isSelected
-                    ? "bg-blue-50/50 ring-1 ring-inset ring-blue-300"
+                    ? "bg-blue-50/50 ring-1 ring-inset ring-blue-300 dark:bg-blue-950/50"
                     : "",
             ].join(" ")}
         >
             <div
-                className="flex items-center justify-between px-2 pt-2"
+                className={cn(
+                    "flex items-center justify-between",
+                    showGantt && "px-2 pt-2",
+                )}
                 style={showGantt ? { height: DATE_HEADER_HEIGHT } : undefined}
             >
                 <span
                     className={[
-                        "flex size-6 items-center justify-center rounded-full text-xs font-bold transition-colors",
+                        "flex size-6 items-center justify-center rounded-full text-xs transition-colors",
                         isToday
                             ? "bg-bright-blue text-white"
                             : isOtherMonth
-                              ? "text-gray-300"
-                              : "text-gray-600",
+                              ? "text-gray-300 dark:text-gray-700"
+                              : "text-gray-600 dark:text-gray-400",
                     ].join(" ")}
                 >
                     {day}
                 </span>
                 {tasks.length > 0 && (
-                    <span className="text-[9px] font-bold text-gray-400">
+                    <span className="text-[9px] font-semibold text-muted-foreground">
                         {tasks.length}
                     </span>
                 )}
@@ -84,7 +86,9 @@ export default function DayCell({
                     style={{ top: DATE_HEADER_HEIGHT }}
                 >
                     {tasks.map((task) => {
-                        if (!task.start_date || !task.due_date) return null;
+                        if (!task.start_date || !task.due_date) {
+                            return null;
+                        }
 
                         const taskStartDate = new Date(task.start_date);
                         const taskEndDate = new Date(task.due_date);
@@ -100,11 +104,15 @@ export default function DayCell({
                             taskEndDate.getDate(),
                         );
 
-                        if (dateStr < taskStartStr || dateStr > taskEndStr)
+                        if (dateStr < taskStartStr || dateStr > taskEndStr) {
                             return null;
+                        }
 
                         const lane = taskLanes[task.id] ?? 0;
-                        if (lane >= maxLanes) return null;
+
+                        if (lane >= maxLanes) {
+                            return null;
+                        }
 
                         const isStartDay = dateStr === taskStartStr;
                         const isEndDay = dateStr === taskEndStr;
@@ -133,7 +141,7 @@ export default function DayCell({
                 </div>
             )}
             {!showGantt && (
-                <div className="flex flex-1 flex-col gap-0.5">
+                <div className="flex h-16 flex-col gap-0.5">
                     {visible.map((task) => (
                         <EventChip
                             key={task.id}
@@ -142,7 +150,7 @@ export default function DayCell({
                         />
                     ))}
                     {overflow > 0 && (
-                        <span className="pl-1.5 text-[10px] font-semibold text-gray-400">
+                        <span className="pl-1.5 text-[10px] font-medium text-gray-400">
                             +{overflow} more
                         </span>
                     )}

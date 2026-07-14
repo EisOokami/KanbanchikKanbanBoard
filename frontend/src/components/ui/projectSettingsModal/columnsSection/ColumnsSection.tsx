@@ -160,7 +160,7 @@ export default function ColumnsSection({
                         </SortableContext>
                     </DndContext>
                 </div>
-                <div className="flex items-center gap-2 rounded-md border p-3">
+                <div className="flex items-center gap-2">
                     <Input
                         name="column"
                         placeholder="Column name…"
@@ -174,7 +174,7 @@ export default function ColumnsSection({
                         }}
                         onKeyDown={(e) => e.key === "Enter" && addColumn()}
                         className={cn(
-                            "h-8 flex-1 rounded-md text-sm placeholder:text-gray-300 focus-visible:ring-1 focus-visible:ring-bright-blue",
+                            "h-8 flex-1 rounded-md bg-control text-sm placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue",
                             formState?.zodErrors?.columns
                                 ? "border-red-500"
                                 : "",

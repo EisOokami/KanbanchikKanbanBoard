@@ -38,7 +38,7 @@ export default function ProjectIconPicker({
                     disabled={isPending}
                 >
                     {projectIcon}
-                    <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-bright-blue">
+                    <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-bright-blue dark:border-background">
                         <PencilSimpleIcon
                             weight="duotone"
                             size={9}

@@ -121,16 +121,17 @@ export default function CategoriesSection({
                                 ),
                         )
                         .map((category) => (
-                            <button
+                            <Button
                                 key={category.id}
                                 type="button"
+                                variant="secondary"
                                 onClick={() => onCategorySelect(category)}
-                                className="flex items-center gap-1 rounded-md border border-border/60 bg-white px-2.5 py-0.5 text-sm capitalize text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+                                className="h-6 border border-border bg-control px-2.5 text-sm capitalize text-control-text hover:bg-control-active hover:text-foreground"
                                 disabled={isPending}
                             >
                                 {category.name}
                                 <PlusIcon weight="duotone" className="size-4" />
-                            </button>
+                            </Button>
                         ))}
                 </div>
                 <div>
@@ -158,7 +159,7 @@ export default function CategoriesSection({
                                     (e.preventDefault(), onNewCategoryAdd())
                                 }
                                 className={cn(
-                                    "h-8 flex-1 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue",
+                                    "h-8 flex-1 bg-control text-sm placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue",
                                     formState?.zodErrors?.categories
                                         ? "border-red-500"
                                         : "",

@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/shadcn/button";
 import { Input } from "@/components/ui/shadcn/input";
 import { cn } from "@/libs/utils";
 import { BaseAction } from "@/types/actions";
@@ -54,14 +55,14 @@ export default function SortableColumnRow({
             ref={setNodeRef}
             style={style}
             className={cn(
-                "flex items-center gap-3 rounded-md border px-3 py-2.5 transition-colors hover:bg-gray-50",
+                "flex items-center gap-3 rounded-md border border-border bg-control px-3 py-2.5 transition-colors hover:bg-control-active",
                 isDragging ? "opacity-40" : "",
             )}
         >
             <DotsSixVerticalIcon
                 weight="duotone"
                 size={14}
-                className="cursor-grab text-gray-500 active:cursor-grabbing"
+                className="cursor-grab text-control-text active:cursor-grabbing"
                 {...attributes}
                 {...listeners}
             />
@@ -94,7 +95,7 @@ export default function SortableColumnRow({
             <div className="flex items-center gap-1.5">
                 <label
                     htmlFor={`wip-limit-${column.id}`}
-                    className="whitespace-nowrap text-xs text-gray-400"
+                    className="whitespace-nowrap text-xs text-control-text"
                 >
                     WIP
                 </label>
@@ -117,26 +118,30 @@ export default function SortableColumnRow({
                                 raw === "" ? null : Math.max(1, Number(raw)),
                         });
                     }}
-                    className="h-7 w-14 rounded-md px-2 text-center text-sm focus-visible:ring-1 focus-visible:ring-bright-blue"
+                    className="h-7 w-14 rounded-md px-2 text-center text-sm placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue"
                 />
             </div>
             <div className="flex items-center gap-1">
-                <button
+                <Button
                     type="button"
+                    variant="ghost"
+                    size="icon"
                     onClick={() => onEditingColumnChange(column.id)}
-                    className="ml-1 flex size-7 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-100"
+                    className="ml-1 size-7 text-control-text hover:bg-control-active"
                     disabled={isPending}
                 >
                     <PencilSimpleIcon weight="duotone" size={16} />
-                </button>
-                <button
+                </Button>
+                <Button
                     type="button"
+                    variant="ghost"
+                    size="icon"
                     onClick={() => onColumnRemove(column.id)}
-                    className="flex size-7 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-red-50 hover:text-red-400"
+                    className="size-7 text-control-text hover:bg-red-50 hover:text-red-400 dark:hover:bg-red-950  dark:hover:text-red-600"
                     disabled={isPending}
                 >
                     <TrashSimpleIcon weight="duotone" size={16} />
-                </button>
+                </Button>
             </div>
         </div>
     );

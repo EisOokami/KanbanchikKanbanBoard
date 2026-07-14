@@ -101,7 +101,7 @@ export default function SubtasksSection({
                             {formData.subtasks.map((subtask) => (
                                 <div
                                     key={subtask.id}
-                                    className="group flex items-center gap-3 rounded-md border border-border/50 bg-white px-3 py-2"
+                                    className="group flex items-center gap-3 rounded-md border border-border bg-control px-3 py-2 placeholder:text-control-text"
                                 >
                                     <Checkbox
                                         id={subtask.id.toString()}
@@ -160,7 +160,7 @@ export default function SubtasksSection({
                             (e.preventDefault(), onSubtaskAdd())
                         }
                         className={cn(
-                            "h-8 flex-1 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue",
+                            "h-8 flex-1 bg-control text-sm placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue",
                             formState?.zodErrors?.subtasks
                                 ? "border-red-500"
                                 : "",

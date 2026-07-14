@@ -66,16 +66,16 @@ export default function TaskRow({
 
     return (
         <tr
-            className="group cursor-pointer border-b transition-colors duration-100"
+            className="group cursor-pointer border-b border-border transition-colors duration-100"
             onClick={onOpenDetails}
         >
             <td className="w-24 py-3 pl-8 pr-2">
-                <span className="font-mono text-xs font-medium text-gray-400">
+                <span className="font-mono text-xs font-medium text-muted-foreground">
                     {task.id}
                 </span>
             </td>
             <td className="min-w-[240px] py-3 pr-4">
-                <span className="text-sm font-medium leading-snug text-gray-800">
+                <span className="text-sm font-medium leading-snug">
                     {task.title}
                 </span>
                 {task.labels.length > 0 && (
@@ -90,7 +90,7 @@ export default function TaskRow({
                             </span>
                         ))}
                         {task.labels.length > 2 && (
-                            <span className="text-[10px] text-gray-400">
+                            <span className="text-[10px] text-muted-foreground">
                                 +{task.labels.length - 2}
                             </span>
                         )}
@@ -104,7 +104,7 @@ export default function TaskRow({
                             </span>
                         ))}
                         {task.categories.length > 2 && (
-                            <span className="text-[10px] text-gray-400">
+                            <span className="text-[10px] text-muted-foreground">
                                 +{task.categories.length - 2}
                             </span>
                         )}
@@ -112,13 +112,13 @@ export default function TaskRow({
                 )}
             </td>
             <td className="w-36 py-3 pr-4">
-                <span className="inline-flex rounded-md border px-2 py-1 text-xs font-medium">
+                <span className="inline-flex rounded-md border border-border px-2 py-1 text-xs">
                     {task.column.name}
                 </span>
             </td>
             <td className="w-28 py-3 pr-4">
                 <span
-                    className="inline-flex rounded-md border px-2 py-1 text-xs font-medium text-white"
+                    className="inline-flex rounded-md border border-border px-2 py-1 text-xs font-medium text-white"
                     style={{ backgroundColor: priority.color }}
                 >
                     {priority.label}
@@ -168,7 +168,7 @@ export default function TaskRow({
                         </Tooltip>
                     ))}
                     {task.members.length > 3 && (
-                        <div className="z-10 flex size-6 items-center justify-center rounded-full bg-gray-200 text-[9px] font-bold text-gray-500 ring-2 ring-white">
+                        <div className="z-10 flex size-6 items-center justify-center rounded-full bg-muted text-[9px] font-bold text-muted-foreground ring-2 ring-background-secondary">
                             +{task.members.length - 3}
                         </div>
                     )}
@@ -201,7 +201,7 @@ export default function TaskRow({
                             value={progress}
                             className="h-1 w-12 [&>*]:bg-bright-blue"
                         />
-                        <span className="text-[10px] text-gray-400">
+                        <span className="text-[10px] text-muted-foreground">
                             {task.subtasks_done ? task.subtasks_done : 0}/
                             {task.subtasks_total ? task.subtasks_total : 0}
                         </span>
@@ -209,7 +209,7 @@ export default function TaskRow({
                 ) : null}
             </td>
             <td className="w-24 py-3 pr-4">
-                <div className="flex items-center gap-2.5 text-gray-400">
+                <div className="flex items-center gap-2.5 text-muted-foreground">
                     {task.comments.length > 0 && (
                         <span className="flex items-center gap-0.5 text-[10px]">
                             <ChatTeardropDotsIcon
@@ -232,24 +232,24 @@ export default function TaskRow({
             </td>
             <td className="w-10 py-3 pr-3" onClick={(e) => e.stopPropagation()}>
                 {hasPermission && (
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="size-6 opacity-0 transition-opacity group-hover:opacity-100"
+                    <AlertDialog>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="size-6 text-control-text opacity-0 transition-opacity hover:bg-control-active hover:!opacity-100 group-hover:opacity-50 [&_svg]:size-4"
+                                >
+                                    <DotsThreeOutlineIcon weight="duotone" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                                align="end"
+                                className="w-44 border-border bg-control"
                             >
-                                <DotsThreeOutlineIcon
-                                    weight="duotone"
-                                    className="size-3.5 text-gray-400"
-                                />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-44">
-                            <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                     <DropdownMenuItem
-                                        className="cursor-pointer gap-2 text-xs text-rose-500 focus:text-rose-500"
+                                        className="cursor-pointer gap-2 text-xs text-red-500 hover:!bg-control-active focus:text-red-500 dark:text-red-400 dark:focus:text-red-400"
                                         onSelect={(e) => e.preventDefault()}
                                     >
                                         <TrashSimpleIcon
@@ -259,32 +259,29 @@ export default function TaskRow({
                                         Delete
                                     </DropdownMenuItem>
                                 </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                        <AlertDialogTitle>
-                                            Delete task?
-                                        </AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                            &quot;{task.title}&quot; will be
-                                            permanently deleted. This cannot be
-                                            undone.
-                                        </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                        <AlertDialogCancel>
-                                            Cancel
-                                        </AlertDialogCancel>
-                                        <AlertDialogAction
-                                            onClick={() => onDelete(task.id)}
-                                            className="bg-rose-600 hover:bg-rose-700"
-                                        >
-                                            Delete
-                                        </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                </AlertDialogContent>
-                            </AlertDialog>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                        <AlertDialogContent className="border-border">
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                    Delete task?
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    &quot;{task.title}&quot; will be permanently
+                                    deleted. This cannot be undone.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                    onClick={() => onDelete(task.id)}
+                                    className="bg-rose-600 text-white hover:bg-rose-700"
+                                >
+                                    Delete
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
                 )}
             </td>
         </tr>

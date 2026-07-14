@@ -58,7 +58,7 @@ export default function MembersSection({
                             <div className="group/av relative">
                                 <Avatar
                                     className={cn(
-                                        "size-7 ring-2 ring-white",
+                                        "size-7",
                                         hasPermission
                                             ? "cursor-pointer"
                                             : "cursor-default",
@@ -103,7 +103,7 @@ export default function MembersSection({
                         <PopoverTrigger asChild disabled={isPending}>
                             <button
                                 type="button"
-                                className="flex size-7 items-center justify-center rounded-full border border-dashed transition-colors hover:border-bright-blue hover:bg-bright-blue/5"
+                                className="flex size-7 items-center justify-center rounded-full border border-dashed border-border transition-colors hover:border-bright-blue hover:bg-bright-blue/5"
                                 disabled={isPending}
                             >
                                 <PlusIcon
@@ -113,7 +113,7 @@ export default function MembersSection({
                                 />
                             </button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-52 p-1.5">
+                        <PopoverContent className="grid w-52 gap-1 border-border p-1.5">
                             {projectData.members.map((member) => {
                                 const selectedMembers = formData.members.some(
                                     (formDataMember) =>
@@ -126,10 +126,7 @@ export default function MembersSection({
                                         key={member.id}
                                         onClick={() => toggleMember(member)}
                                         className={cn(
-                                            "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
-                                            selectedMembers
-                                                ? "bg-gray-50"
-                                                : "hover:bg-gray-50",
+                                            "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-control-active",
                                         )}
                                         disabled={isPending}
                                     >
@@ -166,7 +163,9 @@ export default function MembersSection({
                     </Popover>
                 )}
                 {formData.members.length === 0 && (
-                    <span className="text-sm text-gray-300">No members</span>
+                    <span className="text-sm text-gray-300 dark:text-gray-700">
+                        No members
+                    </span>
                 )}
             </div>
         </FieldRow>

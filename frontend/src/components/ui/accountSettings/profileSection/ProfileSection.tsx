@@ -118,7 +118,7 @@ export default function ProfileSection({
     return (
         <form action={formAction} className="space-y-5">
             <div>
-                <h2 className="text-lg font-bold text-gray-800">Profile</h2>
+                <h2 className="text-lg font-bold">Profile</h2>
                 <p className="mt-0.5 text-sm text-gray-400">
                     Manage your public profile information
                 </p>
@@ -133,9 +133,9 @@ export default function ProfileSection({
                     onChange={handleFileChange}
                 />
                 <SectionTitle>Avatar</SectionTitle>
-                <div className="flex items-center gap-5 rounded-md border bg-gray-50 p-4">
+                <div className="flex items-center gap-5 rounded-md border border-border bg-background p-4">
                     <div className="group relative">
-                        <Avatar className="size-16 shadow-md ring-2 ring-white">
+                        <Avatar className="size-16 shadow-md ring-2 ring-white dark:ring-gray-700">
                             <AvatarImage src={avatarPreview} />
                             <AvatarFallback
                                 className="text-xl font-bold text-white"
@@ -161,7 +161,7 @@ export default function ProfileSection({
                             type="button"
                             variant="outline"
                             size="sm"
-                            className="mr-2 h-7 text-xs"
+                            className="mr-2 h-7 bg-control text-xs hover:bg-control-active"
                             onClick={() => fileInputRef.current?.click()}
                             disabled={isPending}
                         >
@@ -172,7 +172,7 @@ export default function ProfileSection({
                                 type="button"
                                 variant="ghost"
                                 size="sm"
-                                className="h-7 text-xs text-gray-400"
+                                className="h-7 text-xs text-muted-foreground hover:bg-control-active"
                                 onClick={handleRemoveAvatar}
                                 disabled={isPending}
                             >
@@ -219,7 +219,7 @@ export default function ProfileSection({
             </div>
             <div className="space-y-2">
                 <SectionTitle>Personal info</SectionTitle>
-                <div className="divide-y divide-gray-100 overflow-hidden rounded-md border px-5">
+                <div className="overflow-hidden rounded-md border border-border bg-background px-5">
                     <FieldRow
                         label="Full name"
                         hint="Your display name across the workspace"
@@ -239,7 +239,7 @@ export default function ProfileSection({
                                     }
                                 }}
                                 className={cn(
-                                    "h-8 text-sm placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-bright-blue",
+                                    "h-8 bg-control text-sm placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue",
                                     formState?.zodErrors?.name
                                         ? "border-red-500"
                                         : "",
@@ -260,7 +260,7 @@ export default function ProfileSection({
                                     }
                                 }}
                                 className={cn(
-                                    "h-8 text-sm placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-bright-blue",
+                                    "h-8 bg-control text-sm placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue",
                                     formState?.zodErrors?.surname
                                         ? "border-red-500"
                                         : "",
@@ -290,7 +290,7 @@ export default function ProfileSection({
                                     }
                                 }}
                                 className={cn(
-                                    "h-8 flex-1 text-sm placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-bright-blue",
+                                    "h-8 flex-1 bg-control text-sm placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue",
                                     formState?.zodErrors?.email
                                         ? "border-red-500"
                                         : "",

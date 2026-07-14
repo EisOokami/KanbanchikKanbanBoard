@@ -7,6 +7,7 @@ import { Calendar } from "../../shadcn/calendar";
 import { FilterState } from "@/types/types";
 import { format } from "date-fns";
 import { useState } from "react";
+import { cn } from "@/libs/utils";
 
 interface DueDateSectionProps {
     filters: FilterState;
@@ -40,20 +41,12 @@ export default function DueDateSection({
                         <button
                             key={key}
                             onClick={() => onUpdate({ [key]: !filters[key] })}
-                            className="flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-all"
-                            style={
+                            className={cn(
+                                "flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors",
                                 filters[key]
-                                    ? {
-                                          background: "#FEF0EF",
-                                          color: "#D93025",
-                                          border: "1px solid #FACACB",
-                                      }
-                                    : {
-                                          background: "#F9FAFB",
-                                          color: "#6B7280",
-                                          border: "1px solid #E5E7EB",
-                                      }
-                            }
+                                    ? "border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300"
+                                    : "border-border bg-muted text-muted-foreground hover:bg-accent hover:text-foreground",
+                            )}
                         >
                             {label}
                             {filters[key] && (
@@ -65,28 +58,14 @@ export default function DueDateSection({
                 <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                     <PopoverTrigger asChild>
                         <button
-                            className="flex w-full items-center gap-2 rounded-md border px-3 py-2.5 text-sm transition-colors hover:bg-gray-50"
-                            style={{
-                                background: filters.date_range?.from
-                                    ? "#EDE9FD"
-                                    : "#F9FAFB",
-                                border: filters.date_range?.from
-                                    ? "1px solid #D3CBF8"
-                                    : "1px solid #E5E7EB",
-                                color: filters.date_range?.from
-                                    ? "#0096FF"
-                                    : "#6b7280",
-                            }}
+                            className={cn(
+                                "flex w-full items-center gap-2 rounded-md border border-border bg-control px-3 py-2.5 text-sm transition-colors hover:bg-control-active",
+                                filters.date_range?.from
+                                    ? "border-bright-blue/60 text-bright-blue hover:bg-control-active"
+                                    : "text-control-text",
+                            )}
                         >
-                            <CalendarIcon
-                                weight="duotone"
-                                size={16}
-                                style={{
-                                    color: filters.date_range?.from
-                                        ? "#0096FF"
-                                        : "#6b7280",
-                                }}
-                            />
+                            <CalendarIcon weight="duotone" size={16} />
                             {filters.date_range?.from
                                 ? filters.date_range.to
                                     ? `${format(filters.date_range.from, "MMM d")} → ${format(filters.date_range.to, "MMM d")}`
@@ -110,7 +89,7 @@ export default function DueDateSection({
                             )}
                         </button>
                     </PopoverTrigger>
-                    <PopoverContent className="rounded-md border bg-white p-0 shadow-sm">
+                    <PopoverContent className="w-fit rounded-md border border-border p-0 shadow-sm">
                         <Calendar
                             mode="range"
                             selected={filters.date_range}

@@ -9,7 +9,12 @@ import {
 } from "@/components/ui/shadcn/sheet";
 import { Button } from "@/components/ui/shadcn/button";
 import { Separator } from "@/components/ui/shadcn/separator";
-import { FunnelIcon } from "@phosphor-icons/react";
+import {
+    ArrowCounterClockwiseIcon,
+    CheckIcon,
+    FunnelIcon,
+    XIcon,
+} from "@phosphor-icons/react";
 import { Category, Project, User } from "@/types/types";
 import { FilterSortOptions, SortField } from "@/types/projectsOverview";
 import SortBySection from "./sortBySection/SortBySection";
@@ -68,16 +73,26 @@ export default function ProjectFilterSheet({
 
     return (
         <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
-            <SheetContent className="flex w-80 flex-col gap-0 p-0">
-                <SheetHeader className="border-b border-border/60 px-5 py-4">
+            <SheetContent className="flex min-w-[620px] max-w-[100vw] flex-col gap-0 border-border bg-background-secondary p-0 [&>button:first-of-type]:hidden">
+                <SheetHeader className="border-b border-border px-5 py-4">
                     <div className="flex items-center justify-between">
-                        <SheetTitle className="flex items-center gap-2 text-base font-semibold">
-                            <FunnelIcon
-                                weight="duotone"
-                                className="size-5 text-bright-blue"
-                            />
-                            Filter & Sort
-                        </SheetTitle>
+                        <div className="flex items-center justify-between">
+                            <SheetTitle className="flex items-center gap-2 text-base font-semibold">
+                                <FunnelIcon
+                                    weight="duotone"
+                                    className="size-5"
+                                />
+                                Filter & Sort
+                            </SheetTitle>
+                        </div>
+                        <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => onClose()}
+                            className="size-7 text-control-text transition-colors hover:bg-control-active [&_svg]:size-4"
+                        >
+                            <XIcon weight="duotone" />
+                        </Button>
                     </div>
                 </SheetHeader>
                 <div className="flex-1 space-y-5 overflow-y-auto px-5 py-4">
@@ -109,18 +124,20 @@ export default function ProjectFilterSheet({
                         />
                     )}
                 </div>
-                <SheetFooter className="border-t border-border/60 px-5 py-3">
+                <SheetFooter className="border-t border-border px-5 py-3">
                     <Button
-                        variant="ghost"
-                        className="flex-1 text-muted-foreground"
+                        variant="outline"
+                        className="bg-control text-control-text hover:bg-control-active [&_svg]:size-4"
                         onClick={onReset}
                     >
+                        <ArrowCounterClockwiseIcon weight="duotone" />
                         Reset all
                     </Button>
                     <Button
-                        className="flex-1 bg-bright-blue text-white hover:bg-blue-600"
+                        className="bg-bright-blue text-white hover:bg-blue-600 [&_svg]:size-4"
                         onClick={onClose}
                     >
+                        <CheckIcon weight="duotone" />
                         Apply
                     </Button>
                 </SheetFooter>

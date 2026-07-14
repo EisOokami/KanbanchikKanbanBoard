@@ -187,17 +187,17 @@ export default function Tasks({
 
     return (
         <>
-            <div className="h-full overflow-y-auto rounded-xl bg-white">
+            <div className="h-full overflow-y-auto rounded-xl bg-background-secondary">
                 <div className="flex min-w-0 flex-1 flex-col">
                     <div className="sticky top-0 z-10">
-                        <header className="sticky top-0 z-10 flex flex-wrap items-center gap-3 border-b bg-white px-8 py-4">
+                        <header className="sticky top-0 z-10 flex flex-wrap items-center gap-3 border-b border-border bg-background-secondary px-8 py-4">
                             <h1 className="mr-12 text-xl font-semibold">
                                 Tasks
                             </h1>
                             <div className="relative flex items-center">
                                 <MagnifyingGlassIcon
                                     weight="duotone"
-                                    className="absolute left-2.5 size-3.5 text-gray-400"
+                                    className="absolute left-2.5 size-3.5 text-control-text"
                                 />
                                 <Input
                                     value={filter.search}
@@ -205,7 +205,7 @@ export default function Tasks({
                                         setF("search", e.target.value)
                                     }
                                     placeholder="Search tasks…"
-                                    className="pl-8 pr-6 text-xs placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-bright-blue"
+                                    className="bg-control pl-8 pr-6 text-xs placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue"
                                 />
                                 {filter.search && (
                                     <button
@@ -214,7 +214,7 @@ export default function Tasks({
                                     >
                                         <XIcon
                                             weight="duotone"
-                                            className="size-3 text-gray-400"
+                                            className="size-3 text-control-text"
                                         />
                                     </button>
                                 )}
@@ -227,8 +227,8 @@ export default function Tasks({
                                         className={cn(
                                             "h-9 gap-1.5 text-xs",
                                             filter.columns.length
-                                                ? "border-bright-blue bg-blue-50 text-blue-600"
-                                                : "text-gray-500",
+                                                ? "border-bright-blue bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400"
+                                                : "bg-control text-control-text hover:bg-control-active",
                                         )}
                                     >
                                         <FunnelIcon
@@ -240,7 +240,7 @@ export default function Tasks({
                                             ` (${filter.columns.length})`}
                                     </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent className="w-44">
+                                <DropdownMenuContent className="w-44 border-border bg-background-secondary">
                                     <DropdownMenuLabel className="text-xs">
                                         Filter by column
                                     </DropdownMenuLabel>
@@ -258,9 +258,9 @@ export default function Tasks({
                                                         status.name,
                                                     )
                                                 }
-                                                className="text-xs"
+                                                className="text-xs hover:!bg-control-active"
                                             >
-                                                <span className="inline-flex items-center gap-1.5 rounded-md border px-1.5 py-0.5 text-xs">
+                                                <span className="inline-flex items-center gap-1.5 rounded-md border border-border px-1.5 py-0.5 text-xs">
                                                     {status.name}
                                                 </span>
                                             </DropdownMenuCheckboxItem>
@@ -276,8 +276,8 @@ export default function Tasks({
                                         className={cn(
                                             "h-9 gap-1.5 text-xs",
                                             filter.priorities.length
-                                                ? "border-bright-blue bg-blue-50 text-blue-600"
-                                                : "text-gray-500",
+                                                ? "border-bright-blue bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400"
+                                                : "bg-control text-control-text hover:bg-control-active",
                                         )}
                                     >
                                         <FlagIcon
@@ -289,7 +289,7 @@ export default function Tasks({
                                             ` (${filter.priorities.length})`}
                                     </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent className="w-40">
+                                <DropdownMenuContent className="w-40 border-border bg-background-secondary">
                                     <DropdownMenuLabel className="text-xs">
                                         Filter by priority
                                     </DropdownMenuLabel>
@@ -340,8 +340,8 @@ export default function Tasks({
                                                 className={cn(
                                                     "h-9 gap-1.5 text-xs",
                                                     filter.projects.length
-                                                        ? "border-bright-blue bg-blue-50 text-blue-600"
-                                                        : "text-gray-500",
+                                                        ? "border-bright-blue bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400"
+                                                        : "bg-control text-control-text hover:bg-control-active",
                                                 )}
                                             >
                                                 <LayoutIcon
@@ -353,7 +353,7 @@ export default function Tasks({
                                                     ` (${filter.projects.length})`}
                                             </Button>
                                         </DropdownMenuTrigger>
-                                        <DropdownMenuContent className="w-48">
+                                        <DropdownMenuContent className="w-48 border-border bg-background-secondary">
                                             <DropdownMenuLabel className="text-xs">
                                                 Filter by project
                                             </DropdownMenuLabel>
@@ -362,6 +362,9 @@ export default function Tasks({
                                                 (project) => (
                                                     <DropdownMenuCheckboxItem
                                                         key={project.id}
+                                                        checked={filter.projects.includes(
+                                                            project.name,
+                                                        )}
                                                         onCheckedChange={() =>
                                                             toggleStrFilter(
                                                                 "projects",
@@ -394,8 +397,8 @@ export default function Tasks({
                                 className={cn(
                                     "h-9 gap-1.5 text-xs",
                                     filter.overdue
-                                        ? "border-rose-300 bg-rose-50 text-rose-600"
-                                        : "text-gray-500",
+                                        ? "border-rose-300 bg-rose-50 text-rose-600 dark:border-rose-700 dark:bg-rose-950 dark:text-rose-400"
+                                        : "bg-control text-control-text hover:bg-control-active",
                                 )}
                             >
                                 <FireIcon weight="duotone" className="size-3" />{" "}
@@ -415,37 +418,38 @@ export default function Tasks({
                                 </button>
                             )}
                             <div className="ml-auto flex items-center justify-end gap-3">
-                                <div className="hidden items-center gap-1 md:flex">
+                                <div className="hidden items-center gap-1.5 md:flex">
                                     {[
                                         {
                                             label: "Total",
                                             value: stats.total,
-                                            style: "text-gray-600",
+                                            style: "text-gray-600 dark:text-gray-400",
                                         },
                                         {
                                             label: "In Progress",
                                             value: stats.inProgress,
-                                            style: "text-blue-600",
+                                            style: "text-blue-600 dark:text-blue-400",
                                         },
                                         {
                                             label: "Done",
                                             value: stats.done,
-                                            style: "text-emerald-600",
+                                            style: "text-emerald-600 dark:text-emerald-400",
                                         },
                                         {
                                             label: "Overdue",
                                             value: stats.overdue,
-                                            style: "text-rose-600",
+                                            style: "text-rose-600 dark:text-rose-400",
                                         },
                                     ].map((status, i) => (
                                         <div
                                             key={status.label}
-                                            className="flex items-center gap-2"
-                                        >
-                                            {i > 0 && (
-                                                <div className="h-3 w-px bg-gray-200" />
+                                            className={cn(
+                                                "flex items-center gap-1.5 pr-1.5",
+                                                i !== 3 &&
+                                                    "border-r border-border",
                                             )}
-                                            <span className="text-xs text-gray-400">
+                                        >
+                                            <span className="text-xs text-muted-foreground">
                                                 {status.label}
                                             </span>
                                             <span
@@ -460,7 +464,7 @@ export default function Tasks({
                                     ))}
                                 </div>
                                 <Button
-                                    className="gap-1.5 bg-bright-blue px-3 text-xs hover:bg-blue-600"
+                                    className="gap-1.5 bg-bright-blue px-3 text-xs text-white hover:bg-blue-600"
                                     onClick={handleShowNewTaskModal}
                                 >
                                     <PlusIcon
@@ -472,7 +476,7 @@ export default function Tasks({
                             </div>
                         </header>
                         {activeFilterCount > 0 && (
-                            <div className="flex flex-wrap gap-1.5 border-b bg-white px-8 py-2">
+                            <div className="flex flex-wrap gap-1.5 border-b border-border px-8 py-2">
                                 {filter.columns.map((column) => (
                                     <FilterChip
                                         key={column}
@@ -512,15 +516,15 @@ export default function Tasks({
                             </div>
                         )}
                     </div>
-                    <table className="w-full min-w-[960px] bg-gray-50">
+                    <table className="w-full min-w-[960px] bg-column">
                         <thead
                             className={cn(
-                                "sticky z-10 bg-gray-50 shadow-[inset_0_-1px_0_0_rgba(0,0,0,0.1)]",
+                                "sticky z-10 bg-column shadow-[inset_0_-1px_0_0_rgba(0,0,0,0.1)] dark:shadow-[inset_0_-1px_0_0_hsl(0_0%_14.9%)]",
                                 activeFilterCount > 0 ? "top-28" : "top-[69px]",
                             )}
                         >
                             <tr>
-                                <th className="flex w-24 items-center gap-1 py-2.5 pl-4 pr-4 text-left text-sm font-normal tracking-wider text-gray-400">
+                                <th className="flex w-24 items-center gap-1 py-2.5 pl-4 pr-4 text-left text-sm font-normal tracking-wider text-muted-foreground">
                                     <HashIcon
                                         weight="duotone"
                                         className="size-4"
@@ -581,7 +585,7 @@ export default function Tasks({
                                     onSort={toggleSort}
                                     Icon={CalendarBlankIcon}
                                 />
-                                <th className="w-24 py-2.5 pr-4 text-left text-sm font-normal tracking-wider text-gray-400">
+                                <th className="w-24 py-2.5 pr-4 text-left text-sm font-normal tracking-wider text-muted-foreground">
                                     <div className="flex items-center gap-1">
                                         <ChartLineIcon
                                             weight="duotone"
@@ -590,7 +594,7 @@ export default function Tasks({
                                         Progress
                                     </div>
                                 </th>
-                                <th className="w-24 py-2.5 pr-4 text-left text-sm font-normal tracking-wider text-gray-400">
+                                <th className="w-24 py-2.5 pr-4 text-left text-sm font-normal tracking-wider text-muted-foreground">
                                     <div className="flex items-center gap-1">
                                         <PulseIcon
                                             weight="duotone"
@@ -601,7 +605,7 @@ export default function Tasks({
                                 </th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white">
+                        <tbody className="bg-background-secondary">
                             {filteredTasks.length > 0 ? (
                                 filteredTasks.map((task) => (
                                     <TaskRow
@@ -619,7 +623,7 @@ export default function Tasks({
                                 <tr>
                                     <td
                                         colSpan={9}
-                                        className="py-16 text-center text-sm text-gray-400"
+                                        className="py-16 text-center text-sm text-muted-foreground"
                                     >
                                         No tasks match the current filters
                                     </td>

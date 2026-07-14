@@ -14,6 +14,7 @@ import { countActive } from "@/libs/taskFilterSheet";
 import { FilterState, Project } from "@/types/types";
 import {
     ArrowCounterClockwiseIcon,
+    CheckIcon,
     MagnifyingGlassIcon,
     XIcon,
 } from "@phosphor-icons/react";
@@ -86,9 +87,9 @@ export default function TaskFilterSheet({
         <Sheet open={open} onOpenChange={onOpenChange}>
             <SheetContent
                 side="right"
-                className="flex min-w-[620px] max-w-[100vw] flex-col gap-0 overflow-hidden border-l p-0 [&>button:first-of-type]:hidden"
+                className="flex min-w-[620px] max-w-[100vw] flex-col gap-0 overflow-hidden border-l border-border bg-background-secondary p-0 [&>button:first-of-type]:hidden"
             >
-                <SheetHeader className="shrink-0 border-b px-5 py-3">
+                <SheetHeader className="shrink-0 border-b border-border px-5 py-3">
                     <div className="flex items-center justify-between">
                         <div className="grid">
                             <SheetTitle className="font-semibold">
@@ -100,12 +101,14 @@ export default function TaskFilterSheet({
                                     : "No filters applied"}
                             </p>
                         </div>
-                        <button
+                        <Button
+                            size="icon"
+                            variant="ghost"
                             onClick={() => onOpenChange(false)}
-                            className="flex size-8 items-center justify-center rounded-md transition-colors hover:bg-gray-100"
+                            className="size-7 text-control-text transition-colors hover:bg-control-active [&_svg]:size-4"
                         >
-                            <XIcon weight="duotone" size={18} />
-                        </button>
+                            <XIcon weight="duotone" />
+                        </Button>
                     </div>
                 </SheetHeader>
                 <div className="grid flex-1 gap-2 overflow-y-auto px-5 py-2">
@@ -116,7 +119,7 @@ export default function TaskFilterSheet({
                             <MagnifyingGlassIcon
                                 weight="duotone"
                                 size={16}
-                                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-control-text"
                             />
                             <Input
                                 value={filters.search}
@@ -129,7 +132,7 @@ export default function TaskFilterSheet({
 
                                     debouncedSearchUpdate(e.target.value);
                                 }}
-                                className="h-9 rounded-md pl-9 text-sm placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-bright-blue"
+                                className="h-9 rounded-md bg-control pl-9 text-sm placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue"
                             />
                             {filters.search && (
                                 <button
@@ -150,7 +153,7 @@ export default function TaskFilterSheet({
                         onToggle={toggle}
                     />
                     <Separator />
-                    {filters.members && filters.members.length > 1 && (
+                    {projectData.members && projectData.members.length > 1 && (
                         <>
                             <MembersSection
                                 filters={filters}
@@ -185,8 +188,8 @@ export default function TaskFilterSheet({
                     )}
                     <HasSection filters={filters} onUpdate={update} />
                 </div>
-                <div className="flex shrink-0 items-center justify-between border-t px-5 py-4">
-                    <p className="text-xs text-gray-500">
+                <div className="flex shrink-0 items-center justify-between border-t border-border px-5 py-4">
+                    <p className="text-xs text-muted-foreground">
                         {activeCount > 0
                             ? `${activeCount} filter${activeCount > 1 ? "s" : ""} applied`
                             : "No filters"}
@@ -196,19 +199,17 @@ export default function TaskFilterSheet({
                             <Button
                                 variant="outline"
                                 onClick={reset}
-                                className="h-9 gap-1.5 px-4 text-sm text-gray-500 hover:bg-gray-200 [&_svg]:size-4"
+                                className="h-9 gap-1.5 bg-control px-4 text-sm text-control-text hover:bg-control-active [&_svg]:size-4"
                             >
-                                <ArrowCounterClockwiseIcon
-                                    weight="duotone"
-                                    size={16}
-                                />
+                                <ArrowCounterClockwiseIcon weight="duotone" />
                                 Reset all
                             </Button>
                         )}
                         <Button
                             onClick={() => onOpenChange(false)}
-                            className="h-9 bg-bright-blue px-5 text-sm font-semibold text-white hover:bg-blue-600"
+                            className="h-9 bg-bright-blue px-5 text-sm font-semibold text-white hover:bg-blue-600 [&_svg]:size-4"
                         >
+                            <CheckIcon weight="duotone" />
                             Apply
                         </Button>
                     </div>

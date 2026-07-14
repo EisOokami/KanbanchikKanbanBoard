@@ -35,7 +35,7 @@ export default function AppSidebar({
                 variant="sidebar"
                 className="z-50 border-transparent"
             >
-                <SidebarHeader className="bg-gray-100">
+                <SidebarHeader>
                     <div className="flex items-center gap-1.5 px-2 py-1 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
                         <div className="flex size-7 shrink-0 items-center justify-center">
                             <Image
@@ -46,19 +46,19 @@ export default function AppSidebar({
                                 className="object-contain"
                             />
                         </div>
-                        <span className="whitespace-nowrap text-lg font-medium tracking-tight text-black group-data-[collapsible=icon]:hidden">
+                        <span className="whitespace-nowrap text-lg font-medium tracking-tight group-data-[collapsible=icon]:hidden">
                             Kabanchik
                         </span>
                     </div>
                 </SidebarHeader>
-                <SidebarContent className="bg-gray-100">
+                <SidebarContent>
                     <SidebarGroup>
                         <SidebarGroupContent>
                             <NavMain projectsData={projectsData} />
                         </SidebarGroupContent>
                     </SidebarGroup>
                 </SidebarContent>
-                <SidebarFooter className="border-t bg-gray-100">
+                <SidebarFooter className="border-t border-border">
                     <UserFooter userData={userData} />
                 </SidebarFooter>
                 <SidebarRail />

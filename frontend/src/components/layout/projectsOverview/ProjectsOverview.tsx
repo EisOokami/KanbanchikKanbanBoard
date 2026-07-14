@@ -66,8 +66,8 @@ export default function ProjectsOverview({
     };
 
     return (
-        <div className="h-full overflow-y-auto rounded-xl bg-white">
-            <header className="sticky top-0 z-10 border-b border-border/60 bg-card/80 backdrop-blur">
+        <div className="h-full overflow-y-auto rounded-xl bg-background-secondary">
+            <header className="sticky top-0 z-10 border-b border-border backdrop-blur">
                 <div className="flex items-center justify-between gap-4 px-8 py-4">
                     <h1 className="text-xl font-semibold">Projects</h1>
                     <Button
@@ -84,19 +84,19 @@ export default function ProjectsOverview({
                     <div className="relative w-full sm:w-72">
                         <MagnifyingGlassIcon
                             weight="duotone"
-                            className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400 text-muted-foreground"
+                            className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-control-text"
                         />
                         <Input
                             placeholder="Search projects…"
                             onChange={(e) => setSearch(e.target.value)}
-                            className="h-9 pl-9 text-sm placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-bright-blue"
+                            className="h-9 bg-control pl-9 text-sm placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue"
                         />
                     </div>
                     <div className="flex items-center gap-2">
                         <Button
                             variant="outline"
                             size="sm"
-                            className="relative h-9 gap-1.5 border-border/60 text-sm"
+                            className="relative h-9 gap-1.5 border-border bg-control text-sm text-control-text hover:bg-control-active"
                             onClick={() => setShowFilterSheet(true)}
                         >
                             <FunnelIcon weight="duotone" className="size-4" />
@@ -107,20 +107,20 @@ export default function ProjectsOverview({
                                 </Badge>
                             )}
                         </Button>
-                        <div className="flex gap-0.5 rounded-md bg-muted/60 p-1">
+                        <div className="flex gap-0.5 rounded-md border border-border bg-control p-1">
                             {(["grid", "list"] as ("grid" | "list")[]).map(
-                                (v) => (
+                                (value) => (
                                     <button
-                                        key={v}
-                                        onClick={() => setView(v)}
+                                        key={value}
+                                        onClick={() => setView(value)}
                                         className={cn(
                                             "rounded-md p-1 transition-colors",
-                                            view === v
-                                                ? "bg-background text-foreground shadow-sm"
+                                            view === value
+                                                ? "bg-control-active text-foreground"
                                                 : "text-muted-foreground hover:text-foreground",
                                         )}
                                     >
-                                        {v === "grid" ? (
+                                        {value === "grid" ? (
                                             <GridFourIcon
                                                 weight="duotone"
                                                 className="size-5"
@@ -138,14 +138,14 @@ export default function ProjectsOverview({
                     </div>
                 </div>
                 <section className="space-y-3">
-                    <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                    <h2 className="items- inline-flex text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                         All Projects
-                        <span className="ml-2 font-normal normal-case tracking-normal text-muted-foreground/60">
+                        <span className="ml-2 font-normal normal-case text-muted-foreground/60">
                             ({filtered.length})
                         </span>
                     </h2>
                     {filtered.length === 0 ? (
-                        <Card className="border-dashed border-border/60">
+                        <Card className="border-dashed border-border">
                             <CardContent className="flex flex-col items-center justify-center gap-3 py-16 text-center">
                                 <div className="flex size-12 items-center justify-center rounded-md bg-muted">
                                     <GridFourIcon
@@ -154,7 +154,7 @@ export default function ProjectsOverview({
                                     />
                                 </div>
                                 <div>
-                                    <p className="text-sm font-medium text-foreground">
+                                    <p className="text-sm font-medium">
                                         No projects found
                                     </p>
                                     <p className="mt-1 text-xs text-muted-foreground">
@@ -165,7 +165,7 @@ export default function ProjectsOverview({
                                 <Button
                                     size="sm"
                                     variant="outline"
-                                    className="mt-1 gap-1.5"
+                                    className="mt-1 gap-1.5 bg-bright-blue px-4 py-2 text-sm text-white hover:bg-blue-600"
                                     onClick={handleShowNewProjectModal}
                                 >
                                     <PlusIcon

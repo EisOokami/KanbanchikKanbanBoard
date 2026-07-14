@@ -1,11 +1,4 @@
-import {
-    Column,
-    User,
-    Priority,
-    PriorityConfig,
-    Role,
-    Status,
-} from "@/types/types";
+import { Column, Priority, PriorityConfig, Role, Status } from "@/types/types";
 
 export const COLUMNS_CONFIG: Pick<
     Column,
@@ -78,32 +71,31 @@ export const STATUS_CONFIG: Record<Status, { label: string; dot: string }> = {
 export const ROLES: Role[] = ["admin", "member", "owner", "viewer"];
 
 export const ROLE_META: Record<
-    User["role"],
-    { label: string; color: string; bg: string; border: string }
+    Role,
+    {
+        label: string;
+        activeClass: string;
+    }
 > = {
     owner: {
         label: "Owner",
-        color: "#7C5CBF",
-        bg: "#EDE9FD",
-        border: "#D3CBF8",
+        activeClass:
+            "border-violet-300 bg-violet-100 text-violet-700 dark:border-violet-700 dark:bg-violet-950/50 dark:text-violet-300",
     },
     admin: {
         label: "Admin",
-        color: "#91A211",
-        bg: "#EDE3FA",
-        border: "#AEDF7F",
+        activeClass:
+            "border-lime-300 bg-lime-100 text-lime-700 dark:border-lime-700 dark:bg-lime-950/50 dark:text-lime-300",
     },
     member: {
-        label: "Editor",
-        color: "#1A6BBF",
-        bg: "#EEF4FD",
-        border: "#BDD5F5",
+        label: "Member",
+        activeClass:
+            "border-blue-300 bg-blue-100 text-blue-700 dark:border-blue-700 dark:bg-blue-900/50 dark:text-blue-300",
     },
     viewer: {
         label: "Viewer",
-        color: "#1E7E3A",
-        bg: "#EEFAF2",
-        border: "#AEDFC0",
+        activeClass:
+            "border-emerald-300 bg-emerald-100 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300",
     },
 };
 

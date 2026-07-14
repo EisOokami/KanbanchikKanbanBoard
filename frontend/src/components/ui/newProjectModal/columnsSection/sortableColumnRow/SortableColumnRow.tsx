@@ -37,19 +37,19 @@ export default function SortableColumnRow({
             ref={setNodeRef}
             style={style}
             className={cn(
-                "flex items-center gap-2.5 rounded-md border border-border/50 bg-muted/30 bg-white px-3 py-2 transition-all",
-                isDragging ? "cursor-grabbing opacity-40" : "",
+                "flex items-center gap-2.5 rounded-md border border-border bg-control px-3 py-2 transition-all",
+                isDragging ? "cursor-grabbing opacity-60" : "",
             )}
         >
             <DotsSixVerticalIcon
                 weight="duotone"
-                className="size-3.5 flex-shrink-0 cursor-grab text-muted-foreground/50 active:cursor-grabbing"
+                className="size-3.5 flex-shrink-0 cursor-grab text-control-text active:cursor-grabbing"
                 {...attributes}
                 {...listeners}
             />
             <span className="flex-1 text-sm font-medium">{column.name}</span>
             <div className="flex items-center gap-1.5">
-                <span className="text-xs text-muted-foreground/60">WIP</span>
+                <span className="text-xs text-control-text">WIP</span>
                 <Input
                     name="wip-limit"
                     type="number"
@@ -57,7 +57,7 @@ export default function SortableColumnRow({
                     max={999}
                     placeholder="∞"
                     value={column.wip_limit ?? ""}
-                    className="h-6 w-12 px-1 py-0 text-center text-sm"
+                    className="h-6 w-12 px-1 py-0 text-center text-sm placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue"
                     onChange={(e) => {
                         const raw = e.target.value;
 
@@ -72,7 +72,7 @@ export default function SortableColumnRow({
             <button
                 type="button"
                 onClick={() => onRemove(column.id)}
-                className="text-muted-foreground/50 transition-colors hover:text-muted-foreground"
+                className="text-control-text transition-colors hover:text-foreground"
                 disabled={isPending}
             >
                 <XIcon weight="duotone" className="size-4" />

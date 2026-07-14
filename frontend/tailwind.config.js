@@ -9,6 +9,7 @@ module.exports = {
 		'./src/app/**/*.{js,ts,jsx,tsx,mdx}',
 		'./src/pages/**/*.{js,ts,jsx,tsx,mdx}',
 		'./src/components/**/*.{js,ts,jsx,tsx,mdx}',
+		'./src/constants/**/*.{js,ts,jsx,tsx,mdx}',
 	],
 	theme: {
     	extend: {
@@ -22,11 +23,15 @@ module.exports = {
     		},
     		colors: {
 				'bright-blue': '#0096FF',
-    			background: 'hsl(var(--background))',
+    			background: {
+					DEFAULT: 'var(--background)',
+					secondary: 'var(--background-secondary)'
+				},
     			foreground: 'hsl(var(--foreground))',
     			card: {
-    				DEFAULT: 'hsl(var(--card))',
-    				foreground: 'hsl(var(--card-foreground))'
+    				DEFAULT: 'var(--card)',
+    				foreground: 'hsl(var(--card-foreground))',
+					active: 'var(--card-active)'
     			},
     			popover: {
     				DEFAULT: 'hsl(var(--popover))',
@@ -63,7 +68,7 @@ module.exports = {
     				'5': 'hsl(var(--chart-5))'
     			},
     			sidebar: {
-    				DEFAULT: 'hsl(var(--sidebar-background))',
+    				DEFAULT: 'var(--sidebar-background)',
     				foreground: 'hsl(var(--sidebar-foreground))',
     				primary: 'hsl(var(--sidebar-primary))',
     				'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
@@ -71,7 +76,18 @@ module.exports = {
     				'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
     				border: 'hsl(var(--sidebar-border))',
     				ring: 'hsl(var(--sidebar-ring))'
-    			}
+    			},
+				control: {
+					DEFAULT: 'var(--control)',
+					active: 'var(--control-active)',
+					text: 'var(--control-text)'
+				},
+				column: {
+					DEFAULT: 'var(--column)',
+					'is-over': 'var(--column-is-over)',
+				},
+				'vampire-black': '#080808',
+				'dark-ash': '#101211'
     		}
     	}
     },

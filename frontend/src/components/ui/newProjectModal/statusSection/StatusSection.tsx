@@ -29,9 +29,9 @@ export default function StatusSection({
                             type="button"
                             onClick={() => setStatus(statusConfig)}
                             className={cn(
-                                "flex items-center gap-1.5 rounded-md bg-muted/60 px-2.5 py-1 text-xs font-medium transition-all hover:bg-muted",
+                                "flex items-center gap-1.5 rounded-md border border-border bg-control px-2.5 py-1 text-xs font-medium transition-all hover:bg-control-active",
                                 status === statusConfig
-                                    ? "bg-muted ring-1 ring-border"
+                                    ? "bg-control-active"
                                     : "opacity-60 hover:opacity-100",
                             )}
                             disabled={isPending}

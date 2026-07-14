@@ -43,7 +43,7 @@ export default function LoginForm({ redirect }: Readonly<LoginFormProps>) {
     );
 
     return (
-        <Card className="z-50 mx-auto w-full max-w-sm">
+        <Card className="z-50 mx-auto w-full max-w-sm border-border">
             <CardHeader className="pb-5">
                 <CardTitle className="text-2xl">Login</CardTitle>
                 <CardDescription>
@@ -59,11 +59,12 @@ export default function LoginForm({ redirect }: Readonly<LoginFormProps>) {
                             name="email"
                             type="email"
                             placeholder="name@example.com"
-                            className={
+                            className={cn(
+                                "bg-control placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue",
                                 formState?.zodErrors?.email
                                     ? "border-red-500"
-                                    : ""
-                            }
+                                    : "",
+                            )}
                             defaultValue={
                                 formState?.formData?.get("email")?.toString() ??
                                 undefined
@@ -85,11 +86,12 @@ export default function LoginForm({ redirect }: Readonly<LoginFormProps>) {
                         <PasswordInput
                             id="password"
                             name="password"
-                            className={
+                            className={cn(
+                                "bg-control placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue",
                                 formState?.zodErrors?.password
                                     ? "border-red-500"
-                                    : ""
-                            }
+                                    : "",
+                            )}
                             defaultValue={
                                 formState?.formData
                                     ?.get("password")

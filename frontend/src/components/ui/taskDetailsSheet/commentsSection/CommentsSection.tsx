@@ -73,7 +73,7 @@ export default function CommentsSection({
                                 addComment();
                         }}
                         rows={3}
-                        className="resize-none rounded-md bg-gray-50 text-xs placeholder:text-gray-300 focus-visible:ring-1 focus-visible:ring-bright-blue"
+                        className="resize-none rounded-md bg-control text-xs placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue"
                         disabled={isPending}
                     />
                     {newComment.trim() && (
@@ -87,7 +87,7 @@ export default function CommentsSection({
                                     size="sm"
                                     variant="ghost"
                                     onClick={() => setNewComment("")}
-                                    className="h-7 rounded-md px-3 text-xs text-gray-500 hover:bg-gray-100"
+                                    className="h-7 px-3 text-xs text-control-text hover:bg-control-active"
                                     disabled={isPending}
                                 >
                                     Cancel
@@ -96,7 +96,7 @@ export default function CommentsSection({
                                     type="button"
                                     size="sm"
                                     onClick={addComment}
-                                    className="h-7 gap-2 rounded-md bg-bright-blue px-3 text-xs text-white hover:bg-blue-600 [&_svg]:size-3.5"
+                                    className="h-7 gap-2 bg-bright-blue px-3 text-xs text-white hover:bg-blue-600 [&_svg]:size-3.5"
                                     disabled={isPending}
                                 >
                                     <PaperPlaneTiltIcon

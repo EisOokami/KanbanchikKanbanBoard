@@ -9,6 +9,7 @@ import { UpdateTaskFormData } from "@/types/types";
 import { useState } from "react";
 import { BaseAction } from "@/types/actions";
 import { ZodErrors } from "../../zodErrors/ZodErrors";
+import { Progress } from "../../shadcn/progress";
 
 interface SubtasksSectionProps {
     formState: BaseAction | undefined;
@@ -116,27 +117,27 @@ export default function SubtasksSection({
                 </div>
                 {totalSubtasks > 0 && (
                     <span
-                        className="text-xs font-semibold"
-                        style={{
-                            color:
-                                subtasksPercent === 100 ? "#1E7E3A" : "#0096FF",
-                        }}
+                        className={cn(
+                            "text-xs font-semibold",
+                            subtasksPercent === 100
+                                ? "text-green-500"
+                                : "text-bright-blue",
+                        )}
                     >
                         {subtasksPercent}%
                     </span>
                 )}
             </div>
             {totalSubtasks > 0 && (
-                <div className="mb-4 h-1.5 overflow-hidden rounded-full bg-gray-100">
-                    <div
-                        className="h-full rounded-full transition-all duration-500"
-                        style={{
-                            width: `${subtasksPercent}%`,
-                            background:
-                                subtasksPercent === 100 ? "#1E7E3A" : "#0096FF",
-                        }}
-                    />
-                </div>
+                <Progress
+                    value={subtasksPercent}
+                    className={cn(
+                        "mb-4 h-1.5 w-full",
+                        subtasksPercent === 100
+                            ? "[&>*]:bg-green-500"
+                            : "[&>*]:bg-bright-blue",
+                    )}
+                />
             )}
             <div className="space-y-2">
                 {formData.subtasks.map((subtask) => (
@@ -148,7 +149,7 @@ export default function SubtasksSection({
                                 ? "border-red-500"
                                 : "",
                             hasPermission &&
-                                "transition-colors hover:bg-gray-50",
+                                "transition-colors hover:bg-control-active",
                         )}
                     >
                         <Checkbox
@@ -177,26 +178,20 @@ export default function SubtasksSection({
                                 }
                                 className={cn(
                                     "h-auto flex-1 rounded-none border-0 bg-transparent px-0 py-0 text-sm focus-visible:ring-0",
-                                    subtask.is_done ? "line-through" : "",
+                                    subtask.is_done
+                                        ? "text-control-text line-through"
+                                        : "text-muted-foreground",
                                 )}
-                                style={{
-                                    color: subtask.is_done
-                                        ? "#6b7280"
-                                        : "#374151",
-                                }}
                                 disabled={isPending}
                             />
                         ) : (
                             <p
                                 className={cn(
                                     "h-auto flex-1 rounded-none border-0 bg-transparent px-0 py-0 text-sm focus-visible:ring-0",
-                                    subtask.is_done ? "line-through" : "",
+                                    subtask.is_done
+                                        ? "text-control-text line-through"
+                                        : "text-muted-foreground",
                                 )}
-                                style={{
-                                    color: subtask.is_done
-                                        ? "#6b7280"
-                                        : "#374151",
-                                }}
                             >
                                 {subtask.title}
                             </p>
@@ -244,13 +239,10 @@ export default function SubtasksSection({
                                 }
                                 className={cn(
                                     "h-auto flex-1 rounded-none border-0 bg-transparent px-0 py-0 text-sm focus-visible:ring-0",
-                                    subtask.is_done ? "line-through" : "",
+                                    subtask.is_done
+                                        ? "text-control-text line-through"
+                                        : "text-muted-foreground",
                                 )}
-                                style={{
-                                    color: subtask.is_done
-                                        ? "#6b7280"
-                                        : "#374151",
-                                }}
                                 disabled={isPending}
                             />
                             <button
@@ -272,17 +264,17 @@ export default function SubtasksSection({
                         value={newSubtaskText}
                         onChange={(e) => setNewSubtaskText(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && addSubtask()}
-                        className="h-8 flex-1 rounded-md text-sm placeholder:text-gray-300 focus-visible:ring-1 focus-visible:ring-bright-blue"
+                        className="h-8 flex-1 rounded-md bg-control text-sm placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue"
                         disabled={isPending}
                     />
                     <Button
                         type="button"
                         size="sm"
                         onClick={addSubtask}
-                        className="h-8 rounded-md border bg-bright-blue px-3 transition-colors hover:bg-blue-600 [&_svg]:size-4"
+                        className="h-8 bg-bright-blue px-3 text-white hover:bg-blue-600 [&_svg]:size-4"
                         disabled={isPending}
                     >
-                        <PlusIcon weight="duotone" size={16} />
+                        <PlusIcon weight="duotone" />
                     </Button>
                 </div>
             )}

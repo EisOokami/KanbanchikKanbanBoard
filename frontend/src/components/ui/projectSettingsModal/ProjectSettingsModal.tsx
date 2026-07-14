@@ -240,7 +240,7 @@ export default function ProjectSettingsModal({
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent
-                className="flex h-[88vh] max-h-[680px] w-[95vw] max-w-[780px] flex-col gap-0 overflow-hidden rounded-md border bg-white p-0 shadow-xl [&>button:last-child]:hidden"
+                className="flex h-[88vh] max-h-[680px] w-[95vw] max-w-[780px] flex-col gap-0 overflow-hidden rounded-md border border-border bg-background-secondary p-0 shadow-xl [&>button:last-child]:hidden"
                 aria-describedby={undefined}
             >
                 <form
@@ -250,7 +250,7 @@ export default function ProjectSettingsModal({
                 >
                     <DialogTitle className="hidden"></DialogTitle>
                     <div className="flex flex-1 overflow-hidden">
-                        <nav className="flex w-48 shrink-0 flex-col gap-0.5 border-r px-2 py-3">
+                        <nav className="flex w-48 shrink-0 flex-col gap-0.5 border-r  border-border px-2 py-3">
                             {NAV_ITEMS.map((item) => {
                                 const Icon = item.icon;
 
@@ -271,15 +271,15 @@ export default function ProjectSettingsModal({
                                         className={cn(
                                             "flex w-full items-center gap-2.5 rounded-md border px-3 py-2 text-left text-sm font-medium transition-all",
                                             activeSection === item.id
-                                                ? "bg-white text-bright-blue shadow-sm"
-                                                : "border-transparent text-gray-500 hover:bg-white/80",
+                                                ? "border-border bg-control-active"
+                                                : "border-transparent text-gray-500 hover:bg-control",
                                         )}
                                         disabled={isPending}
                                     >
                                         <span
                                             className={
                                                 activeSection === item.id
-                                                    ? "text-bright-blue"
+                                                    ? ""
                                                     : "text-gray-500"
                                             }
                                         >
@@ -290,7 +290,7 @@ export default function ProjectSettingsModal({
                                             <CaretRightIcon
                                                 weight="duotone"
                                                 size={12}
-                                                className="ml-auto text-bright-blue"
+                                                className="ml-auto"
                                             />
                                         )}
                                     </button>

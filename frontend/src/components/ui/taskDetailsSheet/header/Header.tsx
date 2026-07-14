@@ -19,6 +19,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "../../shadcn/tooltip";
 import { useState } from "react";
 import { deleteTaskAction, generateInviteAction } from "@/data/actions";
 import { toast } from "sonner";
+import { cn } from "@/libs/utils";
+import { Button } from "../../shadcn/button";
 
 interface HeaderProps {
     isPending: boolean;
@@ -100,10 +102,10 @@ export default function Header({
             <div className="flex flex-wrap items-center gap-2">
                 {!hasPermission ? (
                     <>
-                        <div className="flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors hover:brightness-95">
+                        <div className="flex items-center gap-1.5 rounded-md border border-border bg-control px-2.5 py-1 text-xs font-medium capitalize">
                             {column.name}
                         </div>
-                        <div className="flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium capitalize transition-colors hover:brightness-95">
+                        <div className="flex items-center gap-1.5 rounded-md border border-border bg-control px-2.5 py-1 text-xs font-medium capitalize">
                             {priority}
                         </div>
                     </>
@@ -113,18 +115,18 @@ export default function Header({
                             <DropdownMenuTrigger asChild disabled={isPending}>
                                 <button
                                     type="button"
-                                    className="flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors hover:brightness-95"
+                                    className="flex items-center gap-1.5 rounded-md border border-border bg-control px-2.5 py-1 text-xs font-medium transition-colors hover:bg-control-active"
                                     disabled={isPending}
                                 >
                                     {column.name}
                                     <CaretDownIcon weight="duotone" size={12} />
                                 </button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent>
+                            <DropdownMenuContent className="border-border bg-control">
                                 {projectData.columns.map((projectColumn) => (
                                     <DropdownMenuItem
                                         key={projectColumn.id}
-                                        className="cursor-pointer gap-2 text-sm"
+                                        className="cursor-pointer gap-2 text-sm hover:!bg-control-active"
                                         onClick={() =>
                                             onColumnChange(projectColumn)
                                         }
@@ -146,20 +148,20 @@ export default function Header({
                             <DropdownMenuTrigger asChild disabled={isPending}>
                                 <button
                                     type="button"
-                                    className="flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium capitalize transition-colors hover:brightness-95"
+                                    className="flex items-center gap-1.5 rounded-md border border-border bg-control px-2.5 py-1 text-xs font-medium capitalize transition-colors hover:bg-control-active"
                                     disabled={isPending}
                                 >
                                     {priority}
                                     <CaretDownIcon weight="duotone" size={12} />
                                 </button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent>
+                            <DropdownMenuContent className="border-border bg-control">
                                 {(
                                     Object.keys(PRIORITY_CONFIG) as Priority[]
                                 ).map((priorityConfig) => (
                                     <DropdownMenuItem
                                         key={priorityConfig}
-                                        className="cursor-pointer gap-2 text-sm capitalize"
+                                        className="cursor-pointer gap-2 text-sm capitalize hover:!bg-control-active"
                                         onClick={() =>
                                             onPriorityChange(priorityConfig)
                                         }
@@ -185,23 +187,25 @@ export default function Header({
                     <>
                         <Tooltip>
                             <TooltipTrigger asChild disabled={isPending}>
-                                <button
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
                                     type="button"
                                     onClick={handleCopyLink}
-                                    className="flex size-8 items-center justify-center rounded-md transition-colors hover:bg-gray-100"
-                                    style={{
-                                        color: linkCopied
-                                            ? "#1E7E3A"
-                                            : "#6b7280",
-                                    }}
+                                    className={cn(
+                                        "size-8 transition-colors hover:bg-control-active [&_svg]:size-4",
+                                        linkCopied
+                                            ? "text-green-500"
+                                            : "text-control-text",
+                                    )}
                                     disabled={isPending}
                                 >
                                     {linkCopied ? (
-                                        <CheckIcon weight="duotone" size={18} />
+                                        <CheckIcon weight="duotone" />
                                     ) : (
-                                        <LinkIcon weight="duotone" size={16} />
+                                        <LinkIcon weight="duotone" />
                                     )}
-                                </button>
+                                </Button>
                             </TooltipTrigger>
                             <TooltipContent>
                                 {linkCopied ? "Copied!" : "Copy link"}
@@ -213,19 +217,18 @@ export default function Header({
                                 disabled={isPending}
                                 onClick={() => handleDeleteTask(task.id)}
                             >
-                                <button
+                                <Button
                                     type="button"
-                                    className="flex size-8 items-center justify-center rounded-md text-red-500 transition-colors hover:bg-red-50"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="size-8 text-control-text hover:bg-red-50 hover:text-red-400 dark:hover:bg-red-950  dark:hover:text-red-600 [&_svg]:size-4"
                                     onClick={() => {
                                         onOpenChange(false);
                                     }}
                                     disabled={isPending}
                                 >
-                                    <TrashSimpleIcon
-                                        weight="duotone"
-                                        size={16}
-                                    />
-                                </button>
+                                    <TrashSimpleIcon weight="duotone" />
+                                </Button>
                             </TooltipTrigger>
                             <TooltipContent>Delete task</TooltipContent>
                         </Tooltip>
@@ -233,14 +236,16 @@ export default function Header({
                 )}
                 <Tooltip>
                     <TooltipTrigger asChild disabled={isPending}>
-                        <button
+                        <Button
+                            size="icon"
+                            variant="ghost"
                             type="button"
-                            className="ml-1 flex size-8 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-100"
                             onClick={() => onOpenChange(false)}
+                            className="ml-1 size-8 text-control-text hover:bg-control-active [&_svg]:size-4"
                             disabled={isPending}
                         >
-                            <XIcon weight="duotone" size={18} />
-                        </button>
+                            <XIcon weight="duotone" />
+                        </Button>
                     </TooltipTrigger>
                     <TooltipContent>Close task</TooltipContent>
                 </Tooltip>

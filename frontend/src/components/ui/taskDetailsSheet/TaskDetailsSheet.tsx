@@ -245,7 +245,7 @@ export default function TaskDetailsSheet({
         <Sheet open={open} onOpenChange={onOpenChange}>
             <SheetContent
                 side="right"
-                className="flex min-w-[620px] max-w-[100vw] flex-col gap-0 bg-white p-0 outline-none [&>button:first-of-type]:hidden"
+                className="flex min-w-[620px] max-w-[100vw] flex-col gap-0 border-border bg-background-secondary p-0 outline-none [&>button:first-of-type]:hidden"
             >
                 <form
                     action={formAction}
@@ -400,7 +400,7 @@ export default function TaskDetailsSheet({
                     {hasPermission && (
                         <div
                             className={cn(
-                                "flex border-t px-6 py-3.5",
+                                "flex border-t border-border px-6 py-3.5",
                                 formState?.status === "error" ||
                                     formState?.status === "success" ||
                                     (formState?.details &&
@@ -442,7 +442,7 @@ export default function TaskDetailsSheet({
                                     variant="outline"
                                     disabled={isPending}
                                     onClick={() => onOpenChange(false)}
-                                    className="h-8 rounded-md px-4 text-sm hover:bg-gray-200"
+                                    className="h-8 bg-control px-4 text-sm text-control-text hover:bg-control-active"
                                 >
                                     Discard
                                 </Button>

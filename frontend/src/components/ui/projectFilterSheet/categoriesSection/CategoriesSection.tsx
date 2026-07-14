@@ -4,6 +4,7 @@ import { cn } from "@/libs/utils";
 import { FilterSortOptions } from "@/types/projectsOverview";
 import { Category } from "@/types/types";
 import { CheckIcon } from "@phosphor-icons/react";
+import { Button } from "../../shadcn/button";
 
 interface CategoriesSectionProps {
     categories: Category[];
@@ -27,7 +28,7 @@ export default function CategoriesSection({
                 {categories.map((category) => {
                     const active = options.categoryIds.includes(category.id);
                     return (
-                        <button
+                        <Button
                             key={category.id}
                             onClick={() =>
                                 onChange({
@@ -38,11 +39,12 @@ export default function CategoriesSection({
                                     ),
                                 })
                             }
+                            variant="outline"
                             className={cn(
-                                "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium capitalize transition-all",
+                                "h-6 gap-1.5 rounded-full px-3 text-xs font-medium capitalize",
                                 active
-                                    ? "border-transparent text-white"
-                                    : "border-border/60 bg-background text-muted-foreground hover:border-border",
+                                    ? "border-transparent text-white hover:text-white"
+                                    : "border-border bg-control text-control-text hover:bg-control-active",
                             )}
                             style={
                                 active
@@ -65,7 +67,7 @@ export default function CategoriesSection({
                                 <CheckIcon weight="bold" className="size-3" />
                             )}
                             {category.name}
-                        </button>
+                        </Button>
                     );
                 })}
             </div>

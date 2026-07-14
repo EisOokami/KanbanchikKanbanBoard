@@ -36,7 +36,7 @@ export default function ForgotPasswordForm() {
     );
 
     return (
-        <Card className="z-50 mx-auto w-full max-w-sm">
+        <Card className="z-50 mx-auto w-full max-w-sm border-border">
             <CardHeader className="pb-5">
                 <CardTitle className="text-2xl">Forgot password?</CardTitle>
                 <CardDescription>
@@ -52,11 +52,12 @@ export default function ForgotPasswordForm() {
                             name="email"
                             type="email"
                             placeholder="name@example.com"
-                            className={
+                            className={cn(
+                                "bg-control placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue",
                                 formState?.zodErrors?.email
                                     ? "border-red-500"
-                                    : ""
-                            }
+                                    : "",
+                            )}
                             defaultValue={
                                 formState?.formData?.get("email")?.toString() ??
                                 undefined

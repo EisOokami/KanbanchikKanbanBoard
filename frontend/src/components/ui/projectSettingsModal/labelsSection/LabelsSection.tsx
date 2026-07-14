@@ -89,7 +89,7 @@ export default function LabelsSection({
                     {formData.labels.map((label) => (
                         <div
                             key={label.id}
-                            className="flex items-center gap-3 rounded-md border px-3 py-2.5 transition-colors hover:bg-gray-50"
+                            className="flex items-center gap-3 rounded-md border border-border bg-control px-3 py-2.5 transition-colors hover:bg-control-active"
                         >
                             <ColorPicker
                                 value={label.color}
@@ -130,35 +130,39 @@ export default function LabelsSection({
                                 </span>
                             )}
                             <div className="flex items-center gap-1">
-                                <button
+                                <Button
                                     type="button"
+                                    variant="ghost"
+                                    size="icon"
                                     onClick={() => setEditingLabel(label.id)}
-                                    className="ml-1 flex size-6 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100"
+                                    className="ml-1 size-7 text-control-text hover:bg-control-active"
                                     disabled={isPending}
                                 >
                                     <PencilSimpleIcon
                                         weight="duotone"
                                         size={16}
                                     />
-                                </button>
-                                <button
+                                </Button>
+                                <Button
                                     type="button"
+                                    variant="ghost"
+                                    size="icon"
                                     onClick={() => removeLabel(label.id)}
-                                    className="flex size-6 items-center justify-center rounded-md text-gray-500 hover:bg-red-50 hover:text-red-400"
+                                    className="size-7 text-control-text hover:bg-red-50 hover:text-red-400 dark:hover:bg-red-950  dark:hover:text-red-600"
                                     disabled={isPending}
                                 >
                                     <TrashSimpleIcon
                                         weight="duotone"
                                         size={16}
                                     />
-                                </button>
+                                </Button>
                             </div>
                         </div>
                     ))}
                     {formData.newLabels.map((label) => (
                         <div
                             key={label.id}
-                            className="flex items-center gap-3 rounded-md border px-3 py-2.5 transition-colors hover:bg-gray-50"
+                            className="flex items-center gap-3 rounded-md border border-border bg-control px-3 py-2.5 transition-colors hover:bg-control-active"
                         >
                             <ColorPicker
                                 value={label.color}
@@ -225,7 +229,7 @@ export default function LabelsSection({
                         </div>
                     ))}
                 </div>
-                <div className="space-y-2 rounded-md border p-3">
+                <div className="space-y-2">
                     <div className="flex gap-2">
                         <ColorPicker
                             value={labelInputValues.color}
@@ -253,7 +257,7 @@ export default function LabelsSection({
                             }
                             onKeyDown={(e) => e.key === "Enter" && addLabel()}
                             className={cn(
-                                "h-8 flex-1 rounded-md text-sm placeholder:text-gray-300 focus-visible:ring-1 focus-visible:ring-bright-blue",
+                                "h-8 flex-1 rounded-md bg-control text-sm placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue",
                                 formState?.zodErrors?.labels
                                     ? "border-red-500"
                                     : "",

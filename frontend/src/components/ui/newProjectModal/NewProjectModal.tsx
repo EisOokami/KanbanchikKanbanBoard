@@ -12,7 +12,7 @@ import {
 import { NewProjectFormData } from "@/types/types";
 import { COLUMNS_CONFIG } from "@/constants/constants";
 import { cn } from "@/libs/utils";
-import { InfoIcon, PlusIcon } from "@phosphor-icons/react";
+import { InfoIcon, PlusIcon, XIcon } from "@phosphor-icons/react";
 import { BaseAction } from "@/types/actions";
 import { createProjectAction } from "@/data/actions";
 import { Loader2 } from "lucide-react";
@@ -88,7 +88,7 @@ export default function NewProjectModal({
     return (
         <Dialog open={open} onOpenChange={handleClose}>
             <DialogContent
-                className="flex max-h-[92svh] w-full max-w-2xl flex-col gap-0 overflow-hidden rounded-md border border-border/70 p-0 shadow-2xl"
+                className="flex max-h-[92svh] w-full max-w-2xl flex-col gap-0 overflow-hidden rounded-md border border-border bg-background-secondary p-0 shadow-2xl [&>button:first-of-type]:hidden"
                 aria-describedby={undefined}
             >
                 <form
@@ -96,14 +96,26 @@ export default function NewProjectModal({
                     noValidate
                     className="flex min-h-0 flex-1 flex-col"
                 >
-                    <DialogHeader className="flex-shrink-0 border-b border-border/60 px-6 pb-4 pt-6">
-                        <div className="min-w-0 flex-1">
-                            <DialogTitle className="mb-0.5 font-semibold">
-                                New Project
-                            </DialogTitle>
-                            <p className="text-xs text-muted-foreground">
-                                Configure your project settings
-                            </p>
+                    <DialogHeader className="flex-shrink-0 border-b border-border px-6 pb-4 pt-6">
+                        <div className="flex items-center justify-between">
+                            <div className="min-w-0 flex-1">
+                                <DialogTitle className="mb-0.5 font-semibold">
+                                    New Project
+                                </DialogTitle>
+                                <p className="text-xs text-muted-foreground">
+                                    Configure your project settings
+                                </p>
+                            </div>
+                            <Button
+                                size="icon"
+                                variant="ghost"
+                                type="button"
+                                onClick={() => onClose()}
+                                className="size-6 text-control-text hover:bg-control-active [&_svg]:size-4"
+                                disabled={isPending}
+                            >
+                                <XIcon weight="duotone" />
+                            </Button>
                         </div>
                     </DialogHeader>
                     <div className="flex-1 space-y-8 overflow-y-auto px-6 py-5">
@@ -152,7 +164,7 @@ export default function NewProjectModal({
                             onFormDataChange={setFormData}
                         />
                     </div>
-                    <DialogFooter className="flex flex-shrink-0 items-center !justify-between gap-3 border-t border-border/60 px-6 py-4">
+                    <DialogFooter className="flex flex-shrink-0 items-center !justify-between gap-3 border-t border-border px-6 py-4">
                         <div>
                             {formState?.status !== "success" &&
                                 formState?.message && (
@@ -186,7 +198,7 @@ export default function NewProjectModal({
                                 variant="outline"
                                 size="sm"
                                 onClick={handleClose}
-                                className="h-9"
+                                className="h-9 bg-control text-control-text hover:bg-control-active"
                                 disabled={isPending}
                             >
                                 Cancel

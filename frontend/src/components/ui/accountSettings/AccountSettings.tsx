@@ -21,6 +21,8 @@ import { cn, getInitials } from "@/libs/utils";
 import { CaretRightIcon, SignOutIcon } from "@phosphor-icons/react";
 import { User, UserData } from "@/types/types";
 import { logoutAction } from "@/data/actions";
+import { Button } from "../shadcn/button";
+import AppearanceSection from "./appearanceSection/AppearanceSection";
 
 interface AccountSettingsModalProps {
     open: boolean;
@@ -39,8 +41,8 @@ function renderSection(id: SectionId, userData: User): React.ReactNode {
             );
         case "security":
             return <SecuritySection />;
-        // case "appearance":
-        //     return <AppearanceSection />;
+        case "appearance":
+            return <AppearanceSection />;
     }
 }
 
@@ -67,12 +69,12 @@ export default function AccountSettingsModal({
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent
-                className="flex h-[88vh] max-h-[680px] w-[95vw] max-w-[860px] flex-col gap-0 overflow-hidden rounded-md border bg-white p-0 shadow-xl [&>button:last-child]:hidden"
+                className="flex h-[88vh] max-h-[680px] w-[95vw] max-w-[860px] flex-col gap-0 overflow-hidden rounded-md border-border bg-background-secondary p-0 shadow-xl [&>button:last-child]:hidden"
                 aria-describedby={undefined}
             >
                 <DialogTitle className="hidden"></DialogTitle>
                 <div className="flex flex-1 overflow-hidden">
-                    <nav className="flex w-48 shrink-0 flex-col border-r">
+                    <nav className="flex w-48 shrink-0 flex-col border-r border-border">
                         <div className="flex-1 space-y-0 overflow-y-auto px-2 py-3">
                             <div className="space-y-0.5">
                                 {NAV.map((item) => {
@@ -80,22 +82,23 @@ export default function AccountSettingsModal({
                                     const active = activeSection === item.id;
 
                                     return (
-                                        <button
+                                        <Button
                                             key={item.id}
+                                            variant="ghost"
                                             onClick={() =>
                                                 setActiveSection(item.id)
                                             }
                                             className={cn(
-                                                "flex w-full items-center gap-2.5 rounded-md border px-3 py-2 text-left text-sm font-medium transition-all",
+                                                "w-full justify-start gap-2.5 border px-3 py-2 text-sm font-medium transition-all",
                                                 active
-                                                    ? "bg-white text-bright-blue shadow-sm"
-                                                    : "border-transparent text-gray-500 hover:bg-white/80",
+                                                    ? "shadow-sm hover:bg-background dark:border-gray-500"
+                                                    : "border-transparent text-gray-500",
                                             )}
                                         >
                                             <span
                                                 className={
                                                     active
-                                                        ? "text-bright-blue"
+                                                        ? ""
                                                         : "text-gray-500"
                                                 }
                                             >
@@ -109,15 +112,15 @@ export default function AccountSettingsModal({
                                                 <CaretRightIcon
                                                     weight="duotone"
                                                     size={12}
-                                                    className="ml-auto text-bright-blue"
+                                                    className="ml-auto"
                                                 />
                                             )}
-                                        </button>
+                                        </Button>
                                     );
                                 })}
                             </div>
                         </div>
-                        <div className="border-t p-3">
+                        <div className="border-t border-border p-3">
                             <div className="mb-2 flex items-center gap-2 px-1">
                                 <Avatar className="size-7">
                                     <AvatarImage src={user.avatar_url} />
@@ -131,7 +134,7 @@ export default function AccountSettingsModal({
                                     </AvatarFallback>
                                 </Avatar>
                                 <div className="min-w-0">
-                                    <p className="truncate text-xs font-semibold text-gray-700">
+                                    <p className="truncate text-xs font-semibold text-gray-700 dark:text-gray-200">
                                         {user.name} {user.surname}
                                     </p>
                                     <p className="truncate text-[10px] text-gray-400">
@@ -139,17 +142,18 @@ export default function AccountSettingsModal({
                                     </p>
                                 </div>
                             </div>
-                            <button
+                            <Button
                                 type="button"
+                                variant="ghost"
                                 onClick={handleSignOut}
-                                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs text-gray-400 transition-colors hover:bg-rose-50 hover:text-rose-500"
+                                className="flex w-full items-center justify-start gap-2 rounded-md px-2 py-1.5 text-xs text-gray-400 transition-colors hover:text-rose-500"
                             >
                                 <SignOutIcon
                                     weight="duotone"
                                     className="size-4"
                                 />{" "}
                                 Sign out
-                            </button>
+                            </Button>
                         </div>
                     </nav>
                     <ScrollArea className="flex-1">

@@ -31,8 +31,10 @@ export default function PrioritySection({
                 {Object.values(PRIORITY_CONFIG).map((priority) => (
                     <Chip
                         key={priority.label}
-                        active={filters.priorities.includes(
-                            priority.label.toLowerCase() as Priority,
+                        active={filters.priorities.some(
+                            (priorityFilter) =>
+                                priorityFilter.toLowerCase() ===
+                                (priority.label.toLowerCase() as Priority),
                         )}
                         bgColor={priority.color ?? ""}
                         textColor="#fff"

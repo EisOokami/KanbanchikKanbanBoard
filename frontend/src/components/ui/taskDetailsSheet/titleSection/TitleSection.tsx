@@ -58,12 +58,12 @@ export default function TitleSection({
                         className={cn(
                             "group -mx-2 flex max-w-[550px] items-center gap-2 rounded-md px-2 py-1 text-xl font-bold leading-tight",
                             hasPermission &&
-                                "cursor-text transition-colors hover:bg-gray-50",
+                                "cursor-text transition-colors hover:bg-background-secondary",
                         )}
                     >
                         <span className="max-w-[95%] flex-1 break-words">
                             {title.trim() || (
-                                <span className="text-gray-300">
+                                <span className="text-gray-300 dark:text-gray-700">
                                     Untitled task
                                 </span>
                             )}

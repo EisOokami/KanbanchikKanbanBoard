@@ -110,13 +110,13 @@ export default function ProjectTaskRow({
                             className="size-4"
                         />
                     </button>
-                    <span className="font-mono text-xs font-medium text-gray-400">
+                    <span className="font-mono text-xs font-medium text-muted-foreground">
                         {task.id}
                     </span>
                 </div>
             </td>
             <td className="min-w-[240px] py-3 pr-4">
-                <span className="text-sm font-medium leading-snug text-gray-800">
+                <span className="text-sm font-medium leading-snug">
                     {task.title}
                 </span>
                 {task.labels.length > 0 && (
@@ -131,32 +131,34 @@ export default function ProjectTaskRow({
                             </span>
                         ))}
                         {task.labels.length > 2 && (
-                            <span className="text-[10px] text-gray-400">
+                            <span className="text-[10px] text-muted-foreground">
                                 +{task.labels.length - 2}
                             </span>
                         )}
                     </div>
                 )}
             </td>
-            <td className="flex w-36 flex-wrap gap-1 py-3 pr-4">
-                {task.categories.map((category) => (
-                    <span
-                        key={category.id}
-                        className="inline-flex truncate rounded-md border px-2 py-1 text-xs font-medium capitalize text-white"
-                        style={{ backgroundColor: category.color }}
-                    >
-                        {category.name}
-                    </span>
-                ))}
+            <td className="w-36 py-3 pr-4">
+                <div className="flex flex-wrap gap-1">
+                    {task.categories.map((category) => (
+                        <span
+                            key={category.id}
+                            className="inline-flex truncate rounded-md px-2 py-1 text-xs font-medium capitalize text-white"
+                            style={{ backgroundColor: category.color }}
+                        >
+                            {category.name}
+                        </span>
+                    ))}
+                </div>
             </td>
             <td className="w-36 py-3 pr-4">
-                <span className="inline-flex rounded-md border px-2.5 py-1 text-xs font-medium">
+                <span className="inline-flex rounded-md border border-border px-2.5 py-1 text-xs font-medium">
                     {column.name}
                 </span>
             </td>
             <td className="w-28 py-3 pr-4">
                 <span
-                    className="inline-flex rounded-md border px-2.5 py-1 text-xs font-medium text-white"
+                    className="inline-flex rounded-md px-2.5 py-1 text-xs font-medium text-white"
                     style={{ backgroundColor: priority.color }}
                 >
                     {showPriorityEmoji ? priority.emoji + " " : ""}
@@ -264,59 +266,56 @@ export default function ProjectTaskRow({
                     className="w-10 py-3 pr-3"
                     onClick={(e) => e.stopPropagation()}
                 >
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="size-6 opacity-0 transition-opacity group-hover:opacity-100"
+                    <AlertDialog>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="size-6 text-control-text opacity-0 transition-opacity hover:bg-control-active hover:!opacity-100 group-hover:opacity-50 [&_svg]:size-3.5"
+                                >
+                                    <DotsThreeOutlineIcon weight="duotone" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                                align="end"
+                                className="w-44 border-border bg-control"
                             >
-                                <DotsThreeOutlineIcon
-                                    weight="duotone"
-                                    className="size-3.5 text-gray-400"
-                                />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-44">
-                            <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                     <DropdownMenuItem
-                                        className="cursor-pointer gap-2 text-xs text-rose-500 focus:text-rose-500"
+                                        className="cursor-pointer gap-2 text-xs text-red-500 hover:!bg-control-active focus:text-red-500 dark:text-red-400 dark:focus:text-red-400"
                                         onSelect={(e) => e.preventDefault()}
                                     >
                                         <TrashIcon
                                             weight="duotone"
                                             className="size-3.5"
                                         />{" "}
-                                        Delete
+                                        Delete Task
                                     </DropdownMenuItem>
                                 </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                        <AlertDialogTitle>
-                                            Delete task?
-                                        </AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                            &quot;{task.title}&quot; will be
-                                            permanently deleted. This cannot be
-                                            undone.
-                                        </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                        <AlertDialogCancel>
-                                            Cancel
-                                        </AlertDialogCancel>
-                                        <AlertDialogAction
-                                            onClick={() => onDelete(task.id)}
-                                            className="bg-rose-600 hover:bg-rose-700"
-                                        >
-                                            Delete
-                                        </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                </AlertDialogContent>
-                            </AlertDialog>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                        <AlertDialogContent className="border-border">
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                    Delete task?
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    &quot;{task.title}&quot; will be permanently
+                                    deleted. This cannot be undone.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                    onClick={() => onDelete(task.id)}
+                                    className="bg-rose-600 text-white hover:bg-rose-700"
+                                >
+                                    Delete
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
                 </td>
             )}
         </tr>

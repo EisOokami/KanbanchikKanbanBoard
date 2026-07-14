@@ -40,7 +40,7 @@ export default function ResetPasswordForm() {
     const token = searchParams.get("token");
 
     return (
-        <Card className="z-50 mx-auto w-full max-w-sm">
+        <Card className="z-50 mx-auto w-full max-w-sm border-border">
             <CardHeader className="pb-5">
                 <CardTitle className="text-2xl">Forgot password?</CardTitle>
                 <CardDescription>
@@ -54,11 +54,12 @@ export default function ResetPasswordForm() {
                         <PasswordInput
                             id="newPassword"
                             name="newPassword"
-                            className={
+                            className={cn(
+                                "bg-control placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue",
                                 formState?.zodErrors?.newPassword
                                     ? "border-red-500"
-                                    : ""
-                            }
+                                    : "",
+                            )}
                             defaultValue={
                                 formState?.formData
                                     ?.get("newPassword")
@@ -75,11 +76,12 @@ export default function ResetPasswordForm() {
                         <PasswordInput
                             id="confirmPassword"
                             name="confirmPassword"
-                            className={
+                            className={cn(
+                                "bg-control placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue",
                                 formState?.zodErrors?.confirmPassword
                                     ? "border-red-500"
-                                    : ""
-                            }
+                                    : "",
+                            )}
                             defaultValue={
                                 formState?.formData
                                     ?.get("confirmPassword")

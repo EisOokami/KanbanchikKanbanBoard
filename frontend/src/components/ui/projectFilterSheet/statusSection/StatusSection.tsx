@@ -5,6 +5,7 @@ import { cn } from "@/libs/utils";
 import { FilterSortOptions } from "@/types/projectsOverview";
 import { Status } from "@/types/types";
 import { CheckIcon } from "@phosphor-icons/react";
+import { Button } from "../../shadcn/button";
 
 interface StatusSectionProps {
     options: FilterSortOptions;
@@ -25,8 +26,9 @@ export default function StatusSection({
             <div className="flex flex-wrap gap-2">
                 {(Object.keys(STATUS_LABELS) as Status[]).map((status) => {
                     const active = options.statuses.includes(status);
+
                     return (
-                        <button
+                        <Button
                             key={status}
                             onClick={() =>
                                 onChange({
@@ -37,18 +39,20 @@ export default function StatusSection({
                                     ),
                                 })
                             }
+                            variant="outline"
+                            size="sm"
                             className={cn(
-                                "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-all",
+                                "h-6 gap-1.5 rounded-full text-xs font-medium",
                                 active
                                     ? STATUS_COLORS[status]
-                                    : "border-border/60 bg-background text-muted-foreground hover:border-border",
+                                    : "border-border bg-control text-control-text hover:bg-control-active hover:text-foreground",
                             )}
                         >
                             {active && (
                                 <CheckIcon weight="bold" className="size-3" />
                             )}
                             {STATUS_LABELS[status]}
-                        </button>
+                        </Button>
                     );
                 })}
             </div>

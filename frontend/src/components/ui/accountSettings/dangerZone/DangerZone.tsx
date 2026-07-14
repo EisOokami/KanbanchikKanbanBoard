@@ -40,20 +40,19 @@ export default function DangerZone({ userData }: Readonly<DangerZoneProps>) {
     );
 
     return (
-        <form ref={formRef} action={formAction} className="mb-10 border-t pt-5">
+        <form
+            ref={formRef}
+            action={formAction}
+            className="mb-10 border-t border-border pt-5"
+        >
             <p className="mb-4 font-semibold">Danger zone</p>
-            <div
-                className="flex items-center justify-between rounded-md border p-4"
-                style={{ background: "#FEF0EF", border: "1px solid #FACACB" }}
-            >
+            <div className="flex items-center justify-between rounded-md border border-red-200 bg-red-50 p-4 dark:border-red-900/50 dark:bg-red-950/20">
                 <div>
-                    <p
-                        className="text-sm font-semibold"
-                        style={{ color: "#D93025" }}
-                    >
+                    <p className="text-sm font-semibold text-red-700 dark:text-red-400">
                         Delete account
                     </p>
-                    <p className="mt-0.5 text-xs text-gray-500">
+
+                    <p className="mt-0.5 text-xs text-muted-foreground">
                         Permanently delete your account and all data. This
                         cannot be undone.
                     </p>
@@ -62,32 +61,28 @@ export default function DangerZone({ userData }: Readonly<DangerZoneProps>) {
                     <AlertDialogTrigger asChild>
                         <Button
                             type="button"
-                            variant="outline"
+                            variant="destructive"
                             size="sm"
-                            className="h-8 shrink-0 gap-1.5 rounded-md px-3 text-xs font-medium"
-                            style={{
-                                border: "1px solid #FACACB",
-                                color: "#D93025",
-                                background: "#FFF",
-                            }}
+                            className="gap-1.5"
                             disabled={isPending}
                         >
                             <TrashSimpleIcon
                                 weight="duotone"
                                 className="size-4"
-                            />{" "}
+                            />
                             Delete
                         </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent>
+                    <AlertDialogContent className="border-border">
                         <AlertDialogHeader>
                             <AlertDialogTitle className="flex items-center gap-2">
                                 <WarningIcon
                                     weight="duotone"
-                                    className="size-5 text-rose-500"
+                                    className="size-5 text-red-500"
                                 />
                                 Delete your account?
                             </AlertDialogTitle>
+
                             <AlertDialogDescription>
                                 This will permanently delete your account, all
                                 your projects, tasks, and data. This action
@@ -105,7 +100,7 @@ export default function DangerZone({ userData }: Readonly<DangerZoneProps>) {
                             <AlertDialogAction
                                 type="button"
                                 onClick={() => formRef.current?.requestSubmit()}
-                                className="rounded-md bg-red-500 text-sm font-semibold text-white hover:bg-red-600"
+                                className="rounded-md bg-red-600 text-sm font-semibold text-white hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-500"
                                 disabled={isPending}
                             >
                                 Yes, delete everything

@@ -48,7 +48,7 @@ export default function DescriptionSection({
                     }
                     onBlur={() => setEditingDesc(false)}
                     rows={5}
-                    className="min-h-32 max-w-[550px] break-words rounded-md text-sm leading-relaxed placeholder:text-gray-300 focus-visible:ring-1 focus-visible:ring-bright-blue"
+                    className="min-h-32 max-w-[550px] break-words rounded-md bg-control text-sm leading-relaxed placeholder:text-control-active focus-visible:ring-1 focus-visible:ring-bright-blue"
                     placeholder="Add a description…"
                     disabled={isPending}
                 />
@@ -61,17 +61,19 @@ export default function DescriptionSection({
                             }
                         }}
                         className={cn(
-                            "group/desc min-h-32 max-w-[550px] rounded-md border px-3 py-2.5 text-sm leading-relaxed",
+                            "group/desc min-h-32 max-w-[550px] rounded-md border border-border bg-control px-3 py-2.5 text-sm leading-relaxed",
                             hasPermission &&
-                                "cursor-text transition-all hover:bg-gray-50",
+                                "cursor-text transition-all hover:bg-control-active",
                         )}
-                        style={{
-                            color: description ? "#374151" : "#D1D5DB",
-                        }}
                     >
-                        <p className="whitespace-pre-wrap break-words">
+                        <p
+                            className={cn(
+                                "whitespace-pre-wrap break-words",
+                                !description && "text-control-text",
+                            )}
+                        >
                             {description || "Add a description…"}
-                            {hasPermission && description && (
+                            {hasPermission && (
                                 <PencilSimpleIcon
                                     weight="duotone"
                                     size={16}

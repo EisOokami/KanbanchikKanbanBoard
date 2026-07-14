@@ -49,12 +49,11 @@ export default function CategoriesSection({
                     <span
                         key={category.id}
                         className={cn(
-                            "flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium capitalize",
+                            "flex items-center gap-1 rounded-md border border-border px-2 py-0.5 text-xs font-medium capitalize text-white",
                             hasPermission && "cursor-pointer",
                         )}
                         style={{
                             backgroundColor: category.color,
-                            color: "#fff",
                         }}
                         onClick={() => {
                             if (!isPending && hasPermission) {
@@ -71,14 +70,14 @@ export default function CategoriesSection({
                         <PopoverTrigger asChild disabled={isPending}>
                             <button
                                 type="button"
-                                className="flex items-center gap-1 text-xs text-gray-500 transition-colors hover:text-gray-600"
+                                className="flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-gray-500"
                                 disabled={isPending}
                             >
                                 <PlusIcon weight="duotone" size={14} />
                                 Add
                             </button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-52 p-2">
+                        <PopoverContent className="w-52 border-border p-2">
                             <div className="flex flex-wrap gap-1.5">
                                 {projectData.categories.map((category) => {
                                     const selectedCategory =
@@ -96,10 +95,10 @@ export default function CategoriesSection({
                                                 toggleCategory(category)
                                             }
                                             className={cn(
-                                                "rounded-md border px-2.5 py-1 text-xs font-medium capitalize transition-colors",
+                                                "rounded-md border border-border px-2.5 py-1 text-xs font-medium capitalize transition-colors",
                                                 selectedCategory
                                                     ? ""
-                                                    : "border-gray-200 text-gray-600 hover:bg-gray-50",
+                                                    : "text-control-text hover:bg-control-active",
                                             )}
                                             style={{
                                                 backgroundColor:

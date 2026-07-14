@@ -25,12 +25,12 @@ export default function ListTh({
     return (
         <th
             className={cn(
-                "cursor-pointer select-none whitespace-nowrap py-2.5 pr-4 text-left text-sm font-normal tracking-wider text-gray-400",
+                "cursor-pointer select-none whitespace-nowrap py-2.5 pr-4 text-left text-sm font-normal tracking-wider",
                 className,
             )}
             onClick={() => onSort(field)}
         >
-            <span className="flex items-center gap-1 transition-colors hover:text-gray-600">
+            <span className="flex items-center gap-1 text-muted-foreground transition-colors hover:text-foreground">
                 {Icon && <Icon weight="duotone" className="size-4" />}
                 {label}
                 <SortIcon

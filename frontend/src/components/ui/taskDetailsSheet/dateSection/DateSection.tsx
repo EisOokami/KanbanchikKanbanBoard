@@ -29,8 +29,12 @@ export default function DateSection({
     const [startDateOpen, setStartDateOpen] = useState<boolean>(false);
     const [dueDateOpen, setDueDateOpen] = useState<boolean>(false);
 
-    const dueDateMeta = dateMeta(dueDate);
-    const startDateMeta = dateMeta(startDate);
+    const startDateMeta = dateMeta(startDate, {
+        showOverdue: false,
+    });
+    const dueDateMeta = dateMeta(dueDate, {
+        showOverdue: true,
+    });
 
     return (
         <>
@@ -46,27 +50,27 @@ export default function DateSection({
                         <PopoverTrigger asChild disabled={isPending}>
                             <button
                                 type="button"
-                                className="-mx-2 flex items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-gray-50"
+                                className="-mx-2 flex items-center gap-2 rounded-md px-2 py-1 text-control-text transition-colors hover:bg-control-active"
                                 disabled={isPending}
                             >
                                 {startDateMeta ? (
                                     <span
-                                        className="flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-sm font-medium"
-                                        style={{
-                                            background: startDateMeta.bg,
-                                            color: startDateMeta.color,
-                                            border: `1px solid ${startDateMeta.border}`,
-                                        }}
+                                        className={cn(
+                                            "flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-sm font-medium",
+                                            startDateMeta.className,
+                                        )}
                                     >
                                         <CalendarIcon
                                             weight="duotone"
                                             size={14}
                                         />
-                                        {startDateMeta.text !== "Overdue" &&
-                                        startDateMeta.text !== "Today" &&
-                                        startDateMeta.text !== "Tomorrow"
-                                            ? startDateMeta.text
-                                            : `${startDateMeta.text} · ${format(startDate!, "MMM d")}`}
+                                        {[
+                                            "Overdue",
+                                            "Today",
+                                            "Tomorrow",
+                                        ].includes(startDateMeta.text)
+                                            ? `${startDateMeta.text} · ${format(startDate!, "MMM d")}`
+                                            : startDateMeta.text}
                                     </span>
                                 ) : (
                                     <span className="text-sm text-gray-300">
@@ -89,7 +93,7 @@ export default function DateSection({
                                 )}
                             </button>
                         </PopoverTrigger>
-                        <PopoverContent className="p-0">
+                        <PopoverContent className="w-fit rounded-md border-border p-0">
                             <Calendar
                                 mode="single"
                                 selected={startDate ?? undefined}
@@ -98,6 +102,7 @@ export default function DateSection({
                                     setStartDateOpen(false);
                                 }}
                                 disabled={isPending}
+                                className="rounded-md"
                             />
                         </PopoverContent>
                     </Popover>
@@ -111,19 +116,17 @@ export default function DateSection({
                     >
                         {startDateMeta ? (
                             <span
-                                className="flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-sm font-medium"
-                                style={{
-                                    background: startDateMeta.bg,
-                                    color: startDateMeta.color,
-                                    border: `1px solid ${startDateMeta.border}`,
-                                }}
+                                className={cn(
+                                    "flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-sm font-medium",
+                                    startDateMeta.className,
+                                )}
                             >
                                 <CalendarIcon weight="duotone" size={14} />
-                                {startDateMeta.text !== "Overdue" &&
-                                startDateMeta.text !== "Today" &&
-                                startDateMeta.text !== "Tomorrow"
-                                    ? startDateMeta.text
-                                    : `${startDateMeta.text} · ${format(startDate!, "MMM d")}`}
+                                {["Overdue", "Today", "Tomorrow"].includes(
+                                    startDateMeta.text,
+                                )
+                                    ? `${startDateMeta.text} · ${format(startDate!, "MMM d")}`
+                                    : startDateMeta.text}
                             </span>
                         ) : (
                             <span className="text-sm text-gray-300">
@@ -142,27 +145,27 @@ export default function DateSection({
                         <PopoverTrigger asChild disabled={isPending}>
                             <button
                                 type="button"
-                                className="-mx-2 flex items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-gray-50"
+                                className="-mx-2 flex items-center gap-2 rounded-md px-2 py-1 text-control-text transition-colors hover:bg-control-active"
                                 disabled={isPending}
                             >
                                 {dueDateMeta ? (
                                     <span
-                                        className="flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-sm font-medium"
-                                        style={{
-                                            background: dueDateMeta.bg,
-                                            color: dueDateMeta.color,
-                                            border: `1px solid ${dueDateMeta.border}`,
-                                        }}
+                                        className={cn(
+                                            "flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-sm font-medium",
+                                            dueDateMeta.className,
+                                        )}
                                     >
                                         <CalendarIcon
                                             weight="duotone"
                                             size={14}
                                         />
-                                        {dueDateMeta.text !== "Overdue" &&
-                                        dueDateMeta.text !== "Today" &&
-                                        dueDateMeta.text !== "Tomorrow"
-                                            ? dueDateMeta.text
-                                            : `${dueDateMeta.text} · ${format(dueDate!, "MMM d")}`}
+                                        {[
+                                            "Overdue",
+                                            "Today",
+                                            "Tomorrow",
+                                        ].includes(dueDateMeta.text)
+                                            ? `${dueDateMeta.text} · ${format(dueDate!, "MMM d")}`
+                                            : dueDateMeta.text}
                                     </span>
                                 ) : (
                                     <span className="text-sm text-gray-300">
@@ -185,7 +188,7 @@ export default function DateSection({
                                 )}
                             </button>
                         </PopoverTrigger>
-                        <PopoverContent className="p-0">
+                        <PopoverContent className="w-fit rounded-md border-border p-0">
                             <Calendar
                                 mode="single"
                                 selected={dueDate ?? undefined}
@@ -194,6 +197,7 @@ export default function DateSection({
                                     setDueDateOpen(false);
                                 }}
                                 disabled={isPending}
+                                className="rounded-md"
                             />
                         </PopoverContent>
                     </Popover>
@@ -207,19 +211,17 @@ export default function DateSection({
                     >
                         {dueDateMeta ? (
                             <span
-                                className="flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-sm font-medium"
-                                style={{
-                                    background: dueDateMeta.bg,
-                                    color: dueDateMeta.color,
-                                    border: `1px solid ${dueDateMeta.border}`,
-                                }}
+                                className={cn(
+                                    "flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-sm font-medium",
+                                    dueDateMeta.className,
+                                )}
                             >
                                 <CalendarIcon weight="duotone" size={14} />
-                                {dueDateMeta.text !== "Overdue" &&
-                                dueDateMeta.text !== "Today" &&
-                                dueDateMeta.text !== "Tomorrow"
-                                    ? dueDateMeta.text
-                                    : `${dueDateMeta.text} · ${format(dueDate!, "MMM d")}`}
+                                {["Overdue", "Today", "Tomorrow"].includes(
+                                    dueDateMeta.text,
+                                )
+                                    ? `${dueDateMeta.text} · ${format(dueDate!, "MMM d")}`
+                                    : dueDateMeta.text}
                             </span>
                         ) : (
                             <span className="text-sm text-gray-300">

@@ -68,7 +68,7 @@ export default function NavMain({ projectsData }: Readonly<NavMainProps>) {
                             <CollapsibleTrigger asChild>
                                 <SidebarMenuButton
                                     tooltip={item.title}
-                                    className="group transition-colors hover:!bg-gray-200 group-data-[collapsible=icon]:!p-1.5 [&>svg]:size-5"
+                                    className="group transition-colors group-data-[collapsible=icon]:!p-1.5 [&>svg]:size-5"
                                 >
                                     <item.icon weight="duotone" />
                                     <span>{item.title}</span>
@@ -89,7 +89,7 @@ export default function NavMain({ projectsData }: Readonly<NavMainProps>) {
                                         <SidebarMenuSubItem key={project.id}>
                                             <SidebarMenuSubButton
                                                 asChild
-                                                className="transition-colors hover:bg-gray-200"
+                                                className="transition-colors"
                                             >
                                                 <Link
                                                     href={`${item.url}/${project.slug}`}
@@ -119,7 +119,7 @@ export default function NavMain({ projectsData }: Readonly<NavMainProps>) {
                             asChild
                             tooltip={item.title}
                             isActive={item.url === pathname}
-                            className="border border-transparent transition-colors hover:bg-gray-200 hover:text-black data-[active=true]:border-gray-300 data-[active=true]:bg-gray-200 data-[active=true]:text-black group-data-[collapsible=icon]:!p-[5px]"
+                            className="border border-transparent transition-colors group-data-[collapsible=icon]:!p-[5px]"
                         >
                             <Link href={item.url} className="[&>svg]:size-5">
                                 <item.icon weight="duotone" />

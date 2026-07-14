@@ -43,13 +43,13 @@ export default function MembersSection({
                     <MagnifyingGlassIcon
                         weight="duotone"
                         size={16}
-                        className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400"
+                        className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-control-text"
                     />
                     <Input
                         placeholder="Search…"
                         value={memberSearch}
                         onChange={(e) => setMemberSearch(e.target.value)}
-                        className="h-8 rounded-md pl-8 text-xs placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-bright-blue"
+                        className="h-8 rounded-md bg-control pl-8 text-xs placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue"
                     />
                 </div>
                 {filteredMembers.map((member) => {
@@ -61,7 +61,7 @@ export default function MembersSection({
                         <label
                             key={member.id}
                             className={cn(
-                                "flex cursor-pointer items-center gap-3 rounded-md border px-2 py-1.5 transition-colors hover:bg-gray-50",
+                                "flex cursor-pointer items-center gap-3 rounded-md border px-2 py-1.5 text-control-text transition-colors hover:bg-control-active hover:text-foreground",
                                 active
                                     ? "border-bright-blue"
                                     : "border-transparent",
@@ -89,10 +89,10 @@ export default function MembersSection({
                                 </AvatarFallback>
                             </Avatar>
                             <span
-                                className="text-sm"
-                                style={{
-                                    color: active ? "" : "#374151",
-                                }}
+                                className={cn(
+                                    "text-sm",
+                                    active && "text-foreground",
+                                )}
                             >
                                 {member.name} {member.surname}
                             </span>

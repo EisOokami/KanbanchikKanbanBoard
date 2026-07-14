@@ -25,6 +25,18 @@ import {
     TrashIcon,
 } from "@phosphor-icons/react";
 import { Progress } from "../shadcn/progress";
+import { Button } from "../shadcn/button";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "../shadcn/alert-dialog";
 
 interface KanbanTaskProps {
     task: Task;
@@ -77,7 +89,7 @@ export default function KanbanTask({
             {...attributes}
             {...listeners}
             className={cn(
-                "group relative cursor-default select-none rounded-xl border bg-white p-3 text-left",
+                "group relative cursor-default select-none rounded-xl border border-border bg-background-secondary p-3 text-left",
                 userData.role === "viewer" ||
                     (userData.role === "member" &&
                         userData.id !== task.creator_id &&
@@ -85,7 +97,7 @@ export default function KanbanTask({
                             (member) => member.id === userData.id,
                         ))
                     ? "cursor-pointer"
-                    : "cursor-grab transition-shadow duration-150 hover:border-gray-300 hover:shadow-md",
+                    : "cursor-grab transition-all duration-150 hover:border-gray-300 hover:shadow-md dark:hover:border-gray-700",
             )}
         >
             <div className="mb-2.5 flex items-center justify-between gap-2">
@@ -116,48 +128,69 @@ export default function KanbanTask({
                         </span>
                     ))}
                 </div>
-                {!(
-                    userData.role === "viewer" ||
-                    (userData.role === "member" &&
-                        userData.id !== task.creator_id)
-                ) && (
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <button
-                                onClick={(e) => e.stopPropagation()}
-                                className="ml-auto flex-shrink-0 rounded p-0.5 opacity-0 transition-opacity hover:bg-gray-100 hover:!opacity-100 group-hover:opacity-50"
-                            >
-                                <DotsThreeOutlineIcon
-                                    weight="duotone"
-                                    className="size-3.5 text-gray-400"
-                                />
-                            </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent
-                            align="end"
-                            className="w-36 border"
-                        >
-                            <DropdownMenuItem
-                                className="cursor-pointer gap-2 text-xs text-red-400 focus:bg-red-500/10 focus:text-red-400"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onDelete(task.id);
-                                }}
-                            >
-                                <TrashIcon
-                                    weight="duotone"
-                                    className="size-3"
-                                />{" "}
-                                Delete task
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                )}
+                <div onClick={(e) => e.stopPropagation()}>
+                    {!(
+                        userData.role === "viewer" ||
+                        (userData.role === "member" &&
+                            userData.id !== task.creator_id)
+                    ) && (
+                        <AlertDialog>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="ml-auto size-6 text-control-text opacity-0 transition-opacity hover:bg-control-active hover:!opacity-100 group-hover:opacity-50 [&_svg]:size-4"
+                                    >
+                                        <DotsThreeOutlineIcon weight="duotone" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                    align="end"
+                                    className="w-36 border-border bg-control"
+                                >
+                                    <AlertDialogTrigger asChild>
+                                        <DropdownMenuItem className="cursor-pointer gap-2 text-xs text-red-500 hover:!bg-control-active focus:text-red-500 dark:text-red-400 dark:focus:text-red-400">
+                                            <TrashIcon
+                                                weight="duotone"
+                                                className="size-3.5"
+                                            />{" "}
+                                            Delete task
+                                        </DropdownMenuItem>
+                                    </AlertDialogTrigger>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                            <AlertDialogContent className="border-border">
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                        Delete task?
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        &quot;{task.title}&quot; will be
+                                        permanently deleted. This cannot be
+                                        undone.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>
+                                        Cancel
+                                    </AlertDialogCancel>
+                                    <AlertDialogAction
+                                        onClick={() => onDelete(task.id)}
+                                        className="bg-rose-600 text-white hover:bg-rose-700"
+                                    >
+                                        Delete
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    )}
+                </div>
             </div>
             <p className="mb-1 break-words text-sm font-medium leading-snug">
                 {task.title}
             </p>
-            <p className="mb-2 line-clamp-1 break-words text-xs text-gray-500">
+            <p className="mb-2 line-clamp-1 break-words text-xs text-muted-foreground">
                 {task.description}
             </p>
             {(!task.show_progress || task.subtasks_total === 0) &&
@@ -237,7 +270,7 @@ export default function KanbanTask({
                     />
                 </div>
             ) : null}
-            <div className="flex items-center justify-between gap-2 border-t pt-2">
+            <div className="flex items-center justify-between gap-2 border-t border-border pt-2">
                 <div className="flex items-center gap-2">
                     {task.members.length ? (
                         <div className="flex -space-x-1.5">

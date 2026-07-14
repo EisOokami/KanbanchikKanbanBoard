@@ -148,7 +148,7 @@ export default function ColumnsSection({
                                 (e.preventDefault(), addColumn())
                             }
                             className={cn(
-                                "h-8 flex-1 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue",
+                                "h-8 flex-1 bg-control text-sm placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue",
                                 formState?.zodErrors?.columns
                                     ? "border-red-500"
                                     : "",

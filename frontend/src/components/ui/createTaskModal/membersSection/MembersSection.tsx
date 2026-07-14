@@ -37,7 +37,7 @@ export default function MembersSection({
                                 key={member.id}
                                 type="button"
                                 onClick={() => onMemberChange(member)}
-                                className="flex items-center gap-1.5 rounded-md border border-border/60 bg-muted/60 px-2.5 py-1.5 transition-colors hover:bg-muted/40 hover:text-foreground"
+                                className="flex items-center gap-1.5 rounded-md border border-border bg-control px-2.5 py-1.5 text-foreground transition-colors hover:bg-control-active"
                                 disabled={isPending}
                             >
                                 <Avatar
@@ -86,7 +86,7 @@ export default function MembersSection({
                                 key={member.id}
                                 type="button"
                                 onClick={() => onMemberChange(member)}
-                                className="flex items-center gap-1.5 rounded-md border border-border/60 bg-muted/60 px-2.5 py-1.5 transition-colors hover:bg-muted/40 hover:text-foreground"
+                                className="flex items-center gap-1.5 rounded-md border border-border bg-control px-2.5 py-1.5 text-control-text transition-colors hover:bg-control-active hover:text-foreground"
                                 disabled={isPending}
                             >
                                 <Avatar

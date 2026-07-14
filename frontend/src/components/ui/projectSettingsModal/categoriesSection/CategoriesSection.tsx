@@ -85,14 +85,14 @@ export default function CategoriesSection({
     };
 
     return (
-        <div className="space-y-2">
+        <div className="space-y-1">
             <h3 className="font-semibold">Categories</h3>
             <div className="space-y-4">
                 <div className="space-y-2">
                     {formData.categories.map((category) => (
                         <div
                             key={category.id}
-                            className="flex items-center gap-3 rounded-md border px-3 py-2.5 transition-colors hover:bg-gray-50"
+                            className="flex items-center gap-3 rounded-md border border-border bg-control px-3 py-2.5 transition-colors hover:bg-control-active"
                         >
                             <ColorPicker
                                 value={category.color}
@@ -131,37 +131,41 @@ export default function CategoriesSection({
                                 </span>
                             )}
                             <div className="flex items-center gap-1">
-                                <button
+                                <Button
                                     type="button"
+                                    variant="ghost"
+                                    size="icon"
                                     onClick={() =>
                                         setEditingCategory(category.id)
                                     }
-                                    className="ml-1 flex size-6 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100"
+                                    className="ml-1 size-7 text-control-text hover:bg-control-active"
                                     disabled={isPending}
                                 >
                                     <PencilSimpleIcon
                                         weight="duotone"
                                         size={16}
                                     />
-                                </button>
-                                <button
+                                </Button>
+                                <Button
                                     type="button"
+                                    variant="ghost"
+                                    size="icon"
                                     onClick={() => removeCategory(category.id)}
-                                    className="flex size-6 items-center justify-center rounded-md text-gray-500 hover:bg-red-50 hover:text-red-400"
+                                    className="size-7 text-control-text hover:bg-red-50 hover:text-red-400 dark:hover:bg-red-950  dark:hover:text-red-600"
                                     disabled={isPending}
                                 >
                                     <TrashSimpleIcon
                                         weight="duotone"
                                         size={16}
                                     />
-                                </button>
+                                </Button>
                             </div>
                         </div>
                     ))}
                     {formData.newCategories.map((category) => (
                         <div
                             key={category.id}
-                            className="flex items-center gap-3 rounded-md border px-3 py-2.5 transition-colors hover:bg-gray-50"
+                            className="flex items-center gap-3 rounded-md border border-border bg-control px-3 py-2.5 transition-colors hover:bg-control-active"
                         >
                             <ColorPicker
                                 value={category.color}
@@ -228,7 +232,7 @@ export default function CategoriesSection({
                         </div>
                     ))}
                 </div>
-                <div className="flex items-center gap-2 rounded-md border p-3">
+                <div className="flex items-center gap-2">
                     <ColorPicker
                         value={categoryInputValues.color}
                         onChange={(color) =>
@@ -259,7 +263,7 @@ export default function CategoriesSection({
                                 e.key === "Enter" && addCategory()
                             }
                             className={cn(
-                                "h-8 flex-1 rounded-md text-sm placeholder:text-gray-300 focus-visible:ring-1 focus-visible:ring-bright-blue",
+                                "h-8 flex-1 rounded-md bg-control text-sm placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue",
                                 formState?.zodErrors?.categories
                                     ? "border-red-500"
                                     : "",

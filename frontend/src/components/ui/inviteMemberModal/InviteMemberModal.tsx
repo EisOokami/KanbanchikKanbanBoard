@@ -165,7 +165,7 @@ export default function InviteMemberModal({
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent
-                className="w-[95vw] max-w-[560px] gap-0 overflow-hidden p-0 shadow-xl [&>button:first-of-type]:hidden"
+                className="w-[95vw] max-w-[560px] gap-0 overflow-hidden border-border p-0 shadow-md [&>button:first-of-type]:hidden"
                 aria-describedby={undefined}
             >
                 <form
@@ -194,34 +194,36 @@ export default function InviteMemberModal({
                                 </DialogTitle>
                                 {(userData.role === "admin" ||
                                     userData.role === "owner") && (
-                                    <p className="max-w-[300px] text-xs text-gray-500">
+                                    <p className="max-w-[300px] text-xs text-muted-foreground">
                                         We&apos;ll email them instructions and a
                                         link to join your Project
                                     </p>
                                 )}
                             </div>
-                            <button
+                            <Button
+                                size="icon"
+                                variant="ghost"
                                 type="button"
                                 onClick={() => onOpenChange(false)}
-                                className="rounded-md p-1.5 transition-colors hover:bg-gray-100"
+                                className="size-6 text-control-text hover:bg-control-active [&_svg]:size-4"
                                 disabled={isPending}
                             >
-                                <XIcon weight="duotone" size={16} />
-                            </button>
+                                <XIcon weight="duotone" />
+                            </Button>
                         </div>
                         {(userData.role === "admin" ||
                             userData.role === "owner") && (
-                            <div className="flex gap-1.5 rounded-xl bg-gray-100 p-1.5">
+                            <div className="flex gap-1.5 rounded-md bg-background-secondary p-1.5">
                                 {(["invite", "members"] as const).map((tab) => (
-                                    <button
+                                    <Button
                                         key={tab}
                                         type="button"
                                         onClick={() => setSelectedTab(tab)}
                                         className={cn(
-                                            "flex flex-1 items-center justify-center gap-2 rounded-md py-2 text-sm font-medium transition-all",
+                                            "flex-1 gap-2 rounded-md py-2 text-sm font-medium text-control-text transition-all",
                                             tab === selectedTab
-                                                ? "bg-white shadow-sm"
-                                                : "text-gray-500 hover:bg-white/60",
+                                                ? "cursor-default bg-control-active text-foreground shadow-sm hover:bg-control-active"
+                                                : "bg-control hover:bg-control-active hover:text-foreground",
                                         )}
                                         disabled={isPending}
                                     >
@@ -239,7 +241,7 @@ export default function InviteMemberModal({
                                         {tab === "invite"
                                             ? "Invite people"
                                             : `Members (${members.length})`}
-                                    </button>
+                                    </Button>
                                 ))}
                             </div>
                         )}
@@ -252,7 +254,7 @@ export default function InviteMemberModal({
                                         <EnvelopeIcon
                                             weight="duotone"
                                             size={14}
-                                            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                                            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-control-text"
                                         />
                                         <Input
                                             type="email"
@@ -266,7 +268,7 @@ export default function InviteMemberModal({
                                             onChange={(e) =>
                                                 setInviteEmail(e.target.value)
                                             }
-                                            className="h-8 rounded-md pl-9"
+                                            className="h-8 rounded-md bg-control pl-9 placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue"
                                             disabled={isPending}
                                         />
                                     </div>
@@ -285,26 +287,25 @@ export default function InviteMemberModal({
                                     {invites.map((invite) => (
                                         <div
                                             key={invite}
-                                            className="flex items-center justify-between rounded-md border p-2"
+                                            className="flex h-8 items-center justify-between rounded-md border border-border px-3"
                                         >
                                             <div className="flex flex-col">
                                                 <span className="text-sm font-medium">
                                                     {invite}
                                                 </span>
                                             </div>
-                                            <button
+                                            <Button
                                                 type="button"
+                                                size="icon"
+                                                variant="ghost"
                                                 onClick={() =>
                                                     removeInvite(invite)
                                                 }
-                                                className="text-red-500"
+                                                className="size-5 text-control-text hover:bg-red-50 hover:text-red-400 dark:hover:bg-red-950  dark:hover:text-red-600 [&_svg]:size-3.5"
                                                 disabled={isPending}
                                             >
-                                                <XIcon
-                                                    weight="duotone"
-                                                    size={14}
-                                                />
-                                            </button>
+                                                <XIcon weight="duotone" />
+                                            </Button>
                                         </div>
                                     ))}
                                 </div>
@@ -317,12 +318,12 @@ export default function InviteMemberModal({
                                     />
                                 </div>
                                 <Separator />
-                                <div className="flex items-center gap-2 rounded-md border bg-gray-50 p-3">
-                                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-gray-200">
+                                <div className="flex items-center gap-2 rounded-md border border-border p-3">
+                                    <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-gray-200 dark:bg-zinc-800">
                                         <LinkIcon
                                             weight="duotone"
                                             size={13}
-                                            className="text-gray-500"
+                                            className="text-gray-500 dark:text-zinc-400"
                                         />
                                     </div>
                                     <div className="min-w-0 flex-1">
@@ -336,10 +337,10 @@ export default function InviteMemberModal({
                                                 type="button"
                                                 onClick={handleCopyLink}
                                                 className={cn(
-                                                    "flex h-8 items-center gap-1.5 rounded-md border px-3 text-xs font-medium transition-all",
+                                                    "flex h-8 items-center gap-1.5 rounded-md border border-border px-3 text-xs font-medium transition-all",
                                                     linkCopied
                                                         ? "border-green-300 text-green-500"
-                                                        : "bg-gray-100 text-gray-500",
+                                                        : "bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-zinc-900 dark:text-zinc-500 dark:hover:bg-zinc-950",
                                                 )}
                                                 disabled={isPending}
                                             >
@@ -372,7 +373,7 @@ export default function InviteMemberModal({
                                     <MagnifyingGlassIcon
                                         weight="duotone"
                                         size={14}
-                                        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                                        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-control-text"
                                     />
                                     <Input
                                         name="search"
@@ -386,7 +387,7 @@ export default function InviteMemberModal({
                                                 ?.get("search")
                                                 ?.toString() ?? undefined
                                         }
-                                        className="h-9 rounded-md pl-9 text-xs placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-bright-blue"
+                                        className="h-9 rounded-md bg-control pl-9 text-xs placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue"
                                         disabled={isPending}
                                     />
                                 </div>
@@ -406,14 +407,14 @@ export default function InviteMemberModal({
                                         </div>
                                     ) : (
                                         <div className="flex flex-col items-center gap-2 py-10">
-                                            <div className="flex size-10 items-center justify-center rounded-md bg-gray-100">
+                                            <div className="flex size-10 items-center justify-center rounded-md bg-gray-100 dark:bg-zinc-900">
                                                 <UsersIcon
                                                     weight="duotone"
                                                     size={18}
-                                                    className="text-gray-500"
+                                                    className="text-gray-500 dark:text-zinc-500"
                                                 />
                                             </div>
-                                            <p className="text-sm text-gray-500">
+                                            <p className="text-sm text-gray-500 dark:text-zinc-500">
                                                 No members found
                                             </p>
                                         </div>
@@ -421,7 +422,7 @@ export default function InviteMemberModal({
                                 </ScrollArea>
                                 {(userData.role === "admin" ||
                                     userData.role === "owner") && (
-                                    <div className="flex items-center justify-between rounded-md border bg-gray-50 px-3 py-2 text-xs">
+                                    <div className="flex items-center justify-between rounded-md border border-border bg-control px-3 py-2 text-xs">
                                         <button
                                             type="button"
                                             onClick={() =>
@@ -469,8 +470,8 @@ export default function InviteMemberModal({
                                 ))}
                         </div>
                     </div>
-                    <div className="flex items-center justify-between border-t px-6 py-3">
-                        <p className="text-xs text-gray-500">
+                    <div className="flex items-center justify-between border-t border-border px-6 py-3">
+                        <p className="text-xs text-muted-foreground">
                             {selectedTab === "invite"
                                 ? "Invites will be sent by email"
                                 : `${members.length} member${members.length !== 1 ? "s" : ""} on this project`}

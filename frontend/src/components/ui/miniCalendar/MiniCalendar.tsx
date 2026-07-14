@@ -8,6 +8,7 @@ import {
 } from "@/libs/utils";
 import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
 import { useState } from "react";
+import { Button } from "../shadcn/button";
 
 interface MiniCalendarProps {
     viewYear: number;
@@ -24,84 +25,99 @@ export default function MiniCalendar({
     onSelectDate,
     eventDates,
 }: Readonly<MiniCalendarProps>) {
-    const [mYear, setMYear] = useState<number>(viewYear);
-    const [mMonth, setMMonth] = useState<number>(viewMonth);
+    const [year, setYear] = useState<number>(viewYear);
+    const [month, setMonth] = useState<number>(viewMonth);
 
-    const daysInMonth = getDaysInMonth(mYear, mMonth);
-    const firstDay = getFirstDayOfMonth(mYear, mMonth);
+    const daysInMonth = getDaysInMonth(year, month);
+    const firstDay = getFirstDayOfMonth(year, month);
     const today = todayStr();
 
     const prev = (): void => {
-        if (mMonth === 0) {
-            setMMonth(11);
-            setMYear((y) => y - 1);
-        } else setMMonth((m) => m - 1);
+        if (month === 0) {
+            setMonth(11);
+            setYear((prevState) => prevState - 1);
+        } else {
+            setMonth((prevState) => prevState - 1);
+        }
     };
     const next = (): void => {
-        if (mMonth === 11) {
-            setMMonth(0);
-            setMYear((y) => y + 1);
-        } else setMMonth((m) => m + 1);
+        if (month === 11) {
+            setMonth(0);
+            setYear((prevState) => prevState + 1);
+        } else {
+            setMonth((prevState) => prevState + 1);
+        }
     };
 
     const cells: (number | null)[] = [];
-    for (let i = 0; i < firstDay; i++) cells.push(null);
-    for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+
+    for (let i = 0; i < firstDay; i++) {
+        cells.push(null);
+    }
+    for (let d = 1; d <= daysInMonth; d++) {
+        cells.push(d);
+    }
 
     return (
         <div className="p-4">
             <div className="mb-3 flex items-center justify-between gap-0.5">
-                <button
+                <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={prev}
-                    className="rounded p-1  transition-colors hover:bg-gray-100"
+                    className="size-6 hover:bg-control-active [&_svg]:size-4"
                 >
-                    <CaretLeftIcon weight="duotone" className="size-3" />
-                </button>
-                <span className="text-xs font-bold">
-                    {MONTHS[mMonth].slice(0, 3)} {mYear}
+                    <CaretLeftIcon weight="duotone" />
+                </Button>
+                <span className="text-xs font-semibold">
+                    {MONTHS[month].slice(0, 3)} {year}
                 </span>
-                <button
+                <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={next}
-                    className="rounded p-1 transition-colors hover:bg-gray-100"
+                    className="size-6 hover:bg-control-active [&_svg]:size-4"
                 >
-                    <CaretRightIcon weight="duotone" className="size-3" />
-                </button>
+                    <CaretRightIcon weight="duotone" />
+                </Button>
             </div>
             <div className="mb-1 grid grid-cols-7">
-                {WEEKDAYS.map((d) => (
+                {WEEKDAYS.map((day) => (
                     <div
-                        key={d}
-                        className="pb-1 text-center text-[9px] font-bold text-gray-400"
+                        key={day}
+                        className="pb-1 text-center text-[9px] font-bold text-muted-foreground"
                     >
-                        {d[0]}
+                        {day[0]}
                     </div>
                 ))}
             </div>
             <div className="grid grid-cols-7 gap-y-0.5">
                 {cells.map((day, i) => {
-                    if (day === null) return <div key={`_${i}`} />;
+                    if (day === null) {
+                        return <div key={`_${i}`} />;
+                    }
 
-                    const ds = toDateStr(mYear, mMonth, day);
-                    const isT = ds === today;
-                    const isSel = ds === selectedDate;
-                    const hasEv = eventDates.has(ds);
+                    const dateStr = toDateStr(year, month, day);
+                    const isToday = dateStr === today;
+                    const isSelected = dateStr === selectedDate;
+                    const hasEvent = eventDates.has(dateStr);
 
                     return (
                         <button
-                            key={ds}
-                            onClick={() => onSelectDate(ds)}
+                            key={dateStr}
+                            onClick={() => onSelectDate(dateStr)}
                             className={cn(
-                                "flex aspect-square flex-col items-center justify-center rounded-full text-[10px] font-semibold transition-all",
-                                isT
+                                "flex aspect-square flex-col items-center justify-center rounded-full text-[10px] transition-all",
+                                isToday
                                     ? "bg-bright-blue text-white"
-                                    : isSel
-                                      ? "bg-blue-100 text-blue-600"
-                                      : "text-gray-600 hover:bg-gray-100",
+                                    : isSelected
+                                      ? "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400"
+                                      : "text-gray-600 dark:text-gray-400",
                             )}
                         >
                             {day}
-                            {hasEv && !isT && (
-                                <span className="-mt-0.5 size-1 rounded-full bg-blue-400" />
+                            {hasEvent && !isToday && (
+                                <span className="-mt-0.5 size-1 rounded-full bg-bright-blue" />
                             )}
                         </button>
                     );

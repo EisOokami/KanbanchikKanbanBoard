@@ -38,7 +38,7 @@ export default function RoleSelect({
             >
                 <SelectValue placeholder="Select a role" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="border-border">
                 {ROLES.map((role) =>
                     role !== "owner" ? (
                         <SelectItem

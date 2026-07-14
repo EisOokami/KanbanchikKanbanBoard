@@ -4,9 +4,11 @@
 
 @layer base {
     :root {
-        --background: 0 0% 100%;
+        --background: #fafafa;
+        --background-secondary: #ffffff;
         --foreground: 0 0% 3.9%;
-        --card: 0 0% 100%;
+        --card: #ffffff;
+        --card-active: #fafafa;
         --card-foreground: 0 0% 3.9%;
         --popover: 0 0% 100%;
         --popover-foreground: 0 0% 3.9%;
@@ -29,7 +31,7 @@
         --chart-4: 43 74% 66%;
         --chart-5: 27 87% 67%;
         --radius: 0.5rem;
-        --sidebar-background: 0 0% 98%;
+        --sidebar-background: #fafafa;
         --sidebar-foreground: 240 5.3% 26.1%;
         --sidebar-primary: 240 5.9% 10%;
         --sidebar-primary-foreground: 0 0% 98%;
@@ -37,11 +39,18 @@
         --sidebar-accent-foreground: 240 5.9% 10%;
         --sidebar-border: 220 13% 91%;
         --sidebar-ring: 217.2 91.2% 59.8%;
+        --control: #ffffff;
+        --control-active: #f5f7fb;
+        --control-text: #565663;
+        --column: #f3f4f6;
+        --column-is-over: #e5e7eb;
     }
     .dark {
-        --background: 0 0% 3.9%;
+        --background: #080808;
+        --background-secondary: #101211;
         --foreground: 0 0% 98%;
-        --card: 0 0% 3.9%;
+        --card: #101211;
+        --card-active: #080808;
         --card-foreground: 0 0% 98%;
         --popover: 0 0% 3.9%;
         --popover-foreground: 0 0% 98%;
@@ -63,7 +72,7 @@
         --chart-3: 30 80% 55%;
         --chart-4: 280 65% 60%;
         --chart-5: 340 75% 55%;
-        --sidebar-background: 240 5.9% 10%;
+        --sidebar-background: #080808;
         --sidebar-foreground: 240 4.8% 95.9%;
         --sidebar-primary: 224.3 76.3% 48%;
         --sidebar-primary-foreground: 0 0% 100%;
@@ -71,6 +80,11 @@
         --sidebar-accent-foreground: 240 4.8% 95.9%;
         --sidebar-border: 240 3.7% 15.9%;
         --sidebar-ring: 217.2 91.2% 59.8%;
+        --control: #111317;
+        --control-active: #20212a;
+        --control-text: #8c8e92;
+        --column: #181a20;
+        --column-is-over: #23262d;
     }
 }
 

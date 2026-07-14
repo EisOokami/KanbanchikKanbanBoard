@@ -30,6 +30,7 @@ import {
     TrashIcon,
 } from "@phosphor-icons/react";
 import Link from "next/link";
+import { Button } from "../shadcn/button";
 
 interface ProjectCardProps {
     projectData: Project;
@@ -67,7 +68,7 @@ export default function ProjectCard({
     return (
         <>
             <Link href={`/project/${projectData.slug}`} className="grid">
-                <Card className="group relative flex flex-col overflow-hidden border border-border/60 bg-card shadow-sm transition-shadow duration-200 hover:shadow-md">
+                <Card className="group relative flex flex-col overflow-hidden border border-border bg-card shadow-sm transition-all duration-200 hover:bg-card-active hover:shadow-md">
                     <CardHeader className="flex-row items-start justify-between gap-2 px-3 pb-0 pt-3">
                         <div className="flex min-w-0 items-center gap-3">
                             <div
@@ -105,20 +106,25 @@ export default function ProjectCard({
                                         asChild
                                         onClick={(e) => e.preventDefault()}
                                     >
-                                        <button className="rounded p-1 transition-colors hover:bg-accent">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="size-7 text-control-text transition-colors hover:bg-control-active"
+                                        >
                                             <DotsThreeOutlineIcon
                                                 weight="duotone"
-                                                className="size-4 text-muted-foreground"
+                                                className="text-muted-foreground"
                                             />
-                                        </button>
+                                        </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent
                                         align="end"
-                                        className="w-44"
+                                        className="w-44 border-border bg-background-secondary"
                                         onClick={(e) => e.preventDefault()}
                                     >
                                         <DropdownMenuItem
                                             onClick={handleShopProjectSettings}
+                                            className="hover:!bg-control-active"
                                         >
                                             <PencilSimpleIcon
                                                 weight="duotone"
@@ -127,7 +133,7 @@ export default function ProjectCard({
                                             Edit
                                         </DropdownMenuItem>
                                         <DropdownMenuItem
-                                            className="text-destructive focus:text-destructive"
+                                            className="text-red-500 hover:!bg-control-active focus:text-red-500 dark:text-red-400 dark:focus:text-red-400"
                                             onClick={() =>
                                                 onDelete(projectData.slug)
                                             }
@@ -160,7 +166,7 @@ export default function ProjectCard({
                             />
                         </div>
                     </CardContent>
-                    <CardFooter className="flex items-center justify-between border-t border-border/50 p-3">
+                    <CardFooter className="flex items-center justify-between border-t border-border p-3">
                         <div className="flex items-center">
                             <div className="flex -space-x-2">
                                 {visibleMembers.map((member) => (

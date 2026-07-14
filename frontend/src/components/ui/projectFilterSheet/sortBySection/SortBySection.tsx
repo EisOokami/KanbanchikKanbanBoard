@@ -30,7 +30,7 @@ export default function SortBySection({
                                 "flex w-full items-center justify-between rounded-md px-3 py-2 text-sm transition-colors",
                                 active
                                     ? "bg-bright-blue/10 font-medium text-bright-blue"
-                                    : "text-foreground hover:bg-muted/60",
+                                    : "text-foreground hover:bg-control-active",
                             )}
                         >
                             <span>{label}</span>

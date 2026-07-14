@@ -13,7 +13,7 @@ export default async function MainLayout({
     const userData = await getUserData();
 
     return (
-        <div className="overflow-hidden bg-gray-100">
+        <div className="overflow-hidden bg-background">
             <SidebarProvider>
                 <AccountSettingsProvider>
                     <AppSidebar
@@ -21,7 +21,7 @@ export default async function MainLayout({
                         userData={userData}
                     />
                     <TooltipProvider>
-                        <div className="my-3 mr-3 max-h-[calc(100svh-1.5rem)] w-full overflow-hidden rounded-xl border">
+                        <div className="my-3 mr-3 max-h-[calc(100svh-1.5rem)] w-full overflow-hidden rounded-xl border border-border">
                             {children}
                         </div>
                     </TooltipProvider>

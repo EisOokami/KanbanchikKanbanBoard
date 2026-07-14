@@ -27,7 +27,7 @@ export default function TitleSection({
                     formState?.formData?.get("title")?.toString() ?? undefined
                 }
                 className={cn(
-                    "h-9 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue",
+                    "h-9 bg-control text-sm placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue",
                     formState?.zodErrors?.title ? "border-red-500" : "",
                 )}
                 disabled={isPending}

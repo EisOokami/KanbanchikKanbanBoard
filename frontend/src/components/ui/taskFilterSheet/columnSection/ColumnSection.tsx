@@ -37,7 +37,7 @@ export default function ColumnSection({
                         <label
                             key={column.id}
                             className={cn(
-                                "flex cursor-pointer items-center gap-3 rounded-md border px-3 py-2 transition-colors hover:bg-gray-50",
+                                "flex cursor-pointer items-center gap-3 rounded-md border px-3 py-2 text-control-text transition-colors hover:bg-control-active hover:!text-foreground",
                                 active
                                     ? "border-bright-blue"
                                     : "border-transparent",
@@ -54,9 +54,7 @@ export default function ColumnSection({
                                 <span
                                     className={cn(
                                         "text-sm",
-                                        active
-                                            ? "text-bright-blue"
-                                            : "text-gray-500",
+                                        active ? "text-bright-blue" : "",
                                     )}
                                 >
                                     {column.name}

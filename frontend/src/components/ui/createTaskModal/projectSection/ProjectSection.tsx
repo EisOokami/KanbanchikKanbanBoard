@@ -39,16 +39,16 @@ export default function ProjectSection({
                 >
                     <SelectTrigger
                         id="project"
-                        className="focus:ring-1 focus:ring-bright-blue"
+                        className="bg-control transition-colors placeholder:text-control-text hover:bg-control-active focus:ring-1 focus:ring-bright-blue"
                     >
                         <SelectValue placeholder="Select a project" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="border-border bg-control">
                         {projectsData.map((project) => (
                             <SelectItem
                                 key={project.id}
                                 value={project.id.toString()}
-                                className="rounded-md text-sm font-medium capitalize"
+                                className="rounded-md text-sm font-medium capitalize hover:!bg-control-active"
                             >
                                 <span>{project.name}</span>
                             </SelectItem>

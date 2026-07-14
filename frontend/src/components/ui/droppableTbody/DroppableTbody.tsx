@@ -13,16 +13,10 @@ export default function DroppableTbody({
     columnId,
     children,
 }: Readonly<DroppableTbodyProps>) {
-    const { setNodeRef, isOver } = useDroppable({ id: columnId });
+    const { setNodeRef } = useDroppable({ id: columnId });
 
     return (
-        <tbody
-            ref={setNodeRef}
-            className={cn(
-                "divide-y-[1px]",
-                isOver ? "bg-blue-50/60" : undefined,
-            )}
-        >
+        <tbody ref={setNodeRef} className={cn("divide-y-[1px] divide-border")}>
             {children}
         </tbody>
     );

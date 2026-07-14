@@ -4,6 +4,7 @@ import { cn } from "@/libs/utils";
 import "./globals.css";
 import { Toaster } from "sonner";
 import "sonner/dist/styles.css";
+import { ThemeProvider } from "@/components/ui/themeProvider/ThemeProvider";
 
 const montserrat = Montserrat({
     variable: "--font-montserrat",
@@ -21,15 +22,22 @@ export default async function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="en" className="h-svh">
+        <html lang="en" className="h-svh" suppressHydrationWarning>
             <body
                 className={cn(
                     "font-montserrat",
                     `${montserrat.variable} overflow-hidden antialiased`,
                 )}
             >
-                {children}
-                <Toaster />
+                <ThemeProvider
+                    attribute="class"
+                    defaultTheme="system"
+                    enableSystem
+                    disableTransitionOnChange
+                >
+                    {children}
+                    <Toaster />
+                </ThemeProvider>
             </body>
         </html>
     );

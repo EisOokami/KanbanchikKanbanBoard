@@ -16,6 +16,7 @@ import {
     PaperclipIcon,
 } from "@phosphor-icons/react";
 import { Progress } from "../shadcn/progress";
+import { Button } from "../shadcn/button";
 
 interface OverlayTaskProps {
     task: Task;
@@ -26,14 +27,14 @@ export default function OverlayTask({
     task,
     showPriorityEmoji,
 }: Readonly<OverlayTaskProps>) {
-    const overdue = isOverdue(task.due_date, task.column.name);
+    const overdue = isOverdue(task.due_date ?? undefined, task.column.name);
     const progress = Math.round(
         ((task.subtasks_done ? task.subtasks_done : 0) * 100) /
             (task.subtasks_total ? task.subtasks_total : 1),
     );
 
     return (
-        <div className="w-[272px] rotate-2 cursor-grabbing rounded-xl border border-gray-300 bg-white p-3 shadow-2xl">
+        <div className="w-[272px] rotate-2 cursor-grabbing rounded-xl border border-border bg-background-secondary p-3 shadow-2xl">
             <div className="mb-2.5 flex items-center justify-between gap-2">
                 <div className="flex flex-wrap items-center gap-1.5">
                     <div className="flex items-center gap-1">
@@ -62,17 +63,19 @@ export default function OverlayTask({
                         </span>
                     ))}
                 </div>
-                <button className="ml-auto flex-shrink-0 rounded p-0.5 opacity-0 transition-opacity hover:bg-gray-100 hover:!opacity-100 group-hover:opacity-50">
-                    <DotsThreeOutlineIcon
-                        weight="duotone"
-                        className="size-3.5 text-gray-400"
-                    />
-                </button>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="ml-auto size-6 text-control-text opacity-0 transition-opacity hover:bg-control-active hover:!opacity-100 group-hover:opacity-50 [&_svg]:size-4"
+                    disabled
+                >
+                    <DotsThreeOutlineIcon weight="duotone" />
+                </Button>
             </div>
             <p className="mb-1 break-words text-sm font-medium leading-snug">
                 {task.title}
             </p>
-            <p className="mb-2 line-clamp-1 break-words text-xs text-gray-500">
+            <p className="mb-2 line-clamp-1 break-words text-xs text-muted-foreground">
                 {task.description}
             </p>
             {(!task.show_progress || task.subtasks_total === 0) &&
@@ -157,7 +160,7 @@ export default function OverlayTask({
                     />
                 </div>
             ) : null}
-            <div className="flex items-center justify-between gap-2 border-t pt-2">
+            <div className="flex items-center justify-between gap-2 border-t border-border pt-2">
                 <div className="flex items-center gap-2">
                     {task.members.length ? (
                         <div className="flex -space-x-1.5">

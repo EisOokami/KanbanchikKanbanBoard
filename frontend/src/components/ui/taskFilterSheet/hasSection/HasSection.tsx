@@ -3,6 +3,7 @@
 import { CheckSquareIcon, PaperclipIcon } from "@phosphor-icons/react";
 import { Checkbox } from "../../shadcn/checkbox";
 import { FilterState } from "@/types/types";
+import { cn } from "@/libs/utils";
 
 interface ProgressSectionProps {
     filters: FilterState;
@@ -32,22 +33,12 @@ export default function HasSection({
             ].map(({ key, label, Icon }) => (
                 <label
                     key={key}
-                    className="flex cursor-pointer items-center justify-between rounded-md px-3 py-2.5 transition-colors hover:bg-gray-50"
-                    style={
-                        filters[key]
-                            ? {
-                                  background: "#EDE9FD",
-                                  border: "1px solid #D3CBF8",
-                              }
-                            : { border: "1px solid #E5E7EB" }
-                    }
+                    className={cn(
+                        "flex cursor-pointer items-center justify-between rounded-md border border-border bg-control px-3 py-2.5 transition-colors hover:bg-control-active",
+                        filters[key] && "border-bright-blue text-bright-blue",
+                    )}
                 >
-                    <span
-                        className="flex items-center gap-1.5 text-sm"
-                        style={{
-                            color: filters[key] ? "#0096FF" : "#374151",
-                        }}
-                    >
+                    <span className="flex items-center gap-1.5 text-sm">
                         <Icon weight="duotone" size={16} />
                         {label}
                     </span>

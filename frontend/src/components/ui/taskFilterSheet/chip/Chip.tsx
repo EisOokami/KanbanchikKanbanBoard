@@ -1,6 +1,7 @@
 "use client";
 
 import { XIcon } from "@phosphor-icons/react";
+import { Button } from "../../shadcn/button";
 
 interface ChipProps {
     active: boolean;
@@ -18,9 +19,9 @@ export default function Chip({
     children,
 }: Readonly<ChipProps>) {
     return (
-        <button
+        <Button
             onClick={onClick}
-            className="flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium capitalize transition-all"
+            className="h-7 gap-1.5 px-2.5 text-xs font-medium capitalize transition-all hover:opacity-85"
             style={{
                 backgroundColor: bgColor,
                 color: textColor,
@@ -28,6 +29,6 @@ export default function Chip({
         >
             {children}
             {active && <XIcon weight="duotone" size={12} />}
-        </button>
+        </Button>
     );
 }

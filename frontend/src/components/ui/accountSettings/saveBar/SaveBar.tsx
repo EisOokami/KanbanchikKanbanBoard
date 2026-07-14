@@ -3,15 +3,15 @@ import { Button } from "../../shadcn/button";
 
 interface SaveBarProps {
     isChanged: boolean;
+    isPending?: boolean;
     onDiscard?: () => void;
-    isPending: boolean;
     onSave?: () => void;
 }
 
 export default function SaveBar({
     isChanged,
-    onDiscard,
     isPending,
+    onDiscard,
     onSave,
 }: Readonly<SaveBarProps>) {
     if (!isChanged) {
@@ -19,8 +19,8 @@ export default function SaveBar({
     }
 
     return (
-        <div className="absolute bottom-0 -mx-6 mt-6 flex w-full items-center justify-between gap-3 border-t bg-white/95 px-6 py-3 backdrop-blur">
-            <p className="flex items-center gap-1.5 text-xs text-gray-500">
+        <div className="absolute bottom-0 -mx-6 mt-6 flex w-full items-center justify-between gap-3 border-t border-border bg-background px-6 py-3 backdrop-blur transition-colors">
+            <p className="flex items-center gap-1.5 text-xs text-gray-400">
                 <WarningIcon
                     weight="duotone"
                     className="size-4 text-amber-500"
@@ -41,7 +41,7 @@ export default function SaveBar({
                 <Button
                     type="submit"
                     size="sm"
-                    className="h-7 gap-1.5 bg-bright-blue text-xs hover:bg-blue-600"
+                    className="h-7 gap-1.5 bg-bright-blue text-xs text-white hover:bg-blue-600"
                     disabled={isPending}
                     onClick={onSave}
                 >

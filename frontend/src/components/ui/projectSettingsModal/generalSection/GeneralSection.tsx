@@ -10,6 +10,7 @@ import { ZodErrors } from "../../zodErrors/ZodErrors";
 import ProjectColorPicker from "../../projectColorPicker/ProjectColorPicker";
 import ProjectIconPicker from "../../projectIconPicker/ProjectIconPicker";
 import { Checkbox } from "../../shadcn/checkbox";
+import { Button } from "../../shadcn/button";
 
 interface GeneralSectionProps {
     icon: string;
@@ -82,7 +83,7 @@ export default function GeneralSection({
                     }
                     onChange={(e) => onNameChange(e.target.value)}
                     className={cn(
-                        "h-10 rounded-md text-sm placeholder:text-gray-300 focus-visible:ring-1 focus-visible:ring-bright-blue",
+                        "h-10 rounded-md bg-control text-sm placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue",
                         formState?.zodErrors?.name ? "border-red-500" : "",
                     )}
                     disabled={isPending}
@@ -100,10 +101,11 @@ export default function GeneralSection({
                         formState?.formData?.get("description")?.toString() ??
                         undefined
                     }
+                    placeholder="What is this project about?"
                     onChange={(e) => onDescriptionChange(e.target.value)}
                     rows={4}
                     className={cn(
-                        "resize-none rounded-md text-xs placeholder:text-gray-300 focus-visible:ring-1 focus-visible:ring-bright-blue",
+                        "resize-none rounded-md bg-control text-xs placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue",
                         formState?.zodErrors?.description
                             ? "border-red-500"
                             : "",
@@ -123,15 +125,17 @@ export default function GeneralSection({
                 <div className="flex flex-wrap gap-1.5">
                     {(Object.keys(STATUS_CONFIG) as Status[]).map(
                         (statusConfig) => (
-                            <button
+                            <Button
                                 key={statusConfig}
                                 type="button"
                                 onClick={() => onStatusChange(statusConfig)}
+                                variant="outline"
+                                size="sm"
                                 className={cn(
-                                    "flex items-center gap-1.5 rounded-md bg-muted/60 px-2.5 py-1 text-xs font-medium transition-all hover:bg-muted",
+                                    "h-6 gap-1.5 rounded-full text-xs font-medium",
                                     status === statusConfig
-                                        ? "bg-muted ring-1 ring-border"
-                                        : "opacity-60 hover:opacity-100",
+                                        ? "bg-control-active text-foreground"
+                                        : "bg-control text-control-text hover:bg-control-active",
                                 )}
                                 disabled={isPending}
                             >
@@ -143,7 +147,7 @@ export default function GeneralSection({
                                     }}
                                 />
                                 {STATUS_CONFIG[statusConfig].label}
-                            </button>
+                            </Button>
                         ),
                     )}
                 </div>

@@ -22,7 +22,7 @@ export default function SaveBar({
     return (
         <div
             className={cn(
-                "flex border-t px-6 py-3.5",
+                "flex border-t border-border px-6 py-3.5",
                 formState?.status === "error" ||
                     formState?.status === "success" ||
                     (formState?.details && formState?.details?.length)
@@ -58,7 +58,7 @@ export default function SaveBar({
                     type="button"
                     variant="outline"
                     onClick={() => onOpenChange(false)}
-                    className="h-9 rounded-md px-4 text-sm hover:bg-gray-100"
+                    className="h-9 rounded-md bg-control px-4 text-sm text-control-text hover:bg-control-active"
                     disabled={isPending}
                 >
                     Cancel

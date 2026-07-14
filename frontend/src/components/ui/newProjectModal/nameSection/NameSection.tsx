@@ -29,7 +29,7 @@ export default function NameSection({
                         : undefined
                 }
                 className={cn(
-                    "h-9 bg-white text-sm focus-visible:ring-1 focus-visible:ring-bright-blue",
+                    "h-9 bg-control text-sm placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue",
                     formState?.zodErrors?.name ? "border-red-500" : "",
                 )}
                 disabled={isPending}

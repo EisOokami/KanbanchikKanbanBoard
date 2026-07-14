@@ -29,7 +29,6 @@ import {
     AvatarGroupCount,
     AvatarImage,
 } from "@/components/ui/shadcn/avatar";
-import { ButtonGroup } from "@/components/ui/shadcn/button-group";
 import InviteMemberModal from "@/components/ui/inviteMemberModal/InviteMemberModal";
 import TaskFilterSheet from "@/components/ui/taskFilterSheet/TaskFilterSheet";
 import ProjectSettingsModal from "@/components/ui/projectSettingsModal/ProjectSettingsModal";
@@ -48,7 +47,7 @@ import {
     UserPlusIcon,
 } from "@phosphor-icons/react";
 import CreateTaskModal from "@/components/ui/createTaskModal/CreateTaskModal";
-import { getInitials } from "@/libs/utils";
+import { cn, getInitials } from "@/libs/utils";
 import { deleteTaskAction, moveTaskAction } from "@/data/actions";
 import {
     getSurroundingPositions,
@@ -414,123 +413,132 @@ export default function Project({
     const hasTasks = columns.some((column) => column.tasks.length > 0);
 
     return (
-        <div className="flex h-full w-full flex-col rounded-xl bg-white">
-            <header className="z-10 grid shrink-0 gap-5 border-b bg-white px-8 py-4">
-                <div className="flex items-start justify-between">
-                    <div className="w-full space-y-3">
-                        <div className="flex items-center gap-3">
-                            <div
-                                className="grid size-10 place-content-center rounded-md"
-                                style={{
-                                    backgroundColor: projectData.color + "33",
-                                }}
-                            >
-                                <span className="text-lg">
-                                    {projectData.icon}
-                                </span>
+        <div className="flex h-full w-full flex-col rounded-xl bg-background-secondary">
+            <header className="z-10 grid shrink-0 border-b border-border">
+                <div className="grid gap-3 border-b border-border px-8 py-3">
+                    <div className="flex items-center justify-between">
+                        <div className="w-full">
+                            <div className="flex items-center gap-3">
+                                <div
+                                    className="grid size-9 place-content-center rounded-md"
+                                    style={{
+                                        backgroundColor:
+                                            projectData.color + "33",
+                                    }}
+                                >
+                                    <span className="text-lg">
+                                        {projectData.icon}
+                                    </span>
+                                </div>
+                                <h1 className="text-xl font-semibold">
+                                    {projectData.name}
+                                </h1>
                             </div>
-                            <h1 className="text-2xl font-semibold">
-                                {projectData.name}
-                            </h1>
                         </div>
-                        {projectData.description && (
-                            <p className="min-h-14 w-3/4 text-ellipsis break-words rounded-md bg-gray-100 px-3 py-2 text-gray-600">
-                                {projectData.description}
-                            </p>
-                        )}
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <AvatarGroup>
-                            {projectData.members.slice(0, 3).map((member) => (
-                                <Avatar key={member.id} className="size-8">
-                                    <AvatarImage
-                                        src={member.avatar_url}
-                                        alt={member.name}
-                                    />
-                                    <AvatarFallback
-                                        className="text-xs font-semibold text-white"
-                                        style={{
-                                            background: member.color,
-                                        }}
-                                    >
-                                        {getInitials(
-                                            member.name,
-                                            member.surname,
-                                        )}
-                                    </AvatarFallback>
-                                </Avatar>
-                            ))}
-                            {projectData.members.length > 3 && (
-                                <AvatarGroupCount>+3</AvatarGroupCount>
-                            )}
-                        </AvatarGroup>
-                        <Button
-                            variant="outline"
-                            onClick={() => setShowInvite(true)}
-                        >
-                            {updatedUserData.role === "admin" ||
-                            updatedUserData.role === "owner" ? (
-                                <>
-                                    <UserPlusIcon weight="duotone" />
-                                    Invite
-                                </>
-                            ) : (
-                                <>
-                                    <UserIcon weight="duotone" />
-                                    Members
-                                </>
-                            )}
-                        </Button>
-                        {(updatedUserData.role === "admin" ||
-                            updatedUserData.role === "owner") && (
+                        <div className="flex items-center gap-3">
+                            <AvatarGroup>
+                                {projectData.members
+                                    .slice(0, 3)
+                                    .map((member) => (
+                                        <Avatar
+                                            key={member.id}
+                                            className="size-8"
+                                        >
+                                            <AvatarImage
+                                                src={member.avatar_url}
+                                                alt={member.name}
+                                            />
+                                            <AvatarFallback
+                                                className="text-xs font-semibold text-white"
+                                                style={{
+                                                    background: member.color,
+                                                }}
+                                            >
+                                                {getInitials(
+                                                    member.name,
+                                                    member.surname,
+                                                )}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                    ))}
+                                {projectData.members.length > 3 && (
+                                    <AvatarGroupCount>+3</AvatarGroupCount>
+                                )}
+                            </AvatarGroup>
                             <Button
-                                size="icon"
-                                variant="ghost"
-                                className="[&_svg]:size-5"
-                                onClick={() => handleShowProjectSettings(true)}
+                                variant="outline"
+                                className="border-border bg-control text-control-text hover:bg-control-active"
+                                onClick={() => setShowInvite(true)}
                             >
-                                <GearSixIcon weight="duotone" />
+                                {updatedUserData.role === "admin" ||
+                                updatedUserData.role === "owner" ? (
+                                    <>
+                                        <UserPlusIcon weight="duotone" />
+                                        Invite
+                                    </>
+                                ) : (
+                                    <>
+                                        <UserIcon weight="duotone" />
+                                        Members
+                                    </>
+                                )}
                             </Button>
-                        )}
-                    </div>
-                </div>
-                <div className="flex justify-between">
-                    <nav>
-                        <ButtonGroup>
-                            {viewModes.map(({ id, label, icon: Icon }) => (
+                            {(updatedUserData.role === "admin" ||
+                                updatedUserData.role === "owner") && (
                                 <Button
-                                    key={id}
-                                    variant={
-                                        selectedMode === id
-                                            ? "default"
-                                            : "outline"
-                                    }
-                                    onClick={() => handleChangeMode(id)}
-                                    className={
-                                        selectedMode === id
-                                            ? "pointer-events-none bg-bright-blue text-white"
-                                            : ""
+                                    size="icon"
+                                    variant="ghost"
+                                    className="text-control-text hover:bg-control-active [&_svg]:size-5"
+                                    onClick={() =>
+                                        handleShowProjectSettings(true)
                                     }
                                 >
-                                    <Icon weight="duotone" />
-                                    {label}
+                                    <GearSixIcon weight="duotone" />
                                 </Button>
-                            ))}
-                        </ButtonGroup>
+                            )}
+                        </div>
+                    </div>
+                    {projectData.description && (
+                        <p className="min-h-14 w-3/4 text-ellipsis break-words rounded-md border border-border bg-background px-3 py-2 text-muted-foreground">
+                            {projectData.description}
+                        </p>
+                    )}
+                </div>
+                <div className="flex items-center justify-between px-8 py-2">
+                    <nav className="space-x-1 rounded-lg border border-border p-1">
+                        {viewModes.map(({ id, label, icon: Icon }) => (
+                            <Button
+                                key={id}
+                                variant={
+                                    selectedMode === id ? "default" : "ghost"
+                                }
+                                onClick={() => handleChangeMode(id)}
+                                className={cn(
+                                    "shadow-none",
+                                    selectedMode === id
+                                        ? "pointer-events-none bg-control-active text-foreground"
+                                        : "text-control-text hover:bg-control-active",
+                                )}
+                            >
+                                <Icon weight="duotone" />
+                                {label}
+                            </Button>
+                        ))}
                     </nav>
                     <div className="flex gap-3">
                         <Button
                             variant="outline"
+                            className="border-border bg-control text-control-text hover:bg-control-active"
                             onClick={() => setShowFilters(true)}
                         >
                             <FunnelIcon weight="duotone" />
-                            Filter
+                            Filter & Sort
                         </Button>
                         {(updatedUserData.role === "admin" ||
                             updatedUserData.role === "owner" ||
                             updatedUserData.role === "member") && (
                             <Button
-                                className="gap-1.5 bg-bright-blue px-3 text-xs hover:bg-blue-600"
+                                className="gap-1.5 bg-bright-blue px-3 text-xs text-white hover:bg-blue-600"
                                 onClick={() => handleToggleCreateTask()}
                             >
                                 <PlusIcon
@@ -554,23 +562,23 @@ export default function Project({
                     {!hasTasks ? (
                         <div className="flex h-full flex-1 items-center justify-center px-6">
                             <div className="flex max-w-md flex-col items-center text-center">
-                                <div className="mb-5 flex size-20 items-center justify-center rounded-2xl bg-gray-100">
+                                <div className="mb-5 flex size-20 items-center justify-center rounded-md bg-muted">
                                     <ClipboardTextIcon
                                         weight="duotone"
-                                        className="size-10 text-gray-400"
+                                        className="size-10 text-muted-foreground"
                                     />
                                 </div>
-                                <h2 className="text-xl font-semibold text-gray-900">
+                                <h2 className="text-xl font-semibold">
                                     No tasks yet
                                 </h2>
-                                <p className="mt-2 text-sm leading-relaxed text-gray-500">
+                                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                                     Start by creating your first task, inviting
                                     teammates, or importing existing work into
                                     this project.
                                 </p>
                                 <div className="mt-6 flex items-center gap-3">
                                     <Button
-                                        className="gap-1.5 bg-bright-blue px-4 py-2 text-sm hover:bg-blue-600"
+                                        className="gap-1.5 bg-bright-blue px-4 py-2 text-sm text-white hover:bg-blue-600"
                                         onClick={() => handleToggleCreateTask()}
                                     >
                                         <PlusIcon

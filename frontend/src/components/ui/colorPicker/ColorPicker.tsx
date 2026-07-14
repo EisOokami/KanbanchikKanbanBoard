@@ -23,14 +23,12 @@ export default function ColorPicker({
     return (
         <Popover onOpenChange={setOpen} open={open}>
             <PopoverTrigger disabled={isPending}>
-                <button
-                    type="button"
+                <div
                     className={cn(
-                        "size-8 rounded-md border border-border/60 ring-offset-background transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bright-blue focus-visible:ring-offset-2",
+                        "size-8 rounded-md border border-border ring-offset-background transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bright-blue focus-visible:ring-offset-2",
                         buttonClassName,
                     )}
                     style={{ backgroundColor: value }}
-                    disabled={isPending}
                 />
             </PopoverTrigger>
             <PopoverContent className="w-fit p-0">

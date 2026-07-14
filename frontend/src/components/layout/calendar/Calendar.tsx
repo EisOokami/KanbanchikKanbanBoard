@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { Separator } from "@/components/ui/shadcn/separator";
 import CreateTaskModal from "@/components/ui/createTaskModal/CreateTaskModal";
 import {
     cn,
@@ -10,7 +9,6 @@ import {
     toDateStr,
     todayStr,
 } from "@/libs/utils";
-import MiniCalendar from "@/components/ui/miniCalendar/MiniCalendar";
 import DayCell from "@/components/ui/dayCell/DayCell";
 import DaySidebar from "@/components/ui/daySidebar/DaySidebar";
 import { GridCell, Project, Task, User } from "@/types/types";
@@ -18,6 +16,7 @@ import { MONTHS, WEEKDAYS } from "@/constants/constants";
 import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
 import TaskDetailsSheet from "@/components/ui/taskDetailsSheet/TaskDetailsSheet";
 import { getProjectData } from "@/data/loaders";
+import { Button } from "@/components/ui/shadcn/button";
 
 interface CalendarProps {
     tasksData: Task[];
@@ -131,11 +130,6 @@ export default function Calendar({
         return map;
     }, [tasksData, showGantt]);
 
-    const taskDates: Set<string> = useMemo(
-        () => new Set(Object.keys(tasksByDate)),
-        [tasksByDate],
-    );
-
     const daysInMonth = getDaysInMonth(year, month);
     const firstDay = getFirstDayOfMonth(year, month);
     const prevMonthDays = getDaysInMonth(year, month === 0 ? 11 : month - 1);
@@ -233,84 +227,72 @@ export default function Calendar({
 
     return (
         <>
-            <div className="flex h-full w-full rounded-xl bg-white">
-                <div className="flex w-56 flex-shrink-0 flex-col border-r">
-                    <MiniCalendar
-                        viewYear={year}
-                        viewMonth={month}
-                        selectedDate={selectedDate}
-                        onSelectDate={setSelected}
-                        eventDates={taskDates}
-                    />
-                    <Separator />
-                </div>
+            <div className="flex h-full w-full rounded-xl bg-background-secondary">
                 <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-                    <div className="flex flex-shrink-0 items-center gap-3 border-b px-5 py-3">
-                        <div className="flex items-center gap-3">
-                            <button
+                    <div className="flex flex-shrink-0 items-center gap-3 border-b border-border px-5 py-3">
+                        <div className="flex items-center gap-0.5">
+                            <Button
+                                variant="ghost"
+                                size="icon"
                                 onClick={prevMonth}
-                                className="rounded-md p-1.5 transition-colors hover:bg-gray-100"
+                                className="size-6 [&_svg]:size-4"
                             >
-                                <CaretLeftIcon
-                                    weight="duotone"
-                                    className="size-4"
-                                />
-                            </button>
-                            <h2 className="min-w-0 text-base font-bold">
-                                {MONTHS[month]}{" "}
-                                <span className="font-normal text-gray-500">
-                                    {year}
-                                </span>
-                            </h2>
-                            <button
+                                <CaretLeftIcon weight="duotone" />
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="icon"
                                 onClick={nextMonth}
-                                className="rounded-md p-1.5 transition-colors hover:bg-gray-100"
+                                className="size-6 [&_svg]:size-4"
                             >
-                                <CaretRightIcon
-                                    weight="duotone"
-                                    className="size-4"
-                                />
-                            </button>
+                                <CaretRightIcon weight="duotone" />
+                            </Button>
                         </div>
-                        <div className="space-x-1">
-                            <button
+                        <h2 className="min-w-0 text-base font-medium tracking-tight">
+                            {MONTHS[month]}{" "}
+                            <span className="font-light text-muted-foreground">
+                                {year}
+                            </span>
+                        </h2>
+                        <div className="ml-2">
+                            <Button
                                 onClick={goToday}
-                                className="rounded-md border bg-white px-2.5 py-1 text-xs font-semibold text-gray-600 transition-colors hover:bg-gray-50"
+                                className="h-7 border border-border bg-control text-xs font-semibold text-control-text transition-colors hover:bg-control-active"
                             >
                                 Today
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                                 onClick={() => setShowGantt((s) => !s)}
                                 className={cn(
-                                    "rounded-md border px-2.5 py-1 text-xs font-semibold transition-colors",
+                                    "ml-2 h-7 rounded-md border border-border px-2.5 py-1 text-xs font-semibold transition-colors",
                                     showGantt
                                         ? "bg-bright-blue text-white hover:bg-blue-600"
-                                        : "bg-white text-gray-600 hover:bg-gray-50",
+                                        : "bg-control text-control-text hover:bg-control-active",
                                 )}
                             >
                                 Gantt bars: {showGantt ? "ON" : "OFF"}
-                            </button>
+                            </Button>
                         </div>
                     </div>
                     <div className="flex min-h-0 flex-1 overflow-hidden">
                         <div className="flex flex-1 flex-col overflow-hidden">
-                            <div className="grid flex-shrink-0 grid-cols-7 border-b">
-                                {WEEKDAYS.map((d, i) => (
+                            <div className="grid flex-shrink-0 grid-cols-7 border-b border-border">
+                                {WEEKDAYS.map((day, i) => (
                                     <div
-                                        key={d}
+                                        key={day}
                                         className={cn(
-                                            "border-r py-2.5 text-center text-xs font-bold uppercase tracking-wider last:border-r-0",
+                                            "border-r border-border py-2.5 text-center text-xs font-bold uppercase tracking-wider last:border-r-0",
                                             i === 0 || i === 6
                                                 ? "text-gray-300"
                                                 : "text-gray-500",
                                         )}
                                     >
-                                        {d}
+                                        {day}
                                     </div>
                                 ))}
                             </div>
                             <div className="flex-1 overflow-y-auto">
-                                <div className="grid grid-cols-7">
+                                <div className="grid h-full grid-cols-7">
                                     {cells.map((cell) => (
                                         <DayCell
                                             key={cell.dateStr}

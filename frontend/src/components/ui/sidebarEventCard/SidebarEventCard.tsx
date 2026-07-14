@@ -20,12 +20,12 @@ export default function SidebarEventCard({
 
     return (
         <button
-            className="w-full max-w-60 rounded-md border bg-white p-3 text-left transition-all hover:border-blue-200 hover:shadow-sm"
+            className="w-full max-w-60 rounded-md border border-border bg-background-secondary p-3 text-left transition-all hover:border-blue-200 hover:shadow-sm dark:hover:border-blue-800"
             onClick={onOpen}
         >
             <div className="flex items-start gap-2">
                 <div className="min-w-0 flex-1">
-                    <p className="truncate text-xs font-semibold leading-tight text-gray-800">
+                    <p className="truncate text-xs font-semibold leading-tight">
                         {task.title}
                     </p>
                     <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
@@ -62,7 +62,7 @@ export default function SidebarEventCard({
                         ))}
                     </div>
                     <div className="mt-2 flex items-center justify-between">
-                        <div className="flex items-center gap-1 text-[10px] text-gray-500">
+                        <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                             <CalendarBlankIcon
                                 weight="duotone"
                                 className="size-3"

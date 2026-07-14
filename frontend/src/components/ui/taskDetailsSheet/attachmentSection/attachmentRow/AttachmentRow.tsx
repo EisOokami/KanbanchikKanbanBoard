@@ -37,13 +37,10 @@ export default function AttachmentRow({
 
     return (
         <div
-            className={`group/att flex items-center gap-3 rounded-md border px-3 py-2 transition-colors hover:bg-gray-50 ${canPreview ? "cursor-pointer" : ""}`}
+            className={`group/att flex items-center gap-3 rounded-md border border-border bg-control px-3 py-2 transition-colors hover:bg-control-active ${canPreview ? "cursor-pointer" : ""}`}
             onClick={canPreview ? () => onPreview(attachment.id) : undefined}
         >
-            <div
-                className="flex size-8 shrink-0 items-center justify-center rounded-md"
-                style={{ background: "#EDE9FD" }}
-            >
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-gray-200 dark:bg-zinc-800">
                 {getFileIcon(attachment.mime_type)}
             </div>
             {isImage(attachment.mime_type) && (

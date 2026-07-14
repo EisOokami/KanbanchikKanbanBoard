@@ -2,14 +2,14 @@
 
 import { BaseAction } from "@/types/actions";
 import { CreateTaskFormData } from "@/types/types";
-import {
-    PaperclipIcon,
-    TrashSimpleIcon,
-    UploadSimpleIcon,
-} from "@phosphor-icons/react";
-import { useRef } from "react";
+import { UploadSimpleIcon } from "@phosphor-icons/react";
+import { useMemo, useRef, useState } from "react";
 import { ZodErrors } from "../../zodErrors/ZodErrors";
-import { formatSize } from "@/libs/utils";
+import Lightbox from "yet-another-react-lightbox";
+import Video from "yet-another-react-lightbox/plugins/video";
+import "yet-another-react-lightbox/styles.css";
+import { isImageFile, isPdfFile, isVideoFile } from "@/libs/createTaskModal";
+import AttachmentRow from "./attachmentRow/AttachmentRow";
 
 interface AttachmentsSectionProps {
     formState: BaseAction | undefined;
@@ -25,6 +25,44 @@ export default function AttachmentsSection({
     onFormDataChange,
 }: Readonly<AttachmentsSectionProps>) {
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [lightboxOpen, setLightboxOpen] = useState<boolean>(false);
+    const [lightboxIndex, setLightboxIndex] = useState<number>(0);
+
+    const slides = useMemo(() => {
+        return formData.attachments
+            .filter(
+                (attachment) =>
+                    isImageFile(attachment.file) ||
+                    isVideoFile(attachment.file),
+            )
+            .map((attachment) => {
+                const url = URL.createObjectURL(attachment.file);
+
+                if (isVideoFile(attachment.file)) {
+                    return {
+                        type: "video" as const,
+                        width: 1280,
+                        height: 720,
+                        sources: [{ src: url, type: attachment.file.type }],
+                    };
+                }
+
+                return { src: url, alt: attachment.file.name };
+            });
+    }, [formData.attachments]);
+
+    const slideIndexMap = useMemo(() => {
+        const map: Record<string | number, number> = {};
+        let index = 0;
+
+        for (const attachment of formData.attachments) {
+            if (isImageFile(attachment.file) || isVideoFile(attachment.file)) {
+                map[attachment.id] = index++;
+            }
+        }
+
+        return map;
+    }, [formData.attachments]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files ?? []);
@@ -57,6 +95,22 @@ export default function AttachmentsSection({
         });
     };
 
+    const handlePreview = (attachment: { id: number | string; file: File }) => {
+        if (isPdfFile(attachment.file)) {
+            const url = URL.createObjectURL(attachment.file);
+            window.open(url, "_blank", "noopener,noreferrer");
+
+            return;
+        }
+
+        const index = slideIndexMap[attachment.id];
+
+        if (index !== undefined) {
+            setLightboxIndex(index);
+            setLightboxOpen(true);
+        }
+    };
+
     return (
         <div className="space-y-1">
             <label className="font-semibold" htmlFor="attachments">
@@ -75,53 +129,20 @@ export default function AttachmentsSection({
                 {formData.attachments.length > 0 && (
                     <div className="space-y-1.5">
                         {formData.attachments.map((attachment) => (
-                            <div
+                            <AttachmentRow
                                 key={attachment.id}
-                                className="group flex items-center gap-2.5 rounded-md border border-border/50 bg-white px-3 py-2"
-                            >
-                                <div
-                                    className="flex size-7 flex-shrink-0 items-center justify-center rounded-md"
-                                    style={{
-                                        backgroundColor: "#6366f1" + "22",
-                                    }}
-                                >
-                                    <PaperclipIcon
-                                        weight="duotone"
-                                        className="size-4"
-                                        style={{
-                                            color: "#6366f1",
-                                        }}
-                                    />
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                    <p className="truncate text-xs font-medium">
-                                        {attachment.file.name}
-                                    </p>
-                                    <p className="text-[10px] text-muted-foreground">
-                                        {formatSize(attachment.file.size)}
-                                    </p>
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        onAttachmentRemove(attachment)
-                                    }
-                                    className="text-muted-foreground/50 opacity-0 transition-all hover:text-red-500 group-hover:opacity-100"
-                                    disabled={isPending}
-                                >
-                                    <TrashSimpleIcon
-                                        weight="duotone"
-                                        className="size-4"
-                                    />
-                                </button>
-                            </div>
+                                attachment={attachment}
+                                isPending={isPending}
+                                onRemove={onAttachmentRemove}
+                                onPreview={handlePreview}
+                            />
                         ))}
                     </div>
                 )}
                 <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="h+over:text-foreground flex h-32 w-full items-center justify-center gap-2 rounded-md border border-dashed border-border/60 bg-white px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted/30"
+                    className="h+over:text-foreground flex h-32 w-full items-center justify-center gap-2 rounded-md border border-dashed border-border bg-control px-3 py-2.5 text-sm text-control-text transition-colors hover:bg-control-active"
                     disabled={isPending}
                 >
                     <UploadSimpleIcon weight="duotone" className="size-4" />
@@ -131,6 +152,16 @@ export default function AttachmentsSection({
             <div>
                 <ZodErrors error={formState?.zodErrors?.attachments} />
             </div>
+            <Lightbox
+                open={lightboxOpen}
+                close={() => setLightboxOpen(false)}
+                index={lightboxIndex}
+                slides={slides}
+                plugins={[Video]}
+                styles={{
+                    container: { backgroundColor: "rgba(0,0,0,0.85)" },
+                }}
+            />
         </div>
     );
 }

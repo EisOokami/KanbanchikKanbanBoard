@@ -51,10 +51,10 @@ export default function DateSection({
                         <button
                             type="button"
                             className={cn(
-                                "flex h-9 w-full items-center gap-1.5 rounded-md border border-input bg-white px-3 text-sm transition-colors hover:bg-muted/40",
+                                "flex h-9 w-full items-center gap-1.5 rounded-md border border-input bg-control px-3 text-sm transition-colors hover:bg-control-active",
                                 startDate
                                     ? "text-foreground"
-                                    : "text-muted-foreground",
+                                    : "text-control-text",
                                 formState?.zodErrors?.startDate
                                     ? "border-red-500"
                                     : "",
@@ -63,14 +63,17 @@ export default function DateSection({
                         >
                             <CalendarIcon
                                 weight="duotone"
-                                className="size-4 flex-shrink-0 text-muted-foreground"
+                                className="size-4 flex-shrink-0 text-control-text"
                             />
                             {startDate
                                 ? format(startDate, "MMM d, yyyy")
                                 : "Pick a date"}
                         </button>
                     </PopoverTrigger>
-                    <PopoverContent className="p-0" align="start">
+                    <PopoverContent
+                        className="w-fit rounded-md border-border p-0"
+                        align="start"
+                    >
                         <Calendar
                             mode="single"
                             selected={startDate}
@@ -80,6 +83,7 @@ export default function DateSection({
                                     onOpenStartDateChange(false);
                                 }
                             }}
+                            className="rounded-md"
                         />
                     </PopoverContent>
                 </Popover>
@@ -96,10 +100,10 @@ export default function DateSection({
                         <button
                             type="button"
                             className={cn(
-                                "flex h-9 w-full items-center gap-1.5 rounded-md border border-input bg-white px-3 text-sm transition-colors hover:bg-muted/40",
+                                "flex h-9 w-full items-center gap-1.5 rounded-md border border-input bg-control px-3 text-sm transition-colors hover:bg-control-active",
                                 dueDate
                                     ? "text-foreground"
-                                    : "text-muted-foreground",
+                                    : "text-control-text",
                                 formState?.zodErrors?.dueDate
                                     ? "border-red-500"
                                     : "",
@@ -115,7 +119,10 @@ export default function DateSection({
                                 : "Pick a date"}
                         </button>
                     </PopoverTrigger>
-                    <PopoverContent className="p-0" align="start">
+                    <PopoverContent
+                        className="w-fit rounded-md border-border p-0"
+                        align="start"
+                    >
                         <Calendar
                             mode="single"
                             selected={dueDate}
@@ -125,6 +132,7 @@ export default function DateSection({
                                     onOpenDueDateChange(false);
                                 }
                             }}
+                            className="rounded-md"
                         />
                     </PopoverContent>
                 </Popover>

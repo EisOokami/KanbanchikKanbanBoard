@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/shadcn/button";
 import { format } from "date-fns";
 import { PRIORITY_CONFIG } from "@/constants/constants";
 import { CreateTaskFormData, Project, Task, User } from "@/types/types";
-import { InfoIcon, PlusIcon } from "@phosphor-icons/react";
+import { InfoIcon, PlusIcon, XIcon } from "@phosphor-icons/react";
 import { getProjectsData, getTaskData } from "@/data/loaders";
 import { BaseAction } from "@/types/actions";
 import { createTaskAction } from "@/data/actions";
@@ -211,7 +211,7 @@ export default function CreateTaskModal({
     return (
         <Dialog open={open} onOpenChange={handleClose}>
             <DialogContent
-                className="flex max-h-[92vh] w-full max-w-2xl flex-col gap-0 overflow-hidden rounded-md border border-border/70 p-0 shadow-2xl"
+                className="flex max-h-[92vh] w-full max-w-2xl flex-col gap-0 overflow-hidden rounded-md border border-border bg-background-secondary p-0 shadow-2xl [&>button:first-of-type]:hidden"
                 aria-describedby={undefined}
             >
                 <form
@@ -219,14 +219,26 @@ export default function CreateTaskModal({
                     noValidate
                     className="flex min-h-0 flex-1 flex-col"
                 >
-                    <DialogHeader className="flex-shrink-0 border-b border-border/60 px-6 pb-4 pt-6">
-                        <div className="min-w-0 flex-1">
-                            <DialogTitle className="mb-0.5 text-base font-semibold">
-                                New Task
-                            </DialogTitle>
-                            <p className="text-xs text-muted-foreground">
-                                Configure your task details
-                            </p>
+                    <DialogHeader className="flex-shrink-0 border-b border-border px-6 pb-4 pt-6">
+                        <div className="flex items-center justify-between">
+                            <div className="min-w-0 flex-1">
+                                <DialogTitle className="mb-0.5 text-base font-semibold">
+                                    New Task
+                                </DialogTitle>
+                                <p className="text-xs text-muted-foreground">
+                                    Configure your task details
+                                </p>
+                            </div>
+                            <Button
+                                size="icon"
+                                variant="ghost"
+                                type="button"
+                                onClick={() => onOpenChange(false)}
+                                className="size-6 text-control-text hover:bg-control-active [&_svg]:size-4"
+                                disabled={isPending}
+                            >
+                                <XIcon weight="duotone" />
+                            </Button>
                         </div>
                     </DialogHeader>
                     {showProjectSelect && projectsData && selectedProject && (
@@ -314,7 +326,7 @@ export default function CreateTaskModal({
                             />
                         </div>
                     )}
-                    <DialogFooter className="flex items-center !justify-between gap-3 border-t border-border/60 px-6 py-4">
+                    <DialogFooter className="flex items-center !justify-between gap-3 border-t border-border px-6 py-4">
                         <div>
                             {formState?.status !== "success" &&
                                 formState?.message && (
@@ -348,7 +360,7 @@ export default function CreateTaskModal({
                                 variant="outline"
                                 size="sm"
                                 onClick={handleClose}
-                                className="h-9"
+                                className="h-9 bg-control text-control-text hover:bg-control-active"
                             >
                                 Cancel
                             </Button>

@@ -62,7 +62,7 @@ export default function SortBySection({
                                 "flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-all",
                                 active
                                     ? "border-bright-blue bg-bright-blue/10 text-bright-blue"
-                                    : "border-gray-200 bg-gray-50 text-gray-500 hover:border-gray-300 hover:bg-gray-100",
+                                    : "border-border bg-control text-control-text hover:bg-control-active",
                             )}
                         >
                             {active ? (

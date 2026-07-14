@@ -70,7 +70,7 @@ export default function MemberSection({
                         {formData.members.map((member) => (
                             <div
                                 key={member}
-                                className="flex items-center gap-2 rounded-md border border-border/60 bg-muted/40 px-2.5 py-1.5"
+                                className="flex items-center gap-2 rounded-md border border-border bg-muted/40 px-2.5 py-1.5"
                             >
                                 <div className="min-w-0">
                                     <p className="mt-0.5 max-w-[140px] truncate text-[10px] text-muted-foreground">
@@ -117,7 +117,7 @@ export default function MemberSection({
                                 (e.preventDefault(), inviteMember())
                             }
                             className={cn(
-                                "h-9 bg-white pl-8 text-sm focus-visible:ring-1 focus-visible:ring-bright-blue",
+                                "h-9 bg-control pl-8 text-sm placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue",
                                 emailError || formState?.zodErrors?.members
                                     ? "border-red-500"
                                     : "",

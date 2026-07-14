@@ -43,7 +43,7 @@ export default function GanttBar({
             title={`${task.title} (${task.start_date} → ${task.due_date})`}
         >
             <div className="flex h-full items-center overflow-hidden px-1.5">
-                <span className="truncate text-[9px] font-semibold text-white drop-shadow-md">
+                <span className="truncate text-[9px] text-white drop-shadow-md">
                     {isStartDay ? task.title : ""}
                 </span>
             </div>

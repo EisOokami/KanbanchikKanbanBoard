@@ -11,43 +11,43 @@ import {
 
 export function dateMeta(
     date: Date | null | undefined,
-): { text: string; color: string; bg: string; border: string } | null {
+    options?: {
+        showOverdue?: boolean;
+    },
+): { text: string; className: string } | null {
     if (!date) {
         return null;
     }
 
-    if (!isToday(date) && isPast(date)) {
+    const showOverdue = options?.showOverdue ?? true;
+
+    if (showOverdue && !isToday(date) && isPast(date)) {
         return {
             text: "Overdue",
-            color: "#D93025",
-            bg: "#FEF0EF",
-            border: "#FACACB",
+            className:
+                "border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300",
         };
     }
 
     if (isToday(date)) {
         return {
             text: "Today",
-            color: "#C9620A",
-            bg: "#FEF4EC",
-            border: "#FCD9B5",
+            className:
+                "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-300",
         };
     }
 
     if (isTomorrow(date)) {
         return {
             text: "Tomorrow",
-            color: "#1A6BBF",
-            bg: "#EEF4FD",
-            border: "#BDD5F5",
+            className:
+                "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-300",
         };
     }
 
     return {
         text: format(date, "MMM d, yyyy"),
-        color: "#374151",
-        bg: "#F9FAFB",
-        border: "#E5E7EB",
+        className: "border-border bg-muted text-muted-foreground",
     };
 }
 
@@ -79,11 +79,13 @@ export function isPdf(mime: string) {
 }
 
 export function getFileIcon(mime: string) {
-    if (isImage(mime))
+    if (isImage(mime)) {
         return (
             <ImageIcon weight="duotone" size={16} className="text-violet-600" />
         );
-    if (isVideo(mime))
+    }
+
+    if (isVideo(mime)) {
         return (
             <FileVideoIcon
                 weight="duotone"
@@ -91,7 +93,9 @@ export function getFileIcon(mime: string) {
                 className="text-violet-600"
             />
         );
-    if (isPdf(mime))
+    }
+
+    if (isPdf(mime)) {
         return (
             <FilePdfIcon
                 weight="duotone"
@@ -99,6 +103,8 @@ export function getFileIcon(mime: string) {
                 className="text-violet-600"
             />
         );
+    }
+
     return <FileIcon weight="duotone" size={16} className="text-violet-600" />;
 }
 
