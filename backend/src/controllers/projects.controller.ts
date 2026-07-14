@@ -25,6 +25,8 @@ import {
 } from "../validation/validation";
 import { transporter } from "../utils/email";
 import { generateSlug, generateUniqueSlug } from "../utils/slugify";
+import path from "path";
+import { existsSync, unlinkSync } from "fs";
 
 export const getProjects = async (req: IGetUserRequest, res: Response) => {
     try {
@@ -198,14 +200,20 @@ export const getProjects = async (req: IGetUserRequest, res: Response) => {
                         owner.length && owner[0]
                             ? {
                                   name: owner[0].name,
-                                  avatar_url: owner[0].avatar_url,
+                                  avatar_url:
+                                      owner[0].avatar_url === null
+                                          ? null
+                                          : `${process.env.BACKEND_URL}${owner[0].avatar_url}`,
                               }
                             : null,
                     members: members.map((member) => ({
                         id: member.id,
                         name: member.name,
                         surname: member.surname,
-                        avatar_url: member.avatar_url,
+                        avatar_url:
+                            member.avatar_url === null
+                                ? null
+                                : `${process.env.BACKEND_URL}${member.avatar_url}`,
                         color: member.color,
                         role: member.role,
                         status: member.status,
@@ -388,7 +396,7 @@ export const getProject = async (req: IGetUserRequest, res: Response) => {
             [project.id],
         );
 
-        const [ownerData] = await pool.execute<
+        const [owner] = await pool.execute<
             (Pick<
                 User,
                 "id" | "name" | "surname" | "email" | "avatar_url" | "color"
@@ -604,7 +612,13 @@ export const getProject = async (req: IGetUserRequest, res: Response) => {
                                 id: task.column_id,
                                 name: task.column_name,
                             },
-                            members,
+                            members: members.map((member) => ({
+                                ...member,
+                                avatar_url:
+                                    member.avatar_url === null
+                                        ? null
+                                        : `${process.env.BACKEND_URL}${member.avatar_url}`,
+                            })),
                             labels: taskLabels,
                             categories: taskCategories,
                             subtasks,
@@ -614,14 +628,20 @@ export const getProject = async (req: IGetUserRequest, res: Response) => {
                                     id: comment.user_id,
                                     name: comment.name,
                                     surname: comment.surname,
-                                    avatar_url: comment.avatar_url,
+                                    avatar_url:
+                                        comment.avatar_url === null
+                                            ? null
+                                            : `${process.env.BACKEND_URL}${comment.avatar_url}`,
                                     color: comment.color,
                                 },
                                 body: comment.body,
                                 created_at: comment.created_at,
                                 updated_at: comment.updated_at,
                             })),
-                            attachments,
+                            attachments: attachments.map((attachment) => ({
+                                ...attachment,
+                                file_url: `${process.env.BACKEND_URL}${attachment.file_url}`,
+                            })),
                             subtasks_total: subtasksTotal,
                             subtasks_done: subtasksDone,
                         };
@@ -661,17 +681,23 @@ export const getProject = async (req: IGetUserRequest, res: Response) => {
             created_at: project.created_at,
             updated_at: project.updated_at,
             owner:
-                ownerData.length && ownerData[0]
+                owner.length && owner[0]
                     ? {
-                          name: ownerData[0].name,
-                          avatar_url: ownerData[0].avatar_url,
+                          name: owner[0].name,
+                          avatar_url:
+                              owner[0].avatar_url === null
+                                  ? null
+                                  : `${process.env.BACKEND_URL}${owner[0].avatar_url}`,
                       }
                     : null,
             members: members.map((member) => ({
                 id: member.id,
                 name: member.name,
                 surname: member.surname,
-                avatar_url: member.avatar_url,
+                avatar_url:
+                    member.avatar_url === null
+                        ? null
+                        : `${process.env.BACKEND_URL}${member.avatar_url}`,
                 color: member.color,
                 role: member.role,
                 status: member.status,
@@ -1447,6 +1473,64 @@ export const deleteProject = async (req: IGetUserRequest, res: Response) => {
             });
 
             return;
+        }
+
+        const [attachments] = await pool.execute<
+            (Pick<
+                Attachment,
+                | "id"
+                | "task_id"
+                | "uploader_id"
+                | "filename"
+                | "file_url"
+                | "mime_type"
+                | "size_bytes"
+                | "created_at"
+            > &
+                RowDataPacket)[]
+        >(
+            `
+                SELECT 
+                    a.id, 
+                    a.task_id, 
+                    a.uploader_id, 
+                    a.filename, 
+                    a.file_url, 
+                    a.mime_type, 
+                    a.size_bytes, 
+                    a.created_at
+                FROM attachments a
+                JOIN tasks t ON a.task_id = t.id
+                JOIN columns c ON t.column_id = c.id
+                WHERE c.project_id = ?
+            `,
+            [project.id],
+        );
+
+        if (attachments && attachments.length) {
+            attachments.map(async (attachment) => {
+                const __dirname = path.resolve(path.dirname(""));
+                const fileUrl = attachment.file_url.replace(/^\/files/, "");
+                const filePath = path.join(__dirname, "/src/uploads", fileUrl);
+
+                if (existsSync(filePath)) {
+                    unlinkSync(filePath);
+                }
+
+                const [rows] = await pool.execute<ResultSetHeader>(
+                    "DELETE FROM attachments WHERE id = ?",
+                    [attachment.id],
+                );
+
+                if (rows.affectedRows === 0) {
+                    res.status(400).json({
+                        status: "error",
+                        message: "Failed to delete file",
+                    });
+
+                    throw Error("Failed to delete file");
+                }
+            });
         }
 
         const [result] = await pool.execute<ResultSetHeader>(

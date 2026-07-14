@@ -73,3 +73,15 @@ export function formatSize(bytes: number) {
 
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
+
+export function isImageFile(file: File) {
+    return file.type.startsWith("image/");
+}
+
+export function isVideoFile(file: File) {
+    return file.type.startsWith("video/");
+}
+
+export function isPdfFile(file: File) {
+    return file.type === "application/pdf";
+}

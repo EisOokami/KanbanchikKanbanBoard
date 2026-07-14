@@ -12,7 +12,7 @@ import {
     getAttachmentsSchema,
 } from "../validation/validation";
 import { ZodError } from "zod";
-import { existsSync, unlinkSync } from "fs";
+import { existsSync, unlink, unlinkSync } from "fs";
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import path from "path";
 import dotenv from "dotenv";
@@ -60,7 +60,12 @@ export const getAttachments = async (req: IGetUserRequest, res: Response) => {
             [validatedData.taskId],
         );
 
-        res.status(200).json(rows);
+        const attachments = rows.map((row) => ({
+            ...row,
+            file_url: `${process.env.BACKEND_URL}${row.file_url}`,
+        }));
+
+        res.status(200).json(attachments);
     } catch (error) {
         if (error instanceof ZodError) {
             const errorMessages = error.issues.map((issue: any) => ({
@@ -95,6 +100,8 @@ export const uploadSingle = async (req: IGetUserRequest, res: Response) => {
         const validatedData = getAttachmentsSchema.parse(req.body);
 
         if (!userId) {
+            unlinkSync(req.file.path);
+
             res.status(401).json({
                 status: "error",
                 message: "Unauthorized",
@@ -125,6 +132,8 @@ export const uploadSingle = async (req: IGetUserRequest, res: Response) => {
         );
 
         if (!taskMembers || !taskMembers.length) {
+            unlinkSync(req.file.path);
+
             res.status(403).json({
                 status: "error",
                 message: "Access denied or task not found",
@@ -143,13 +152,15 @@ export const uploadSingle = async (req: IGetUserRequest, res: Response) => {
                 validatedData.taskId,
                 userId,
                 req.file.originalname,
-                `${process.env.BACKEND_URL}/files/${req.file.filename}`,
+                `/files/${req.file.filename}`,
                 req.file.mimetype,
                 req.file.size,
             ],
         );
 
         if (result.affectedRows === 0) {
+            unlinkSync(req.file.path);
+
             res.status(400).json({
                 status: "error",
                 message: "Failed to upload file",
@@ -208,6 +219,8 @@ export const uploadAvatar = async (req: IGetUserRequest, res: Response) => {
         const userId = req.user.id;
 
         if (!userId) {
+            unlinkSync(req.file.path);
+
             res.status(401).json({
                 status: "error",
                 message: "Unauthorized",
@@ -225,13 +238,15 @@ export const uploadAvatar = async (req: IGetUserRequest, res: Response) => {
             [
                 userId,
                 req.file.originalname,
-                `${process.env.BACKEND_URL}/files/${req.file.filename}`,
+                `/files/${req.file.filename}`,
                 req.file.mimetype,
                 req.file.size,
             ],
         );
 
         if (uploadResult.affectedRows === 0) {
+            unlinkSync(req.file.path);
+
             res.status(400).json({
                 status: "error",
                 message: "Failed to upload avatar",
@@ -246,10 +261,12 @@ export const uploadAvatar = async (req: IGetUserRequest, res: Response) => {
                 SET avatar_url = ?
                 WHERE id = ?
             `,
-            [`${process.env.BACKEND_URL}/files/${req.file.filename}`, userId],
+            [`/files/${req.file.filename}`, userId],
         );
 
         if (userResult.affectedRows === 0) {
+            unlinkSync(req.file.path);
+
             res.status(400).json({
                 status: "error",
                 message: "Failed to upload avatar",
@@ -312,12 +329,16 @@ export const uploadMultiple = async (req: IGetUserRequest, res: Response) => {
         const validatedData = getAttachmentsSchema.parse(req.body);
 
         if (!userId) {
+            files.forEach((file) => {
+                unlinkSync(file.path);
+            });
+
             res.status(401).json({
                 status: "error",
                 message: "Unauthorized",
             });
 
-            return;
+            throw Error("Unauthorized");
         }
 
         const [taskMembers] = await pool.execute<TaskMembers[]>(
@@ -342,6 +363,10 @@ export const uploadMultiple = async (req: IGetUserRequest, res: Response) => {
         );
 
         if (!taskMembers || !taskMembers.length) {
+            files.forEach((file) => {
+                unlinkSync(file.path);
+            });
+
             res.status(403).json({
                 status: "error",
                 message: "Access denied or task not found",
@@ -355,7 +380,7 @@ export const uploadMultiple = async (req: IGetUserRequest, res: Response) => {
                 validatedData.taskId,
                 userId,
                 file.originalname,
-                `${process.env.BACKEND_URL}/files/${file.filename}`,
+                `/files/${file.filename}`,
                 file.mimetype,
                 file.size,
             ];
@@ -372,6 +397,10 @@ export const uploadMultiple = async (req: IGetUserRequest, res: Response) => {
             );
 
             if (result.affectedRows === 0) {
+                files.forEach((file) => {
+                    unlinkSync(file.path);
+                });
+
                 res.status(400).json({
                     status: "error",
                     message: "Failed to upload file",
@@ -542,7 +571,8 @@ export const deleteAttachment = async (req: IGetUserRequest, res: Response) => {
         }
 
         const __dirname = path.resolve(path.dirname(""));
-        const filePath = path.join(__dirname, attachment.file_url);
+        const fileUrl = attachment.file_url.replace(/^\/files/, "");
+        const filePath = path.join(__dirname, "/src/uploads", fileUrl);
 
         if (existsSync(filePath)) {
             unlinkSync(filePath);
@@ -611,8 +641,10 @@ export const deleteAvatar = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
-        // const url = new URL(validatedData.avatar_url);
-        // const pathname = url.pathname;
+        const avatarUrl = validatedData.avatar_url.replace(
+            new RegExp(`^${process.env.BACKEND_URL}`),
+            "",
+        );
 
         const [attachments] = await pool.execute<
             (Pick<Attachment, "id" | "file_url" | "uploader_id" | "task_id"> &
@@ -623,11 +655,11 @@ export const deleteAvatar = async (req: IGetUserRequest, res: Response) => {
                 FROM attachments 
                 WHERE file_url = ? AND uploader_id = ?
             `,
-            [validatedData.avatar_url, userId],
+            [avatarUrl, userId],
         );
 
         if (!attachments || !attachments.length) {
-            res.status(404).json({ error: "Attachment not found" });
+            res.status(404).json({ error: "Avatar not found" });
 
             return;
         }
@@ -637,14 +669,15 @@ export const deleteAvatar = async (req: IGetUserRequest, res: Response) => {
         if (!attachment) {
             res.status(404).json({
                 status: "error",
-                message: "Attachment not found",
+                message: "Avatar not found",
             });
 
             return;
         }
 
         const __dirname = path.resolve(path.dirname(""));
-        const filePath = path.join(__dirname, attachment.file_url);
+        const fileUrl = attachment.file_url.replace(/^\/files/, "");
+        const filePath = path.join(__dirname, "/src/uploads", fileUrl);
 
         if (existsSync(filePath)) {
             unlinkSync(filePath);

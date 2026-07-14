@@ -199,7 +199,7 @@ export interface UpdateTaskFormData {
     subtasks: Omit<Subtask, "created_at">[];
     newSubtasks: Omit<Subtask, "created_at">[];
     attachments: Attachment[];
-    newAttachments: Attachment[];
+    newAttachments: { id: number | string; file: File }[];
     labels: Label[];
     comments: Comment[];
     newComments: Omit<Comment, "created_at" | "updated_at">[];

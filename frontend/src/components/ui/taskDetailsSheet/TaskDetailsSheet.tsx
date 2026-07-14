@@ -370,7 +370,6 @@ export default function TaskDetailsSheet({
                             hasPermission ? (
                                 <>
                                     <AttachmentSection
-                                        userData={userData}
                                         formState={formState}
                                         isPending={isPending}
                                         formData={formData}

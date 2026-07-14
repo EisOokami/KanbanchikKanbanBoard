@@ -8,6 +8,9 @@ import { ZodError } from "zod";
 import bcrypt from "bcryptjs";
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import type { IGetUserRequest, User } from "../types/types";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 export const me = async (
     req: IGetUserRequest,
@@ -65,7 +68,10 @@ export const me = async (
                 name: user.name,
                 surname: user.surname,
                 email: user.email,
-                avatar_url: user.avatar_url,
+                avatar_url:
+                    user.avatar_url === null
+                        ? null
+                        : `${process.env.BACKEND_URL}${user.avatar_url}`,
                 color: user.color,
                 created_at: user.created_at,
                 updated_at: user.updated_at,
@@ -204,10 +210,24 @@ export const updateProfile = async (
             [id],
         );
 
+        if (!updatedUser.length || !updatedUser[0]) {
+            res.status(409).json({
+                status: "error",
+                message: "User not found",
+            });
+
+            return;
+        }
+
         res.status(200).json({
             status: "success",
             message: "Profile updated successfully",
-            user: updatedUser,
+            user: [
+                {
+                    ...updatedUser[0],
+                    avatar_url: `${process.env.BACKEND_URL}${updatedUser[0].avatar_url}`,
+                },
+            ],
         });
     } catch (error) {
         if (error instanceof ZodError) {

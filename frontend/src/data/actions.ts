@@ -1358,7 +1358,6 @@ const updateTaskSchema = z.object({
                 .max(3, "Attachments must be less than 3"),
         )
         .optional(),
-    // attachments: z.array(attachmentSchema),
     subtasks: z.array(subtaskSchema),
     newSubtasks: z.array(subtaskSchema),
 });
@@ -1370,7 +1369,7 @@ export async function updateTaskAction(
         subtasks: Omit<Subtask, "created_at">[];
         newSubtasks: Omit<Subtask, "created_at">[];
         attachments: Attachment[];
-        newAttachments: Attachment[];
+        newAttachments: { id: number | string; file: File }[];
         labels: Label[];
     },
     currentPath: string | undefined,
@@ -1391,8 +1390,9 @@ export async function updateTaskAction(
         categories: data.categories,
         subtasks: data.subtasks,
         newSubtasks: data.newSubtasks,
-        newAttachments: formData.getAll("attachments"),
-        // attachments: data.attachments,
+        newAttachments: data.newAttachments.map(
+            (attachment) => attachment.file,
+        ),
         labels: data.labels,
     });
 
@@ -1403,6 +1403,50 @@ export async function updateTaskAction(
             error: null,
             status: null,
             details: null,
+            message: null,
+        };
+    }
+
+    const responseData = await mutateData(
+        "PUT",
+        `/tasks/${validatedFields.data.taskId}`,
+        validatedFields.data,
+    );
+
+    if (!responseData) {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: null,
+            details: null,
+            message: "Ops! Something went wrong. Please try again.",
+        };
+    }
+
+    if (
+        "message" in responseData &&
+        "status" in responseData &&
+        responseData.message &&
+        responseData.status !== "success"
+    ) {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: responseData.status,
+            details: null,
+            message: responseData.message,
+        };
+    }
+
+    if ("error" in responseData && responseData.error) {
+        return {
+            formData,
+            zodErrors: null,
+            error: responseData.error,
+            status: null,
+            details: responseData.details,
             message: null,
         };
     }
@@ -1463,50 +1507,6 @@ export async function updateTaskAction(
                 message: null,
             };
         }
-    }
-
-    const responseData = await mutateData(
-        "PUT",
-        `/tasks/${validatedFields.data.taskId}`,
-        validatedFields.data,
-    );
-
-    if (!responseData) {
-        return {
-            formData,
-            zodErrors: null,
-            error: null,
-            status: null,
-            details: null,
-            message: "Ops! Something went wrong. Please try again.",
-        };
-    }
-
-    if (
-        "message" in responseData &&
-        "status" in responseData &&
-        responseData.message &&
-        responseData.status !== "success"
-    ) {
-        return {
-            formData,
-            zodErrors: null,
-            error: null,
-            status: responseData.status,
-            details: null,
-            message: responseData.message,
-        };
-    }
-
-    if ("error" in responseData && responseData.error) {
-        return {
-            formData,
-            zodErrors: null,
-            error: responseData.error,
-            status: null,
-            details: responseData.details,
-            message: null,
-        };
     }
 
     if (currentPath) {

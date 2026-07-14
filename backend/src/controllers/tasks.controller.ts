@@ -22,6 +22,8 @@ import {
     updateTaskSchema,
     validateIdSchema,
 } from "../validation/validation";
+import { existsSync, unlinkSync } from "fs";
+import path from "path";
 
 export const getTasks = async (req: IGetUserRequest, res: Response) => {
     try {
@@ -120,7 +122,15 @@ export const getTasks = async (req: IGetUserRequest, res: Response) => {
                 );
 
                 const [members] = await pool.execute<
-                    (Pick<User, "id" | "name" | "surname" | "color" | "email"> &
+                    (Pick<
+                        User,
+                        | "id"
+                        | "name"
+                        | "surname"
+                        | "color"
+                        | "email"
+                        | "avatar_url"
+                    > &
                         Pick<ProjectMember, "role" | "status" | "joined_at"> &
                         RowDataPacket)[]
                 >(
@@ -275,16 +285,28 @@ export const getTasks = async (req: IGetUserRequest, res: Response) => {
                         icon: task.project_icon,
                         color: task.project_color,
                         slug: task.project_slug,
-                        members: projectMembers,
+                        members: projectMembers.map((member) => ({
+                            ...projectMembers,
+                            avatar_url:
+                                member.avatar_url === null
+                                    ? null
+                                    : `${process.env.BACKEND_URL}${member.avatar_url}`,
+                        })),
                     },
-                    members,
+                    members: members.map((member) => ({
+                        ...member,
+                        avatar_url:
+                            member.avatar_url === null
+                                ? null
+                                : `${process.env.BACKEND_URL}${member.avatar_url}`,
+                    })),
                     labels,
                     categories,
                     subtasks,
                     attachments: attachments.map((attachment) => ({
                         id: attachment.id,
                         filename: attachment.filename,
-                        file_url: attachment.file_url,
+                        file_url: `${process.env.BACKEND_URL}${attachment.file_url}`,
                         mime_type: attachment.mime_type,
                         size_bytes: attachment.size_bytes,
                         created_at: attachment.created_at,
@@ -310,7 +332,10 @@ export const getTasks = async (req: IGetUserRequest, res: Response) => {
                             id: comment.user_id,
                             name: comment.name,
                             surname: comment.surname,
-                            avatar_url: comment.avatar_url,
+                            avatar_url:
+                                comment.avatar_url === null
+                                    ? null
+                                    : `${process.env.BACKEND_URL}${comment.avatar_url}`,
                             color: comment.color,
                         },
                     })),
@@ -420,7 +445,10 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
         }
 
         const [members] = await pool.execute<
-            (Pick<User, "id" | "name" | "surname" | "color" | "email"> &
+            (Pick<
+                User,
+                "id" | "name" | "surname" | "color" | "email" | "avatar_url"
+            > &
                 Pick<ProjectMember, "role" | "status" | "joined_at"> &
                 RowDataPacket)[]
         >(
@@ -572,14 +600,20 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
                 color: task.project_color,
                 slug: task.project_slug,
             },
-            members,
+            members: members.map((member) => ({
+                ...member,
+                avatar_url:
+                    member.avatar_url === null
+                        ? null
+                        : `${process.env.BACKEND_URL}${member.avatar_url}`,
+            })),
             labels,
             categories,
             subtasks,
             attachments: attachments.map((attachment) => ({
                 id: attachment.id,
                 filename: attachment.filename,
-                file_url: attachment.file_url,
+                file_url: `${process.env.BACKEND_URL}${attachment.file_url}`,
                 mime_type: attachment.mime_type,
                 size_bytes: attachment.size_bytes,
                 created_at: attachment.created_at,
@@ -605,7 +639,10 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
                     id: comment.user_id,
                     name: comment.name,
                     surname: comment.surname,
-                    avatar_url: comment.avatar_url,
+                    avatar_url:
+                        comment.avatar_url === null
+                            ? null
+                            : `${process.env.BACKEND_URL}${comment.avatar_url}`,
                     color: comment.color,
                 },
             })),
@@ -1249,6 +1286,47 @@ export const deleteTask = async (req: IGetUserRequest, res: Response) => {
             });
 
             return;
+        }
+
+        const [attachments] = await pool.execute<
+            (Pick<Attachment, "id" | "file_url"> & RowDataPacket)[]
+        >(
+            `
+                SELECT
+                    a.id,
+                    a.file_url
+                FROM attachments a
+                JOIN users u ON a.uploader_id = u.id
+                WHERE a.task_id = ?
+                ORDER BY a.created_at DESC
+            `,
+            [id],
+        );
+
+        if (attachments && attachments.length) {
+            attachments.map(async (attachment) => {
+                const __dirname = path.resolve(path.dirname(""));
+                const fileUrl = attachment.file_url.replace(/^\/files/, "");
+                const filePath = path.join(__dirname, "/src/uploads", fileUrl);
+
+                if (existsSync(filePath)) {
+                    unlinkSync(filePath);
+                }
+
+                const [rows] = await pool.execute<ResultSetHeader>(
+                    "DELETE FROM attachments WHERE id = ?",
+                    [attachment.id],
+                );
+
+                if (rows.affectedRows === 0) {
+                    res.status(400).json({
+                        status: "error",
+                        message: "Failed to delete file",
+                    });
+
+                    throw Error("Failed to delete file");
+                }
+            });
         }
 
         const [result] = await pool.execute<ResultSetHeader>(

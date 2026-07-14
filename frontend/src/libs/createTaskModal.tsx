@@ -5,18 +5,6 @@ import {
     ImageIcon,
 } from "@phosphor-icons/react";
 
-export function isImageFile(file: File) {
-    return file.type.startsWith("image/");
-}
-
-export function isVideoFile(file: File) {
-    return file.type.startsWith("video/");
-}
-
-export function isPdfFile(file: File) {
-    return file.type === "application/pdf";
-}
-
 export function isImage(mime: string) {
     return mime.startsWith("image/");
 }

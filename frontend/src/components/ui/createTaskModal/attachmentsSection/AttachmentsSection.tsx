@@ -8,8 +8,8 @@ import { ZodErrors } from "../../zodErrors/ZodErrors";
 import Lightbox from "yet-another-react-lightbox";
 import Video from "yet-another-react-lightbox/plugins/video";
 import "yet-another-react-lightbox/styles.css";
-import { isImageFile, isPdfFile, isVideoFile } from "@/libs/createTaskModal";
 import AttachmentRow from "./attachmentRow/AttachmentRow";
+import { isImageFile, isPdfFile, isVideoFile } from "@/libs/utils";
 
 interface AttachmentsSectionProps {
     formState: BaseAction | undefined;
@@ -71,8 +71,8 @@ export default function AttachmentsSection({
             ...formData,
             attachments: [
                 ...formData.attachments,
-                ...files.map((file) => ({
-                    id: new Date().getTime(),
+                ...files.map((file, index) => ({
+                    id: `${Date.now()}-${index}-${Math.random().toString(36).slice(2)}`,
                     file: file,
                 })),
             ],
