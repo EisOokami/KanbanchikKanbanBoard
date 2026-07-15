@@ -741,3 +741,13 @@ export const changeRoleSchema = z.object({
         message: "Invalid member role",
     }),
 });
+
+export const deleteMemberSchema = z.object({
+    memberId: z
+        .number()
+        .positive()
+        .int("User ID must be an integer")
+        .refine((value) => Number.isSafeInteger(value), {
+            message: "ID is too large a numerical value",
+        }),
+});

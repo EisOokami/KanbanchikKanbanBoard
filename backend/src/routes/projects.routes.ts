@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
     changeRole,
     createProject,
+    deleteMember,
     deleteProject,
     getProject,
     getProjects,
@@ -38,5 +39,6 @@ router.put(
     validateData(changeRoleSchema),
     changeRole,
 );
+router.delete("/delete-member/:id", authenticateToken, deleteMember);
 
 export default router;

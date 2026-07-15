@@ -22,6 +22,8 @@ import {
     validateSlugSchema,
     updateProjectSchema,
     changeRoleSchema,
+    deleteMemberSchema,
+    validateIdSchema,
 } from "../validation/validation";
 import { transporter } from "../utils/email";
 import { generateSlug, generateUniqueSlug } from "../utils/slugify";
@@ -1676,6 +1678,133 @@ export const changeRole = async (req: IGetUserRequest, res: Response) => {
             message: "Role changed successfully",
         });
     } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: "error", message: "Database error" });
+    }
+};
+
+export const deleteMember = async (
+    req: IGetUserRequest,
+    res: Response,
+): Promise<void> => {
+    try {
+        validateIdSchema.parse(req.params);
+
+        const { id } = req.params;
+        const userId = req.user.id;
+
+        if (!userId) {
+            res.status(401).json({
+                status: "error",
+                message: "Unauthorized",
+            });
+
+            return;
+        }
+
+        if (!id) {
+            res.status(400).json({
+                status: "error",
+                message: "Invalid project ID",
+            });
+
+            return;
+        }
+
+        const validatedData = deleteMemberSchema.parse(req.body);
+
+        const projectId = +id;
+
+        const [userAccess] = await pool.execute<
+            (Pick<ProjectMember, "role"> & RowDataPacket)[]
+        >(
+            `
+                SELECT role
+                FROM project_members
+                WHERE project_id = ?
+                AND user_id = ?
+                AND role IN ("owner")
+            `,
+            [projectId, userId],
+        );
+
+        if (!userAccess.length || !userAccess[0]) {
+            res.status(403).json({
+                status: "error",
+                message: "Forbidden",
+            });
+
+            return;
+        }
+
+        const [memberAccess] = await pool.execute<
+            (Pick<ProjectMember, "role"> & RowDataPacket)[]
+        >(
+            `
+                SELECT role
+                FROM project_members
+                WHERE project_id = ?
+                AND user_id = ?
+                AND role IN ("admin", "member", "viewer")
+            `,
+            [projectId, validatedData.memberId],
+        );
+
+        if (!memberAccess.length || !memberAccess[0]) {
+            res.status(404).json({
+                status: "error",
+                message: "Member not found in the project",
+            });
+
+            return;
+        }
+
+        const [deleteFromTasksRows] = await pool.execute<ResultSetHeader>(
+            `
+                DELETE tm
+                FROM task_members tm
+                INNER JOIN tasks t ON tm.task_id = t.id
+                INNER JOIN columns c ON t.column_id = c.id
+                WHERE c.project_id = ? 
+                AND tm.user_id = ?;
+            `,
+            [projectId, validatedData.memberId],
+        );
+
+        const [deleteFromProjectRows] = await pool.execute<ResultSetHeader>(
+            "DELETE FROM project_members WHERE user_id = ? AND project_id = ?",
+            [validatedData.memberId, projectId],
+        );
+
+        if (deleteFromProjectRows.affectedRows === 0) {
+            res.status(400).json({
+                status: "error",
+                message: "Failed to delete member from project",
+            });
+
+            return;
+        }
+
+        res.status(201).json({
+            status: "success",
+            message: "Member has been deleted",
+        });
+    } catch (error) {
+        if (error instanceof ZodError) {
+            const errorMessages = error.issues.map((issue: any) => ({
+                field: issue.path[0],
+                message: issue.message,
+            }));
+
+            res.status(400).json({
+                status: "error",
+                message: "Invalid data",
+                details: errorMessages,
+            });
+
+            return;
+        }
+
         console.error(error);
         res.status(500).json({ status: "error", message: "Database error" });
     }

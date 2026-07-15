@@ -33,6 +33,7 @@ import {
 } from "@phosphor-icons/react";
 import {
     changeRoleAction,
+    deleteMemberAction,
     generateInviteAction,
     inviteMemberAction,
 } from "@/data/actions";
@@ -79,6 +80,7 @@ export default function InviteMemberModal({
         inviteMemberAction.bind(null, invites),
         INITIAL_STATE,
     );
+
     const updateRole = async (id: number, role: Role) => {
         const result = await changeRoleAction(projectData.slug, id, role);
 
@@ -107,10 +109,33 @@ export default function InviteMemberModal({
         }
     };
 
-    const removeMember = (id: number) =>
+    const removeMember = async (id: number) => {
+        const result = await deleteMemberAction(projectData.id, id);
+
+        if (!result || !result.ok) {
+            toast.success("Error", {
+                description: "Something went wrong",
+            });
+
+            return;
+        }
+
+        if (result && result.ok) {
+            toast.success("Success", {
+                description: `Member has been deleted`,
+            });
+        }
+
+        if (result && !result.ok) {
+            toast.success("Error", {
+                description: result.message,
+            });
+        }
+
         setMembers((prevState) =>
             prevState.filter((member) => member.id !== id),
         );
+    };
 
     const handleCopyLink = async () => {
         const result = await generateInviteAction(projectData.id);
@@ -146,7 +171,6 @@ export default function InviteMemberModal({
         }
 
         setInvites((prevState) => [...prevState, inviteEmail]);
-
         setInviteEmail("");
     };
 
