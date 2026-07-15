@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
 import { cn } from "@/libs/utils";
 import "./globals.css";
-import { Toaster } from "sonner";
 import "sonner/dist/styles.css";
 import { ThemeProvider } from "@/components/ui/themeProvider/ThemeProvider";
+import { Toaster } from "@/components/ui/shadcn/sonner";
 
 const montserrat = Montserrat({
     variable: "--font-montserrat",
