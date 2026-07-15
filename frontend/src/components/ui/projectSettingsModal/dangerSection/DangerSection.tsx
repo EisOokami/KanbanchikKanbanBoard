@@ -44,7 +44,7 @@ export default function DangerSection({
         }
 
         if (result && !result.ok) {
-            toast.success("Error", {
+            toast.error("Error", {
                 description: result.message,
             });
         }

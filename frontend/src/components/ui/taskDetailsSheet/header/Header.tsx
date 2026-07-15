@@ -51,7 +51,7 @@ export default function Header({
         const result = await generateInviteAction(projectData.id);
 
         if (!result || !result.ok || !result.inviteUrl) {
-            toast.success("Error", {
+            toast.error("Error", {
                 description: "Something went wrong",
             });
 
@@ -65,7 +65,7 @@ export default function Header({
         }
 
         if (result && !result.ok) {
-            toast.success("Error", {
+            toast.error("Error", {
                 description: result.message,
             });
         }
@@ -79,7 +79,7 @@ export default function Header({
         const result = await deleteTaskAction(id);
 
         if (!result || !result.ok) {
-            toast.success("Error", {
+            toast.error("Error", {
                 description: "Something went wrong",
             });
         }
@@ -91,7 +91,7 @@ export default function Header({
         }
 
         if (result && !result.ok) {
-            toast.success("Error", {
+            toast.error("Error", {
                 description: result.message,
             });
         }

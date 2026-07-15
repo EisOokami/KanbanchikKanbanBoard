@@ -76,13 +76,13 @@ export default function ProfileSection({
         const result = await deleteAvatarAction(avatar_url);
 
         if (!result || !result.ok) {
-            toast.success("Error", {
+            toast.error("Error", {
                 description: "Something went wrong",
             });
         }
 
         if (result && !result.ok) {
-            toast.success("Error", {
+            toast.error("Error", {
                 description: result.message,
             });
         }

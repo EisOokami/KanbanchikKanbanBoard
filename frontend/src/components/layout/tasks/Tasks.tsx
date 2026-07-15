@@ -89,7 +89,7 @@ export default function Tasks({
             const result = await deleteTaskAction(id, "/tasks");
 
             if (!result || !result.ok) {
-                toast.success("Error", {
+                toast.error("Error", {
                     description: "Something went wrong",
                 });
             }
@@ -101,7 +101,7 @@ export default function Tasks({
             }
 
             if (result && !result.ok) {
-                toast.success("Error", {
+                toast.error("Error", {
                     description: result.message,
                 });
             }

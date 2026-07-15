@@ -85,7 +85,7 @@ export default function InviteMemberModal({
         const result = await changeRoleAction(projectData.slug, id, role);
 
         if (!result || !result.ok) {
-            toast.success("Error", {
+            toast.error("Error", {
                 description: "Something went wrong",
             });
         }
@@ -103,7 +103,7 @@ export default function InviteMemberModal({
         }
 
         if (result && !result.ok) {
-            toast.success("Error", {
+            toast.error("Error", {
                 description: result.message,
             });
         }
@@ -113,7 +113,7 @@ export default function InviteMemberModal({
         const result = await deleteMemberAction(projectData.id, id);
 
         if (!result || !result.ok) {
-            toast.success("Error", {
+            toast.error("Error", {
                 description: "Something went wrong",
             });
 
@@ -127,7 +127,7 @@ export default function InviteMemberModal({
         }
 
         if (result && !result.ok) {
-            toast.success("Error", {
+            toast.error("Error", {
                 description: result.message,
             });
         }
@@ -141,7 +141,7 @@ export default function InviteMemberModal({
         const result = await generateInviteAction(projectData.id);
 
         if (!result || !result.ok || !result.inviteUrl) {
-            toast.success("Error", {
+            toast.error("Error", {
                 description: "Something went wrong",
             });
 
@@ -155,7 +155,7 @@ export default function InviteMemberModal({
         }
 
         if (result && !result.ok) {
-            toast.success("Error", {
+            toast.error("Error", {
                 description: result.message,
             });
         }

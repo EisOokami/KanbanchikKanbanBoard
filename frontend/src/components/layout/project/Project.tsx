@@ -328,7 +328,7 @@ export default function Project({
             if (!result || !result.ok) {
                 setColumns(Object.values(projectData.columns));
 
-                toast.success("Error", {
+                toast.error("Error", {
                     description: "Something went wrong",
                 });
             }
@@ -340,7 +340,7 @@ export default function Project({
             }
 
             if (result && !result.ok) {
-                toast.success("Error", {
+                toast.error("Error", {
                     description: result.message,
                 });
             }
