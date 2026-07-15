@@ -48,11 +48,9 @@ export const generateInvite = async (
 
         const projectId = +id;
 
-        const [members] = await pool.execute<
-            (Pick<ProjectMember, "id"> & RowDataPacket)[]
-        >(
+        const [members] = await pool.execute<(ProjectMember & RowDataPacket)[]>(
             `
-                SELECT id
+                SELECT *
                 FROM project_members
                 WHERE project_id = ?
                 AND user_id = ?
