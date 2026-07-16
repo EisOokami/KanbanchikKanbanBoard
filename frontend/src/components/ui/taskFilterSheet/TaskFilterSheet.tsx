@@ -145,7 +145,11 @@ export default function TaskFilterSheet({
                         </div>
                     </div>
                     <Separator />
-                    <PrioritySection filters={filters} onToggle={toggle} />
+                    <PrioritySection
+                        filters={filters}
+                        showPriorityEmoji={projectData.show_priority_emoji}
+                        onToggle={toggle}
+                    />
                     <Separator />
                     <ColumnSection
                         filters={filters}

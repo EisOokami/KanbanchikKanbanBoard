@@ -8,6 +8,7 @@ import { FilterState, Priority } from "@/types/types";
 
 interface PrioritySectionProps {
     filters: FilterState;
+    showPriorityEmoji: boolean;
     onToggle: <
         T,
         K extends "priorities" | "columns" | "members" | "categories",
@@ -19,6 +20,7 @@ interface PrioritySectionProps {
 
 export default function PrioritySection({
     filters,
+    showPriorityEmoji,
     onToggle,
 }: Readonly<PrioritySectionProps>) {
     return (
@@ -40,6 +42,7 @@ export default function PrioritySection({
                         textColor="#fff"
                         onClick={() => onToggle("priorities", priority.label)}
                     >
+                        {showPriorityEmoji ? priority.emoji + " " : ""}
                         {priority.label}
                     </Chip>
                 ))}
