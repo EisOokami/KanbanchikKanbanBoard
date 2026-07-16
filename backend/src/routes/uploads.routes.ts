@@ -10,6 +10,10 @@ import {
     uploadMultiple,
     uploadSingle,
 } from "../controllers/uploads.controller";
+import {
+    filesValidation,
+    fileValidation,
+} from "../middleware/fileValidation.middleware";
 
 const singleUploadLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -79,6 +83,7 @@ router.post(
     authenticateToken,
     singleUploadLimiter,
     upload.single("file"),
+    fileValidation,
     uploadSingle,
 );
 router.post(
@@ -86,6 +91,7 @@ router.post(
     authenticateToken,
     avatarUploadLimiter,
     upload.single("file"),
+    fileValidation,
     uploadAvatar,
 );
 router.post(
@@ -93,6 +99,7 @@ router.post(
     authenticateToken,
     multipleUploadLimiter,
     upload.array("files"),
+    filesValidation,
     uploadMultiple,
 );
 router.delete("/avatar", authenticateToken, deleteAvatarLimiter, deleteAvatar);

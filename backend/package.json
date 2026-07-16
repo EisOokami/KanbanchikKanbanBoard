@@ -21,6 +21,7 @@
         "express": "^5.2.1",
         "express-rate-limit": "^8.3.2",
         "express-xss-sanitizer": "^2.0.2",
+        "file-type": "^22.0.1",
         "helmet": "^8.1.0",
         "host-validation": "^2.0.1",
         "hpp": "^0.2.3",
