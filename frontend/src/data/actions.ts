@@ -2206,7 +2206,6 @@ const inviteMemberSchema = z.object({
 });
 
 export async function inviteMemberAction(
-    // invites: Invite[],
     invites: string[],
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     prevState: any,

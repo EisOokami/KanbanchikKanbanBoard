@@ -521,10 +521,6 @@ export const resetPassword = async (
 
 export const refresh = async (req: Request, res: Response): Promise<void> => {
     try {
-        // const validateData = refreshTokenSchema.parse(req.body);
-
-        // const { refreshToken } = validateData;
-
         const refreshToken = req.cookies.refreshToken;
 
         if (!refreshToken) {
@@ -638,10 +634,6 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
 
 export const logout = async (req: Request, res: Response): Promise<void> => {
     try {
-        // const validateData = refreshTokenSchema.parse(req.body);
-
-        // const { refreshToken } = validateData;
-
         const refreshToken = req.cookies.refreshToken;
 
         if (!refreshToken) {

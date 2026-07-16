@@ -424,13 +424,6 @@ export const subtaskSchema = z.object({
         .max(255, "Position must be less than 255")
         .default(0),
     is_done: z.boolean(),
-    // is_done: z
-    //     .union([
-    //         z.boolean(),
-    //         z.literal(0),
-    //         z.literal(1),
-    //     ])
-    //     .transform((value) => Boolean(value)),
 });
 
 export const createTaskSchema = z
@@ -594,7 +587,6 @@ export const updateTaskSchema = z.object({
         .min(1, "At least one category is required"),
     members: z.array(memberSchema).min(1, "At least one member is required"),
     labels: z.array(namedColorSchema).min(1, "At least one label is required"),
-    // attachments: z.array(attachmentSchema),
     newAttachments: z
         .preprocess(
             (value) => {
