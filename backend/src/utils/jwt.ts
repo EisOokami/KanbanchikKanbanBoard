@@ -3,7 +3,7 @@ import type { JWTPayload } from "jose";
 import dotenv from "dotenv";
 import crypto from "crypto";
 import { pool } from "../db/pool";
-import type { ResultSetHeader } from "mysql2";
+import type { ResultSetHeader, RowDataPacket } from "mysql2";
 
 dotenv.config();
 
@@ -55,6 +55,23 @@ export async function verifyAccessToken(token: string | Uint8Array) {
     return (await jwtVerify(token, accessSecret)).payload;
 }
 
-export async function verifyRefreshToken(token: string | Uint8Array) {
-    return (await jwtVerify(token, refreshSecret)).payload;
+export async function verifyRefreshToken(token: string) {
+    const { payload } = await jwtVerify(token, refreshSecret);
+
+    const jti = payload.jti;
+
+    if (!jti) throw new Error("Missing jti");
+
+    if (!payload.sub) throw new Error("Missing sub");
+
+    const [rows] = await pool.execute<RowDataPacket[]>(
+        `SELECT revoked FROM refresh_tokens WHERE id = ? AND user_id = ?`,
+        [jti, payload.sub],
+    );
+
+    if (!rows || !rows.length || rows[0]?.revoked) {
+        throw new Error("Token revoked or not found");
+    }
+
+    return payload;
 }
