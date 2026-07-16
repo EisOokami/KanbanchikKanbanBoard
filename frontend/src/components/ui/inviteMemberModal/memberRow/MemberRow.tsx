@@ -4,8 +4,19 @@ import { Avatar, AvatarFallback, AvatarImage } from "../../shadcn/avatar";
 import RoleSelect from "../roleSelect/RoleSelect";
 import { User, Role } from "@/types/types";
 import { getInitials } from "@/libs/utils";
-import { XIcon } from "@phosphor-icons/react";
+import { WarningIcon, XIcon } from "@phosphor-icons/react";
 import { Button } from "../../shadcn/button";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "../../shadcn/alert-dialog";
 
 interface MemberRowProps {
     member: Omit<User, "email">;
@@ -50,16 +61,52 @@ export default function MemberRow({
                         compact
                         isPending={isPending}
                     />
-                    <Button
-                        type="button"
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => onRemove(member.id)}
-                        className="size-5 text-control-text hover:bg-red-50 hover:text-red-400  dark:hover:bg-red-950 dark:hover:text-red-600 [&_svg]:size-3.5"
-                        disabled={isPending}
-                    >
-                        <XIcon weight="duotone" />
-                    </Button>
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild disabled={isPending}>
+                            <Button
+                                type="button"
+                                size="icon"
+                                variant="ghost"
+                                className="size-5 text-control-text hover:bg-red-50 hover:text-red-400  dark:hover:bg-red-950 dark:hover:text-red-600 [&_svg]:size-3.5"
+                                disabled={isPending}
+                            >
+                                <XIcon weight="duotone" />
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="border-border">
+                            <AlertDialogHeader>
+                                <AlertDialogTitle className="flex items-center gap-2">
+                                    <WarningIcon
+                                        weight="duotone"
+                                        className="size-5 text-red-500"
+                                    />
+                                    Delete member?
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    This action will permanently remove the
+                                    member from the project. The member will no
+                                    longer have access to tasks.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel
+                                    type="button"
+                                    className="text-sm"
+                                    disabled={isPending}
+                                >
+                                    Cancel
+                                </AlertDialogCancel>
+                                <AlertDialogAction
+                                    type="button"
+                                    onClick={() => onRemove(member.id)}
+                                    className="bg-red-600 text-sm font-semibold text-white hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-500"
+                                    disabled={isPending}
+                                >
+                                    Delete member
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
                 </div>
             ) : (
                 <span className="rounded-md border border-border px-3 py-1.5 text-xs font-medium capitalize">

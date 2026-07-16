@@ -5,6 +5,7 @@ import {
     CheckIcon,
     LinkIcon,
     TrashSimpleIcon,
+    WarningIcon,
     XIcon,
 } from "@phosphor-icons/react";
 import {
@@ -21,6 +22,17 @@ import { deleteTaskAction, generateInviteAction } from "@/data/actions";
 import { toast } from "sonner";
 import { cn } from "@/libs/utils";
 import { Button } from "../../shadcn/button";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "../../shadcn/alert-dialog";
 
 interface HeaderProps {
     isPending: boolean;
@@ -211,27 +223,55 @@ export default function Header({
                                 {linkCopied ? "Copied!" : "Copy link"}
                             </TooltipContent>
                         </Tooltip>
-                        <Tooltip>
-                            <TooltipTrigger
-                                asChild
-                                disabled={isPending}
-                                onClick={() => handleDeleteTask(task.id)}
-                            >
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    className="size-8 text-control-text hover:bg-red-50 hover:text-red-400 dark:hover:bg-red-950  dark:hover:text-red-600 [&_svg]:size-4"
-                                    onClick={() => {
-                                        onOpenChange(false);
-                                    }}
-                                    disabled={isPending}
-                                >
-                                    <TrashSimpleIcon weight="duotone" />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Delete task</TooltipContent>
-                        </Tooltip>
+                        <AlertDialog>
+                            <Tooltip>
+                                <TooltipTrigger asChild disabled={isPending}>
+                                    <AlertDialogTrigger asChild>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="size-8 text-control-text hover:bg-red-50 hover:text-red-400 dark:hover:bg-red-950  dark:hover:text-red-600 [&_svg]:size-4"
+                                            disabled={isPending}
+                                        >
+                                            <TrashSimpleIcon weight="duotone" />
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                </TooltipTrigger>
+                                <TooltipContent>Delete task</TooltipContent>
+                            </Tooltip>
+                            <AlertDialogContent className="border-border">
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle className="flex items-center gap-2">
+                                        <WarningIcon
+                                            weight="duotone"
+                                            className="size-5 text-red-500"
+                                        />
+                                        Delete task?
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        &quot;{task.title}&quot; will be
+                                        permanently deleted. This cannot be
+                                        undone.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel disabled={isPending}>
+                                        Cancel
+                                    </AlertDialogCancel>
+                                    <AlertDialogAction
+                                        onClick={() => {
+                                            handleDeleteTask(task.id);
+                                            onOpenChange(false);
+                                        }}
+                                        disabled={isPending}
+                                        className="bg-red-600 font-semibold text-white hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600"
+                                    >
+                                        Delete project
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
                     </>
                 )}
                 <Tooltip>

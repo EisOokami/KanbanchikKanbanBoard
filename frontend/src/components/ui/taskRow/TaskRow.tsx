@@ -31,6 +31,7 @@ import {
     FireIcon,
     PaperclipIcon,
     TrashSimpleIcon,
+    WarningIcon,
 } from "@phosphor-icons/react";
 
 interface TaskRowProps {
@@ -263,7 +264,11 @@ export default function TaskRow({
                         </DropdownMenu>
                         <AlertDialogContent className="border-border">
                             <AlertDialogHeader>
-                                <AlertDialogTitle>
+                                <AlertDialogTitle className="flex items-center gap-2">
+                                    <WarningIcon
+                                        weight="duotone"
+                                        className="size-5 text-red-500"
+                                    />
                                     Delete task?
                                 </AlertDialogTitle>
                                 <AlertDialogDescription>
@@ -275,7 +280,7 @@ export default function TaskRow({
                                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                                 <AlertDialogAction
                                     onClick={() => onDelete(task.id)}
-                                    className="bg-rose-600 text-white hover:bg-rose-700"
+                                    className="bg-red-600 font-semibold text-white hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600"
                                 >
                                     Delete
                                 </AlertDialogAction>

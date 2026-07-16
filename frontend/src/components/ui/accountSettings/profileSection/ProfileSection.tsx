@@ -7,7 +7,7 @@ import { Button } from "../../shadcn/button";
 import FieldRow from "../fieldRow/FieldRow";
 import { Input } from "../../shadcn/input";
 import SaveBar from "../saveBar/SaveBar";
-import { CameraIcon, InfoIcon } from "@phosphor-icons/react";
+import { CameraIcon, InfoIcon, WarningIcon } from "@phosphor-icons/react";
 import { BaseAction } from "@/types/actions";
 import { deleteAvatarAction, updateProfileAction } from "@/data/actions";
 import { ZodErrors } from "../../zodErrors/ZodErrors";
@@ -16,6 +16,17 @@ import { cn, getInitials } from "@/libs/utils";
 import { DetailsErrors } from "../../detailsErrors/DetailsErrors";
 import AvatarColorPicker from "./avatarColorPicker/AvatarColorPicker";
 import { toast } from "sonner";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "../../shadcn/alert-dialog";
 
 const INITIAL_STATE: BaseAction = {
     zodErrors: null,
@@ -69,7 +80,6 @@ export default function ProfileSection({
         }
 
         setAvatarPreview(userData.avatar_url);
-        setIsChanged(true);
     };
 
     const handleDeleteAvatar = async (avatar_url: string) => {
@@ -172,7 +182,7 @@ export default function ProfileSection({
                                 type="button"
                                 variant="ghost"
                                 size="sm"
-                                className="h-7 text-xs text-muted-foreground hover:bg-control-active"
+                                className="mr-2 h-7 text-xs text-muted-foreground hover:bg-control-active"
                                 onClick={handleRemoveAvatar}
                                 disabled={isPending}
                             >
@@ -181,18 +191,59 @@ export default function ProfileSection({
                         )}
                         {userData.avatar_url &&
                             avatarPreview === userData.avatar_url && (
-                                <Button
-                                    type="button"
-                                    variant="destructive"
-                                    size="sm"
-                                    className="h-7 text-xs"
-                                    onClick={() =>
-                                        handleDeleteAvatar(userData.avatar_url)
-                                    }
-                                    disabled={isPending}
-                                >
-                                    Delete
-                                </Button>
+                                <AlertDialog>
+                                    <AlertDialogTrigger
+                                        asChild
+                                        disabled={isPending}
+                                    >
+                                        <Button
+                                            type="button"
+                                            variant="destructive"
+                                            size="sm"
+                                            className="h-7 text-xs"
+                                            disabled={isPending}
+                                        >
+                                            Delete
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent className="border-border">
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle className="flex items-center gap-2">
+                                                <WarningIcon
+                                                    weight="duotone"
+                                                    className="size-5 text-red-500"
+                                                />
+                                                Delete your avatar?
+                                            </AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                This will delete your current
+                                                profile photo. You can upload a
+                                                new one at any time.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel
+                                                type="button"
+                                                className="text-sm"
+                                                disabled={isPending}
+                                            >
+                                                Cancel
+                                            </AlertDialogCancel>
+                                            <AlertDialogAction
+                                                type="button"
+                                                onClick={() =>
+                                                    handleDeleteAvatar(
+                                                        userData.avatar_url,
+                                                    )
+                                                }
+                                                className="bg-red-600 text-sm font-semibold text-white hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-500"
+                                                disabled={isPending}
+                                            >
+                                                Delete avatar
+                                            </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
                             )}
                         {!userData.avatar_url && (
                             <>

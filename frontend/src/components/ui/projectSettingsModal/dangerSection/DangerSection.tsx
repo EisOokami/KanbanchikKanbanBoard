@@ -12,7 +12,11 @@ import {
     AlertDialogTrigger,
 } from "../../shadcn/alert-dialog";
 import { Button } from "../../shadcn/button";
-import { ArchiveIcon, TrashSimpleIcon } from "@phosphor-icons/react";
+import {
+    ArchiveIcon,
+    TrashSimpleIcon,
+    WarningIcon,
+} from "@phosphor-icons/react";
 import { deleteProjectAction } from "@/data/actions";
 import { toast } from "sonner";
 import { NavSection } from "@/types/types";
@@ -100,7 +104,11 @@ export default function DangerSection({
                         </AlertDialogTrigger>
                         <AlertDialogContent className="border-border">
                             <AlertDialogHeader>
-                                <AlertDialogTitle>
+                                <AlertDialogTitle className="flex items-center gap-2">
+                                    <WarningIcon
+                                        weight="duotone"
+                                        className="size-5 text-red-500"
+                                    />
                                     Delete &quot;{name}&quot;?
                                 </AlertDialogTitle>
                                 <AlertDialogDescription>
@@ -110,16 +118,13 @@ export default function DangerSection({
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                                <AlertDialogCancel
-                                    className="rounded-md"
-                                    disabled={isPending}
-                                >
+                                <AlertDialogCancel disabled={isPending}>
                                     Cancel
                                 </AlertDialogCancel>
                                 <AlertDialogAction
                                     onClick={handleDeleteProject}
                                     disabled={isPending}
-                                    className="rounded-md bg-red-600 font-semibold text-white hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600"
+                                    className="bg-red-600 font-semibold text-white hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600"
                                 >
                                     Delete project
                                 </AlertDialogAction>

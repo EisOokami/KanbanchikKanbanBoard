@@ -51,7 +51,6 @@ export default function DangerZone({ userData }: Readonly<DangerZoneProps>) {
                     <p className="text-sm font-semibold text-red-700 dark:text-red-400">
                         Delete account
                     </p>
-
                     <p className="mt-0.5 text-xs text-muted-foreground">
                         Permanently delete your account and all data. This
                         cannot be undone.
@@ -82,7 +81,6 @@ export default function DangerZone({ userData }: Readonly<DangerZoneProps>) {
                                 />
                                 Delete your account?
                             </AlertDialogTitle>
-
                             <AlertDialogDescription>
                                 This will permanently delete your account, all
                                 your projects, tasks, and data. This action
@@ -92,7 +90,7 @@ export default function DangerZone({ userData }: Readonly<DangerZoneProps>) {
                         <AlertDialogFooter>
                             <AlertDialogCancel
                                 type="button"
-                                className="rounded-md text-sm"
+                                className="text-sm"
                                 disabled={isPending}
                             >
                                 Cancel
@@ -100,7 +98,7 @@ export default function DangerZone({ userData }: Readonly<DangerZoneProps>) {
                             <AlertDialogAction
                                 type="button"
                                 onClick={() => formRef.current?.requestSubmit()}
-                                className="rounded-md bg-red-600 text-sm font-semibold text-white hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-500"
+                                className="bg-red-600 text-sm font-semibold text-white hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-500"
                                 disabled={isPending}
                             >
                                 Yes, delete everything
