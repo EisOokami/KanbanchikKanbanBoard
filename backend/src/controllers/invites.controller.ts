@@ -91,7 +91,7 @@ export const generateInvite = async (
 
         res.status(201).json({
             status: "success",
-            message: "Invite created",
+            message: "The invitation has been created",
             data: { inviteUrl: `${frontendUrl}/invite/${token}` },
         });
     } catch (error) {
@@ -217,7 +217,7 @@ export const acceptInvite = async (
 
         res.status(200).json({
             status: "success",
-            message: "Joined project",
+            message: "Successfully joined the project",
             data: { projectId: invite.project_id },
         });
     } catch (error) {

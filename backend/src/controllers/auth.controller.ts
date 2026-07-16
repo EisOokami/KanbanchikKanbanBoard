@@ -125,7 +125,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
         res.status(201).json({
             status: "success",
-            message: "User registered successfully",
+            message: "User has been successfully registered",
             accessToken,
             refreshToken,
         });
@@ -491,7 +491,7 @@ export const resetPassword = async (
 
         res.status(201).json({
             status: "success",
-            message: "Password Reset successfully",
+            message: "The password has been successfully reset",
             accessToken,
             refreshToken,
         });
@@ -608,7 +608,7 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
 
         res.status(201).json({
             status: "success",
-            message: "Token is refresh",
+            message: "The token has been updated",
             accessToken: newAccessToken,
             refreshToken: newRefreshToken,
         });

@@ -221,7 +221,7 @@ export const updateProfile = async (
 
         res.status(200).json({
             status: "success",
-            message: "Profile updated successfully",
+            message: "The profile has been successfully updated",
             user: [
                 {
                     ...updatedUser[0],
@@ -331,7 +331,7 @@ export const changePassword = async (
 
         res.status(200).json({
             status: "success",
-            message: "Password changed successfully",
+            message: "The password has been successfully changed",
         });
     } catch (error) {
         if (error instanceof ZodError) {
@@ -433,7 +433,7 @@ export const deleteAccount = async (
 
         res.status(200).json({
             status: "success",
-            message: "Account deleted successfully",
+            message: "The account has been successfully deleted",
         });
     } catch (error) {
         if (error instanceof ZodError) {

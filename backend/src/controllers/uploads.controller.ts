@@ -171,7 +171,7 @@ export const uploadSingle = async (req: IGetUserRequest, res: Response) => {
 
         res.status(200).json({
             status: "success",
-            message: "File uploaded successfully",
+            message: "The file was successfully uploaded",
             data: {
                 id: result.insertId,
                 filename: req.file.originalname,
@@ -277,7 +277,7 @@ export const uploadAvatar = async (req: IGetUserRequest, res: Response) => {
 
         res.status(200).json({
             status: "success",
-            message: "Avatar uploaded successfully",
+            message: "The avatar was uploaded successfully",
             data: {
                 id: uploadResult.insertId,
                 filename: req.file.originalname,
@@ -412,7 +412,7 @@ export const uploadMultiple = async (req: IGetUserRequest, res: Response) => {
 
         res.status(200).json({
             status: "success",
-            message: "File uploaded successfully",
+            message: "The file was successfully uploaded",
             data: files.map((file) => ({
                 filename: file.originalname,
                 url: `${process.env.BACKEND_URL}/files/${file.filename}`,
@@ -594,7 +594,7 @@ export const deleteAttachment = async (req: IGetUserRequest, res: Response) => {
 
         res.status(200).json({
             status: "success",
-            message: "File deleted successfully",
+            message: "The file was successfully deleted",
         });
     } catch (error) {
         if (error instanceof ZodError) {
@@ -713,7 +713,7 @@ export const deleteAvatar = async (req: IGetUserRequest, res: Response) => {
 
         res.status(200).json({
             status: "success",
-            message: "File deleted successfully",
+            message: "The file was successfully deleted",
         });
     } catch (error) {
         if (error instanceof ZodError) {

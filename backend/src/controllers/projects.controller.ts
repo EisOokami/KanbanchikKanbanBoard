@@ -938,7 +938,7 @@ export const createProject = async (req: IGetUserRequest, res: Response) => {
 
         res.status(201).json({
             status: "success",
-            message: "Project created successfully",
+            message: "The project has been successfully created",
             project: newProject,
         });
     } catch (error) {
@@ -1395,7 +1395,7 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
 
         res.status(200).json({
             status: "success",
-            message: "Project updated successfully",
+            message: "The project has been successfully updated",
             project: updatedProject,
         });
     } catch (error) {
@@ -1551,7 +1551,7 @@ export const deleteProject = async (req: IGetUserRequest, res: Response) => {
 
         res.status(200).json({
             status: "success",
-            message: "Project deleted successfully",
+            message: "The project has been successfully deleted",
         });
     } catch (error) {
         console.error(error);
@@ -1675,7 +1675,7 @@ export const changeRole = async (req: IGetUserRequest, res: Response) => {
 
         res.status(200).json({
             status: "success",
-            message: "Role changed successfully",
+            message: "The role has been successfully changed",
         });
     } catch (error) {
         console.error(error);

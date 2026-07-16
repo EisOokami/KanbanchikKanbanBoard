@@ -953,7 +953,7 @@ export const createTask = async (req: IGetUserRequest, res: Response) => {
 
         res.status(201).json({
             status: "success",
-            message: "Task created successfully",
+            message: "The task was created successfully",
             data: newTasks[0],
         });
     } catch (error: any) {
@@ -1210,7 +1210,7 @@ export const updateTask = async (req: IGetUserRequest, res: Response) => {
 
         res.status(200).json({
             status: "success",
-            message: "Task updated successfully",
+            message: "The task has been successfully updated",
             data: updatedTasks[0],
         });
     } catch (error) {
@@ -1345,7 +1345,7 @@ export const deleteTask = async (req: IGetUserRequest, res: Response) => {
 
         res.status(200).json({
             status: "success",
-            message: "Task deleted successfully",
+            message: "The task has been successfully deleted",
         });
     } catch (error) {
         console.error(error);
@@ -1597,7 +1597,7 @@ export const moveTask = async (req: IGetUserRequest, res: Response) => {
 
         res.status(200).json({
             status: "success",
-            message: "Task moved successfully",
+            message: "The task has been successfully moved",
         });
     } catch (error) {
         console.error(error);

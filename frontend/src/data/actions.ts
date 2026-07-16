@@ -1568,7 +1568,7 @@ export async function deleteTaskAction(
 
     return {
         ok: true,
-        message: "Task delete",
+        message: "Task has been deleted",
     };
 }
 
@@ -2034,7 +2034,7 @@ export async function deleteAttachmentAction(
 
     return {
         ok: true,
-        message: "Attachment delete",
+        message: "Attachment has been deleted",
     };
 }
 
@@ -2079,7 +2079,7 @@ export async function deleteAvatarAction(
 
     return {
         ok: true,
-        message: "Avatar delete",
+        message: "Avatar has been deleted",
     };
 }
 
@@ -2124,7 +2124,7 @@ export async function generateInviteAction(
     if ("data" in responseData && responseData.data) {
         return {
             ok: true,
-            message: "Invitation accepted",
+            message: "Invitation has been accepted",
             inviteUrl: responseData.data.inviteUrl,
         };
     }
@@ -2174,14 +2174,14 @@ export async function acceptInviteAction(
     ) {
         return {
             ok: true,
-            message: "Invitation accepted",
+            message: "Invitation has been accepted",
             projectId: responseData.data.projectId,
         };
     }
 
     return {
         ok: true,
-        message: "Invitation accepted",
+        message: "Invitation has been accepted",
     };
 }
 
@@ -2320,7 +2320,7 @@ export async function changeRoleAction(
 
     return {
         ok: true,
-        message: "Role changed",
+        message: "Role has been changed",
     };
 }
 
