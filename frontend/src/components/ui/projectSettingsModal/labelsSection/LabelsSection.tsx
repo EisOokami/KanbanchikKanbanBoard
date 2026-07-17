@@ -203,28 +203,32 @@ export default function LabelsSection({
                                 </span>
                             )}
                             <div className="flex items-center gap-1">
-                                <button
+                                <Button
                                     type="button"
+                                    variant="ghost"
+                                    size="icon"
                                     onClick={() => setEditingLabel(label.id)}
-                                    className="ml-1 flex size-6 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100"
+                                    className="ml-1 size-7 text-control-text hover:bg-control-active"
                                     disabled={isPending}
                                 >
                                     <PencilSimpleIcon
                                         weight="duotone"
                                         size={16}
                                     />
-                                </button>
-                                <button
+                                </Button>
+                                <Button
                                     type="button"
+                                    variant="ghost"
+                                    size="icon"
                                     onClick={() => removeLabel(label.id)}
-                                    className="flex size-6 items-center justify-center rounded-md text-gray-500 hover:bg-red-50 hover:text-red-400"
+                                    className="size-7 text-control-text hover:bg-red-50 hover:text-red-400 dark:hover:bg-red-950  dark:hover:text-red-600"
                                     disabled={isPending}
                                 >
                                     <TrashSimpleIcon
                                         weight="duotone"
                                         size={16}
                                     />
-                                </button>
+                                </Button>
                             </div>
                         </div>
                     ))}
