@@ -67,10 +67,7 @@ export const getProjects = async (req: IGetUserRequest, res: Response) => {
         );
 
         if (!projects.length || !projects[0]) {
-            res.status(404).json({
-                status: "error",
-                message: "Project not found or access denied",
-            });
+            res.status(200).json([]);
 
             return;
         }
