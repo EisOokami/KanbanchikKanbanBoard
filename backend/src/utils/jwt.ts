@@ -4,11 +4,15 @@ import dotenv from "dotenv";
 import crypto from "crypto";
 import { pool } from "../db/pool";
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
+import bcrypt from "bcryptjs";
+import type { RefreshSession } from "../types/types";
 
 dotenv.config();
 
 const accessSecret = new TextEncoder().encode(process.env.JWT_ACCESS_SECRET);
 const refreshSecret = new TextEncoder().encode(process.env.JWT_REFRESH_SECRET);
+
+const ROTATION_GRACE_PERIOD_MS = 10_000;
 
 export async function createAccessToken(payload: JWTPayload) {
     return await new SignJWT(payload)
@@ -19,23 +23,35 @@ export async function createAccessToken(payload: JWTPayload) {
 }
 
 export async function createRefreshToken(
-    userId: string,
+    userId: number,
+    ip?: string,
+    userAgent?: string,
 ): Promise<string | null> {
-    const jti = crypto.randomUUID();
+    const sessionId = crypto.randomUUID();
 
-    const token = await new SignJWT({ sub: userId })
+    const token = await new SignJWT({ sub: String(userId), sid: sessionId })
         .setProtectedHeader({ alg: "HS256" })
         .setIssuedAt()
         .setExpirationTime("7d")
-        .setJti(jti)
         .sign(refreshSecret);
+
+    const hash = await bcrypt.hash(token, 10);
 
     const [result] = await pool.execute<ResultSetHeader>(
         `
-            INSERT INTO refresh_tokens (id, user_id)
-            VALUES (?, ?)
+            INSERT INTO user_sessions
+            (
+                id,
+                user_id,
+                refresh_token_hash,
+                ip,
+                user_agent,
+                expires_at
+            )
+            VALUES
+            (?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 7 DAY))
         `,
-        [jti, userId],
+        [sessionId, userId, hash, ip ?? null, userAgent ?? null],
     );
 
     if (result.affectedRows === 0) {
@@ -51,27 +67,147 @@ export async function revokeAllUserTokens(userId: string | number) {
     ]);
 }
 
-export async function verifyAccessToken(token: string | Uint8Array) {
-    return (await jwtVerify(token, accessSecret)).payload;
+export async function verifyAccessToken(token: string) {
+    const { payload } = await jwtVerify(token, accessSecret);
+
+    return {
+        payload,
+    };
 }
 
 export async function verifyRefreshToken(token: string) {
     const { payload } = await jwtVerify(token, refreshSecret);
 
-    const jti = payload.jti;
+    const sid = payload.sid;
 
-    if (!jti) throw new Error("Missing jti");
-
-    if (!payload.sub) throw new Error("Missing sub");
-
-    const [rows] = await pool.execute<RowDataPacket[]>(
-        `SELECT revoked FROM refresh_tokens WHERE id = ? AND user_id = ?`,
-        [jti, payload.sub],
-    );
-
-    if (!rows || !rows.length || rows[0]?.revoked) {
-        throw new Error("Token revoked or not found");
+    if (!sid || typeof sid !== "string") {
+        throw new Error("Missing sid");
     }
 
-    return payload;
+    const [rows] = await pool.execute<RefreshSession[]>(
+        `
+            SELECT *
+            FROM user_sessions
+            WHERE 
+                id = ?
+                AND expires_at > NOW()
+                `,
+        [sid],
+    );
+
+    if (!rows.length || !rows[0]) {
+        throw new Error("Session not found");
+    }
+
+    const session = rows[0];
+
+    const valid = await bcrypt.compare(token, session.refresh_token_hash);
+
+    if (!valid) {
+        throw new Error("Invalid refresh token");
+    }
+
+    if (!session.revoked) {
+        return { payload, session };
+    }
+
+    const replacedAt = session.replaced_at
+        ? new Date(session.replaced_at).getTime()
+        : null;
+
+    const withinGracePeriod =
+        session.replaced_by &&
+        replacedAt !== null &&
+        Date.now() - replacedAt < ROTATION_GRACE_PERIOD_MS;
+
+    if (!withinGracePeriod) {
+        throw new Error("Session not found");
+    }
+
+    return {
+        payload,
+        session,
+    };
+}
+
+export async function rotateRefreshToken(
+    token: string,
+    ip?: string,
+    userAgent?: string,
+) {
+    const { payload, session } = await verifyRefreshToken(token);
+
+    if (!payload.sub) {
+        throw new Error("Missing user id");
+    }
+
+    if (session.revoked && session.replaced_by) {
+        const [rows] = await pool.execute<RefreshSession[]>(
+            `
+                SELECT *
+                FROM user_sessions
+                WHERE
+                    id = ?
+                    AND revoked = FALSE
+                    AND expires_at > NOW()
+            `,
+            [session.replaced_by],
+        );
+
+        const replacementSession = rows[0];
+
+        if (replacementSession) {
+            return await new SignJWT({
+                sub: String(payload.sub),
+                sid: replacementSession.id,
+            })
+                .setProtectedHeader({ alg: "HS256" })
+                .setIssuedAt()
+                .setExpirationTime("7d")
+                .sign(refreshSecret);
+        }
+
+        throw new Error("Session not found");
+    }
+
+    const newToken = await createRefreshToken(+payload.sub, ip, userAgent);
+
+    if (!newToken) {
+        throw new Error("Failed to create new session");
+    }
+
+    const { payload: newPayload } = await jwtVerify(newToken, refreshSecret);
+
+    await pool.execute(
+        `
+            UPDATE user_sessions
+            SET revoked = TRUE, replaced_by = ?, replaced_at = NOW()
+            WHERE id = ?
+        `,
+        [String(newPayload.sid), session.id],
+    );
+
+    return newToken;
+}
+
+export async function revokeSession(sessionId: string) {
+    await pool.execute(
+        `
+            UPDATE user_sessions
+            SET revoked = TRUE
+            WHERE id = ?
+        `,
+        [sessionId],
+    );
+}
+
+export async function revokeAllUserSessions(userId: number) {
+    await pool.execute(
+        `
+            UPDATE user_sessions
+            SET revoked = TRUE
+            WHERE user_id = ?
+        `,
+        [userId],
+    );
 }

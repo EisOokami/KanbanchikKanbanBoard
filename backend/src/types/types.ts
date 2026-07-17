@@ -152,3 +152,13 @@ export interface TaskMembers extends RowDataPacket {
     task_id: number;
     user_id: number;
 }
+
+export interface RefreshSession extends RowDataPacket {
+    id: string;
+    user_id: number;
+    refresh_token_hash: string;
+    revoked: boolean;
+    expires_at: Date;
+    replaced_by: string | null;
+    replaced_at: Date | null;
+}

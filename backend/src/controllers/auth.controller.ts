@@ -15,9 +15,13 @@ import { transporter } from "../utils/email";
 import {
     createAccessToken,
     createRefreshToken,
+    revokeAllUserSessions,
     revokeAllUserTokens,
+    revokeSession,
+    rotateRefreshToken,
+    verifyRefreshToken,
 } from "../utils/jwt";
-import { jwtVerify } from "jose";
+import { jwtVerify, type JWTPayload } from "jose";
 import type { RefreshTokens, User } from "../types/types";
 
 dotenv.config();
@@ -106,7 +110,11 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         }
 
         const accessToken = await createAccessToken({ id: user.id });
-        const refreshToken = await createRefreshToken(user.id.toString());
+        const refreshToken = await createRefreshToken(
+            user.id,
+            req.ip,
+            req.headers["user-agent"],
+        );
 
         const mailOptions = {
             from: process.env.EMAIL_USER,
@@ -201,7 +209,11 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         const accessToken = await createAccessToken({
             id: user.id,
         });
-        const refreshToken = await createRefreshToken(user.id.toString());
+        const refreshToken = await createRefreshToken(
+            user.id,
+            req.ip,
+            req.headers["user-agent"],
+        );
 
         res.status(200).json({
             status: "success",
@@ -458,12 +470,25 @@ export const resetPassword = async (
             return;
         }
 
-        await revokeAllUserTokens(id.toString());
+        await revokeAllUserSessions(user.id);
 
         const accessToken = await createAccessToken({
             id: user.id,
         });
-        const refreshToken = await createRefreshToken(user.id.toString());
+        const refreshToken = await createRefreshToken(
+            user.id,
+            req.ip,
+            req.headers["user-agent"],
+        );
+
+        if (!refreshToken) {
+            res.status(500).json({
+                status: "error",
+                message: "Failed to create session",
+            });
+
+            return;
+        }
 
         const mailOptions = {
             from: process.env.EMAIL_USER,
@@ -532,14 +557,21 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        const { payload } = await jwtVerify(refreshToken, refreshSecret);
-        const jti = payload.jti;
-        const userId = payload.sub;
+        let payload: JWTPayload;
+        let session: RowDataPacket;
 
-        const [refreshTokenRows] = await pool.execute<RefreshTokens[]>(
-            "SELECT * FROM refresh_tokens WHERE id = ?",
-            [jti ?? null],
-        );
+        try {
+            ({ payload, session } = await verifyRefreshToken(refreshToken));
+        } catch {
+            res.status(401).json({
+                status: "error",
+                message: "Invalid token",
+            });
+
+            return;
+        }
+
+        const userId = payload.sub;
 
         if (!userId) {
             res.status(401).json({
@@ -550,57 +582,22 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        if (!refreshTokenRows.length) {
-            await revokeAllUserTokens(userId);
-
-            res.status(401).json({
-                status: "error",
-                message: "Invalid token",
-            });
-
-            return;
-        }
-
-        const storedToken = refreshTokenRows[0];
-
-        if (!storedToken) {
-            await revokeAllUserTokens(userId);
-
-            res.status(401).json({
-                status: "error",
-                message: "Invalid token",
-            });
-
-            return;
-        }
-
-        if (storedToken.revoked) {
-            await revokeAllUserTokens(userId);
-
-            res.status(401).json({
-                status: "error",
-                message: "Invalid token",
-            });
-
-            return;
-        }
-
-        const [result] = await pool.execute<ResultSetHeader>(
-            "UPDATE refresh_tokens SET revoked = true WHERE id = ?",
-            [jti ?? null],
+        const newRefreshToken = await rotateRefreshToken(
+            refreshToken,
+            req.ip,
+            req.headers["user-agent"],
         );
 
-        if (result.affectedRows === 0) {
-            res.status(400).json({
+        if (!newRefreshToken) {
+            res.status(500).json({
                 status: "error",
-                message: "Invalid token",
+                message: "Failed to refresh session",
             });
 
             return;
         }
 
-        const newAccessToken = await createAccessToken({ id: userId });
-        const newRefreshToken = await createRefreshToken(userId);
+        const newAccessToken = await createAccessToken({ id: +userId });
 
         res.status(201).json({
             status: "success",
@@ -647,19 +644,20 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
 
         const { payload } = await jwtVerify(refreshToken, refreshSecret);
 
-        const [result] = await pool.execute<ResultSetHeader>(
-            "UPDATE refresh_tokens SET revoked = true WHERE id = ?",
-            [payload.jti ?? null],
-        );
+        const sid = payload.sid;
 
-        if (result.affectedRows === 0) {
-            res.status(400).json({
+        if (!sid || typeof sid !== "string") {
+            res.status(401).json({
                 status: "error",
-                message: "Failed to reset password",
+                message: "Invalid token",
             });
 
             return;
         }
+
+        await revokeSession(sid);
+
+        res.clearCookie("refreshToken");
 
         res.status(201).json({
             status: "success",

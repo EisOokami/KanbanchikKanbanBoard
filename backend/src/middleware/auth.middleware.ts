@@ -20,7 +20,8 @@ export async function authenticateToken(
                 .json({ status: "error", message: "Token missing" });
         }
 
-        req.user = await verifyAccessToken(token);
+        const { payload } = await verifyAccessToken(token);
+        req.user = payload;
 
         next();
     } catch {
