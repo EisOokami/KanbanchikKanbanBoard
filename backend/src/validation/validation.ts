@@ -1,68 +1,20 @@
 import { z } from "zod";
 
-export const updateProfileSchema = z
-    .object({
-        name: z
-            .string()
-            .trim()
-            .min(1, "Name must be at least 1 characters")
-            .max(100, "Name must be less than 100 characters"),
-        surname: z
-            .string()
-            .trim()
-            .min(1, "Surname must be at least 1 characters")
-            .max(100, "Surname must be less than 100 characters"),
-        email: z
-            .email("Invalid email format")
-            .trim()
-            .toLowerCase()
-            .min(1, "Email is required")
-            .max(255, "Email must be less than 255 characters long"),
-        color: z
-            .string()
-            .trim()
-            .length(7, { message: "Color must be a valid HEX value" })
-            .regex(/^#[0-9A-Fa-f]{6}$/, {
-                message: "Color must be a valid HEX value",
-            })
-            .optional(),
-    })
-    .refine((data) => Object.values(data).some((v) => v !== undefined), {
-        message: "At least one field must be provided",
-    });
-
-export const changePasswordSchema = z
-    .object({
-        currentPassword: z
-            .string()
-            .min(8, "Password must be at least 8 characters long")
-            .max(255, "Password must be less than 255 characters long")
-            .regex(
-                /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[~`!@#$%^&*()_+=\-\[\]\\|;:'",.<>/?])/,
-                "Password must contain at least one uppercase letter, one lowercase letter, one special character and one number",
-            ),
-        newPassword: z
-            .string()
-            .min(8, "Password must be at least 8 characters long")
-            .max(255, "Password must be less than 255 characters long")
-            .regex(
-                /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[~`!@#$%^&*()_+=\-\[\]\\|;:'",.<>/?])/,
-                "Password must contain at least one uppercase letter, one lowercase letter, one special character and one number",
-            ),
-    })
-    .refine((data) => data.currentPassword !== data.newPassword, {
-        message: "Passwords are the same",
-        path: ["confirmPassword"],
-    });
-
-export const validateIdSchema = z.object({
-    id: z
+export const loginSchema = z.object({
+    email: z
+        .email("Invalid email format")
+        .trim()
+        .toLowerCase()
+        .min(1, "Email is required")
+        .max(255, "Email must be less than 255 characters long"),
+    password: z
         .string()
-        .regex(/^\d+$/)
-        .transform(Number)
-        .refine((value) => Number.isSafeInteger(value), {
-            message: "ID is too lcarge a numerical value",
-        }),
+        .min(8, "Password must be at least 8 characters long")
+        .max(255, "Password must be less than 255 characters long")
+        .regex(
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).+$/,
+            "Password must contain at least one uppercase letter, one lowercase letter, one special character and one number",
+        ),
 });
 
 export const registerSchema = z.object({
@@ -77,7 +29,7 @@ export const registerSchema = z.object({
         .min(1, "Surname must be at least 1 characters")
         .max(100, "Surname must be less than 100 characters"),
     email: z
-        .email("Invalid email format")
+        .email("Please enter a valid email address")
         .trim()
         .toLowerCase()
         .min(1, "Email is required")
@@ -87,48 +39,20 @@ export const registerSchema = z.object({
         .min(8, "Password must be at least 8 characters long")
         .max(255, "Password must be less than 255 characters long")
         .regex(
-            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[~`!@#$%^&*()_+=\-\[\]\\|;:'",.<>/?])/,
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).+$/,
             "Password must contain at least one uppercase letter, one lowercase letter, one special character and one number",
         ),
     avatar_url: z
-        .url({ message: "Invalid avatar URL" })
-        .max(500, { message: "Avatar URL must be less than 500 characters" })
+        .url("Invalid avatar URL")
+        .max(500, "Avatar URL must be less than 500 characters")
         .nullable()
         .optional(),
     color: z
         .string()
         .trim()
-        .length(7, { message: "Color must be a valid HEX value" })
-        .regex(/^#[0-9A-Fa-f]{6}$/, {
-            message: "Color must be a valid HEX value",
-        })
+        .length(7, "Color must be a valid HEX value")
+        .regex(/^#[0-9A-Fa-f]{6}$/, "Color must be a valid HEX value")
         .optional(),
-});
-
-export const loginSchema = z.object({
-    email: z
-        .email("Invalid email format")
-        .trim()
-        .toLowerCase()
-        .min(1, "Email is required")
-        .max(255, "Email must be less than 255 characters long"),
-    password: z
-        .string()
-        .min(8, "Password must be at least 8 characters long")
-        .max(255, "Password must be less than 255 characters long")
-        .regex(
-            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[~`!@#$%^&*()_+=\-\[\]\\|;:'",.<>/?])/,
-            "Password must contain at least one uppercase letter, one lowercase letter, one special character and one number",
-        ),
-});
-
-export const forgotPasswordSchema = z.object({
-    email: z
-        .email("Invalid email format")
-        .trim()
-        .toLowerCase()
-        .min(1, "Email is required")
-        .max(255, "Email must be less than 255 characters long"),
 });
 
 export const resetPasswordSchema = z.object({
@@ -142,7 +66,7 @@ export const resetPasswordSchema = z.object({
         .min(8, "Password must be at least 8 characters long")
         .max(255, "Password must be less than 255 characters long")
         .regex(
-            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[~`!@#$%^&*()_+=\-\[\]\\|;:'",.<>/?])/,
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).+$/,
             "Password must contain at least one uppercase letter, one lowercase letter, one special character and one number",
         ),
     id: z.number("Invalid data").int("Invalid data").positive("Invalid data"),
@@ -164,10 +88,8 @@ const namedColorSchema = z.object({
     color: z
         .string()
         .trim()
-        .length(7, { message: "Color must be a valid HEX value" })
-        .regex(/^#[0-9A-Fa-f]{6}$/, {
-            message: "Color must be a valid HEX value",
-        }),
+        .length(7, "Color must be a valid HEX value")
+        .regex(/^#[0-9A-Fa-f]{6}$/, "Color must be a valid HEX value"),
 });
 
 const columnSchema = z.object({
@@ -184,31 +106,36 @@ const columnSchema = z.object({
         .min(1, "Name is required")
         .max(150, "Name must be less than 255 characters long"),
     position: z.number().int().min(0),
-    wip_limit: z.number().int().min(1).max(999).nullable(),
+    wip_limit: z
+        .number()
+        .int()
+        .min(1)
+        .max(999, "WIP limit cannot exceed 999")
+        .nullable(),
 });
 
 export const createProjectSchema = z.object({
     icon: z.string().trim().min(1, "Invalid emoji").max(10, "Invalid emoji"),
+    color: z
+        .string()
+        .trim()
+        .length(7, "Color must be a valid HEX value")
+        .regex(/^#[0-9A-Fa-f]{6}$/, "Color must be a valid HEX value"),
     name: z
         .string()
         .trim()
         .min(1, "Name must be at least 1 characters")
         .max(150, "Name must be less than 150 characters"),
-    color: z
-        .string()
-        .trim()
-        .length(7, { message: "Color must be a valid HEX value" })
-        .regex(/^#[0-9A-Fa-f]{6}$/, {
-            message: "Color must be a valid HEX value",
-        }),
     description: z
         .string()
+        .trim()
         .max(500, "Description must be less than 500 characters long")
         .nullable()
         .optional(),
-    status: z.enum(["active", "paused", "completed", "archived"], {
-        message: "Invalid project status",
-    }),
+    status: z.enum(
+        ["active", "paused", "completed", "archived"],
+        "Invalid project status",
+    ),
     showPriorityEmoji: z.boolean(),
     labels: z.array(namedColorSchema).min(1, "At least one label is required"),
     categories: z
@@ -244,26 +171,18 @@ const memberSchema = z.object({
         .min(1, "Surname must be at least 1 characters")
         .max(100, "Surname must be less than 100 characters"),
     avatar_url: z
-        .url({ message: "Invalid avatar URL" })
-        .max(500, { message: "Avatar URL must be less than 500 characters" })
+        .url("Invalid avatar URL")
+        .max(500, "Avatar URL must be less than 500 characters")
         .nullable()
         .optional(),
-    role: z.enum(["owner", "admin", "member", "viewer"], {
-        message: "Invalid member role",
-    }),
-    joined_at: z.iso
-        .datetime({ message: "Invalid datetime format" })
-        .optional(),
+    role: z.enum(["owner", "admin", "member", "viewer"], "Invalid member role"),
+    joined_at: z.iso.datetime("Invalid datetime format").optional(),
     color: z
         .string()
         .trim()
-        .length(7, { message: "Color must be a valid HEX value" })
-        .regex(/^#[0-9A-Fa-f]{6}$/, {
-            message: "Color must be a valid HEX value",
-        }),
-    status: z.enum(["active", "pending"], {
-        message: "Invalid member status",
-    }),
+        .length(7, "Color must be a valid HEX value")
+        .regex(/^#[0-9A-Fa-f]{6}$/, "Color must be a valid HEX value"),
+    status: z.enum(["active", "pending"], "Invalid member status"),
 });
 
 export const updateProjectSchema = z
@@ -272,10 +191,10 @@ export const updateProjectSchema = z
             .string()
             .min(1, "Slug must be at least 1 characters")
             .max(200, "Slug must be 200 characters or less")
-            .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
-                message:
-                    "Slug can only contain lowercase letters, numbers, and single hyphens",
-            }),
+            .regex(
+                /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+                "Slug can only contain lowercase letters, numbers, and single hyphens",
+            ),
         icon: z
             .string()
             .trim()
@@ -284,10 +203,8 @@ export const updateProjectSchema = z
         color: z
             .string()
             .trim()
-            .length(7, { message: "Color must be a valid HEX value" })
-            .regex(/^#[0-9A-Fa-f]{6}$/, {
-                message: "Color must be a valid HEX value",
-            }),
+            .length(7, "Color must be a valid HEX value")
+            .regex(/^#[0-9A-Fa-f]{6}$/, "Color must be a valid HEX value"),
         name: z
             .string()
             .trim()
@@ -299,9 +216,10 @@ export const updateProjectSchema = z
             .max(500, "Description must be less than 500 characters long")
             .nullable()
             .optional(),
-        status: z.enum(["active", "paused", "completed", "archived"], {
-            message: "Invalid project status",
-        }),
+        status: z.enum(
+            ["active", "paused", "completed", "archived"],
+            "Invalid project status",
+        ),
         showPriorityEmoji: z.boolean(),
         labels: z.array(namedColorSchema),
         newLabels: z.array(namedColorSchema),
@@ -312,7 +230,7 @@ export const updateProjectSchema = z
                     .positive()
                     .int("Label ID must be an integer")
                     .refine((value) => Number.isSafeInteger(value), {
-                        message: "ID is too large a numerical value",
+                        message: "Label ID is too large a numerical value",
                     }),
             )
             .optional()
@@ -326,7 +244,7 @@ export const updateProjectSchema = z
                     .positive()
                     .int("Category ID must be an integer")
                     .refine((value) => Number.isSafeInteger(value), {
-                        message: "ID is too large a numerical value",
+                        message: "Category ID is too large a numerical value",
                     }),
             )
             .optional()
@@ -348,7 +266,7 @@ export const updateProjectSchema = z
                     .positive()
                     .int("Column ID must be an integer")
                     .refine((value) => Number.isSafeInteger(value), {
-                        message: "ID is too large a numerical value",
+                        message: "Column ID is too large a numerical value",
                     }),
             )
             .optional()
@@ -377,37 +295,11 @@ export const updateProjectSchema = z
         if (!data.columns.length && !data.newColumns.length) {
             ctx.addIssue({
                 code: "custom",
-                message: "At least one label (existing or new) is required",
-                path: ["labels"],
+                message: "At least one column (existing or new) is required",
+                path: ["columns"],
             });
         }
     });
-
-export const attachmentSchema = z.object({
-    filename: z
-        .string({
-            error: "Filename is required",
-        })
-        .trim()
-        .min(1, "Filename cannot be empty")
-        .max(255, "Filename must be less than 255 characters"),
-    file_url: z
-        .url("File URL must be a valid URL")
-        .trim()
-        .max(500, "File URL must be less than 500 characters"),
-    mime_type: z
-        .string()
-        .trim()
-        .max(100, "MIME type must be less than 100 characters")
-        .nullable()
-        .optional(),
-    size_bytes: z
-        .number()
-        .int("File size must be an integer")
-        .min(0, "File size cannot be negative")
-        .nullable()
-        .optional(),
-});
 
 export const subtaskSchema = z.object({
     title: z
@@ -439,9 +331,10 @@ export const createTaskSchema = z
             .max(500, "Description must be less than 500 characters long")
             .nullable()
             .optional(),
-        priority: z.enum(["low", "medium", "high", "critical"], {
-            message: "Invalid task priority",
-        }),
+        priority: z.enum(
+            ["low", "medium", "high", "critical"],
+            "Invalid task priority",
+        ),
         dueDate: z.preprocess(
             (value) => (value === "" ? undefined : value),
             z.iso.date().nullable().optional(),
@@ -455,10 +348,10 @@ export const createTaskSchema = z
             .string()
             .min(1, "Slug must be at least 1 characters")
             .max(200, "Slug must be 200 characters or less")
-            .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
-                message:
-                    "Slug can only contain lowercase letters, numbers, and single hyphens",
-            }),
+            .regex(
+                /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+                "Slug can only contain lowercase letters, numbers, and single hyphens",
+            ),
         columnId: z
             .number()
             .positive()
@@ -556,9 +449,10 @@ export const updateTaskSchema = z.object({
         .max(500, "Description must be less than 500 characters long")
         .nullable()
         .optional(),
-    priority: z.enum(["low", "medium", "high", "critical"], {
-        message: "Invalid task priority",
-    }),
+    priority: z.enum(
+        ["low", "medium", "high", "critical"],
+        "Invalid task priority",
+    ),
     dueDate: z.preprocess(
         (value) => (value === "" ? undefined : value),
         z.iso.date().nullable().optional(),
@@ -573,14 +467,14 @@ export const updateTaskSchema = z.object({
         .positive()
         .int("Task ID must be an integer")
         .refine((value) => Number.isSafeInteger(value), {
-            message: "ID is too large a numerical value",
+            message: "Task ID is too large a numerical value",
         }),
     columnId: z
         .number()
         .positive()
         .int("Column ID must be an integer")
         .refine((value) => Number.isSafeInteger(value), {
-            message: "ID is too large a numerical value",
+            message: "Column ID is too large a numerical value",
         }),
     categories: z
         .array(namedColorSchema)
@@ -640,6 +534,68 @@ export const updateTaskSchema = z.object({
     newSubtasks: z.array(subtaskSchema),
 });
 
+export const updateProfileSchema = z
+    .object({
+        name: z
+            .string()
+            .trim()
+            .min(1, "Name must be at least 1 characters")
+            .max(100, "Name must be less than 100 characters"),
+        surname: z
+            .string()
+            .trim()
+            .min(1, "Surname must be at least 1 characters")
+            .max(100, "Surname must be less than 100 characters"),
+        email: z
+            .email("Invalid email format")
+            .trim()
+            .toLowerCase()
+            .min(1, "Email is required")
+            .max(255, "Email must be less than 255 characters long"),
+        color: z
+            .string()
+            .trim()
+            .length(7, "Color must be a valid HEX value")
+            .regex(/^#[0-9A-Fa-f]{6}$/, "Color must be a valid HEX value")
+            .optional(),
+    })
+    .refine((data) => Object.values(data).some((v) => v !== undefined), {
+        message: "At least one field must be provided",
+    });
+
+export const forgotPasswordSchema = z.object({
+    email: z
+        .email("Invalid email format")
+        .trim()
+        .toLowerCase()
+        .min(1, "Email is required")
+        .max(255, "Email must be less than 255 characters long"),
+});
+
+export const changePasswordSchema = z
+    .object({
+        currentPassword: z
+            .string()
+            .min(8, "Password must be at least 8 characters long")
+            .max(255, "Password must be less than 255 characters long")
+            .regex(
+                /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).+$/,
+                "Password must contain at least one uppercase letter, one lowercase letter, one special character and one number",
+            ),
+        newPassword: z
+            .string()
+            .min(8, "Password must be at least 8 characters long")
+            .max(255, "Password must be less than 255 characters long")
+            .regex(
+                /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).+$/,
+                "Password must contain at least one uppercase letter, one lowercase letter, one special character and one number",
+            ),
+    })
+    .refine((data) => data.currentPassword !== data.newPassword, {
+        message: "Passwords are the same",
+        path: ["confirmPassword"],
+    });
+
 const EPSILON = 1e-9;
 const MAX_POSITION = Number.MAX_SAFE_INTEGER;
 
@@ -649,14 +605,14 @@ export const moveTaskSchema = z.object({
         .positive()
         .int("Task ID must be an integer")
         .refine((value) => Number.isSafeInteger(value), {
-            message: "ID is too large a numerical value",
+            message: "Task ID is too large a numerical value",
         }),
     columnId: z
         .number()
         .positive()
         .int("Column ID must be an integer")
         .refine((value) => Number.isSafeInteger(value), {
-            message: "ID is too large a numerical value",
+            message: "Column ID is too large a numerical value",
         }),
     position: z
         .number("Position is required")
@@ -677,15 +633,15 @@ export const getAttachmentsSchema = z.object({
             message: "Task ID must be a numeric string",
         })
         .refine((value) => Number.isSafeInteger(Number(value)), {
-            message: "ID is too large a numerical value",
+            message: "Task ID is too large a numerical value",
         })
         .transform((value) => Number(value)),
 });
 
 export const deleteAvatarSchema = z.object({
     avatar_url: z
-        .url({ message: "Invalid avatar URL" })
-        .max(500, { message: "Avatar URL must be less than 500 characters" })
+        .url("Invalid avatar URL")
+        .max(500, "Avatar URL must be less than 500 characters")
         .nullable()
         .optional(),
 });
@@ -696,7 +652,7 @@ export const memberInviteSchema = z.object({
         .positive()
         .int("Project ID must be an integer")
         .refine((value) => Number.isSafeInteger(value), {
-            message: "ID is too large a numerical value",
+            message: "Project ID is too large a numerical value",
         }),
     members: z
         .array(
@@ -715,10 +671,10 @@ export const validateSlugSchema = z.object({
         .string()
         .min(1, "Slug must be at least 1 characters")
         .max(200, "Slug must be 200 characters or less")
-        .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
-            message:
-                "Slug can only contain lowercase letters, numbers, and single hyphens",
-        }),
+        .regex(
+            /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+            "Slug can only contain lowercase letters, numbers, and single hyphens",
+        ),
 });
 
 export const changeRoleSchema = z.object({
@@ -727,18 +683,25 @@ export const changeRoleSchema = z.object({
         .positive()
         .int("Member ID must be an integer")
         .refine((value) => Number.isSafeInteger(value), {
-            message: "ID is too large a numerical value",
+            message: "Member ID is too large a numerical value",
         }),
-    role: z.enum(["owner", "admin", "member", "viewer"], {
-        message: "Invalid member role",
-    }),
+    role: z.enum(["owner", "admin", "member", "viewer"], "Invalid member role"),
 });
 
 export const deleteMemberSchema = z.object({
     memberId: z
         .number()
         .positive()
-        .int("User ID must be an integer")
+        .int("Member ID must be an integer")
+        .refine((value) => Number.isSafeInteger(value), {
+            message: "Member ID is too large a numerical value",
+        }),
+});
+export const validateIdSchema = z.object({
+    id: z
+        .string()
+        .regex(/^\d+$/)
+        .transform(Number)
         .refine((value) => Number.isSafeInteger(value), {
             message: "ID is too large a numerical value",
         }),
