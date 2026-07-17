@@ -213,10 +213,12 @@ export default function SubtasksSection({
                         <div
                             key={subtask.id}
                             className={cn(
-                                "group/ci flex items-center gap-2.5 rounded-md px-1 py-0.5 transition-colors hover:bg-gray-50",
+                                "group/ci flex items-center gap-2.5 rounded-md px-1 py-0.5",
                                 formState?.zodErrors?.newSubtasks
                                     ? "border-red-500"
                                     : "",
+                                hasPermission &&
+                                    "transition-colors hover:bg-control-active",
                             )}
                         >
                             <Checkbox
