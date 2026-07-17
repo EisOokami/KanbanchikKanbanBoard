@@ -198,44 +198,83 @@ export default function ProjectSettingsModal({
             formData.newLabels.length > 0 ||
             formData.deletedLabelIds.length > 0 ||
             formData.emails.length > 0 ||
-            formData.members.some((member, i) => {
-                const orig = initialFormData.members[i];
+            formData.members.length !== initialFormData.members.length ||
+            formData.members.some((member) => {
+                const original = initialFormData.members.find(
+                    (initialFormDataMember) =>
+                        initialFormDataMember.id === member.id,
+                );
 
-                return !orig || member.role !== orig.role;
+                return !original || original.role !== member.role;
             }) ||
-            formData.columns.some((column, i) => {
-                const orig = initialFormData.columns[i];
+            formData.columns.some((column) => {
+                const original = initialFormData.columns.find(
+                    (initialFormDataColumn) =>
+                        initialFormDataColumn.id === column.id,
+                );
 
                 return (
-                    !orig ||
-                    column.id !== orig.id ||
-                    column.name !== orig.name ||
-                    column.position !== orig.position ||
-                    column.wip_limit !== orig.wip_limit
+                    !original ||
+                    column.name !== original.name ||
+                    column.position !== original.position ||
+                    column.wip_limit !== original.wip_limit
                 );
             }) ||
-            formData.categories.some((category, i) => {
-                const orig = initialFormData.categories[i];
+            formData.categories.some((category) => {
+                const original = initialFormData.categories.find(
+                    (initialFormDataCategory) =>
+                        initialFormDataCategory.id === category.id,
+                );
 
                 return (
-                    !orig ||
-                    category.name !== orig.name ||
-                    category.color !== orig.color
+                    !original ||
+                    category.name !== original.name ||
+                    category.color !== original.color
                 );
             }) ||
-            formData.labels.some((label, i) => {
-                const orig = initialFormData.labels[i];
+            formData.labels.some((label) => {
+                const original = initialFormData.labels.find(
+                    (initialFormDataLabel) =>
+                        initialFormDataLabel.id === label.id,
+                );
 
                 return (
-                    !orig ||
-                    label.name !== orig.name ||
-                    label.color !== orig.color
+                    !original ||
+                    label.name !== original.name ||
+                    label.color !== original.color
                 );
             });
 
         return simpleChanged || formChanged;
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [name, icon, color, description, status, showPriorityEmoji]);
+    }, [
+        name,
+        initialValues.name,
+        initialValues.icon,
+        initialValues.color,
+        initialValues.description,
+        initialValues.status,
+        initialValues.showPriorityEmoji,
+        icon,
+        color,
+        description,
+        status,
+        showPriorityEmoji,
+        formData.newColumns.length,
+        formData.deletedColumnIds.length,
+        formData.newCategories.length,
+        formData.deletedCategoryIds.length,
+        formData.newLabels.length,
+        formData.deletedLabelIds.length,
+        formData.emails.length,
+        formData.members,
+        formData.columns,
+        formData.categories,
+        formData.labels,
+        initialFormData.members,
+        initialFormData.columns,
+        initialFormData.categories,
+        initialFormData.labels,
+    ]);
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>

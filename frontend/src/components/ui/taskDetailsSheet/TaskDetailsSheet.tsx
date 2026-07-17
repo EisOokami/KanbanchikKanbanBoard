@@ -194,13 +194,17 @@ export default function TaskDetailsSheet({
             formData.categories.length !== initialFormData.categories.length ||
             formData.members.length !== initialFormData.members.length ||
             formData.labels.length !== initialFormData.labels.length ||
-            formData.subtasks.some((subtask, i) => {
-                const orig = initialFormData.subtasks[i];
+            formData.subtasks.length !== initialFormData.subtasks.length ||
+            formData.subtasks.some((subtask) => {
+                const original = initialFormData.subtasks.find(
+                    (initialFormDataSubtask) =>
+                        initialFormDataSubtask.id === subtask.id,
+                );
 
                 return (
-                    !orig ||
-                    subtask.title !== orig.title ||
-                    subtask.is_done !== orig.is_done
+                    !original ||
+                    subtask.title !== original.title ||
+                    !!subtask.is_done !== !!original.is_done
                 );
             });
 
