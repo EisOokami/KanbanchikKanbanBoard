@@ -24,6 +24,7 @@ import {
     changeRoleSchema,
     deleteMemberSchema,
     validateIdSchema,
+    transferOwnershipSchema,
 } from "../validation/validation";
 import { transporter } from "../utils/email";
 import { generateSlug, generateUniqueSlug } from "../utils/slugify";
@@ -1785,6 +1786,166 @@ export const deleteMember = async (
         res.status(201).json({
             status: "success",
             message: "Member has been deleted",
+        });
+    } catch (error) {
+        if (error instanceof ZodError) {
+            const errorMessages = error.issues.map((issue: any) => ({
+                field: issue.path[0],
+                message: issue.message,
+            }));
+
+            res.status(400).json({
+                status: "error",
+                message: "Invalid data",
+                details: errorMessages,
+            });
+
+            return;
+        }
+
+        console.error(error);
+        res.status(500).json({ status: "error", message: "Database error" });
+    }
+};
+
+export const transferOwnership = async (
+    req: IGetUserRequest,
+    res: Response,
+) => {
+    try {
+        validateSlugSchema.parse(req.params);
+
+        const { slug } = req.params;
+        const userId = +req.user.id;
+
+        if (!userId) {
+            res.status(401).json({
+                status: "error",
+                message: "Unauthorized",
+            });
+
+            return;
+        }
+
+        if (!slug) {
+            res.status(400).json({
+                status: "error",
+                message: "Invalid project slug",
+            });
+
+            return;
+        }
+
+        const validatedData = transferOwnershipSchema.parse(req.body);
+
+        const [projects] = await pool.execute<
+            (Pick<Project, "id"> & RowDataPacket)[]
+        >(
+            `
+                SELECT 
+                    p.id
+                FROM projects p
+                WHERE p.slug = ? AND (
+                    p.id IN (
+                        SELECT 
+                            project_id 
+                        FROM project_members 
+                        WHERE user_id = ? AND role IN ("owner")
+                    ) OR p.owner_id = ? 
+                )
+            `,
+            [slug, userId, userId],
+        );
+
+        if (projects.length === 0) {
+            res.status(404).json({
+                status: "error",
+                message: "Project not found or access denied",
+            });
+
+            return;
+        }
+
+        const project = projects[0];
+
+        if (!project) {
+            res.status(404).json({
+                status: "error",
+                message: "Project not found or access denied",
+            });
+
+            return;
+        }
+
+        const [members] = await pool.execute<(ProjectMember & RowDataPacket)[]>(
+            `
+                SELECT 
+                    *
+                FROM project_members
+                WHERE project_id = ? AND user_id = ? AND role != "owner"
+            `,
+            [project.id, validatedData.memberId],
+        );
+
+        if (members.length === 0) {
+            res.status(404).json({
+                status: "error",
+                message: "Member not found or access denied",
+            });
+
+            return;
+        }
+
+        const member = members[0];
+
+        if (!member) {
+            res.status(404).json({
+                status: "error",
+                message: "Member not found or access denied",
+            });
+
+            return;
+        }
+
+        const [transferOwnershipResult] = await pool.execute<ResultSetHeader>(
+            `
+                UPDATE project_members 
+                SET role = "owner" 
+                WHERE user_id = ? AND project_id = ?
+            `,
+            [validatedData.memberId, project.id],
+        );
+
+        if (transferOwnershipResult.affectedRows === 0) {
+            res.status(404).json({
+                status: "error",
+                message: "Role not changed",
+            });
+
+            return;
+        }
+
+        const [changeOwnerRoleResult] = await pool.execute<ResultSetHeader>(
+            `
+                UPDATE project_members 
+                SET role = "admin" 
+                WHERE user_id = ? AND project_id = ?
+            `,
+            [userId, project.id],
+        );
+
+        if (changeOwnerRoleResult.affectedRows === 0) {
+            res.status(404).json({
+                status: "error",
+                message: "Role not changed",
+            });
+
+            return;
+        }
+
+        res.status(200).json({
+            status: "success",
+            message: "Ownership rights have been successfully transferred",
         });
     } catch (error) {
         if (error instanceof ZodError) {

@@ -14,16 +14,28 @@ import {
 import { Button } from "../../shadcn/button";
 import {
     ArchiveIcon,
+    CrownIcon,
     TrashSimpleIcon,
     WarningIcon,
 } from "@phosphor-icons/react";
-import { deleteProjectAction } from "@/data/actions";
+import { deleteProjectAction, transferOwnershipAction } from "@/data/actions";
 import { toast } from "sonner";
-import { NavSection } from "@/types/types";
+import { NavSection, User } from "@/types/types";
+import { useState, useTransition } from "react";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "../../shadcn/select";
+import { getInitials } from "@/libs/utils";
+import Image from "next/image";
 
 interface DangerSectionProps {
     name: string;
     slug: string;
+    members: Omit<User, "email">[];
     isPending: boolean;
     onSectionChange: (section: NavSection) => void;
     onOpenChange: (open: boolean) => void;
@@ -32,10 +44,19 @@ interface DangerSectionProps {
 export default function DangerSection({
     name,
     slug,
+    members,
     isPending,
     onSectionChange,
     onOpenChange,
 }: Readonly<DangerSectionProps>) {
+    const [selectedId, setSelectedId] = useState<number | null>(null);
+    const [isTransferPending, startTransferTransition] = useTransition();
+
+    const candidates = members.filter((member) => member.role !== "owner");
+    const selectedMember = candidates.find(
+        (member) => member.id === selectedId,
+    );
+
     const handleDeleteProject = async () => {
         const result = await deleteProjectAction(slug);
 
@@ -54,6 +75,30 @@ export default function DangerSection({
         }
     };
 
+    const handleTransfer = () => {
+        if (selectedId === null || !selectedMember) {
+            return;
+        }
+
+        startTransferTransition(async () => {
+            const result = await transferOwnershipAction(slug, selectedId);
+
+            if (result && result.ok) {
+                toast.success("Success", {
+                    description: `${selectedMember.name} ${selectedMember.surname} is now the project owner`,
+                });
+
+                setSelectedId(null);
+            }
+
+            if (result && !result.ok) {
+                toast.error("Error", {
+                    description: result.message,
+                });
+            }
+        });
+    };
+
     return (
         <div className="space-y-1">
             <h3 className="font-semibold">Danger Zone</h3>
@@ -63,7 +108,6 @@ export default function DangerSection({
                         <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">
                             Archive project
                         </p>
-
                         <p className="mt-0.5 text-xs text-muted-foreground">
                             Hide this project from the board. You can restore it
                             anytime.
@@ -79,6 +123,128 @@ export default function DangerSection({
                         <ArchiveIcon weight="duotone" size={13} />
                         Archive
                     </Button>
+                </div>
+                <div className="rounded-md border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950/30">
+                    <div>
+                        <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">
+                            Transfer ownership
+                        </p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                            Choose a member to become the new owner of this
+                            project.
+                        </p>
+                    </div>
+                    <div className="mt-3 flex items-center gap-2">
+                        <Select
+                            value={
+                                selectedId !== null ? String(selectedId) : ""
+                            }
+                            onValueChange={(value) =>
+                                setSelectedId(Number(value))
+                            }
+                            disabled={
+                                isPending ||
+                                isTransferPending ||
+                                candidates.length === 0
+                            }
+                        >
+                            <SelectTrigger className="h-9 flex-1 bg-control text-sm transition-colors placeholder:text-control-text hover:bg-control-active hover:text-foreground">
+                                <SelectValue
+                                    placeholder={
+                                        candidates.length === 0
+                                            ? "No members available"
+                                            : "Select a member"
+                                    }
+                                />
+                            </SelectTrigger>
+                            <SelectContent className="border-border bg-control">
+                                {candidates.map((member) => (
+                                    <SelectItem
+                                        key={member.id}
+                                        value={String(member.id)}
+                                        className="cursor-pointer transition-colors hover:!bg-control-active"
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            {member.avatar_url ? (
+                                                <Image
+                                                    src={member.avatar_url}
+                                                    alt={member.name}
+                                                    width={20}
+                                                    height={20}
+                                                    className="rounded-full object-cover"
+                                                />
+                                            ) : (
+                                                <span
+                                                    className="flex size-5 items-center justify-center rounded-full text-[10px] font-semibold text-white"
+                                                    style={{
+                                                        backgroundColor:
+                                                            member.color,
+                                                    }}
+                                                >
+                                                    {getInitials(
+                                                        member.name,
+                                                        member.surname,
+                                                    )}
+                                                </span>
+                                            )}
+                                            <span>
+                                                {member.name} {member.surname}
+                                            </span>
+                                        </div>
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={
+                                        isPending ||
+                                        isTransferPending ||
+                                        selectedId === null
+                                    }
+                                    className="h-9 shrink-0 rounded-md border-amber-200 bg-background px-3 text-xs font-medium text-amber-700 transition-colors hover:bg-amber-100 dark:border-amber-800 dark:bg-background dark:text-amber-300 dark:hover:bg-amber-950"
+                                >
+                                    <CrownIcon weight="duotone" size={13} />
+                                    Transfer
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className="border-border">
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle className="flex items-center gap-2">
+                                        <WarningIcon
+                                            weight="duotone"
+                                            className="size-5 text-amber-500"
+                                        />
+                                        Transfer ownership to{" "}
+                                        {selectedMember?.name}?
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        You will lose owner privileges for this
+                                        project. The new owner will have to
+                                        transfer it back if you change your
+                                        mind.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel
+                                        disabled={isTransferPending}
+                                    >
+                                        Cancel
+                                    </AlertDialogCancel>
+                                    <AlertDialogAction
+                                        onClick={handleTransfer}
+                                        disabled={isTransferPending}
+                                        className="bg-amber-600 font-semibold text-white hover:bg-amber-700 dark:bg-amber-700 dark:hover:bg-amber-600"
+                                    >
+                                        Transfer ownership
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    </div>
                 </div>
                 <div className="flex items-center justify-between rounded-md border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950/30">
                     <div>

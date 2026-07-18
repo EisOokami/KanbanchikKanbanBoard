@@ -6,12 +6,14 @@ import {
     deleteProject,
     getProject,
     getProjects,
+    transferOwnership,
     updateProject,
 } from "../controllers/projects.controller";
 import { authenticateToken } from "../middleware/auth.middleware";
 import {
     changeRoleSchema,
     createProjectSchema,
+    transferOwnershipSchema,
     updateProjectSchema,
 } from "../validation/validation";
 import { validateData } from "../middleware/validation.middleware";
@@ -38,6 +40,12 @@ router.post(
     authenticateToken,
     validateData(changeRoleSchema),
     changeRole,
+);
+router.post(
+    "/transfer-ownership/:slug",
+    authenticateToken,
+    validateData(transferOwnershipSchema),
+    transferOwnership,
 );
 router.delete("/delete-member/:id", authenticateToken, deleteMember);
 

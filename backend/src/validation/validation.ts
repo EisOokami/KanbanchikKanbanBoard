@@ -706,3 +706,13 @@ export const validateIdSchema = z.object({
             message: "ID is too large a numerical value",
         }),
 });
+
+export const transferOwnershipSchema = z.object({
+    memberId: z
+        .number()
+        .positive()
+        .int("Member ID must be an integer")
+        .refine((value) => Number.isSafeInteger(value), {
+            message: "Member ID is too large a numerical value",
+        }),
+});

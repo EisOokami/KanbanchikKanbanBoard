@@ -1668,3 +1668,51 @@ export async function deleteMemberAction(
         message: "Member has been deleted",
     };
 }
+
+export async function transferOwnershipAction(
+    slug: string,
+    memberId: number,
+): Promise<{ ok: boolean; message: string } | undefined> {
+    const responseData = await mutateData(
+        "POST",
+        `/projects/transfer-ownership/${slug}`,
+        {
+            memberId,
+        },
+    );
+
+    if (!responseData) {
+        console.error("Ops! Something went wrong. Please try again.");
+
+        return {
+            ok: false,
+            message: "Ops! Something went wrong. Please try again or later",
+        };
+    }
+
+    if (
+        "message" in responseData &&
+        "status" in responseData &&
+        responseData.message &&
+        responseData.status
+    ) {
+        return {
+            ok: responseData.status === "error" ? false : true,
+            message: responseData.message,
+        };
+    }
+
+    if ("error" in responseData && responseData.error) {
+        console.error(responseData.error);
+
+        return {
+            ok: false,
+            message: "Failed to change a role",
+        };
+    }
+
+    return {
+        ok: true,
+        message: "Role has been changed",
+    };
+}

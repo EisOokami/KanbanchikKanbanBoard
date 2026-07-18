@@ -407,6 +407,7 @@ export default function ProjectSettingsModal({
                                         <DangerSection
                                             name={name}
                                             slug={projectData.slug}
+                                            members={projectData.members}
                                             isPending={isPending}
                                             onOpenChange={onOpenChange}
                                             onSectionChange={setActiveSection}
