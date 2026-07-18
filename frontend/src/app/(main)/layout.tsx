@@ -3,6 +3,7 @@ import { SidebarProvider } from "@/components/ui/shadcn/sidebar";
 import AppSidebar from "@/components/ui/appSidebar/AppSidebar";
 import AccountSettingsProvider from "@/context/AccountSettingsProvider";
 import { getProjectsData, getUserData } from "@/data/loaders";
+import { redirect } from "next/navigation";
 
 export default async function MainLayout({
     children,
@@ -11,6 +12,10 @@ export default async function MainLayout({
 }>) {
     const projectsData = await getProjectsData();
     const userData = await getUserData();
+
+    if (!userData.data) {
+        redirect("/signIn");
+    }
 
     return (
         <div className="overflow-hidden bg-background">
