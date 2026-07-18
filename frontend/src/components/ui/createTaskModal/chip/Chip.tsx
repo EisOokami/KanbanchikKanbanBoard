@@ -1,6 +1,7 @@
 "use client";
 
 import { XIcon } from "@phosphor-icons/react";
+import { Button } from "../../shadcn/button";
 
 interface ChipProps {
     label: string;
@@ -16,14 +17,14 @@ export default function Chip({
     isPending,
 }: Readonly<ChipProps>) {
     return (
-        <button
+        <Button
             onClick={onRemove}
-            className="inline-flex items-center gap-1 rounded-md border border-border px-2.5 py-0.5 text-sm font-medium capitalize text-white transition-colors hover:bg-muted/40"
+            className="h-[1.65rem] border border-border px-2.5 text-sm font-medium capitalize text-white hover:bg-muted/40"
             style={{ backgroundColor: color }}
             disabled={isPending}
         >
             {label}
-            {onRemove && <XIcon weight="duotone" className="size-4" />}
-        </button>
+            {onRemove && <XIcon weight="duotone" className="size-3" />}
+        </Button>
     );
 }

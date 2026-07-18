@@ -6,6 +6,7 @@ import { PlusIcon, XIcon } from "@phosphor-icons/react";
 import { ZodErrors } from "../../zodErrors/ZodErrors";
 import { BaseAction } from "@/types/actions";
 import { Avatar, AvatarFallback, AvatarImage } from "../../shadcn/avatar";
+import { Button } from "../../shadcn/button";
 
 interface MembersSectionProps {
     formState: BaseAction | undefined;
@@ -33,11 +34,11 @@ export default function MembersSection({
                 {selectedMembers.length ? (
                     <div className="flex flex-wrap gap-1.5">
                         {selectedMembers.map((member) => (
-                            <button
+                            <Button
                                 key={member.id}
                                 type="button"
                                 onClick={() => onMemberChange(member)}
-                                className="flex items-center gap-1.5 rounded-md border border-border bg-control px-2.5 py-1.5 text-foreground transition-colors hover:bg-control-active"
+                                className="h-10 border border-border bg-control px-2.5 text-foreground hover:bg-control-active"
                                 disabled={isPending}
                             >
                                 <Avatar
@@ -68,7 +69,7 @@ export default function MembersSection({
                                     weight="duotone"
                                     className="size-4 opacity-50"
                                 />
-                            </button>
+                            </Button>
                         ))}
                     </div>
                 ) : null}
@@ -82,11 +83,11 @@ export default function MembersSection({
                                 ),
                         )
                         .map((member) => (
-                            <button
+                            <Button
                                 key={member.id}
                                 type="button"
                                 onClick={() => onMemberChange(member)}
-                                className="flex items-center gap-1.5 rounded-md border border-border bg-control px-2.5 py-1.5 text-control-text transition-colors hover:bg-control-active hover:text-foreground"
+                                className="h-10 border border-border bg-control px-2.5 text-control-text hover:bg-control-active hover:text-foreground"
                                 disabled={isPending}
                             >
                                 <Avatar
@@ -117,7 +118,7 @@ export default function MembersSection({
                                     weight="duotone"
                                     className="size-4 opacity-50"
                                 />
-                            </button>
+                            </Button>
                         ))}
                 </div>
             </div>

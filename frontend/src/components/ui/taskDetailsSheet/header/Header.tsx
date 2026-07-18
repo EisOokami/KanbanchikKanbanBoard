@@ -125,14 +125,14 @@ export default function Header({
                     <>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild disabled={isPending}>
-                                <button
+                                <Button
                                     type="button"
-                                    className="flex items-center gap-1.5 rounded-md border border-border bg-control px-2.5 py-1 text-xs font-medium transition-colors hover:bg-control-active"
+                                    className="h-7 gap-1.5 border border-border bg-control px-2.5 text-xs font-medium text-foreground hover:bg-control-active"
                                     disabled={isPending}
                                 >
                                     {column.name}
                                     <CaretDownIcon weight="duotone" size={12} />
-                                </button>
+                                </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent className="border-border bg-control">
                                 {projectData.columns.map((projectColumn) => (
@@ -158,14 +158,14 @@ export default function Header({
                         </DropdownMenu>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild disabled={isPending}>
-                                <button
+                                <Button
                                     type="button"
-                                    className="flex items-center gap-1.5 rounded-md border border-border bg-control px-2.5 py-1 text-xs font-medium capitalize transition-colors hover:bg-control-active"
+                                    className="h-7 gap-1.5 border border-border bg-control px-2.5 text-xs font-medium capitalize text-foreground hover:bg-control-active"
                                     disabled={isPending}
                                 >
                                     {priority}
                                     <CaretDownIcon weight="duotone" size={12} />
-                                </button>
+                                </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent className="border-border bg-control">
                                 {(

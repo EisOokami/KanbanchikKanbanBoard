@@ -29,6 +29,7 @@ import { BaseAction } from "@/types/actions";
 import { usePathname } from "next/navigation";
 import { getProjectData } from "@/data/loaders";
 import SaveBar from "./saveBar/SaveBar";
+import { Button } from "../shadcn/button";
 
 interface ProjectSettingsModalProps {
     open: boolean;
@@ -301,29 +302,22 @@ export default function ProjectSettingsModal({
                                 }
 
                                 return (
-                                    <button
+                                    <Button
                                         key={item.id}
                                         type="button"
                                         onClick={() =>
                                             setActiveSection(item.id)
                                         }
+                                        variant="ghost"
                                         className={cn(
-                                            "flex w-full items-center gap-2.5 rounded-md border px-3 py-2 text-left text-sm font-medium transition-all",
+                                            "w-full justify-start border px-3 text-left text-sm font-medium transition-all",
                                             activeSection === item.id
                                                 ? "border-border bg-control-active"
                                                 : "border-transparent text-gray-500 hover:bg-control",
                                         )}
                                         disabled={isPending}
                                     >
-                                        <span
-                                            className={
-                                                activeSection === item.id
-                                                    ? ""
-                                                    : "text-gray-500"
-                                            }
-                                        >
-                                            <Icon weight="duotone" size={18} />
-                                        </span>
+                                        <Icon weight="duotone" size={18} />
                                         {item.label}
                                         {activeSection === item.id && (
                                             <CaretRightIcon
@@ -332,7 +326,7 @@ export default function ProjectSettingsModal({
                                                 className="ml-auto"
                                             />
                                         )}
-                                    </button>
+                                    </Button>
                                 );
                             })}
                         </nav>

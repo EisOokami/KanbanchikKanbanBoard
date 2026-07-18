@@ -167,7 +167,7 @@ export default function MembersSection({
                                     const isActive = member.role === role;
 
                                     return (
-                                        <button
+                                        <Button
                                             key={role}
                                             type="button"
                                             onClick={() =>
@@ -185,7 +185,7 @@ export default function MembersSection({
                                                 isPending
                                             }
                                             className={cn(
-                                                "rounded-md border px-2 py-0.5 text-xs font-medium transition-colors",
+                                                "h-7 border px-2 text-xs font-medium",
                                                 isActive
                                                     ? ROLE_META[role]
                                                           .activeClass
@@ -193,7 +193,7 @@ export default function MembersSection({
                                             )}
                                         >
                                             {ROLE_META[role].label}
-                                        </button>
+                                        </Button>
                                     );
                                 })}
                             </div>

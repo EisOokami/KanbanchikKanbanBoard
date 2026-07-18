@@ -7,6 +7,7 @@ import { format } from "date-fns";
 import { Calendar } from "../../shadcn/calendar";
 import { ZodErrors } from "../../zodErrors/ZodErrors";
 import { BaseAction } from "@/types/actions";
+import { Button } from "../../shadcn/button";
 
 interface DateSectionProps {
     formState: BaseAction | undefined;
@@ -48,10 +49,10 @@ export default function DateSection({
                         asChild
                         disabled={isPending}
                     >
-                        <button
+                        <Button
                             type="button"
                             className={cn(
-                                "flex h-9 w-full items-center gap-1.5 rounded-md border border-input bg-control px-3 text-sm transition-colors hover:bg-control-active",
+                                "h-9 w-full justify-start border border-input bg-control px-3 text-sm hover:bg-control-active",
                                 startDate
                                     ? "text-foreground"
                                     : "text-control-text",
@@ -68,7 +69,7 @@ export default function DateSection({
                             {startDate
                                 ? format(startDate, "MMM d, yyyy")
                                 : "Pick a date"}
-                        </button>
+                        </Button>
                     </PopoverTrigger>
                     <PopoverContent
                         className="w-fit rounded-md border-border p-0"
@@ -97,10 +98,10 @@ export default function DateSection({
                 </label>
                 <Popover open={dueDateOpen} onOpenChange={onOpenDueDateChange}>
                     <PopoverTrigger id="due-date" asChild disabled={isPending}>
-                        <button
+                        <Button
                             type="button"
                             className={cn(
-                                "flex h-9 w-full items-center gap-1.5 rounded-md border border-input bg-control px-3 text-sm transition-colors hover:bg-control-active",
+                                "h-9 w-full justify-start border border-input bg-control px-3 text-sm hover:bg-control-active",
                                 dueDate
                                     ? "text-foreground"
                                     : "text-control-text",
@@ -117,7 +118,7 @@ export default function DateSection({
                             {dueDate
                                 ? format(dueDate, "MMM d, yyyy")
                                 : "Pick a date"}
-                        </button>
+                        </Button>
                     </PopoverTrigger>
                     <PopoverContent
                         className="w-fit rounded-md border-border p-0"

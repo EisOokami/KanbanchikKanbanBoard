@@ -72,6 +72,7 @@ export default function ProjectCalendarView({
 
     const tasksByDate = useMemo(() => {
         const map: Record<string, Task[]> = {};
+
         allTasks.forEach((task) => {
             if (!task.start_date || !task.due_date) {
                 return;
@@ -275,7 +276,7 @@ export default function ProjectCalendarView({
     return (
         <>
             <div className="flex h-full w-full overflow-hidden">
-                <div className="flex w-56 flex-shrink-0 flex-col border-r border-border">
+                <div className="hidden w-56 flex-shrink-0 flex-col border-r border-border xl:flex">
                     <MiniCalendar
                         viewYear={year}
                         viewMonth={month}

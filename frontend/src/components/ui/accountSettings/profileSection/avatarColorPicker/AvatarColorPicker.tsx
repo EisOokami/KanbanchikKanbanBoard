@@ -40,7 +40,7 @@ export default function AvatarColorPicker({
                     Pick a avatar color
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-fit p-0">
+            <PopoverContent className="w-fit border-border p-0">
                 <Colorful
                     color={value}
                     onChange={(color) => onChange(color.hex)}

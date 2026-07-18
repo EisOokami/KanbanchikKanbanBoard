@@ -45,7 +45,7 @@ export default function ProjectColorPicker({
                     </span>
                 </button>
             </PopoverTrigger>
-            <PopoverContent className="w-fit p-0">
+            <PopoverContent className="w-fit border-border p-0">
                 <Colorful
                     color={projectColor}
                     onChange={(color) => {

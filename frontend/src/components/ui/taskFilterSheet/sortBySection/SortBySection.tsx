@@ -10,6 +10,7 @@ import FilterSection from "../filterSection/FilterSection";
 import { SORT_FIELDS } from "@/constants/taskFilterSheet";
 import { cn } from "@/libs/utils";
 import { FilterState, TaskSortField } from "@/types/types";
+import { Button } from "../../shadcn/button";
 
 interface SortBySectionProps {
     filters: FilterState;
@@ -55,13 +56,13 @@ export default function SortBySection({
                     const active = filters.sortField === value;
 
                     return (
-                        <button
+                        <Button
                             key={value}
                             onClick={() => handleSortField(value)}
                             className={cn(
-                                "flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-all",
+                                "h-[1.85rem] border px-2.5 text-xs font-medium",
                                 active
-                                    ? "border-bright-blue bg-bright-blue/10 text-bright-blue"
+                                    ? "border-bright-blue bg-bright-blue/10 text-bright-blue hover:bg-bright-blue/20"
                                     : "border-border bg-control text-control-text hover:bg-control-active",
                             )}
                         >
@@ -75,7 +76,7 @@ export default function SortBySection({
                                 <ArrowsDownUpIcon weight="duotone" size={11} />
                             )}
                             {label}
-                        </button>
+                        </Button>
                     );
                 })}
             </div>

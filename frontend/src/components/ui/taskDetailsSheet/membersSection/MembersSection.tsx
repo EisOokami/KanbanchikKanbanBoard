@@ -13,6 +13,7 @@ import { cn, getInitials } from "@/libs/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "../../shadcn/popover";
 import { Project, UpdateTaskFormData, User } from "@/types/types";
 import { useState } from "react";
+import { Button } from "../../shadcn/button";
 
 interface MembersSectionProps {
     isPending: boolean;
@@ -121,34 +122,38 @@ export default function MembersSection({
                                 );
 
                                 return (
-                                    <button
+                                    <Button
                                         type="button"
+                                        variant="ghost"
                                         key={member.id}
                                         onClick={() => toggleMember(member)}
                                         className={cn(
-                                            "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-control-active",
+                                            "h-8 w-full justify-between gap-3 rounded-md px-3 text-sm hover:bg-control-active",
                                         )}
                                         disabled={isPending}
                                     >
-                                        <Avatar className="size-6">
-                                            <AvatarImage
-                                                src={member.avatar_url}
-                                            />
-                                            <AvatarFallback
-                                                className="text-[9px] font-medium text-white"
-                                                style={{
-                                                    background: member.color,
-                                                }}
-                                            >
-                                                {getInitials(
-                                                    member.name,
-                                                    member.surname,
-                                                )}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                        <span>
-                                            {member.name} {member.surname}
-                                        </span>
+                                        <div className="flex items-center gap-3">
+                                            <Avatar className="size-6">
+                                                <AvatarImage
+                                                    src={member.avatar_url}
+                                                />
+                                                <AvatarFallback
+                                                    className="text-[9px] font-medium text-white"
+                                                    style={{
+                                                        background:
+                                                            member.color,
+                                                    }}
+                                                >
+                                                    {getInitials(
+                                                        member.name,
+                                                        member.surname,
+                                                    )}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <span>
+                                                {member.name} {member.surname}
+                                            </span>
+                                        </div>
                                         {selectedMembers && (
                                             <CheckIcon
                                                 weight="duotone"
@@ -156,7 +161,7 @@ export default function MembersSection({
                                                 className="ml-auto text-bright-blue"
                                             />
                                         )}
-                                    </button>
+                                    </Button>
                                 );
                             })}
                         </PopoverContent>

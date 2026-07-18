@@ -4,6 +4,7 @@ import { SORT_FIELDS } from "@/constants/projectsOverview";
 import { cn } from "@/libs/utils";
 import { FilterSortOptions, SortField } from "@/types/projectsOverview";
 import { ArrowDownIcon, ArrowUpIcon } from "@phosphor-icons/react";
+import { Button } from "../../shadcn/button";
 
 interface SortBySectionProps {
     options: FilterSortOptions;
@@ -23,14 +24,14 @@ export default function SortBySection({
                 {SORT_FIELDS.map(({ value, label }) => {
                     const active = options.sortField === value;
                     return (
-                        <button
+                        <Button
                             key={value}
                             onClick={() => onSort(value)}
                             className={cn(
-                                "flex w-full items-center justify-between rounded-md px-3 py-2 text-sm transition-colors",
+                                "w-full justify-between px-3 text-sm",
                                 active
-                                    ? "bg-bright-blue/10 font-medium text-bright-blue"
-                                    : "text-foreground hover:bg-control-active",
+                                    ? "bg-bright-blue/10 font-medium text-bright-blue hover:bg-bright-blue/20"
+                                    : "bg-transparent text-foreground hover:bg-control-active",
                             )}
                         >
                             <span>{label}</span>
@@ -46,7 +47,7 @@ export default function SortBySection({
                                         className="size-3.5"
                                     />
                                 ))}
-                        </button>
+                        </Button>
                     );
                 })}
             </div>

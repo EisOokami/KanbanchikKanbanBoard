@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/shadcn/button";
 import { getFileIcon, isImage } from "@/libs/createTaskModal";
 import { formatSize } from "@/libs/utils";
 import { ArrowLineDownIcon, TrashSimpleIcon } from "@phosphor-icons/react";
@@ -83,31 +84,30 @@ export default function AttachmentRow({
             </div>
             <div className="flex shrink-0 items-center gap-1 opacity-0 transition-all group-hover:opacity-100">
                 {!canPreview && (
-                    <button
+                    <Button
                         type="button"
+                        variant="ghost"
+                        size="icon"
                         onClick={handleDownload}
-                        className="text-muted-foreground/50 transition-colors hover:text-violet-500"
+                        className="size-7 text-control-text hover:bg-control hover:text-violet-500"
                         disabled={isPending}
-                        title="Download"
                     >
-                        <ArrowLineDownIcon
-                            weight="duotone"
-                            className="size-4"
-                        />
-                    </button>
+                        <ArrowLineDownIcon weight="duotone" size={16} />
+                    </Button>
                 )}
-                <button
+                <Button
                     type="button"
+                    variant="ghost"
+                    size="icon"
                     onClick={(e) => {
                         e.stopPropagation();
                         onRemove(attachment);
                     }}
-                    className="text-muted-foreground/50 transition-colors hover:text-red-500 group-hover:opacity-100"
+                    className="size-7 text-control-text hover:bg-red-50 hover:text-red-400 dark:hover:bg-red-950 dark:hover:text-red-600"
                     disabled={isPending}
-                    title="Remove"
                 >
-                    <TrashSimpleIcon weight="duotone" className="size-4" />
-                </button>
+                    <TrashSimpleIcon weight="duotone" size={16} />
+                </Button>
             </div>
         </div>
     );

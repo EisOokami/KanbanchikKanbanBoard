@@ -187,14 +187,14 @@ export default function Tasks({
 
     return (
         <>
-            <div className="h-full overflow-y-auto rounded-xl bg-background-secondary">
+            <div className="h-full overflow-y-auto overflow-x-hidden rounded-xl bg-background-secondary">
                 <div className="flex min-w-0 flex-1 flex-col">
                     <div className="sticky top-0 z-10">
                         <header className="sticky top-0 z-10 flex flex-wrap items-center gap-3 border-b border-border bg-background-secondary px-8 py-4">
                             <h1 className="mr-12 text-xl font-semibold">
                                 Tasks
                             </h1>
-                            <div className="relative flex items-center">
+                            <div className="relative flex min-w-60 items-center">
                                 <MagnifyingGlassIcon
                                     weight="duotone"
                                     className="absolute left-2.5 size-3.5 text-control-text"
@@ -516,121 +516,131 @@ export default function Tasks({
                             </div>
                         )}
                     </div>
-                    <table className="w-full min-w-[960px] bg-column">
-                        <thead
-                            className={cn(
-                                "sticky z-10 bg-column shadow-[inset_0_-1px_0_0_rgba(0,0,0,0.1)] dark:shadow-[inset_0_-1px_0_0_hsl(0_0%_14.9%)]",
-                                activeFilterCount > 0 ? "top-28" : "top-[69px]",
-                            )}
-                        >
-                            <tr>
-                                <th className="flex w-24 items-center gap-1 py-2.5 pl-4 pr-4 text-left text-sm font-normal tracking-wider text-muted-foreground">
-                                    <HashIcon
-                                        weight="duotone"
-                                        className="size-4"
-                                    />
-                                    ID
-                                </th>
-                                <TasksTh
-                                    label="Title"
-                                    field="title"
-                                    className="min-w-[240px]"
-                                    sortField={sortField}
-                                    sortDir={sortDir}
-                                    onSort={toggleSort}
-                                    Icon={TextTIcon}
-                                />
-                                <TasksTh
-                                    label="Status"
-                                    field="status"
-                                    className="w-36"
-                                    sortField={sortField}
-                                    sortDir={sortDir}
-                                    onSort={toggleSort}
-                                    Icon={SealIcon}
-                                />
-                                <TasksTh
-                                    label="Priority"
-                                    field="priority"
-                                    className="w-28"
-                                    sortField={sortField}
-                                    sortDir={sortDir}
-                                    onSort={toggleSort}
-                                    Icon={FlagIcon}
-                                />
-                                <TasksTh
-                                    label="Project"
-                                    field="project"
-                                    className="w-40"
-                                    sortField={sortField}
-                                    sortDir={sortDir}
-                                    onSort={toggleSort}
-                                    Icon={LayoutIcon}
-                                />
-                                <TasksTh
-                                    label="Members"
-                                    field="members"
-                                    className="w-28"
-                                    sortField={sortField}
-                                    sortDir={sortDir}
-                                    onSort={toggleSort}
-                                    Icon={UsersIcon}
-                                />
-                                <TasksTh
-                                    label="Due"
-                                    field="dueDate"
-                                    className="w-28"
-                                    sortField={sortField}
-                                    sortDir={sortDir}
-                                    onSort={toggleSort}
-                                    Icon={CalendarBlankIcon}
-                                />
-                                <th className="w-24 py-2.5 pr-4 text-left text-sm font-normal tracking-wider text-muted-foreground">
-                                    <div className="flex items-center gap-1">
-                                        <ChartLineIcon
-                                            weight="duotone"
-                                            className="size-4"
+                    <div
+                        className={cn(
+                            "overflow-x-auto",
+                            activeFilterCount > 0
+                                ? "h-[calc(100svh-11.6rem)] max-h-svh"
+                                : "h-[calc(100svh-8.95rem)] max-h-svh",
+                        )}
+                    >
+                        <div>
+                            <table className="min-w-[960px]">
+                                <thead className="sticky top-0 z-10 bg-column shadow-[inset_0_-1px_0_0_rgba(0,0,0,0.1)] dark:shadow-[inset_0_-1px_0_0_hsl(0_0%_14.9%)]">
+                                    <tr>
+                                        <th className="flex w-24 items-center gap-1 py-2.5 pl-4 pr-4 text-left text-sm font-normal tracking-wider text-muted-foreground">
+                                            <HashIcon
+                                                weight="duotone"
+                                                className="size-4"
+                                            />
+                                            ID
+                                        </th>
+                                        <TasksTh
+                                            label="Title"
+                                            field="title"
+                                            className="min-w-[240px]"
+                                            sortField={sortField}
+                                            sortDir={sortDir}
+                                            onSort={toggleSort}
+                                            Icon={TextTIcon}
                                         />
-                                        Progress
-                                    </div>
-                                </th>
-                                <th className="w-24 py-2.5 pr-4 text-left text-sm font-normal tracking-wider text-muted-foreground">
-                                    <div className="flex items-center gap-1">
-                                        <PulseIcon
-                                            weight="duotone"
-                                            className="size-4"
+                                        <TasksTh
+                                            label="Status"
+                                            field="status"
+                                            className="w-36"
+                                            sortField={sortField}
+                                            sortDir={sortDir}
+                                            onSort={toggleSort}
+                                            Icon={SealIcon}
                                         />
-                                        Activity
-                                    </div>
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-background-secondary">
-                            {filteredTasks.length > 0 ? (
-                                filteredTasks.map((task) => (
-                                    <TaskRow
-                                        key={task.id}
-                                        task={task}
-                                        userData={userData}
-                                        onDelete={deleteTask}
-                                        onOpenDetails={() => {
-                                            setSelectedTask(task);
-                                            setShowTaskDetailsSheet(true);
-                                        }}
-                                    />
-                                ))
-                            ) : (
-                                <tr>
-                                    <td
-                                        colSpan={9}
-                                        className="py-16 text-center text-sm text-muted-foreground"
-                                    >
-                                        No tasks match the current filters
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+                                        <TasksTh
+                                            label="Priority"
+                                            field="priority"
+                                            className="w-28"
+                                            sortField={sortField}
+                                            sortDir={sortDir}
+                                            onSort={toggleSort}
+                                            Icon={FlagIcon}
+                                        />
+                                        <TasksTh
+                                            label="Project"
+                                            field="project"
+                                            className="w-40"
+                                            sortField={sortField}
+                                            sortDir={sortDir}
+                                            onSort={toggleSort}
+                                            Icon={LayoutIcon}
+                                        />
+                                        <TasksTh
+                                            label="Members"
+                                            field="members"
+                                            className="w-28"
+                                            sortField={sortField}
+                                            sortDir={sortDir}
+                                            onSort={toggleSort}
+                                            Icon={UsersIcon}
+                                        />
+                                        <TasksTh
+                                            label="Due"
+                                            field="dueDate"
+                                            className="w-28"
+                                            sortField={sortField}
+                                            sortDir={sortDir}
+                                            onSort={toggleSort}
+                                            Icon={CalendarBlankIcon}
+                                        />
+                                        <th className="w-24 py-2.5 pr-4 text-left text-sm font-normal tracking-wider text-muted-foreground">
+                                            <div className="flex items-center gap-1">
+                                                <ChartLineIcon
+                                                    weight="duotone"
+                                                    className="size-4"
+                                                />
+                                                Progress
+                                            </div>
+                                        </th>
+                                        <th className="w-24 py-2.5 pr-4 text-left text-sm font-normal tracking-wider text-muted-foreground">
+                                            <div className="flex items-center gap-1">
+                                                <PulseIcon
+                                                    weight="duotone"
+                                                    className="size-4"
+                                                />
+                                                Activity
+                                            </div>
+                                        </th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-background-secondary">
+                                    {filteredTasks.length > 0 ? (
+                                        filteredTasks.map((task) => (
+                                            <TaskRow
+                                                key={task.id}
+                                                task={task}
+                                                userData={userData}
+                                                onDelete={deleteTask}
+                                                onOpenDetails={() => {
+                                                    setSelectedTask(task);
+                                                    setShowTaskDetailsSheet(
+                                                        true,
+                                                    );
+                                                }}
+                                            />
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td
+                                                colSpan={9}
+                                                className="py-16 text-center text-sm text-muted-foreground"
+                                            >
+                                                No tasks match the current
+                                                filters
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
             {selectedTask && projectData && (

@@ -94,7 +94,7 @@ export default function ProjectListView({
                         return (
                             <div key={column.id}>
                                 <div
-                                    className="bg-column hover:bg-column-is-over mt-3 cursor-pointer rounded-md transition-colors"
+                                    className="mt-3 cursor-pointer rounded-md bg-column transition-colors hover:bg-column-is-over"
                                     onClick={() =>
                                         setCollapsedGroups((prev) => {
                                             const next = new Set(prev);
@@ -127,7 +127,7 @@ export default function ProjectListView({
                                             <span className="text-xs font-semibold text-muted-foreground">
                                                 {column.name}
                                             </span>
-                                            <span className="bg-column-is-over flex h-5 min-w-[20px] items-center justify-center rounded-md px-1.5 text-[11px] text-muted-foreground">
+                                            <span className="flex h-5 min-w-[20px] items-center justify-center rounded-md bg-column-is-over px-1.5 text-[11px] text-muted-foreground">
                                                 {column.tasks.length}
                                             </span>
                                         </div>

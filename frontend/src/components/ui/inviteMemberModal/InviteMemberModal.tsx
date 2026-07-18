@@ -357,32 +357,26 @@ export default function InviteMemberModal({
                                     </div>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <button
+                                            <Button
                                                 type="button"
                                                 onClick={handleCopyLink}
                                                 className={cn(
-                                                    "flex h-8 items-center gap-1.5 rounded-md border border-border px-3 text-xs font-medium transition-all",
+                                                    "h-8 rounded-md border border-border px-3 text-xs font-medium",
                                                     linkCopied
                                                         ? "border-green-300 text-green-500"
-                                                        : "bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-zinc-900 dark:text-zinc-500 dark:hover:bg-zinc-950",
+                                                        : "bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-zinc-900 dark:text-zinc-500 dark:hover:bg-zinc-950 [&_svg]:size-3.5",
                                                 )}
                                                 disabled={isPending}
                                             >
                                                 {linkCopied ? (
-                                                    <CheckIcon
-                                                        weight="duotone"
-                                                        size={12}
-                                                    />
+                                                    <CheckIcon weight="duotone" />
                                                 ) : (
-                                                    <CopyIcon
-                                                        weight="duotone"
-                                                        size={12}
-                                                    />
+                                                    <CopyIcon weight="duotone" />
                                                 )}
                                                 {linkCopied
                                                     ? "Copied!"
                                                     : "Copy"}
-                                            </button>
+                                            </Button>
                                         </TooltipTrigger>
                                         <TooltipContent>
                                             Copy invite link

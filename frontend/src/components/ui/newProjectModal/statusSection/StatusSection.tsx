@@ -6,6 +6,7 @@ import { Status } from "@/types/types";
 import { ZodErrors } from "../../zodErrors/ZodErrors";
 import { useState } from "react";
 import { BaseAction } from "@/types/actions";
+import { Button } from "../../shadcn/button";
 
 interface StatusSectionProps {
     formState: BaseAction | undefined;
@@ -24,12 +25,12 @@ export default function StatusSection({
             <div className="flex flex-wrap gap-1.5">
                 {(Object.keys(STATUS_CONFIG) as Status[]).map(
                     (statusConfig) => (
-                        <button
+                        <Button
                             key={statusConfig}
                             type="button"
                             onClick={() => setStatus(statusConfig)}
                             className={cn(
-                                "flex items-center gap-1.5 rounded-md border border-border bg-control px-2.5 py-1 text-xs font-medium transition-all hover:bg-control-active",
+                                "h-6 border border-border bg-control px-2.5 text-xs font-medium text-foreground transition-all hover:bg-control-active",
                                 status === statusConfig
                                     ? "bg-control-active"
                                     : "opacity-60 hover:opacity-100",
@@ -44,7 +45,7 @@ export default function StatusSection({
                                 }}
                             />
                             {STATUS_CONFIG[statusConfig].label}
-                        </button>
+                        </Button>
                     ),
                 )}
             </div>

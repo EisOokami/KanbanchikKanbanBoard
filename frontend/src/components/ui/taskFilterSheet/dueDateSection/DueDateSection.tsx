@@ -8,6 +8,7 @@ import { FilterState } from "@/types/types";
 import { format } from "date-fns";
 import { useState } from "react";
 import { cn } from "@/libs/utils";
+import { Button } from "../../shadcn/button";
 
 interface DueDateSectionProps {
     filters: FilterState;
@@ -38,11 +39,11 @@ export default function DueDateSection({
                             key: "due_soon" as const,
                         },
                     ].map(({ label, key }) => (
-                        <button
+                        <Button
                             key={key}
                             onClick={() => onUpdate({ [key]: !filters[key] })}
                             className={cn(
-                                "flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors",
+                                "h-8 border px-2.5 text-xs font-medium",
                                 filters[key]
                                     ? "border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300"
                                     : "border-border bg-muted text-muted-foreground hover:bg-accent hover:text-foreground",
@@ -52,14 +53,14 @@ export default function DueDateSection({
                             {filters[key] && (
                                 <XIcon weight="duotone" size={14} />
                             )}
-                        </button>
+                        </Button>
                     ))}
                 </div>
                 <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                     <PopoverTrigger asChild>
-                        <button
+                        <Button
                             className={cn(
-                                "flex w-full items-center gap-2 rounded-md border border-border bg-control px-3 py-2.5 text-sm transition-colors hover:bg-control-active",
+                                "h-10 w-full justify-start gap-2 border border-border bg-control px-3 text-sm hover:bg-control-active",
                                 filters.date_range?.from
                                     ? "border-bright-blue/60 text-bright-blue hover:bg-control-active"
                                     : "text-control-text",
@@ -87,7 +88,7 @@ export default function DueDateSection({
                                     <XIcon weight="duotone" size={16} />
                                 </span>
                             )}
-                        </button>
+                        </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-fit rounded-md border border-border p-0 shadow-sm">
                         <Calendar

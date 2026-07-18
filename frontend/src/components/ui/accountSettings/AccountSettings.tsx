@@ -89,24 +89,13 @@ export default function AccountSettingsModal({
                                                 setActiveSection(item.id)
                                             }
                                             className={cn(
-                                                "w-full justify-start gap-2.5 border px-3 py-2 text-sm font-medium transition-all",
+                                                "w-full justify-start border px-3 text-sm font-medium transition-all",
                                                 active
-                                                    ? "shadow-sm hover:bg-background dark:border-gray-500"
-                                                    : "border-transparent text-gray-500",
+                                                    ? "border-border bg-control-active"
+                                                    : "border-transparent text-gray-500 hover:bg-control",
                                             )}
                                         >
-                                            <span
-                                                className={
-                                                    active
-                                                        ? ""
-                                                        : "text-gray-500"
-                                                }
-                                            >
-                                                <Icon
-                                                    weight="duotone"
-                                                    size={16}
-                                                />
-                                            </span>
+                                            <Icon weight="duotone" size={16} />
                                             {item.label}
                                             {active && (
                                                 <CaretRightIcon

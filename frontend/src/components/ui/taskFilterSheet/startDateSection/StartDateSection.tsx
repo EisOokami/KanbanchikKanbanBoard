@@ -8,6 +8,7 @@ import { FilterState } from "@/types/types";
 import { format } from "date-fns";
 import { useState } from "react";
 import { cn } from "@/libs/utils";
+import { Button } from "../../shadcn/button";
 
 interface StartDateSectionProps {
     filters: FilterState;
@@ -29,9 +30,9 @@ export default function StartDateSection({
             <div className="pt-1">
                 <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                     <PopoverTrigger asChild>
-                        <button
+                        <Button
                             className={cn(
-                                "flex w-full items-center gap-2 rounded-md border border-border bg-control px-3 py-2.5 text-sm transition-colors hover:bg-control-active",
+                                "h-10 w-full justify-start gap-2 border border-border bg-control px-3 text-sm hover:bg-control-active",
                                 filters.start_date_range?.from
                                     ? "border-bright-blue/60 text-bright-blue hover:bg-control-active"
                                     : "text-control-text",
@@ -59,7 +60,7 @@ export default function StartDateSection({
                                     <XIcon weight="duotone" size={16} />
                                 </span>
                             )}
-                        </button>
+                        </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-fit rounded-md border border-border p-0 shadow-sm">
                         <Calendar

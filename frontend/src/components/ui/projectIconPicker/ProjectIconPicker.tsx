@@ -26,14 +26,14 @@ export default function ProjectIconPicker({
     const [open, setOpen] = useState<boolean>(false);
 
     return (
-        <Popover onOpenChange={setOpen} open={open}>
+        <Popover onOpenChange={setOpen} open={open} modal={true}>
             <PopoverTrigger disabled={isPending}>
                 <button
                     type="button"
                     className="relative flex size-14 items-center justify-center rounded-md border text-2xl transition-all hover:brightness-95"
                     style={{
-                        background: `${projectColor}15`,
-                        borderColor: `${projectColor}30`,
+                        background: `${projectColor}20`,
+                        borderColor: `${projectColor}40`,
                     }}
                     disabled={isPending}
                 >
@@ -47,16 +47,16 @@ export default function ProjectIconPicker({
                     </span>
                 </button>
             </PopoverTrigger>
-            <PopoverContent className="w-fit p-0">
+            <PopoverContent className="w-fit border-border p-0">
                 <EmojiPicker
                     className="h-[342px]"
                     onEmojiSelect={({ emoji }) => {
                         onProjectIconChange(emoji);
                     }}
                 >
-                    <EmojiPickerSearch />
+                    <EmojiPickerSearch className="border-border" />
                     <EmojiPickerContent />
-                    <EmojiPickerFooter />
+                    <EmojiPickerFooter className="border-border" />
                 </EmojiPicker>
             </PopoverContent>
         </Popover>

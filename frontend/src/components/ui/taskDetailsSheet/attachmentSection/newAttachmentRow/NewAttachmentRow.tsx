@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/shadcn/button";
 import { getFileIcon, isImage } from "@/libs/taskDetailsSheet";
 import { formatSize } from "@/libs/utils";
 import { ArrowLineDownIcon, TrashSimpleIcon } from "@phosphor-icons/react";
@@ -69,28 +70,30 @@ export default function NewAttachmentRow({
             {hasPermission && (
                 <div className="flex shrink-0 items-center gap-1 opacity-0 transition-all group-hover/att:opacity-100">
                     {!canPreview && (
-                        <button
+                        <Button
                             type="button"
+                            variant="ghost"
+                            size="icon"
                             onClick={handleDownload}
-                            className="text-gray-300 transition-colors hover:text-violet-500"
+                            className="size-7 text-control-text hover:bg-control hover:text-violet-500"
                             disabled={isPending}
-                            title="Download"
                         >
                             <ArrowLineDownIcon weight="duotone" size={16} />
-                        </button>
+                        </Button>
                     )}
-                    <button
+                    <Button
                         type="button"
+                        variant="ghost"
+                        size="icon"
                         onClick={(e) => {
                             e.stopPropagation();
                             onRemove(attachment.id);
                         }}
-                        className="text-gray-300 transition-colors hover:text-red-400"
+                        className="size-7 text-control-text hover:bg-red-50 hover:text-red-400 dark:hover:bg-red-950 dark:hover:text-red-600"
                         disabled={isPending}
-                        title="Remove"
                     >
                         <TrashSimpleIcon weight="duotone" size={16} />
-                    </button>
+                    </Button>
                 </div>
             )}
         </div>
