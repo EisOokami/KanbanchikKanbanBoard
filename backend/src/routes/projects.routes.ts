@@ -33,7 +33,7 @@ router.put(
     updateProject,
 );
 router.delete("/:slug", authenticateToken, deleteProject);
-router.put(
+router.post(
     "/change-role/:slug",
     authenticateToken,
     validateData(changeRoleSchema),

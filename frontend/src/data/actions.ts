@@ -1575,7 +1575,7 @@ export async function changeRoleAction(
     role: Role,
 ): Promise<{ ok: boolean; message: string } | undefined> {
     const responseData = await mutateData(
-        "PUT",
+        "POST",
         `/projects/change-role/${slug}`,
         {
             memberId,
