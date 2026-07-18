@@ -1552,6 +1552,21 @@ export const deleteProject = async (req: IGetUserRequest, res: Response) => {
             message: "The project has been successfully deleted",
         });
     } catch (error) {
+        if (error instanceof ZodError) {
+            const errorMessages = error.issues.map((issue: any) => ({
+                field: issue.path[0],
+                message: issue.message,
+            }));
+
+            res.status(400).json({
+                status: "error",
+                message: "Invalid data",
+                details: errorMessages,
+            });
+
+            return;
+        }
+
         console.error(error);
         res.status(500).json({ status: "error", message: "Database error" });
     }
@@ -1676,6 +1691,21 @@ export const changeRole = async (req: IGetUserRequest, res: Response) => {
             message: "The role has been successfully changed",
         });
     } catch (error) {
+        if (error instanceof ZodError) {
+            const errorMessages = error.issues.map((issue: any) => ({
+                field: issue.path[0],
+                message: issue.message,
+            }));
+
+            res.status(400).json({
+                status: "error",
+                message: "Invalid data",
+                details: errorMessages,
+            });
+
+            return;
+        }
+
         console.error(error);
         res.status(500).json({ status: "error", message: "Database error" });
     }
