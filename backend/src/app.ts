@@ -61,7 +61,7 @@ app.use("/auth", authRoutes);
 app.use("/uploads", uploadsRoutes);
 app.use("/invites", inviteRoutes);
 
-app.use("/files", express.static(path.join(process.cwd(), "src/uploads")));
+app.use("/files", express.static(path.join(process.cwd(), "uploads")));
 
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`);

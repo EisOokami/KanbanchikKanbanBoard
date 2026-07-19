@@ -22,9 +22,20 @@ const allowedTypes = [
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, path.join(__dirname, "/src/uploads"));
+        cb(null, path.join(__dirname, "/uploads"));
     },
     filename: (req, file, cb) => {
+        const originalName = file.originalname;
+
+        if (originalName.length > 50) {
+            return cb(
+                new Error(
+                    "Filename is too long. Maximum length is 50 characters.",
+                ),
+                "",
+            );
+        }
+
         cb(
             null,
             `${file.fieldname}-${Date.now()}-${Math.random().toString(36).slice(2)}${path.extname(file.originalname)}`,
@@ -35,6 +46,12 @@ const storage = multer.diskStorage({
 const upload = multer({
     storage,
     fileFilter: async (req, file, cb) => {
+        if (file.originalname.length > 50) {
+            return cb(
+                new Error("File rejection: Filename exceeds 50 characters."),
+            );
+        }
+
         if (!allowedTypes.some((type) => file.mimetype.startsWith(type))) {
             return cb(new Error("Invalid file type"));
         }
@@ -43,6 +60,9 @@ const upload = multer({
     },
     limits: {
         fileSize: 5 * 1024 * 1024,
+        fieldNameSize: 100,
+        files: 5,
+        fields: 10,
     },
 });
 

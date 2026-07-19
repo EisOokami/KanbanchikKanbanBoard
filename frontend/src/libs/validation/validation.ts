@@ -420,6 +420,20 @@ export const createTaskSchema = z
                                 message: "Maximum file size is 5MB",
                             })
                             .refine(
+                                (file) => {
+                                    const fileNameWithoutExtension =
+                                        file.name.replace(/\.[^/.]+$/, "");
+
+                                    return (
+                                        fileNameWithoutExtension.length <= 50
+                                    );
+                                },
+                                {
+                                    message:
+                                        "File name must be less than or equal to 50 characters",
+                                },
+                            )
+                            .refine(
                                 (file) =>
                                     [
                                         "image/jpeg",
@@ -535,6 +549,18 @@ export const updateTaskSchema = z.object({
                             message: "Maximum file size is 5MB",
                         })
                         .refine(
+                            (file) => {
+                                const fileNameWithoutExtension =
+                                    file.name.replace(/\.[^/.]+$/, "");
+
+                                return fileNameWithoutExtension.length <= 50;
+                            },
+                            {
+                                message:
+                                    "File name must be less than or equal to 50 characters",
+                            },
+                        )
+                        .refine(
                             (file) =>
                                 [
                                     "image/jpeg",
@@ -568,10 +594,13 @@ export const updateTaskSchema = z.object({
 export const updateProfileSchema = z.object({
     avatar: z.preprocess(
         (value) => {
-            if (!value || value === "") return undefined;
+            if (!value || value === "") {
+                return undefined;
+            }
 
             if (typeof window !== "undefined" && value instanceof FileList) {
                 const file = value.item(0);
+
                 return file && file.size > 0 ? file : undefined;
             }
 
@@ -589,6 +618,20 @@ export const updateProfileSchema = z.object({
             .refine((file) => file.size <= 5 * 1024 * 1024, {
                 message: "Maximum file size is 5MB",
             })
+            .refine(
+                (file) => {
+                    const fileNameWithoutExtension = file.name.replace(
+                        /\.[^/.]+$/,
+                        "",
+                    );
+
+                    return fileNameWithoutExtension.length <= 50;
+                },
+                {
+                    message:
+                        "File name must be less than or equal to 50 characters",
+                },
+            )
             .refine(
                 (file) =>
                     ["image/jpeg", "image/png", "image/webp"].includes(

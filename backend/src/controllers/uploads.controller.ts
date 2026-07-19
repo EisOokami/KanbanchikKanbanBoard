@@ -572,7 +572,7 @@ export const deleteAttachment = async (req: IGetUserRequest, res: Response) => {
 
         const __dirname = path.resolve(path.dirname(""));
         const fileUrl = attachment.file_url.replace(/^\/files/, "");
-        const filePath = path.join(__dirname, "/src/uploads", fileUrl);
+        const filePath = path.join(__dirname, "/uploads", fileUrl);
 
         if (existsSync(filePath)) {
             unlinkSync(filePath);
@@ -677,7 +677,7 @@ export const deleteAvatar = async (req: IGetUserRequest, res: Response) => {
 
         const __dirname = path.resolve(path.dirname(""));
         const fileUrl = attachment.file_url.replace(/^\/files/, "");
-        const filePath = path.join(__dirname, "/src/uploads", fileUrl);
+        const filePath = path.join(__dirname, "/uploads", fileUrl);
 
         if (existsSync(filePath)) {
             unlinkSync(filePath);

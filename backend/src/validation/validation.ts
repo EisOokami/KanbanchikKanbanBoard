@@ -385,6 +385,20 @@ export const createTaskSchema = z
                             .instanceof(File, {
                                 message: "Attachment is required",
                             })
+                            .refine(
+                                (file) => {
+                                    const fileNameWithoutExtension =
+                                        file.name.replace(/\.[^/.]+$/, "");
+
+                                    return (
+                                        fileNameWithoutExtension.length <= 50
+                                    );
+                                },
+                                {
+                                    message:
+                                        "File name must be less than or equal to 50 characters",
+                                },
+                            )
                             .refine((file) => file.size <= 5 * 1024 * 1024, {
                                 message: "Maximum file size is 5MB",
                             })
@@ -503,6 +517,18 @@ export const updateTaskSchema = z.object({
                         .refine((file) => file.size <= 5 * 1024 * 1024, {
                             message: "Maximum file size is 5MB",
                         })
+                        .refine(
+                            (file) => {
+                                const fileNameWithoutExtension =
+                                    file.name.replace(/\.[^/.]+$/, "");
+
+                                return fileNameWithoutExtension.length <= 50;
+                            },
+                            {
+                                message:
+                                    "File name must be less than or equal to 50 characters",
+                            },
+                        )
                         .refine(
                             (file) =>
                                 [
