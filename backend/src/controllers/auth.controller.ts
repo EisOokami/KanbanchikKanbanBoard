@@ -16,13 +16,12 @@ import {
     createAccessToken,
     createRefreshToken,
     revokeAllUserSessions,
-    revokeAllUserTokens,
     revokeSession,
     rotateRefreshToken,
     verifyRefreshToken,
 } from "../utils/jwt";
 import { jwtVerify, type JWTPayload } from "jose";
-import type { RefreshTokens, User } from "../types/types";
+import type { User } from "../types/types";
 import { generateCsrfToken } from "../utils/csrf";
 
 dotenv.config();

@@ -12,7 +12,7 @@ import {
     getAttachmentsSchema,
 } from "../validation/validation";
 import { ZodError } from "zod";
-import { existsSync, unlink, unlinkSync } from "fs";
+import { existsSync, unlinkSync } from "fs";
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import path from "path";
 import dotenv from "dotenv";

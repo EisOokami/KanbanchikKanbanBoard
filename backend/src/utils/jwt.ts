@@ -11,7 +11,6 @@ dotenv.config();
 
 const accessSecret = new TextEncoder().encode(process.env.JWT_ACCESS_SECRET);
 const refreshSecret = new TextEncoder().encode(process.env.JWT_REFRESH_SECRET);
-
 const ROTATION_GRACE_PERIOD_MS = 10_000;
 
 export async function createAccessToken(payload: JWTPayload) {
