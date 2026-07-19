@@ -586,9 +586,12 @@ export const updateProfileSchema = z
             .regex(/^#[0-9A-Fa-f]{6}$/, "Color must be a valid HEX value")
             .optional(),
     })
-    .refine((data) => Object.values(data).some((v) => v !== undefined), {
-        message: "At least one field must be provided",
-    });
+    .refine(
+        (data) => Object.values(data).some((value) => value !== undefined),
+        {
+            message: "At least one field must be provided",
+        },
+    );
 
 export const forgotPasswordSchema = z.object({
     email: z
