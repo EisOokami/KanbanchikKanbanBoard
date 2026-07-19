@@ -48,6 +48,7 @@ app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 app.use(hpp());
 app.use(helmet());
+app.use(helmet.hidePoweredBy());
 app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
 app.use(limiter);
 app.use(xss());
