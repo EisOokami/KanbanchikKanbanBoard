@@ -18,7 +18,7 @@ import { verifyCsrf } from "../middlewares/csrf.middleware";
 
 const singleUploadLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    limit: 5,
+    limit: 3,
     message: {
         status: 429,
         error: "Too many requests",
@@ -66,7 +66,7 @@ const deleteAttachmentLimiter = rateLimit({
 
 const deleteAvatarLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    limit: 30,
+    limit: 3,
     message: {
         status: 429,
         error: "Too many requests",
@@ -81,43 +81,43 @@ const router = Router();
 router.get("/", authenticateToken, getAttachments);
 router.post(
     "/",
+    singleUploadLimiter,
     authenticateToken,
     verifyCsrf,
-    singleUploadLimiter,
     upload.single("file"),
     fileValidation,
     uploadSingle,
 );
 router.post(
     "/avatar",
+    avatarUploadLimiter,
     authenticateToken,
     verifyCsrf,
-    avatarUploadLimiter,
     upload.single("file"),
     fileValidation,
     uploadAvatar,
 );
 router.post(
     "/multiple",
+    multipleUploadLimiter,
     authenticateToken,
     verifyCsrf,
-    multipleUploadLimiter,
     upload.array("files"),
     filesValidation,
     uploadMultiple,
 );
 router.delete(
     "/avatar",
+    deleteAvatarLimiter,
     authenticateToken,
     verifyCsrf,
-    deleteAvatarLimiter,
     deleteAvatar,
 );
 router.delete(
     "/:id",
+    deleteAttachmentLimiter,
     authenticateToken,
     verifyCsrf,
-    deleteAttachmentLimiter,
     deleteAttachment,
 );
 
