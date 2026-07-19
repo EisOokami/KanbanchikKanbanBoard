@@ -18,6 +18,14 @@ const refreshTokenConfig = {
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict" as const,
 };
+const csrfTokenConfig = {
+    maxAge: 60 * 60 * 24 * 7,
+    path: "/",
+    domain: process.env.HOST ?? "localhost",
+    httpOnly: false,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict" as const,
+};
 
 const protectedRoutes = ["/overview", "/project", "/tasks", "/calendar"];
 const protectedAuthRoutes = [
@@ -39,10 +47,11 @@ export async function proxy(request: NextRequest) {
     const currentPath = request.nextUrl.pathname;
     let accessToken = request.cookies.get("accessToken")?.value;
     const refreshToken = request.cookies.get("refreshToken")?.value;
+    const csrfToken = request.cookies.get("csrfToken")?.value;
     let tokens = null;
 
-    if (!accessToken && refreshToken) {
-        tokens = await refreshAccessToken(refreshToken);
+    if (!accessToken && refreshToken && csrfToken) {
+        tokens = await refreshAccessToken(refreshToken, csrfToken);
 
         if (tokens) {
             accessToken = tokens.accessToken;
@@ -99,12 +108,12 @@ export async function proxy(request: NextRequest) {
             tokens.accessToken,
             accessTokenConfig,
         );
-
         response.cookies.set(
             "refreshToken",
             tokens.refreshToken,
             refreshTokenConfig,
         );
+        response.cookies.set("csrfToken", tokens.csrfToken, csrfTokenConfig);
     }
 
     response.headers.set(

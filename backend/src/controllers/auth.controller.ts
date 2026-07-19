@@ -23,6 +23,7 @@ import {
 } from "../utils/jwt";
 import { jwtVerify, type JWTPayload } from "jose";
 import type { RefreshTokens, User } from "../types/types";
+import { generateCsrfToken } from "../utils/csrf";
 
 dotenv.config();
 
@@ -115,6 +116,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
             req.ip,
             req.headers["user-agent"],
         );
+        const csrfToken = generateCsrfToken();
 
         const mailOptions = {
             from: process.env.EMAIL_USER,
@@ -129,6 +131,14 @@ export const register = async (req: Request, res: Response): Promise<void> => {
             } else {
                 console.log(`Welcome email sent: ${info.response}`);
             }
+        });
+
+        res.cookie("csrfToken", csrfToken, {
+            httpOnly: false,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            path: "/",
+            maxAge: 7 * 24 * 60 * 60 * 1000,
         });
 
         res.status(201).json({
@@ -214,6 +224,15 @@ export const login = async (req: Request, res: Response): Promise<void> => {
             req.ip,
             req.headers["user-agent"],
         );
+        const csrfToken = generateCsrfToken();
+
+        res.cookie("csrfToken", csrfToken, {
+            httpOnly: false,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            path: "/",
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
 
         res.status(200).json({
             status: "success",
@@ -598,6 +617,15 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
         }
 
         const newAccessToken = await createAccessToken({ id: +userId });
+        const csrfToken = generateCsrfToken();
+
+        res.cookie("csrfToken", csrfToken, {
+            httpOnly: false,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            path: "/",
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
 
         res.status(201).json({
             status: "success",
@@ -658,6 +686,7 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
         await revokeSession(sid);
 
         res.clearCookie("refreshToken");
+        res.clearCookie("csrfToken");
 
         res.status(201).json({
             status: "success",

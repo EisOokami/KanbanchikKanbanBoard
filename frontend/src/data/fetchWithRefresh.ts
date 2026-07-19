@@ -2,7 +2,11 @@ import { cookies } from "next/headers";
 import { refreshAccessToken } from "./refreshAccessToken";
 
 type FetchOptions = RequestInit & { requireAuth?: boolean };
-type RefreshResult = { accessToken: string; refreshToken: string };
+type RefreshResult = {
+    accessToken: string;
+    refreshToken: string;
+    csrfToken: string;
+};
 
 const accessTokenConfig = {
     maxAge: 15,
@@ -20,11 +24,20 @@ const refreshTokenConfig = {
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict" as const,
 };
+const csrfTokenConfig = {
+    maxAge: 60 * 60 * 24 * 7,
+    path: "/",
+    domain: process.env.HOST ?? "localhost",
+    httpOnly: false,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict" as const,
+};
 
 const refreshPromises = new Map<string, Promise<RefreshResult | null>>();
 
 async function refreshOnce(
     refreshToken: string,
+    csrfToken: string,
 ): Promise<RefreshResult | null> {
     const inFlight = refreshPromises.get(refreshToken);
 
@@ -32,7 +45,7 @@ async function refreshOnce(
         return inFlight;
     }
 
-    const promise = refreshAccessToken(refreshToken).finally(() => {
+    const promise = refreshAccessToken(refreshToken, csrfToken).finally(() => {
         refreshPromises.delete(refreshToken);
     });
 
@@ -48,31 +61,44 @@ export async function fetchWithRefresh(
     options: FetchOptions = {},
     isImage?: boolean,
 ): Promise<Response> {
+    const method = (options.method ?? "GET").toUpperCase();
+    const needsCsrf = new Set(["POST", "PUT", "PATCH", "DELETE"]).has(method);
+
+    const cookieStore = await cookies();
+    const csrfToken = needsCsrf
+        ? cookieStore.get("csrfToken")?.value
+        : undefined;
+
+    if (needsCsrf && !csrfToken) {
+        throw new Error("CSRF token missing");
+    }
+
     const buildHeaders = (
         token: string | undefined,
         cookieRefreshToken: string | undefined,
+        currentCsrfToken: string | undefined,
     ) => ({
         ...(!isImage && { "Content-Type": "application/json" }),
         ...(token && { Authorization: `Bearer ${token}` }),
         ...(cookieRefreshToken && {
-            Cookie: `refreshToken=${cookieRefreshToken}`,
+            Cookie: `refreshToken=${cookieRefreshToken}; csrfToken=${currentCsrfToken}`,
         }),
+        ...(currentCsrfToken && { "X-CSRF-Token": currentCsrfToken }),
         ...options.headers,
     });
 
     let response = await fetch(url, {
         ...options,
-        headers: buildHeaders(accessToken, refreshToken),
+        headers: buildHeaders(accessToken, refreshToken, csrfToken),
     });
 
-    if (response.status === 401 && refreshToken) {
-        const tokens = await refreshOnce(refreshToken);
+    if (response.status === 401 && refreshToken && csrfToken) {
+        const tokens = await refreshOnce(refreshToken, csrfToken);
 
         if (!tokens) {
             throw new Error("Session expired");
         }
 
-        const cookieStore = await cookies();
         const alreadyPersisted =
             cookieStore.get("refreshToken")?.value === tokens.refreshToken;
 
@@ -87,11 +113,16 @@ export async function fetchWithRefresh(
                 tokens.refreshToken,
                 refreshTokenConfig,
             );
+            cookieStore.set("csrfToken", tokens.csrfToken, csrfTokenConfig);
         }
 
         response = await fetch(url, {
             ...options,
-            headers: buildHeaders(tokens.accessToken, tokens.refreshToken),
+            headers: buildHeaders(
+                tokens.accessToken,
+                tokens.refreshToken,
+                tokens.csrfToken,
+            ),
         });
     }
 

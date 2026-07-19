@@ -9,14 +9,15 @@ import {
     transferOwnership,
     updateProject,
 } from "../controllers/projects.controller";
-import { authenticateToken } from "../middleware/auth.middleware";
+import { authenticateToken } from "../middlewares/auth.middleware";
 import {
     changeRoleSchema,
     createProjectSchema,
     transferOwnershipSchema,
     updateProjectSchema,
 } from "../validation/validation";
-import { validateData } from "../middleware/validation.middleware";
+import { validateData } from "../middlewares/validation.middleware";
+import { verifyCsrf } from "../middlewares/csrf.middleware";
 
 const router = Router();
 
@@ -25,28 +26,37 @@ router.get("/:slug", authenticateToken, getProject);
 router.post(
     "/",
     authenticateToken,
+    verifyCsrf,
     validateData(createProjectSchema),
     createProject,
 );
 router.put(
     "/:slug",
     authenticateToken,
+    verifyCsrf,
     validateData(updateProjectSchema),
     updateProject,
 );
-router.delete("/:slug", authenticateToken, deleteProject);
+router.delete("/:slug", authenticateToken, verifyCsrf, deleteProject);
 router.post(
     "/change-role/:slug",
     authenticateToken,
+    verifyCsrf,
     validateData(changeRoleSchema),
     changeRole,
 );
 router.post(
     "/transfer-ownership/:slug",
     authenticateToken,
+    verifyCsrf,
     validateData(transferOwnershipSchema),
     transferOwnership,
 );
-router.delete("/delete-member/:id", authenticateToken, deleteMember);
+router.delete(
+    "/delete-member/:id",
+    authenticateToken,
+    verifyCsrf,
+    deleteMember,
+);
 
 export default router;

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
-import { upload } from "../middleware/uploads.middleware";
-import { authenticateToken } from "../middleware/auth.middleware";
+import { upload } from "../middlewares/uploads.middleware";
+import { authenticateToken } from "../middlewares/auth.middleware";
 import {
     deleteAttachment,
     deleteAvatar,
@@ -13,7 +13,8 @@ import {
 import {
     filesValidation,
     fileValidation,
-} from "../middleware/fileValidation.middleware";
+} from "../middlewares/fileValidation.middleware";
+import { verifyCsrf } from "../middlewares/csrf.middleware";
 
 const singleUploadLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -81,6 +82,7 @@ router.get("/", authenticateToken, getAttachments);
 router.post(
     "/",
     authenticateToken,
+    verifyCsrf,
     singleUploadLimiter,
     upload.single("file"),
     fileValidation,
@@ -89,6 +91,7 @@ router.post(
 router.post(
     "/avatar",
     authenticateToken,
+    verifyCsrf,
     avatarUploadLimiter,
     upload.single("file"),
     fileValidation,
@@ -97,15 +100,23 @@ router.post(
 router.post(
     "/multiple",
     authenticateToken,
+    verifyCsrf,
     multipleUploadLimiter,
     upload.array("files"),
     filesValidation,
     uploadMultiple,
 );
-router.delete("/avatar", authenticateToken, deleteAvatarLimiter, deleteAvatar);
+router.delete(
+    "/avatar",
+    authenticateToken,
+    verifyCsrf,
+    deleteAvatarLimiter,
+    deleteAvatar,
+);
 router.delete(
     "/:id",
     authenticateToken,
+    verifyCsrf,
     deleteAttachmentLimiter,
     deleteAttachment,
 );

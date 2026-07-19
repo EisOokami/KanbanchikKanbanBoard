@@ -1,11 +1,12 @@
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
-import { authenticateToken } from "../middleware/auth.middleware";
+import { authenticateToken } from "../middlewares/auth.middleware";
 import {
     generateInvite,
     acceptInvite,
     memberInvite,
 } from "../controllers/invites.controller";
+import { verifyCsrf } from "../middlewares/csrf.middleware";
 
 const generateLimiter = rateLimit({
     windowMs: 60 * 60 * 1000,
@@ -49,9 +50,22 @@ router.post(
     "/generate/:id",
     generateLimiter,
     authenticateToken,
+    verifyCsrf,
     generateInvite,
 );
-router.post("/accept", acceptLimiter, authenticateToken, acceptInvite);
-router.post("/member", memberInviteLimiter, authenticateToken, memberInvite);
+router.post(
+    "/accept",
+    acceptLimiter,
+    authenticateToken,
+    verifyCsrf,
+    acceptInvite,
+);
+router.post(
+    "/member",
+    memberInviteLimiter,
+    authenticateToken,
+    verifyCsrf,
+    memberInvite,
+);
 
 export default router;

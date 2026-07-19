@@ -1,17 +1,18 @@
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
-import { authenticateToken } from "../middleware/auth.middleware";
+import { authenticateToken } from "../middlewares/auth.middleware";
 import {
     deleteAccount,
     me,
     changePassword,
     updateProfile,
 } from "../controllers/users.controller";
-import { validateData } from "../middleware/validation.middleware";
+import { validateData } from "../middlewares/validation.middleware";
 import {
     changePasswordSchema,
     updateProfileSchema,
 } from "../validation/validation";
+import { verifyCsrf } from "../middlewares/csrf.middleware";
 
 const updateProfileLimiter = rateLimit({
     windowMs: 30 * 60 * 1000,
@@ -56,6 +57,7 @@ router.post(
     "/update-profile",
     updateProfileLimiter,
     authenticateToken,
+    verifyCsrf,
     validateData(updateProfileSchema),
     updateProfile,
 );
@@ -63,9 +65,16 @@ router.post(
     "/change-password",
     changePasswordLimiter,
     authenticateToken,
+    verifyCsrf,
     validateData(changePasswordSchema),
     changePassword,
 );
-router.delete("/:id", deleteLimiter, authenticateToken, deleteAccount);
+router.delete(
+    "/:id",
+    deleteLimiter,
+    authenticateToken,
+    verifyCsrf,
+    deleteAccount,
+);
 
 export default router;

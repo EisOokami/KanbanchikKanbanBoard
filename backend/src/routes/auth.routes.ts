@@ -8,13 +8,14 @@ import {
     register,
     resetPassword,
 } from "../controllers/auth.controller";
-import { validateData } from "../middleware/validation.middleware";
+import { validateData } from "../middlewares/validation.middleware";
 import {
     forgotPasswordSchema,
     loginSchema,
     registerSchema,
     resetPasswordSchema,
 } from "../validation/validation";
+import { verifyCsrf } from "../middlewares/csrf.middleware";
 
 const registerLimiter = rateLimit({
     windowMs: 5 * 60 * 1000,
@@ -85,7 +86,7 @@ router.post(
     validateData(resetPasswordSchema),
     resetPassword,
 );
-router.post("/refresh", refresh);
-router.post("/logout", logout);
+router.post("/refresh", verifyCsrf, refresh);
+router.post("/logout", verifyCsrf, logout);
 
 export default router;

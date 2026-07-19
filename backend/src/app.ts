@@ -7,13 +7,14 @@ import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import { xss } from "express-xss-sanitizer";
 import hostValidation from "host-validation";
+import path from "path";
+import { issueCsrfCookie } from "./middlewares/csrf.middleware";
 import projectsRoutes from "./routes/projects.routes";
 import tasksRoutes from "./routes/tasks.routes";
 import usersRoutes from "./routes/users.routes";
 import authRoutes from "./routes/auth.routes";
 import uploadsRoutes from "./routes/uploads.routes";
 import inviteRoutes from "./routes/invites.routes";
-import path from "path";
 
 dotenv.config();
 
@@ -51,6 +52,7 @@ app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
 app.use(limiter);
 app.use(xss());
 app.use(cookieParser());
+app.use(issueCsrfCookie);
 
 app.use("/projects", projectsRoutes);
 app.use("/tasks", tasksRoutes);

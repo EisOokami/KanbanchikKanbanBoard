@@ -6,8 +6,36 @@ import {
     Register,
     ResetPassword,
 } from "@/types/services";
+import { cookies } from "next/headers";
 
 const baseUrl = process.env.NEXT_PUBLIC_DB_URL;
+
+const csrfTokenConfig = {
+    maxAge: 60 * 60 * 24 * 7,
+    path: "/",
+    domain: process.env.HOST ?? "localhost",
+    httpOnly: false,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax" as const,
+};
+
+function parseAuthCookies(setCookieHeaders: string[]) {
+    const find = (name: string) => {
+        const header = setCookieHeaders.find((cookieHeader) =>
+            cookieHeader.startsWith(`${name}=`),
+        );
+
+        if (!header) {
+            return "";
+        }
+
+        return header.split(";")[0].split("=")[1];
+    };
+
+    return {
+        csrfToken: find("csrfToken"),
+    };
+}
 
 export async function registerService(userData: Register): Promise<
     | {
@@ -35,8 +63,15 @@ export async function registerService(userData: Register): Promise<
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({ ...userData }),
+            credentials: "include",
             cache: "no-cache",
         });
+
+        const setCookieHeaders = response.headers.getSetCookie();
+        const { csrfToken } = parseAuthCookies(setCookieHeaders);
+
+        const cookieStore = await cookies();
+        cookieStore.set("csrfToken", csrfToken, csrfTokenConfig);
 
         return response.json();
     } catch (error) {
@@ -73,6 +108,12 @@ export async function loginService(userData: Login): Promise<
             credentials: "include",
             cache: "no-cache",
         });
+
+        const setCookieHeaders = response.headers.getSetCookie();
+        const { csrfToken } = parseAuthCookies(setCookieHeaders);
+
+        const cookieStore = await cookies();
+        cookieStore.set("csrfToken", csrfToken, csrfTokenConfig);
 
         return response.json();
     } catch (error) {
