@@ -9,7 +9,11 @@ import type {
     ProjectMember,
 } from "../types/types";
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
-import { memberInviteSchema, validateIdSchema } from "../validation/validation";
+import {
+    memberInviteSchema,
+    tokenSchema,
+    validateIdSchema,
+} from "../validation/validation";
 import { ZodError } from "zod";
 import { transporter } from "../utils/email";
 
@@ -105,6 +109,8 @@ export const acceptInvite = async (
     res: Response,
 ): Promise<void> => {
     try {
+        const validateData = tokenSchema.parse(req.body);
+
         const userId = req.user.id;
 
         if (!userId) {
@@ -116,7 +122,7 @@ export const acceptInvite = async (
             return;
         }
 
-        const { token } = req.body;
+        const { token } = validateData;
 
         if (!token) {
             res.status(400).json({

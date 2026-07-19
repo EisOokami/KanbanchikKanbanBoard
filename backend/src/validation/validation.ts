@@ -57,10 +57,11 @@ export const registerSchema = z.object({
 
 export const resetPasswordSchema = z.object({
     token: z
-        .string("Invalid data")
-        .trim()
-        .min(60, "Invalid data")
-        .max(70, "Invalid data"),
+        .string()
+        .regex(
+            /^\$2[aby]\$(0[4-9]|[12][0-9]|3[01])\$[./A-Za-z0-9]{53}$/,
+            "Invalid token",
+        ),
     password: z
         .string()
         .min(8, "Password must be at least 8 characters long")
@@ -741,4 +742,12 @@ export const transferOwnershipSchema = z.object({
         .refine((value) => Number.isSafeInteger(value), {
             message: "Member ID is too large a numerical value",
         }),
+});
+
+export const tokenSchema = z.object({
+    token: z
+        .string()
+        .trim()
+        .length(64, "Invalid token.")
+        .regex(/^[a-f0-9]{64}$/, "Invalid token."),
 });
