@@ -10,6 +10,7 @@ import type {
 import {
     deleteAvatarSchema,
     getAttachmentsSchema,
+    validateIdSchema,
 } from "../validation/validation";
 import { ZodError } from "zod";
 import { existsSync, unlinkSync } from "fs";
@@ -456,6 +457,8 @@ export const uploadMultiple = async (req: IGetUserRequest, res: Response) => {
 
 export const deleteAttachment = async (req: IGetUserRequest, res: Response) => {
     try {
+        validateIdSchema.parse(req.params);
+
         const { id } = req.params;
         const userId = req.user.id;
 

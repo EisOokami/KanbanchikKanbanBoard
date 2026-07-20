@@ -354,6 +354,8 @@ export const getTasks = async (req: IGetUserRequest, res: Response) => {
 
 export const getTaskById = async (req: IGetUserRequest, res: Response) => {
     try {
+        validateIdSchema.parse(req.params);
+
         const { id } = req.params;
         const userId = req.user.id;
 

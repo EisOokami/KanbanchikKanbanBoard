@@ -2,6 +2,7 @@ import type { Response } from "express";
 import {
     changePasswordSchema,
     updateProfileSchema,
+    validateIdSchema,
 } from "../validation/validation";
 import { pool } from "../db/pool";
 import { ZodError } from "zod";
@@ -362,6 +363,8 @@ export const deleteAccount = async (
     res: Response,
 ): Promise<void> => {
     try {
+        validateIdSchema.parse(req.params);
+
         if (!req.params.id) {
             res.status(400).json({
                 status: "error",
