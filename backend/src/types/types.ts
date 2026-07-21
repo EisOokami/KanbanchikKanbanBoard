@@ -13,6 +13,8 @@ export interface User extends RowDataPacket {
     password: string;
     avatar_url: string | null;
     color: string;
+    google_id: string | null;
+    auth_provider: "local" | "google";
     created_at: string;
     updated_at: string;
     reset_token: string | null;
@@ -161,4 +163,13 @@ export interface RefreshSession extends RowDataPacket {
     expires_at: Date;
     replaced_by: string | null;
     replaced_at: Date | null;
+}
+
+export interface GoogleProfile {
+    googleId: string;
+    email: string;
+    emailVerified: boolean;
+    name: string;
+    surname: string;
+    avatarUrl: string | null;
 }

@@ -10,12 +10,13 @@ export default async function MainLayout({
 }: Readonly<{
     children: React.ReactNode;
 }>) {
-    const projectsData = await getProjectsData();
     const userData = await getUserData();
 
     if (!userData.data) {
         redirect("/signIn");
     }
+
+    const projectsData = await getProjectsData();
 
     return (
         <div className="overflow-hidden bg-background">

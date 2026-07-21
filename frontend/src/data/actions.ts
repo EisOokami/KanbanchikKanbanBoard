@@ -20,6 +20,7 @@ import {
 } from "@/types/actions";
 import {
     forgotPasswordService,
+    googleExchangeService,
     loginService,
     registerService,
     resetPasswordService,
@@ -1714,5 +1715,62 @@ export async function transferOwnershipAction(
     return {
         ok: true,
         message: "Role has been changed",
+    };
+}
+
+export async function exchangeGoogleCodeAction(
+    code: string,
+): Promise<{ ok: boolean; message: string } | undefined> {
+    const responseData = await googleExchangeService(code);
+
+    if (!responseData) {
+        console.error("Ops! Something went wrong. Please try again.");
+
+        return {
+            ok: false,
+            message: "Ops! Something went wrong. Please try again or later",
+        };
+    }
+
+    if (
+        "message" in responseData &&
+        "status" in responseData &&
+        responseData.message &&
+        responseData.status === "error"
+    ) {
+        return {
+            ok: false,
+            message: responseData.message,
+        };
+    }
+
+    if ("error" in responseData && responseData.error) {
+        console.error(responseData.error);
+
+        return {
+            ok: false,
+            message: "Failed to login",
+        };
+    }
+
+    if ("refreshToken" in responseData && "accessToken" in responseData) {
+        const cookieStore = await cookies();
+        cookieStore.set(
+            "refreshToken",
+            responseData.refreshToken,
+            refreshTokenConfig,
+        );
+        cookieStore.set(
+            "accessToken",
+            responseData.accessToken,
+            accessTokenConfig,
+        );
+
+        return { ok: true, message: "Login successfully" };
+    }
+
+    return {
+        ok: false,
+        message: "Failed to login",
     };
 }

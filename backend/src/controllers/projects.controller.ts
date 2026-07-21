@@ -203,7 +203,11 @@ export const getProjects = async (req: IGetUserRequest, res: Response) => {
                                   avatar_url:
                                       owner[0].avatar_url === null
                                           ? null
-                                          : `${process.env.BACKEND_URL}${owner[0].avatar_url}`,
+                                          : owner[0].avatar_url.startsWith(
+                                                  "/files",
+                                              )
+                                            ? `${process.env.BACKEND_URL}${owner[0]}`
+                                            : owner[0].avatar_url,
                               }
                             : null,
                     members: members.map((member) => ({
@@ -213,7 +217,9 @@ export const getProjects = async (req: IGetUserRequest, res: Response) => {
                         avatar_url:
                             member.avatar_url === null
                                 ? null
-                                : `${process.env.BACKEND_URL}${member.avatar_url}`,
+                                : member.avatar_url.startsWith("/files")
+                                  ? `${process.env.BACKEND_URL}${member.avatar_url}`
+                                  : member.avatar_url,
                         color: member.color,
                         role: member.role,
                         status: member.status,
@@ -617,7 +623,9 @@ export const getProject = async (req: IGetUserRequest, res: Response) => {
                                 avatar_url:
                                     member.avatar_url === null
                                         ? null
-                                        : `${process.env.BACKEND_URL}${member.avatar_url}`,
+                                        : member.avatar_url.startsWith("/files")
+                                          ? `${process.env.BACKEND_URL}${member.avatar_url}`
+                                          : member.avatar_url,
                             })),
                             labels: taskLabels,
                             categories: taskCategories,
@@ -631,7 +639,11 @@ export const getProject = async (req: IGetUserRequest, res: Response) => {
                                     avatar_url:
                                         comment.avatar_url === null
                                             ? null
-                                            : `${process.env.BACKEND_URL}${comment.avatar_url}`,
+                                            : comment.avatar_url.startsWith(
+                                                    "/files",
+                                                )
+                                              ? `${process.env.BACKEND_URL}${comment.avatar_url}`
+                                              : comment.avatar_url,
                                     color: comment.color,
                                 },
                                 body: comment.body,
@@ -687,7 +699,9 @@ export const getProject = async (req: IGetUserRequest, res: Response) => {
                           avatar_url:
                               owner[0].avatar_url === null
                                   ? null
-                                  : `${process.env.BACKEND_URL}${owner[0].avatar_url}`,
+                                  : owner[0].avatar_url.startsWith("/files")
+                                    ? `${process.env.BACKEND_URL}${owner[0]}`
+                                    : owner[0].avatar_url,
                       }
                     : null,
             members: members.map((member) => ({
@@ -697,7 +711,9 @@ export const getProject = async (req: IGetUserRequest, res: Response) => {
                 avatar_url:
                     member.avatar_url === null
                         ? null
-                        : `${process.env.BACKEND_URL}${member.avatar_url}`,
+                        : member.avatar_url.startsWith("/files")
+                          ? `${process.env.BACKEND_URL}${member.avatar_url}`
+                          : member.avatar_url,
                 color: member.color,
                 role: member.role,
                 status: member.status,
@@ -858,7 +874,7 @@ export const createProject = async (req: IGetUserRequest, res: Response) => {
                         [projectId, token, userId, expiresAt],
                     );
 
-                    const inviteUrl = `${process.env.WEB_URL}/invite/${token}`;
+                    const inviteUrl = `${process.env.FRONTEND_URL}/invite/${token}`;
                     const [username] = email.split("@");
 
                     const mailOptions = {
@@ -1315,7 +1331,7 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
                         [project.id, token, userId, expiresAt],
                     );
 
-                    const inviteUrl = `${process.env.WEB_URL}/invite/${token}`;
+                    const inviteUrl = `${process.env.FRONTEND_URL}/invite/${token}`;
                     const [username] = email.split("@");
 
                     const mailOptions = {

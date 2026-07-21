@@ -72,7 +72,7 @@ export async function proxy(request: NextRequest) {
             script-src 'self' 'nonce-${nonce}' 'strict-dynamic';
             style-src 'self' 'nonce-${nonce}';
             style-src-attr 'self' 'unsafe-inline';
-            img-src 'self' http://127.0.0.1:3001 http://localhost:3001 blob: data:;
+            img-src 'self' http://127.0.0.1:3001 http://localhost:3001 https://lh3.googleusercontent.com blob: data:;
             connect-src 'self' http://127.0.0.1:3001 http://localhost:3001 https://cdn.jsdelivr.net;
             font-src 'self';
             object-src 'none';

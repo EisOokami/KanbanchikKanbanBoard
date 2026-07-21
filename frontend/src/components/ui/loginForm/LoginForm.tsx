@@ -21,7 +21,7 @@ import { ZodErrors } from "@/components/ui/zodErrors/ZodErrors";
 import { DetailsErrors } from "@/components/ui/detailsErrors/DetailsErrors";
 import { PasswordInput } from "@/components/ui/shadcn/password-input";
 import { cn } from "@/libs/utils";
-import { InfoIcon } from "@phosphor-icons/react";
+import { GoogleLogoIcon, InfoIcon } from "@phosphor-icons/react";
 
 const INITIAL_STATE: BaseAction = {
     zodErrors: null,
@@ -142,6 +142,25 @@ export default function LoginForm({ redirect }: Readonly<LoginFormProps>) {
                         <input type="hidden" name="redirect" value={redirect} />
                     )}
                 </form>
+                <div className="my-4 flex items-center gap-3">
+                    <div className="h-px flex-1 bg-border" />
+                    <span className="text-xs text-muted-foreground">OR</span>
+                    <div className="h-px flex-1 bg-border" />
+                </div>
+                <Button
+                    asChild
+                    type="button"
+                    variant="outline"
+                    className="w-full border-border bg-control text-foreground hover:bg-control-active"
+                >
+                    <a href={`${process.env.NEXT_PUBLIC_API_URL}/auth/google`}>
+                        <GoogleLogoIcon
+                            weight="duotone"
+                            className="mr-2 size-4"
+                        />
+                        Continue with Google
+                    </a>
+                </Button>
             </CardContent>
             <CardFooter className="flex justify-center">
                 <p className="text-sm text-muted-foreground">

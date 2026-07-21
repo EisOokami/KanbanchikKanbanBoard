@@ -1,6 +1,6 @@
 "use server";
 
-const baseUrl = process.env.DB_URL;
+const baseUrl = process.env.API_URL;
 
 export async function refreshAccessToken(
     refreshToken: string,

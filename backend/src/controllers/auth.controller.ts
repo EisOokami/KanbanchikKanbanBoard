@@ -23,6 +23,11 @@ import {
 import { jwtVerify, type JWTPayload } from "jose";
 import type { User } from "../types/types";
 import { generateCsrfToken } from "../utils/csrf";
+import {
+    exchangeCodeForProfile,
+    findOrCreateGoogleUser,
+    getGoogleAuthUrl,
+} from "../utils/googleAuth";
 
 dotenv.config();
 
@@ -32,8 +37,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     try {
         const validateData = registerSchema.parse(req.body);
 
-        const { name, surname, email, password, color, avatar_url } =
-            validateData;
+        const { name, surname, email, password, color } = validateData;
 
         const [existingEmailUser] = await pool.execute<
             (Pick<User, "id"> & RowDataPacket)[]
@@ -53,17 +57,10 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
         const [result] = await pool.execute<ResultSetHeader>(
             `
-                INSERT INTO users (name, surname, email, password, avatar_url, color)
+                INSERT INTO users (name, surname, email, password, color)
                 VALUES (?, ?, ?, ?, ?, ?)
             `,
-            [
-                name,
-                surname,
-                email,
-                hashedPassword,
-                avatar_url || null,
-                color || "#cccccc",
-            ],
+            [name, surname, email, hashedPassword, color || "#cccccc"],
         );
 
         if (result.affectedRows === 0) {
@@ -186,16 +183,17 @@ export const login = async (req: Request, res: Response): Promise<void> => {
                 | "password"
                 | "avatar_url"
                 | "color"
+                | "auth_provider"
             > &
                 RowDataPacket)[]
         >(
-            "SELECT id, name, surname, email, password, avatar_url, color FROM users WHERE email = ?",
+            "SELECT id, name, surname, email, password, avatar_url, color, auth_provider FROM users WHERE email = ?",
             [email],
         );
 
         const user = rows[0];
 
-        if (!user) {
+        if (!user || user.auth_provider === "google") {
             res.status(401).json({
                 status: "error",
                 message: "Invalid email or password",
@@ -311,7 +309,7 @@ export const forgotPassword = async (
             return;
         }
 
-        const resetLink = `${process.env.WEB_URL}/resetPassword?token=${token}&id=${user.id}`;
+        const resetLink = `${process.env.FRONTEND_URL}/resetPassword?token=${token}&id=${user.id}`;
 
         const mailOptions = {
             from: process.env.EMAIL_USER,
@@ -714,3 +712,161 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
         });
     }
 };
+
+export function googleAuthStart(req: Request, res: Response) {
+    const state = crypto.randomUUID();
+
+    res.cookie("google_oauth_state", state, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 5 * 60 * 1000,
+    });
+
+    const url = getGoogleAuthUrl(state);
+
+    res.redirect(url);
+}
+
+export async function googleAuthCallback(req: Request, res: Response) {
+    try {
+        const { code, state } = req.query;
+        const savedState = req.cookies?.google_oauth_state;
+
+        res.clearCookie("google_oauth_state");
+
+        if (
+            !code ||
+            typeof code !== "string" ||
+            !state ||
+            state !== savedState
+        ) {
+            res.redirect(
+                `${process.env.FRONTEND_URL}/signIn?error=oauth_state_mismatch`,
+            );
+
+            return;
+        }
+
+        const profile = await exchangeCodeForProfile(code);
+
+        if (!profile.emailVerified) {
+            res.redirect(
+                `${process.env.FRONTEND_URL}/signIn?error=email_not_verified`,
+            );
+
+            return;
+        }
+
+        const userId = await findOrCreateGoogleUser(profile);
+        const exchangeCode = crypto.randomBytes(32).toString("hex");
+        const expiresAt = new Date(Date.now() + 60_000);
+
+        const [result] = await pool.execute<ResultSetHeader>(
+            `INSERT INTO oauth_exchange_codes (code, user_id, expires_at) VALUES (?, ?, ?)`,
+            [exchangeCode, userId, expiresAt],
+        );
+
+        if (result.affectedRows === 0) {
+            res.redirect(
+                `${process.env.FRONTEND_URL}/signIn?error=oauth_failed`,
+            );
+
+            return;
+        }
+
+        return res.redirect(
+            `${process.env.FRONTEND_URL}/callback?code=${exchangeCode}`,
+        );
+    } catch (error) {
+        console.error("Error:", error);
+        return res.redirect(
+            `${process.env.FRONTEND_URL}/signIn?error=oauth_failed`,
+        );
+    }
+}
+
+export async function googleAuthExchange(req: Request, res: Response) {
+    try {
+        const { code } = req.body;
+
+        if (!code || typeof code !== "string") {
+            res.status(400).json({ status: "error", message: "Missing code" });
+
+            return;
+        }
+
+        const [rows] = await pool.execute<RowDataPacket[]>(
+            `
+            SELECT * FROM oauth_exchange_codes
+            WHERE code = ? AND used_at IS NULL AND expires_at > NOW()
+        `,
+            [code],
+        );
+
+        const record = rows[0];
+
+        if (!record) {
+            res.status(400).json({
+                status: "error",
+                message: "Invalid or expired code",
+            });
+
+            return;
+        }
+
+        const [result] = await pool.execute<ResultSetHeader>(
+            `UPDATE oauth_exchange_codes SET used_at = NOW() WHERE code = ?`,
+            [code],
+        );
+
+        if (result.affectedRows === 0) {
+            res.status(400).json({
+                status: "error",
+                message: "Something went wrong... Try again",
+            });
+
+            return;
+        }
+
+        const userId = record.user_id;
+        const refreshToken = await createRefreshToken(
+            userId,
+            req.ip,
+            req.headers["user-agent"],
+        );
+
+        if (!refreshToken) {
+            res.status(500).json({
+                status: "error",
+                message: "Failed to create session",
+            });
+
+            return;
+        }
+
+        const accessToken = await createAccessToken({ id: userId });
+        const csrfToken = generateCsrfToken();
+
+        res.cookie("csrfToken", csrfToken, {
+            httpOnly: false,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            path: "/",
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
+
+        res.status(200).json({
+            status: "success",
+            message: "Login successful",
+            accessToken,
+            refreshToken,
+        });
+    } catch (error) {
+        console.error("Error:", error);
+        res.status(500).json({
+            status: "error",
+            message: "Server error",
+        });
+    }
+}

@@ -290,7 +290,9 @@ export const getTasks = async (req: IGetUserRequest, res: Response) => {
                             avatar_url:
                                 member.avatar_url === null
                                     ? null
-                                    : `${process.env.BACKEND_URL}${member.avatar_url}`,
+                                    : member.avatar_url.startsWith("/files")
+                                      ? `${process.env.BACKEND_URL}${member.avatar_url}`
+                                      : member.avatar_url,
                         })),
                     },
                     members: members.map((member) => ({
@@ -298,7 +300,9 @@ export const getTasks = async (req: IGetUserRequest, res: Response) => {
                         avatar_url:
                             member.avatar_url === null
                                 ? null
-                                : `${process.env.BACKEND_URL}${member.avatar_url}`,
+                                : member.avatar_url.startsWith("/files")
+                                  ? `${process.env.BACKEND_URL}${member.avatar_url}`
+                                  : member.avatar_url,
                     })),
                     labels,
                     categories,
@@ -335,7 +339,9 @@ export const getTasks = async (req: IGetUserRequest, res: Response) => {
                             avatar_url:
                                 comment.avatar_url === null
                                     ? null
-                                    : `${process.env.BACKEND_URL}${comment.avatar_url}`,
+                                    : comment.avatar_url.startsWith("/files")
+                                      ? `${process.env.BACKEND_URL}${comment.avatar_url}`
+                                      : comment.avatar_url,
                             color: comment.color,
                         },
                     })),
@@ -607,7 +613,9 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
                 avatar_url:
                     member.avatar_url === null
                         ? null
-                        : `${process.env.BACKEND_URL}${member.avatar_url}`,
+                        : member.avatar_url.startsWith("/files")
+                          ? `${process.env.BACKEND_URL}${member.avatar_url}`
+                          : member.avatar_url,
             })),
             labels,
             categories,
@@ -644,7 +652,9 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
                     avatar_url:
                         comment.avatar_url === null
                             ? null
-                            : `${process.env.BACKEND_URL}${comment.avatar_url}`,
+                            : comment.avatar_url.startsWith("/files")
+                              ? `${process.env.BACKEND_URL}${comment.avatar_url}`
+                              : comment.avatar_url,
                     color: comment.color,
                 },
             })),

@@ -19,7 +19,7 @@ import { transporter } from "../utils/email";
 
 dotenv.config();
 
-const frontendUrl = process.env.WEB_URL;
+const frontendUrl = process.env.FRONTEND_URL;
 const inviteTime = 7 * 24 * 60 * 60 * 1000;
 
 export const generateInvite = async (
@@ -293,7 +293,7 @@ export const memberInvite = async (
                         [project.id, token, userId, expiresAt],
                     );
 
-                    const inviteUrl = `${process.env.WEB_URL}/invite/${token}`;
+                    const inviteUrl = `${process.env.FRONTEND_URL}/invite/${token}`;
                     const [username] = email.split("@");
 
                     const mailOptions = {

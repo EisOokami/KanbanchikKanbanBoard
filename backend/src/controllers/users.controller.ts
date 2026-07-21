@@ -72,7 +72,9 @@ export const me = async (
                 avatar_url:
                     user.avatar_url === null
                         ? null
-                        : `${process.env.BACKEND_URL}${user.avatar_url}`,
+                        : user.avatar_url.startsWith("/files")
+                          ? `${process.env.BACKEND_URL}${user.avatar_url}`
+                          : user.avatar_url,
                 color: user.color,
                 created_at: user.created_at,
                 updated_at: user.updated_at,
@@ -226,7 +228,11 @@ export const updateProfile = async (
             user: [
                 {
                     ...updatedUser[0],
-                    avatar_url: `${process.env.BACKEND_URL}${updatedUser[0].avatar_url}`,
+                    avatar_url:
+                        !updatedUser[0].avatar_url ||
+                        updatedUser[0].avatar_url.startsWith("/files")
+                            ? `${process.env.BACKEND_URL}${updatedUser[0].avatar_url}`
+                            : updatedUser[0].avatar_url,
                 },
             ],
         });
