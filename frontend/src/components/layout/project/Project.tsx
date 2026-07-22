@@ -133,18 +133,18 @@ export default function Project({
         const activeId = active.id as number;
         const overId = over.id as number;
 
-        setColumns((prev) => {
-            const activeColumn = prev.find((column) =>
+        setColumns((prevState) => {
+            const activeColumn = prevState.find((column) =>
                 column.tasks.some((task) => task.id === activeId),
             );
-            const overColumn = prev.find(
+            const overColumn = prevState.find(
                 (column) =>
                     column.id === overId ||
                     column.tasks.some((task) => task.id === overId),
             );
 
             if (!activeColumn || !overColumn) {
-                return prev;
+                return prevState;
             }
 
             const activeTask = activeColumn.tasks.find(
@@ -152,7 +152,7 @@ export default function Project({
             );
 
             if (!activeTask) {
-                return prev;
+                return prevState;
             }
 
             if (activeColumn.id !== overColumn.id) {
@@ -162,7 +162,7 @@ export default function Project({
                     overColumn.tasks.length >= overColumn.wip_limit;
 
                 if (wipExceeded) {
-                    return prev;
+                    return prevState;
                 }
             }
 
@@ -178,7 +178,7 @@ export default function Project({
                 );
 
                 if (fromIndex === rawToIndex || rawToIndex === -1) {
-                    return prev;
+                    return prevState;
                 }
 
                 const withoutActive = sorted.filter(
@@ -202,7 +202,7 @@ export default function Project({
                     ? rebalanceTasks(result)
                     : result;
 
-                return prev.map((column) =>
+                return prevState.map((column) =>
                     column.id === activeColumn.id
                         ? { ...column, tasks: updatedTasks }
                         : column,
@@ -261,7 +261,7 @@ export default function Project({
                 });
             }
 
-            return prev.map((column) => {
+            return prevState.map((column) => {
                 if (column.id === activeColumn.id) {
                     return { ...column, tasks: newActiveItems };
                 }

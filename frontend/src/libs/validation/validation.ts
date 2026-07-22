@@ -17,6 +17,11 @@ export const loginSchema = z.object({
         ),
 });
 
+export const mfaVerifySchema = z.object({
+    tempToken: z.string().min(1),
+    token: z.string().trim().min(1, "Code is required").max(9),
+});
+
 export const registerSchema = z.object({
     name: z
         .string()
@@ -748,4 +753,31 @@ export const inviteMemberSchema = z.object({
                 .max(255, "Email must be less than 255 characters long"),
         )
         .min(1, "At least one member is required"),
+});
+
+export const mfaEnableSchema = z.object({
+    token: z.string().regex(/^\d{6}$/, "Code must be 6 digits"),
+});
+
+export const mfaDisableSchema = z.object({
+    password: z
+        .string()
+        .min(8, "Password must be at least 8 characters long")
+        .max(255, "Password must be less than 255 characters long")
+        .regex(
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).+$/,
+            "Password must contain at least one uppercase letter, one lowercase letter, one special character and one number",
+        ),
+    token: z.string().optional(),
+});
+
+export const mfaBackupCodesSchema = z.object({
+    password: z
+        .string()
+        .min(8, "Password must be at least 8 characters long")
+        .max(255, "Password must be less than 255 characters long")
+        .regex(
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).+$/,
+            "Password must contain at least one uppercase letter, one lowercase letter, one special character and one number",
+        ),
 });

@@ -50,8 +50,8 @@ export default function ProjectListView({
 
     const handleDeleteTask = useCallback(
         (taskId: number) => {
-            setColumns((prev) =>
-                prev.map((column) => ({
+            setColumns((prevState) =>
+                prevState.map((column) => ({
                     ...column,
                     tasks: column.tasks.filter((task) => task.id !== taskId),
                 })),
@@ -96,8 +96,8 @@ export default function ProjectListView({
                                 <div
                                     className="mt-3 cursor-pointer rounded-md bg-column transition-colors hover:bg-column-is-over"
                                     onClick={() =>
-                                        setCollapsedGroups((prev) => {
-                                            const next = new Set(prev);
+                                        setCollapsedGroups((prevState) => {
+                                            const next = new Set(prevState);
 
                                             if (next.has(column.name)) {
                                                 next.delete(column.name);

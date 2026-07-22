@@ -86,6 +86,12 @@ export async function loginService(userData: Login): Promise<
           status: "success";
           message: string;
       }
+    | {
+          status: "success";
+          message: string;
+          requiresMfa: boolean;
+          tempToken: string;
+      }
     | { status: "error" | "message" | "success"; message: string }
     | {
           error: string;
@@ -220,6 +226,34 @@ export async function googleExchangeService(code: string): Promise<
         return response.json();
     } catch (error) {
         console.error("Google Exchange Service Error:", error);
+        throw error;
+    }
+}
+
+export async function mfaVerifyService(data: {
+    tempToken: string;
+    token: string;
+}) {
+    const url = new URL("/auth/mfa/verify", baseUrl);
+
+    try {
+        const response = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+            credentials: "include",
+            cache: "no-cache",
+        });
+
+        const setCookieHeaders = response.headers.getSetCookie();
+        const { csrfToken } = parseAuthCookies(setCookieHeaders);
+
+        const cookieStore = await cookies();
+        cookieStore.set("csrfToken", csrfToken, csrfTokenConfig);
+
+        return response.json();
+    } catch (error) {
+        console.error("MFA Verify Service Error:", error);
         throw error;
     }
 }

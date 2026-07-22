@@ -28,6 +28,7 @@ import {
     findOrCreateGoogleUser,
     getGoogleAuthUrl,
 } from "../utils/googleAuth";
+import { generateRawToken, hashToken } from "../utils/mfa";
 
 dotenv.config();
 
@@ -184,10 +185,24 @@ export const login = async (req: Request, res: Response): Promise<void> => {
                 | "avatar_url"
                 | "color"
                 | "auth_provider"
+                | "mfa_enabled"
             > &
                 RowDataPacket)[]
         >(
-            "SELECT id, name, surname, email, password, avatar_url, color, auth_provider FROM users WHERE email = ?",
+            `
+                SELECT 
+                    id, 
+                    name,
+                    surname, 
+                    email, 
+                    password, 
+                    avatar_url, 
+                    color, 
+                    auth_provider,
+                    mfa_enabled
+                FROM users 
+                WHERE email = ?
+            `,
             [email],
         );
 
@@ -208,6 +223,40 @@ export const login = async (req: Request, res: Response): Promise<void> => {
             res.status(401).json({
                 status: "error",
                 message: "Invalid email or password",
+            });
+
+            return;
+        }
+
+        if (user.mfa_enabled) {
+            const rawTempToken = generateRawToken();
+            const tempTokenHash = hashToken(rawTempToken);
+
+            await pool.execute<ResultSetHeader>(
+                `
+                    INSERT INTO mfa_login_sessions 
+                        (
+                            token_hash, 
+                            user_id, 
+                            ip_address, 
+                            user_agent, 
+                            expires_at
+                        )
+                    VALUES (?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 5 MINUTE))
+                `,
+                [
+                    tempTokenHash,
+                    user.id,
+                    req.ip ?? null,
+                    req.headers["user-agent"] ?? null,
+                ],
+            );
+
+            res.status(200).json({
+                status: "success",
+                message: "MFA verification required",
+                requiresMfa: true,
+                tempToken: rawTempToken,
             });
 
             return;

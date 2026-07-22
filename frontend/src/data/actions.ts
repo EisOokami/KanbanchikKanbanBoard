@@ -12,6 +12,10 @@ import {
     ForgotPasswordAction,
     InviteMemberAction,
     LoginAction,
+    MfaBackupCodesAction,
+    MfaDisableAction,
+    MfaEnableAction,
+    MfaSetupAction,
     RegisterAction,
     ResetPasswordAction,
     UpdateProfileAction,
@@ -22,6 +26,7 @@ import {
     forgotPasswordService,
     googleExchangeService,
     loginService,
+    mfaVerifyService,
     registerService,
     resetPasswordService,
 } from "./service";
@@ -42,6 +47,10 @@ import {
     forgotPasswordSchema,
     inviteMemberSchema,
     loginSchema,
+    mfaBackupCodesSchema,
+    mfaDisableSchema,
+    mfaEnableSchema,
+    mfaVerifySchema,
     moveTaskSchema,
     registerSchema,
     resetPasswordSchema,
@@ -72,6 +81,86 @@ export async function loginAction(
     prevState: any,
     formData: FormData,
 ): Promise<LoginAction | undefined> {
+    const tempToken = formData.get("tempToken");
+
+    if (tempToken) {
+        const validatedFields = mfaVerifySchema.safeParse({
+            tempToken,
+            token: formData.get("token"),
+        });
+
+        if (!validatedFields.success) {
+            return {
+                formData,
+                zodErrors: z.flattenError(validatedFields.error).fieldErrors,
+                error: null,
+                status: null,
+                details: null,
+                message: null,
+                data: {
+                    requiresMfa: true,
+                    tempToken: tempToken.toString(),
+                },
+            };
+        }
+
+        const responseData = await mfaVerifyService(validatedFields.data);
+
+        if (!responseData) {
+            return {
+                formData,
+                zodErrors: null,
+                error: null,
+                status: null,
+                details: null,
+                message: "Ops! Something went wrong. Please try again.",
+                data: {
+                    requiresMfa: true,
+                    tempToken: tempToken.toString(),
+                },
+            };
+        }
+
+        if (
+            "message" in responseData &&
+            "status" in responseData &&
+            responseData.message &&
+            responseData.status !== "success"
+        ) {
+            return {
+                formData: null,
+                zodErrors: null,
+                error: null,
+                status: responseData.status,
+                details: null,
+                message: responseData.message,
+                data: {
+                    requiresMfa: true,
+                    tempToken: tempToken.toString(),
+                },
+            };
+        }
+
+        if ("refreshToken" in responseData && "accessToken" in responseData) {
+            const cookieStore = await cookies();
+            cookieStore.set(
+                "refreshToken",
+                responseData.refreshToken,
+                refreshTokenConfig,
+            );
+            cookieStore.set(
+                "accessToken",
+                responseData.accessToken,
+                accessTokenConfig,
+            );
+
+            const redirectPath = formData.get("redirect")?.toString();
+            redirect(redirectPath ?? "/overview");
+        }
+
+        return;
+    }
+
     const validatedFields = loginSchema.safeParse({
         email: formData.get("email"),
         password: formData.get("password"),
@@ -114,6 +203,21 @@ export async function loginAction(
             status: responseData.status,
             details: null,
             message: responseData.message,
+        };
+    }
+
+    if ("requiresMfa" in responseData && responseData.requiresMfa) {
+        return {
+            formData: null,
+            zodErrors: null,
+            error: null,
+            status: "success",
+            details: null,
+            message: null,
+            data: {
+                requiresMfa: responseData.requiresMfa,
+                tempToken: responseData.tempToken,
+            },
         };
     }
 
@@ -247,6 +351,7 @@ export async function logoutAction() {
 
     cookieStore.delete("refreshToken");
     cookieStore.delete("accessToken");
+    cookieStore.delete("csrfToken");
 }
 
 export async function forgotPasswordAction(
@@ -1773,4 +1878,297 @@ export async function exchangeGoogleCodeAction(
         ok: false,
         message: "Failed to login",
     };
+}
+
+export async function mfaSetupAction(): Promise<MfaSetupAction | undefined> {
+    const responseData = await mutateData("POST", "/auth/mfa/setup");
+
+    console.log(responseData);
+
+    if (!responseData) {
+        return {
+            formData: null,
+            zodErrors: null,
+            error: null,
+            status: "error",
+            details: null,
+            message: "Ops! Something went wrong. Please try again.",
+        };
+    }
+
+    if (
+        "message" in responseData &&
+        "status" in responseData &&
+        responseData.message &&
+        responseData.status === "error"
+    ) {
+        return {
+            formData: null,
+            zodErrors: null,
+            error: null,
+            status: responseData.status,
+            details: null,
+            message: responseData.message,
+        };
+    }
+
+    if ("error" in responseData && responseData.error) {
+        return {
+            formData: null,
+            zodErrors: null,
+            error: responseData.error,
+            status: null,
+            details: responseData.details,
+            message: null,
+        };
+    }
+
+    if ("status" in responseData && responseData.status === "success") {
+        return {
+            formData: null,
+            zodErrors: null,
+            error: null,
+            status: responseData.status,
+            details: null,
+            message: responseData.message,
+            data: {
+                qrCode: responseData.data.qrCode,
+                manualEntryKey: responseData.data.manualEntryKey,
+            },
+        };
+    }
+}
+
+export async function mfaEnableAction(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    prevState: any,
+    formData: FormData,
+): Promise<MfaEnableAction | undefined> {
+    const validatedFields = mfaEnableSchema.safeParse({
+        token: formData.get("token"),
+    });
+
+    if (!validatedFields.success) {
+        return {
+            formData,
+            zodErrors: z.flattenError(validatedFields.error).fieldErrors,
+            error: null,
+            status: null,
+            details: null,
+            message: null,
+        };
+    }
+
+    const responseData = await mutateData("POST", "/auth/mfa/enable", {
+        token: validatedFields.data.token,
+    });
+
+    if (!responseData) {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: "error",
+            details: null,
+            message: "Ops! Something went wrong. Please try again.",
+        };
+    }
+
+    if (
+        "message" in responseData &&
+        "status" in responseData &&
+        responseData.message &&
+        responseData.status === "error"
+    ) {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: responseData.status,
+            details: null,
+            message: responseData.message,
+        };
+    }
+
+    if ("error" in responseData && responseData.error) {
+        return {
+            formData,
+            zodErrors: null,
+            error: responseData.error,
+            status: null,
+            details: responseData.details,
+            message: null,
+        };
+    }
+
+    if ("status" in responseData && responseData.status === "success") {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: responseData.status,
+            details: null,
+            message: responseData.message,
+            data: {
+                enable: true,
+            },
+        };
+    }
+}
+
+export async function mfaDisableAction(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    prevState: any,
+    formData: FormData,
+): Promise<MfaDisableAction | undefined> {
+    const validatedFields = mfaDisableSchema.safeParse({
+        password: formData.get("password"),
+        token: formData.get("token") || undefined,
+    });
+
+    if (!validatedFields.success) {
+        return {
+            formData,
+            zodErrors: z.flattenError(validatedFields.error).fieldErrors,
+            error: null,
+            status: null,
+            details: null,
+            message: null,
+        };
+    }
+
+    const responseData = await mutateData("POST", "/auth/mfa/disable", {
+        password: validatedFields.data.password,
+        token: validatedFields.data.token,
+    });
+
+    if (!responseData) {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: "error",
+            details: null,
+            message: "Ops! Something went wrong. Please try again.",
+        };
+    }
+
+    if (
+        "message" in responseData &&
+        "status" in responseData &&
+        responseData.message &&
+        responseData.status === "error"
+    ) {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: responseData.status,
+            details: null,
+            message: responseData.message,
+        };
+    }
+
+    if ("error" in responseData && responseData.error) {
+        return {
+            formData,
+            zodErrors: null,
+            error: responseData.error,
+            status: null,
+            details: responseData.details,
+            message: null,
+        };
+    }
+
+    if ("status" in responseData && responseData.status === "success") {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: responseData.status,
+            details: null,
+            message: responseData.message,
+        };
+    }
+
+    revalidatePath("/");
+}
+
+export async function mfaRegenerateBackupCodesAction(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    prevState: any,
+    formData: FormData,
+): Promise<MfaBackupCodesAction | undefined> {
+    const validatedFields = mfaBackupCodesSchema.safeParse({
+        password: formData.get("password"),
+    });
+
+    if (!validatedFields.success) {
+        return {
+            formData,
+            zodErrors: z.flattenError(validatedFields.error).fieldErrors,
+            error: null,
+            status: null,
+            details: null,
+            message: null,
+        };
+    }
+
+    const responseData = await mutateData(
+        "POST",
+        "/auth/mfa/regenerate-backup-codes",
+        { password: validatedFields.data.password },
+    );
+
+    if (!responseData) {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: "error",
+            details: null,
+            message: "Ops! Something went wrong. Please try again.",
+        };
+    }
+
+    if (
+        "message" in responseData &&
+        "status" in responseData &&
+        responseData.message &&
+        responseData.status === "error"
+    ) {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: responseData.status,
+            details: null,
+            message: responseData.message,
+        };
+    }
+
+    if ("error" in responseData && responseData.error) {
+        return {
+            formData,
+            zodErrors: null,
+            error: responseData.error,
+            status: null,
+            details: responseData.details,
+            message: null,
+        };
+    }
+
+    if ("status" in responseData && responseData.status === "success") {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: responseData.status,
+            details: null,
+            message: responseData.message,
+            data: {
+                backupCodes: responseData.data.backupCodes,
+            },
+        };
+    }
 }

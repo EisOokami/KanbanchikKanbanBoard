@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useRef, useState } from "react";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { loginAction } from "@/data/actions";
@@ -20,8 +20,13 @@ import { Button } from "@/components/ui/shadcn/button";
 import { ZodErrors } from "@/components/ui/zodErrors/ZodErrors";
 import { DetailsErrors } from "@/components/ui/detailsErrors/DetailsErrors";
 import { PasswordInput } from "@/components/ui/shadcn/password-input";
-import { cn } from "@/libs/utils";
-import { GoogleLogoIcon, InfoIcon } from "@phosphor-icons/react";
+import { cn, formatBackupCode } from "@/libs/utils";
+import {
+    GoogleLogoIcon,
+    InfoIcon,
+    ShieldCheckIcon,
+} from "@phosphor-icons/react";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "../shadcn/input-otp";
 
 const INITIAL_STATE: BaseAction = {
     zodErrors: null,
@@ -30,6 +35,7 @@ const INITIAL_STATE: BaseAction = {
     details: null,
     message: null,
     formData: null,
+    data: null,
 };
 
 interface LoginFormProps {
@@ -37,10 +43,160 @@ interface LoginFormProps {
 }
 
 export default function LoginForm({ redirect }: Readonly<LoginFormProps>) {
+    const [backupCode, setBackupCode] = useState<string>("");
+    const [useBackupCode, setUseBackupCode] = useState<boolean>(false);
     const [formState, formAction, isPending] = useActionState(
         loginAction,
         INITIAL_STATE,
     );
+    const formRef = useRef<HTMLFormElement>(null);
+
+    const handleOtpComplete = () => {
+        formRef.current?.requestSubmit();
+    };
+
+    if (
+        formState?.data &&
+        formState?.data.requiresMfa &&
+        formState?.data.tempToken
+    ) {
+        return (
+            <Card className="z-50 mx-auto w-full max-w-sm border-border">
+                <CardHeader className="pb-5">
+                    <div className="mb-2 flex items-center gap-2">
+                        <ShieldCheckIcon
+                            weight="duotone"
+                            className="size-6 text-bright-blue"
+                        />
+                        <CardTitle className="text-2xl">
+                            Two-factor verification
+                        </CardTitle>
+                    </div>
+                    <CardDescription>
+                        Enter the 6-digit code from your authenticator app, or
+                        one of your backup codes.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <form
+                        ref={formRef}
+                        action={formAction}
+                        className="grid gap-4"
+                    >
+                        <input
+                            type="hidden"
+                            name="tempToken"
+                            value={formState.data.tempToken}
+                        />
+                        {redirect && (
+                            <input
+                                type="hidden"
+                                name="redirect"
+                                value={redirect}
+                            />
+                        )}
+                        {useBackupCode ? (
+                            <div className="grid gap-2">
+                                <Label htmlFor="token">Backup code</Label>
+                                <Input
+                                    id="token"
+                                    name="token"
+                                    type="text"
+                                    placeholder="XXXX-XXXX"
+                                    autoComplete="one-time-code"
+                                    autoFocus
+                                    value={backupCode}
+                                    onChange={(e) =>
+                                        setBackupCode(
+                                            formatBackupCode(e.target.value),
+                                        )
+                                    }
+                                    maxLength={9}
+                                    className="bg-control text-center font-mono uppercase tracking-widest placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue"
+                                />
+                            </div>
+                        ) : (
+                            <div className="flex justify-center">
+                                <InputOTP
+                                    maxLength={6}
+                                    name="token"
+                                    autoFocus
+                                    onComplete={handleOtpComplete}
+                                >
+                                    <InputOTPGroup>
+                                        <InputOTPSlot
+                                            index={0}
+                                            className="border-border bg-control"
+                                        />
+                                        <InputOTPSlot
+                                            index={1}
+                                            className="border-border bg-control"
+                                        />
+                                        <InputOTPSlot
+                                            index={2}
+                                            className="border-border bg-control"
+                                        />
+                                        <InputOTPSlot
+                                            index={3}
+                                            className="border-border bg-control"
+                                        />
+                                        <InputOTPSlot
+                                            index={4}
+                                            className="border-border bg-control"
+                                        />
+                                        <InputOTPSlot
+                                            index={5}
+                                            className="border-border bg-control"
+                                        />
+                                    </InputOTPGroup>
+                                </InputOTP>
+                            </div>
+                        )}
+                        <ZodErrors error={formState?.zodErrors?.token} />
+                        {formState?.message && (
+                            <div
+                                className={cn(
+                                    "flex items-center gap-2 rounded-md text-sm",
+                                    formState?.status === "error"
+                                        ? "text-red-500"
+                                        : "text-yellow-300",
+                                )}
+                            >
+                                <InfoIcon weight="duotone" className="size-4" />
+                                <p>{formState?.message}</p>
+                            </div>
+                        )}
+                        <Button
+                            type="submit"
+                            className="mt-3 w-full bg-bright-blue text-white hover:bg-blue-600"
+                            disabled={isPending}
+                        >
+                            {isPending ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Verifying...
+                                </>
+                            ) : (
+                                "Verify"
+                            )}
+                        </Button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setUseBackupCode((prevState) => !prevState);
+                                setBackupCode("");
+                            }}
+                            className="text-center text-sm text-muted-foreground underline"
+                        >
+                            {useBackupCode
+                                ? "Use authenticator code instead"
+                                : "Use a backup code instead"}
+                        </button>
+                    </form>
+                </CardContent>
+            </Card>
+        );
+    }
 
     return (
         <Card className="z-50 mx-auto w-full max-w-sm border-border">

@@ -85,3 +85,16 @@ export function isVideoFile(file: File) {
 export function isPdfFile(file: File) {
     return file.type === "application/pdf";
 }
+
+export function formatBackupCode(raw: string): string {
+    const cleaned = raw
+        .replace(/[^a-zA-Z0-9]/g, "")
+        .toUpperCase()
+        .slice(0, 8);
+
+    if (cleaned.length <= 4) {
+        return cleaned;
+    }
+
+    return `${cleaned.slice(0, 4)}-${cleaned.slice(4)}`;
+}

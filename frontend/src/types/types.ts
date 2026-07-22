@@ -50,9 +50,10 @@ export interface User extends Omit<Base, "created_at"> {
     email: string;
     avatar_url: string;
     role?: Role;
-    joined_at: string | Date;
+    joined_at?: string | Date;
     color: string;
-    status: "active" | "pending";
+    status?: "active" | "pending";
+    mfa_enabled: boolean;
 }
 
 export interface Project extends ExtendedBase {

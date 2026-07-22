@@ -19,6 +19,9 @@ export interface User extends RowDataPacket {
     updated_at: string;
     reset_token: string | null;
     reset_token_expires_at: string | null;
+    mfa_enabled: boolean;
+    mfa_secret: Buffer | null;
+    mfa_enabled_at: string | null;
 }
 
 export interface Project extends RowDataPacket {
@@ -160,9 +163,9 @@ export interface RefreshSession extends RowDataPacket {
     user_id: number;
     refresh_token_hash: string;
     revoked: boolean;
-    expires_at: Date;
+    expires_at: string;
     replaced_by: string | null;
-    replaced_at: Date | null;
+    replaced_at: string | null;
 }
 
 export interface GoogleProfile {
@@ -172,4 +175,23 @@ export interface GoogleProfile {
     name: string;
     surname: string;
     avatarUrl: string | null;
+}
+
+export interface MfaLoginSession extends RowDataPacket {
+    id: string;
+    token_hash: string;
+    user_id: number;
+    ip_address: string | null;
+    user_agent: string | null;
+    attempts: number;
+    expires_at: string;
+    created_at: string;
+}
+
+export interface MfaBackupCode extends RowDataPacket {
+    id: string;
+    user_id: number;
+    code_hash: string;
+    used_at: string | null;
+    created_at: string;
 }

@@ -52,7 +52,10 @@ export default function NavMain({ projectsData }: Readonly<NavMainProps>) {
     const pathname = usePathname();
 
     const toggle = (title: string) =>
-        setOpenItems((prev) => ({ ...prev, [title]: !prev[title] }));
+        setOpenItems((prevState) => ({
+            ...prevState,
+            [title]: !prevState[title],
+        }));
 
     return (
         <SidebarMenu>

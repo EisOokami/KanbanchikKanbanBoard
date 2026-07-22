@@ -29,6 +29,7 @@ export const me = async (
                 | "email"
                 | "avatar_url"
                 | "color"
+                | "mfa_enabled"
                 | "created_at"
                 | "updated_at"
             > &
@@ -42,6 +43,7 @@ export const me = async (
                     email,
                     avatar_url,
                     color,
+                    mfa_enabled,
                     created_at,
                     updated_at
                 FROM users 
@@ -76,6 +78,7 @@ export const me = async (
                           ? `${process.env.BACKEND_URL}${user.avatar_url}`
                           : user.avatar_url,
                 color: user.color,
+                mfa_enabled: user.mfa_enabled,
                 created_at: user.created_at,
                 updated_at: user.updated_at,
             },

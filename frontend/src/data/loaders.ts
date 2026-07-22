@@ -48,10 +48,8 @@ export async function getUserData(): Promise<UserData> {
             surname: fetchedData.user.surname,
             email: fetchedData.user.email,
             avatar_url: fetchedData.user.avatar_url,
-            role: fetchedData.user.role,
-            joined_at: fetchedData.user.joined_at,
             color: fetchedData.user.color,
-            status: fetchedData.user.status,
+            mfa_enabled: fetchedData.user.mfa_enabled,
         },
     };
 }

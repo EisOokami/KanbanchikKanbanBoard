@@ -15,6 +15,7 @@ import usersRoutes from "./routes/users.routes";
 import authRoutes from "./routes/auth.routes";
 import uploadsRoutes from "./routes/uploads.routes";
 import inviteRoutes from "./routes/invites.routes";
+import mfaRoutes from "./routes/mfa.routes";
 
 dotenv.config();
 
@@ -61,6 +62,7 @@ app.use("/users", usersRoutes);
 app.use("/auth", authRoutes);
 app.use("/uploads", uploadsRoutes);
 app.use("/invites", inviteRoutes);
+app.use("/auth/mfa", mfaRoutes);
 
 app.use("/files", express.static(path.join(process.cwd(), "uploads")));
 

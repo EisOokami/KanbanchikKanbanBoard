@@ -21,6 +21,8 @@ export interface BaseAction {
 export interface LoginZodErrors extends BaseZodErrors {
     identifier?: string[];
     password?: string[];
+    tempToken?: string[];
+    token?: string[];
 }
 
 export interface RegisterZodErrors extends BaseZodErrors {
@@ -113,6 +115,24 @@ export interface InviteMemberZodErrors extends BaseZodErrors {
     members?: string[];
 }
 
+export interface MfaSetupZodErrors extends BaseZodErrors {
+    qrCode?: string[];
+    manualEntryKey?: string[];
+}
+
+export interface MfaDisableZodErrors extends BaseZodErrors {
+    password?: string[];
+    token?: string[];
+}
+
+export interface MfaEnableZodErrors extends BaseZodErrors {
+    enabled?: string[];
+}
+
+export interface MfaBackupCodesZodErrors extends BaseZodErrors {
+    backupCodes?: string[];
+}
+
 export interface LoginAction extends BaseAction {
     zodErrors: LoginZodErrors | null;
 }
@@ -155,4 +175,20 @@ export interface ChangePasswordAction extends BaseAction {
 
 export interface InviteMemberAction extends BaseAction {
     zodErrors: InviteMemberZodErrors | null;
+}
+
+export interface MfaSetupAction extends BaseAction {
+    zodErrors: MfaSetupZodErrors | null;
+}
+
+export interface MfaDisableAction extends BaseAction {
+    zodErrors: MfaDisableZodErrors | null;
+}
+
+export interface MfaEnableAction extends BaseAction {
+    zodErrors: MfaEnableZodErrors | null;
+}
+
+export interface MfaBackupCodesAction extends BaseAction {
+    zodErrors: MfaBackupCodesZodErrors | null;
 }

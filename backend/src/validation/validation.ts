@@ -754,3 +754,42 @@ export const tokenSchema = z.object({
         .length(64, "Invalid token.")
         .regex(/^[a-f0-9]{64}$/, "Invalid token."),
 });
+
+export const mfaEnableSchema = z.object({
+    token: z
+        .string()
+        .trim()
+        .regex(/^\d{6}$/, "Code must be exactly 6 digits"),
+});
+
+export const mfaVerifySchema = z.object({
+    tempToken: z.string().trim().min(1, "TempToken is required"),
+    token: z.string().trim().min(1, "Code is required").max(9),
+});
+
+export const mfaDisableSchema = z.object({
+    password: z
+        .string()
+        .min(8, "Password must be at least 8 characters long")
+        .max(255, "Password must be less than 255 characters long")
+        .regex(
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).+$/,
+            "Password must contain at least one uppercase letter, one lowercase letter, one special character and one number",
+        ),
+    token: z
+        .string()
+        .trim()
+        .regex(/^\d{6}$/, "Code must be exactly 6 digits")
+        .optional(),
+});
+
+export const mfaBackupCodesSchema = z.object({
+    password: z
+        .string()
+        .min(8, "Password must be at least 8 characters long")
+        .max(255, "Password must be less than 255 characters long")
+        .regex(
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).+$/,
+            "Password must contain at least one uppercase letter, one lowercase letter, one special character and one number",
+        ),
+});
