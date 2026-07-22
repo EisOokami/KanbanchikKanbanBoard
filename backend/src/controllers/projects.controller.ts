@@ -67,12 +67,6 @@ export const getProjects = async (req: IGetUserRequest, res: Response) => {
             [userId, userId],
         );
 
-        if (!projects.length || !projects[0]) {
-            res.status(200).json([]);
-
-            return;
-        }
-
         const enrichedProjects = await Promise.all(
             projects.map(async (project) => {
                 const [owner] = await pool.execute<
