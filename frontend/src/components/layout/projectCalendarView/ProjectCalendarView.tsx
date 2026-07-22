@@ -17,6 +17,11 @@ import { MONTHS, WEEKDAYS } from "@/constants/constants";
 import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/shadcn/button";
 import { Progress } from "@/components/ui/shadcn/progress";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/shadcn/popover";
 
 interface ProjectCalendarViewProps {
     columns: Column[];
@@ -40,9 +45,14 @@ export default function ProjectCalendarView({
     const [month, setMonth] = useState<number>(now.getMonth());
     const [selectedDate, setSelected] = useState<string>(todayStr());
     const [showGantt, setShowGantt] = useState<boolean>(true);
+    const [showPicker, setShowPicker] = useState<boolean>(false);
 
     const prevMonth = () => {
         if (month === 0) {
+            if (year - 1 < now.getFullYear() - 3) {
+                return;
+            }
+
             setMonth(11);
             setYear((year) => year - 1);
         } else {
@@ -52,11 +62,31 @@ export default function ProjectCalendarView({
 
     const nextMonth = () => {
         if (month === 11) {
+            if (year + 1 > now.getFullYear() + 3) {
+                return;
+            }
+
             setMonth(0);
             setYear((year) => year + 1);
         } else {
             setMonth((month) => month + 1);
         }
+    };
+
+    const selectMonth = (month: number): void => {
+        setMonth(month);
+    };
+
+    const shiftPickerYear = (delta: number): void => {
+        setYear((prevState) => {
+            const next = prevState + delta;
+
+            if (next < now.getFullYear() - 3 || next > now.getFullYear() + 3) {
+                return prevState;
+            }
+
+            return next;
+        });
     };
 
     const goToday = () => {
@@ -331,6 +361,7 @@ export default function ProjectCalendarView({
                                 size="icon"
                                 onClick={prevMonth}
                                 className="size-6 [&_svg]:size-4"
+                                disabled={year <= now.getFullYear() - 3}
                             >
                                 <CaretLeftIcon weight="duotone" />
                             </Button>
@@ -339,16 +370,69 @@ export default function ProjectCalendarView({
                                 size="icon"
                                 onClick={nextMonth}
                                 className="size-6 [&_svg]:size-4"
+                                disabled={year >= now.getFullYear() + 3}
                             >
                                 <CaretRightIcon weight="duotone" />
                             </Button>
                         </div>
-                        <h2 className="min-w-0 text-base font-medium tracking-tight">
-                            {MONTHS[month]}{" "}
-                            <span className="font-light text-muted-foreground">
-                                {year}
-                            </span>
-                        </h2>
+                        <Popover open={showPicker} onOpenChange={setShowPicker}>
+                            <PopoverTrigger asChild>
+                                <button
+                                    type="button"
+                                    className="min-w-0 rounded-md px-1.5 py-0.5 text-base font-medium tracking-tight transition-colors hover:bg-control-active"
+                                >
+                                    {MONTHS[month]}{" "}
+                                    <span className="font-light text-muted-foreground">
+                                        {year}
+                                    </span>
+                                </button>
+                            </PopoverTrigger>
+                            <PopoverContent
+                                className="w-64 border-border p-3"
+                                align="start"
+                            >
+                                <div className="mb-3 flex items-center justify-between">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="size-6 [&_svg]:size-4"
+                                        onClick={() => shiftPickerYear(-1)}
+                                        disabled={year <= now.getFullYear() - 3}
+                                    >
+                                        <CaretLeftIcon weight="duotone" />
+                                    </Button>
+                                    <span className="text-sm font-medium">
+                                        {year}
+                                    </span>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="size-6 [&_svg]:size-4"
+                                        onClick={() => shiftPickerYear(1)}
+                                        disabled={year >= now.getFullYear() + 3}
+                                    >
+                                        <CaretRightIcon weight="duotone" />
+                                    </Button>
+                                </div>
+                                <div className="grid grid-cols-3 gap-1">
+                                    {MONTHS.map((monthValue, index) => (
+                                        <Button
+                                            key={monthValue}
+                                            variant={
+                                                index === month
+                                                    ? "default"
+                                                    : "ghost"
+                                            }
+                                            size="sm"
+                                            className="h-8 text-xs"
+                                            onClick={() => selectMonth(index)}
+                                        >
+                                            {monthValue.slice(0, 3)}
+                                        </Button>
+                                    ))}
+                                </div>
+                            </PopoverContent>
+                        </Popover>
                         <div className="ml-2">
                             <Button
                                 onClick={goToday}
