@@ -1871,7 +1871,7 @@ export async function exchangeGoogleCodeAction(
             accessTokenConfig,
         );
 
-        return { ok: true, message: "Login successfully" };
+        return { ok: true, message: "User logged in successfully" };
     }
 
     return {
