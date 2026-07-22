@@ -1,5 +1,23 @@
 import { z } from "zod";
 
+const isWithinDateRange = (value: string): boolean => {
+    const date = new Date(value);
+    const now = new Date();
+
+    const minDate = new Date(
+        now.getFullYear() - 3,
+        now.getMonth(),
+        now.getDate(),
+    );
+    const maxDate = new Date(
+        now.getFullYear() + 3,
+        now.getMonth(),
+        now.getDate(),
+    );
+
+    return date >= minDate && date <= maxDate;
+};
+
 export const loginSchema = z.object({
     email: z
         .email("Invalid email format")
@@ -337,11 +355,25 @@ export const createTaskSchema = z
         ),
         dueDate: z.preprocess(
             (value) => (value === "" ? undefined : value),
-            z.iso.date().nullable().optional(),
+            z.iso
+                .date()
+                .nullable()
+                .optional()
+                .refine((value) => value == null || isWithinDateRange(value), {
+                    message:
+                        "Date must be within 3 years from the current date",
+                }),
         ),
         startDate: z.preprocess(
             (value) => (value === "" ? undefined : value),
-            z.iso.date().nullable().optional(),
+            z.iso
+                .date()
+                .nullable()
+                .optional()
+                .refine((value) => value == null || isWithinDateRange(value), {
+                    message:
+                        "Date must be within 3 years from the current date",
+                }),
         ),
         showProgress: z.boolean(),
         slug: z
@@ -469,11 +501,23 @@ export const updateTaskSchema = z.object({
     ),
     dueDate: z.preprocess(
         (value) => (value === "" ? undefined : value),
-        z.iso.date().nullable().optional(),
+        z.iso
+            .date()
+            .nullable()
+            .optional()
+            .refine((value) => value == null || isWithinDateRange(value), {
+                message: "Date must be within 3 years from the current date",
+            }),
     ),
     startDate: z.preprocess(
         (value) => (value === "" ? undefined : value),
-        z.iso.date().nullable().optional(),
+        z.iso
+            .date()
+            .nullable()
+            .optional()
+            .refine((value) => value == null || isWithinDateRange(value), {
+                message: "Date must be within 3 years from the current date",
+            }),
     ),
     showProgress: z.boolean(),
     taskId: z
