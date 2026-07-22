@@ -59,7 +59,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         const [result] = await pool.execute<ResultSetHeader>(
             `
                 INSERT INTO users (name, surname, email, password, color)
-                VALUES (?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?)
             `,
             [name, surname, email, hashedPassword, color || "#cccccc"],
         );
