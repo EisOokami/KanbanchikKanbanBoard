@@ -104,13 +104,14 @@ export const getTasks = async (req: IGetUserRequest, res: Response) => {
         const enrichedTasks = await Promise.all(
             tasks.map(async (task) => {
                 const [projectMembers] = await pool.execute<
-                    (Pick<User, "id"> &
+                    (Pick<User, "id" | "avatar_url"> &
                         Pick<ProjectMember, "role" | "joined_at"> &
                         RowDataPacket)[]
                 >(
                     `
                         SELECT 
                             u.id,
+                            u.avatar_url,
                             pm.role,
                             pm.joined_at
                         FROM project_members pm
