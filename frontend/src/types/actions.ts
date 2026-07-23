@@ -133,6 +133,10 @@ export interface MfaBackupCodesZodErrors extends BaseZodErrors {
     backupCodes?: string[];
 }
 
+export interface ResendVerificationZodErrors extends BaseZodErrors {
+    email?: string[];
+}
+
 export interface LoginAction extends BaseAction {
     zodErrors: LoginZodErrors | null;
 }
@@ -191,4 +195,8 @@ export interface MfaEnableAction extends BaseAction {
 
 export interface MfaBackupCodesAction extends BaseAction {
     zodErrors: MfaBackupCodesZodErrors | null;
+}
+
+export interface ResendVerificationAction extends BaseAction {
+    zodErrors: ResendVerificationZodErrors | null;
 }

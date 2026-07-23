@@ -7,6 +7,7 @@ import {
     forgotPasswordSchema,
     loginSchema,
     registerSchema,
+    resendVerificationSchema,
     resetPasswordSchema,
 } from "../validation/validation";
 import { ZodError } from "zod";
@@ -56,12 +57,33 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
+        const verificationToken = crypto.randomBytes(32).toString("hex");
+        const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
         const [result] = await pool.execute<ResultSetHeader>(
             `
-                INSERT INTO users (name, surname, email, password, color)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO users 
+                    (
+                        name, 
+                        surname, 
+                        email, 
+                        password, 
+                        color,
+                        is_verified, 
+                        verification_token, 
+                        verification_token_expires
+                    )
+                VALUES (?, ?, ?, ?, ?, FALSE, ?, ?)
             `,
-            [name, surname, email, hashedPassword, color || "#cccccc"],
+            [
+                name,
+                surname,
+                email,
+                hashedPassword,
+                color || "#cccccc",
+                verificationToken,
+                verificationExpires,
+            ],
         );
 
         if (result.affectedRows === 0) {
@@ -89,7 +111,15 @@ export const register = async (req: Request, res: Response): Promise<void> => {
                 RowDataPacket)[]
         >(
             `
-                SELECT id, name, surname, email, avatar_url, color, created_at
+                SELECT 
+                    id, 
+                    name, 
+                    surname, 
+                    email, 
+                    avatar_url, 
+                    color, 
+                    created_at, 
+                    is_verified
                 FROM users
                 WHERE id = ?
             `,
@@ -107,42 +137,53 @@ export const register = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        const accessToken = await createAccessToken({ id: user.id });
-        const refreshToken = await createRefreshToken(
-            user.id,
-            req.ip,
-            req.headers["user-agent"],
-        );
-        const csrfToken = generateCsrfToken();
+        const verificationUrl = `${process.env.FRONTEND_URL}/verifyEmail?token=${verificationToken}`;
 
         const mailOptions = {
             from: process.env.EMAIL_USER,
             to: email,
-            subject: "Welcome!",
-            text: `Hi ${name}, welcome! Your account has been created successfully.`,
+            subject: "Welcome! Activate your account",
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f4f4f4; padding: 20px;">
+                    <table style="width: 100%; background-color: #ffffff; padding: 40px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <tr>
+                            <td style="text-align: center; color: #333333;">
+                                <h1 style="color: #2c3e50;">Welcome, ${name}!</h1>
+                                <p style="font-size: 16px; line-height: 1.6; color: #555555;">
+                                    Thank you for registering with us. To complete your setup and activate your account, please verify your email address by clicking the button below.
+                                </p>
+                                <p style="margin: 30px 0;">
+                                    <a href="${verificationUrl}" style="background-color: #007bff; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+                                        Activate Account
+                                    </a>
+                                </p>
+                                <p style="font-size: 14px; color: #888888;">
+                                    If the button above doesn't work, copy and paste this link into your browser:<br>
+                                    <a href="${verificationUrl}" style="color: #007bff; word-break: break-all;">${verificationUrl}</a>
+                                </p>
+                                <hr style="border: 0; border-top: 1px solid #eeeeee; margin: 30px 0;">
+                                <p style="font-size: 12px; color: #aaaaaa;">
+                                    This link is valid for 24 hours. If you didn't request this, please ignore this email.
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            `,
         };
 
         transporter.sendMail(mailOptions, (error, info) => {
             if (error) {
-                console.error("Welcome email error:", error);
+                console.error("Verification email error:", error);
             } else {
-                console.log(`Welcome email sent: ${info.response}`);
+                console.log(`Verification email sent: ${info.response}`);
             }
-        });
-
-        res.cookie("csrfToken", csrfToken, {
-            httpOnly: false,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "lax",
-            path: "/",
-            maxAge: 7 * 24 * 60 * 60 * 1000,
         });
 
         res.status(201).json({
             status: "success",
-            message: "User has been successfully registered",
-            accessToken,
-            refreshToken,
+            message:
+                "User has been successfully registered. Please check your email to verify your account.",
         });
     } catch (error) {
         if (error instanceof ZodError) {
@@ -168,6 +209,233 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     }
 };
 
+export const verifyEmail = async (
+    req: Request,
+    res: Response,
+): Promise<void> => {
+    try {
+        const token = req.query.token;
+
+        if (!token) {
+            res.status(400).json({
+                status: "error",
+                message: "Verification token is required",
+            });
+
+            return;
+        }
+
+        const [rows] = await pool.execute<
+            (Pick<User, "id" | "is_verified" | "verification_token_expires"> &
+                RowDataPacket)[]
+        >(
+            `
+                SELECT id, is_verified, verification_token_expires
+                FROM users
+                WHERE verification_token = ?
+            `,
+            [token],
+        );
+
+        const user = rows[0];
+
+        if (!user) {
+            res.status(400).json({
+                status: "error",
+                message: "Invalid verification token",
+            });
+
+            return;
+        }
+
+        if (user.is_verified) {
+            res.status(200).json({
+                status: "success",
+                message: "Email already verified",
+            });
+
+            return;
+        }
+
+        if (
+            !user.verification_token_expires ||
+            new Date(user.verification_token_expires) < new Date()
+        ) {
+            res.status(400).json({
+                status: "error",
+                message: "Verification token has expired",
+            });
+
+            return;
+        }
+
+        await pool.execute<ResultSetHeader>(
+            `
+                UPDATE users
+                SET is_verified = TRUE,
+                    verification_token = NULL,
+                    verification_token_expires = NULL
+                WHERE id = ?
+            `,
+            [user.id],
+        );
+
+        res.status(200).json({
+            status: "success",
+            message: "Email successfully verified. You can now log in.",
+        });
+    } catch (error) {
+        console.error("Email verification error:", error);
+        res.status(500).json({
+            status: "error",
+            message: "Server error during email verification",
+        });
+    }
+};
+
+export const resendVerificationEmail = async (
+    req: Request,
+    res: Response,
+): Promise<void> => {
+    try {
+        const { email } = resendVerificationSchema.parse(req.body);
+
+        const [rows] = await pool.execute<
+            (Pick<User, "id" | "name" | "email" | "is_verified"> &
+                RowDataPacket)[]
+        >(
+            `
+                SELECT id, name, email, is_verified
+                FROM users
+                WHERE email = ?
+            `,
+            [email],
+        );
+
+        const user = rows[0];
+
+        if (!user) {
+            res.status(200).json({
+                status: "success",
+                message:
+                    "If this email is registered and not verified, a new verification link has been sent.",
+            });
+
+            return;
+        }
+
+        if (user.is_verified) {
+            res.status(200).json({
+                status: "success",
+                message:
+                    "If this email is registered and not verified, a new verification link has been sent.",
+            });
+
+            return;
+        }
+
+        const verificationToken = crypto.randomBytes(32).toString("hex");
+        const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+        await pool.execute<ResultSetHeader>(
+            `
+                UPDATE users
+                SET verification_token = ?,
+                    verification_token_expires = ?
+                WHERE id = ?
+            `,
+            [verificationToken, verificationExpires, user.id],
+        );
+
+        const verificationUrl = `${process.env.FRONTEND_URL}/verifyEmail?token=${verificationToken}`;
+
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: user.email,
+            subject: "Confirm your email address",
+            html: `
+                <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f4f4f4; padding: 20px; margin: 0;">
+                    <table align="center" cellpadding="0" cellspacing="0" style="width: 100%; max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                        <tr>
+                            <td style="padding: 40px 30px; text-align: center; background-color: #ffffff; border-bottom: 1px solid #eeeeee;">
+                                <h1 style="margin: 0; color: #333333; font-size: 24px;">Confirm your email</h1>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 40px 30px; color: #555555; line-height: 1.6;">
+                                <p style="margin: 0 0 20px 0; font-size: 16px;">Hello <strong>${user.name}</strong>,</p>
+                                <p style="margin: 0 0 30px 0; font-size: 16px;">
+                                    We received a request to activate your account. Please click the button below to confirm your email address.
+                                </p>
+                                <table align="center" cellpadding="0" cellspacing="0" style="margin: 30px auto;">
+                                    <tr>
+                                        <td align="center" bgcolor="#007bff" style="border-radius: 5px;">
+                                            <a href="${verificationUrl}" target="_blank" style="display: inline-block; padding: 14px 32px; text-decoration: none; color: #ffffff; font-size: 16px; font-weight: bold; border-radius: 5px; background-color: #007bff;">
+                                                Activate Account
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </table>
+                                <p style="margin: 30px 0 10px 0; font-size: 14px; color: #888888;">
+                                    Or copy and paste this link into your browser:<br>
+                                    <a href="${verificationUrl}" style="color: #007bff; word-break: break-all;">${verificationUrl}</a>
+                                </p>
+                                <div style="background-color: #f9f9f9; padding: 20px; border-radius: 5px; margin-top: 30px; border: 1px solid #eeeeee;">
+                                    <p style="margin: 0; font-size: 14px; color: #666666;">
+                                        <strong>Note:</strong> This link is valid for 24 hours. If you did not request this activation, please ignore this email.
+                                    </p>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 20px; text-align: center; background-color: #f4f4f4; border-top: 1px solid #eeeeee;">
+                                <p style="margin: 0; font-size: 12px; color: #999999;">
+                                    &copy; 2026 Your Company Name. All rights reserved.
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            `,
+        };
+
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.error("Resend verification email error:", error);
+            } else {
+                console.log(`Verification email resent: ${info.response}`);
+            }
+        });
+
+        res.status(200).json({
+            status: "success",
+            message:
+                "If this email is registered and not verified, a new verification link has been sent.",
+        });
+    } catch (error) {
+        if (error instanceof ZodError) {
+            const errorMessages = error.issues.map((issue: any) => ({
+                field: issue.path[0],
+                message: issue.message,
+            }));
+
+            res.status(400).json({
+                status: "error",
+                message: "Invalid data",
+                details: errorMessages,
+            });
+
+            return;
+        }
+
+        console.error("Resend verification error:", error);
+        res.status(500).json({
+            status: "error",
+            message: "Server error while resending verification email",
+        });
+    }
+};
+
 export const login = async (req: Request, res: Response): Promise<void> => {
     try {
         const validateData = loginSchema.parse(req.body);
@@ -186,6 +454,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
                 | "color"
                 | "auth_provider"
                 | "mfa_enabled"
+                | "is_verified"
             > &
                 RowDataPacket)[]
         >(
@@ -199,7 +468,8 @@ export const login = async (req: Request, res: Response): Promise<void> => {
                     avatar_url, 
                     color, 
                     auth_provider,
-                    mfa_enabled
+                    mfa_enabled,
+                    is_verified
                 FROM users 
                 WHERE email = ?
             `,
@@ -208,10 +478,22 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
         const user = rows[0];
 
-        if (!user || user.auth_provider === "google") {
+        if (!user || user.auth_provider === "google" || !user.password) {
             res.status(401).json({
                 status: "error",
                 message: "Invalid email or password",
+            });
+
+            return;
+        }
+
+        if (!user.is_verified) {
+            res.status(403).json({
+                status: "error",
+                message: "Please verify your email before logging in",
+                data: {
+                    requiresVerification: true,
+                },
             });
 
             return;
@@ -487,7 +769,7 @@ export const resetPassword = async (
             (Pick<User, "password"> & RowDataPacket)[]
         >("SELECT password FROM users WHERE id = ?", [id]);
 
-        if (!currentUser || !currentUser[0]) {
+        if (!currentUser || !currentUser[0] || !currentUser[0].password) {
             res.status(401).json({
                 status: "error",
                 message: "Failed to retrieve user",

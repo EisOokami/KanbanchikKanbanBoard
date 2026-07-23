@@ -143,3 +143,31 @@ export async function getTaskFilterOptionsData(): Promise<FilterOptions> {
 
     return fetchedData;
 }
+
+export async function getVerifyEmailData(
+    token: string,
+): Promise<
+    | { status: "success"; message: string }
+    | { status: "error"; message: string }
+> {
+    if (!token) {
+        return { status: "error", message: "Token missing" };
+    }
+
+    const url = new URL(
+        `/auth/verify-email?token=${encodeURIComponent(token)}`,
+        baseUrl,
+    );
+
+    const fetchedData = await fetchData(url.href, { cache: "no-store" });
+
+    if (fetchedData.status === "error") {
+        return {
+            status: "error",
+            message:
+                fetchedData.message || "Unable to verify the email address",
+        };
+    }
+
+    return fetchedData;
+}

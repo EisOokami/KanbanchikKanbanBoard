@@ -79,7 +79,6 @@ export default function MfaSetupModal({
                 }
 
                 if (result.status === "success") {
-                    console.log(result.data);
                     setQrCode(result.data.qrCode ?? null);
                     setManualEntryKey(result.data.manualEntryKey ?? null);
                 } else {

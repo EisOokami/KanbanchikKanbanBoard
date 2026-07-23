@@ -10,7 +10,7 @@ export interface User extends RowDataPacket {
     name: string;
     surname: string;
     email: string;
-    password: string;
+    password: string | null;
     avatar_url: string | null;
     color: string;
     google_id: string | null;
@@ -22,6 +22,9 @@ export interface User extends RowDataPacket {
     mfa_enabled: boolean;
     mfa_secret: Buffer | null;
     mfa_enabled_at: string | null;
+    is_verified: boolean;
+    verification_token: string | null;
+    verification_token_expires: string | null;
 }
 
 export interface Project extends RowDataPacket {

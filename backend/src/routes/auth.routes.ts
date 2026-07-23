@@ -9,13 +9,16 @@ import {
     logout,
     refresh,
     register,
+    resendVerificationEmail,
     resetPassword,
+    verifyEmail,
 } from "../controllers/auth.controller";
 import { validateData } from "../middlewares/validation.middleware";
 import {
     forgotPasswordSchema,
     loginSchema,
     registerSchema,
+    resendVerificationSchema,
     resetPasswordSchema,
 } from "../validation/validation";
 import { verifyCsrf } from "../middlewares/csrf.middleware";
@@ -80,6 +83,30 @@ const googleAuthExchangeLimiter = rateLimit({
     legacyHeaders: false,
 });
 
+const verifyEmailLimiter = rateLimit({
+    windowMs: 5 * 60 * 1000,
+    limit: 5,
+    message: {
+        status: 429,
+        error: "Too many requests",
+        message: "Too many requests. Please try again in 5 minutes.",
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const resendVerificationLimiter = rateLimit({
+    windowMs: 5 * 60 * 1000,
+    limit: 5,
+    message: {
+        status: 429,
+        error: "Too many requests",
+        message: "Too many requests. Please try again in 5 minutes.",
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
 const router = Router();
 
 router.post(
@@ -87,6 +114,13 @@ router.post(
     registerLimiter,
     validateData(registerSchema),
     register,
+);
+router.get("/verify-email", verifyEmailLimiter, verifyEmail);
+router.post(
+    "/resend-verification",
+    resendVerificationLimiter,
+    validateData(resendVerificationSchema),
+    resendVerificationEmail,
 );
 router.post("/login", loginLimiter, validateData(loginSchema), login);
 router.post(

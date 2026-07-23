@@ -272,6 +272,22 @@ export default function LoginForm({ redirect }: Readonly<LoginFormProps>) {
                             <p>{formState?.message}</p>
                         </div>
                     )}
+                    {formState?.data?.requiresVerification && (
+                        <Link
+                            href={`/resendVerification${
+                                formState?.formData?.get("email")
+                                    ? `?email=${encodeURIComponent(
+                                          formState.formData
+                                              .get("email")!
+                                              .toString(),
+                                      )}`
+                                    : ""
+                            }`}
+                            className="text-center text-sm text-primary underline"
+                        >
+                            Resend verification email
+                        </Link>
+                    )}
                     {formState?.details &&
                         formState?.details?.length &&
                         formState.details.map((error) => (

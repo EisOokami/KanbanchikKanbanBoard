@@ -257,3 +257,33 @@ export async function mfaVerifyService(data: {
         throw error;
     }
 }
+
+export async function resendVerificationService(email: string): Promise<
+    | { status: "error" | "message" | "success"; message: string }
+    | {
+          error: string;
+          details: {
+              field: string;
+              message: string;
+          }[];
+      }
+    | undefined
+> {
+    const url = new URL("/auth/resend-verification", baseUrl);
+
+    try {
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ email }),
+            cache: "no-cache",
+        });
+
+        return response.json();
+    } catch (error) {
+        console.error("Resend Verification Service Error:", error);
+        throw error;
+    }
+}

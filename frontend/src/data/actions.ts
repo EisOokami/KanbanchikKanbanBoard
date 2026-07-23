@@ -17,6 +17,7 @@ import {
     MfaEnableAction,
     MfaSetupAction,
     RegisterAction,
+    ResendVerificationAction,
     ResetPasswordAction,
     UpdateProfileAction,
     UpdateProjectAction,
@@ -28,6 +29,7 @@ import {
     loginService,
     mfaVerifyService,
     registerService,
+    resendVerificationService,
     resetPasswordService,
 } from "./service";
 import {
@@ -53,6 +55,7 @@ import {
     mfaVerifySchema,
     moveTaskSchema,
     registerSchema,
+    resendVerificationSchema,
     resetPasswordSchema,
     updateProfileSchema,
     updateProjectSchema,
@@ -194,6 +197,24 @@ export async function loginAction(
         "message" in responseData &&
         "status" in responseData &&
         responseData.message &&
+        responseData.status !== "success" &&
+        "data" in responseData
+    ) {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: responseData.status,
+            details: null,
+            message: responseData.message,
+            data: responseData.data,
+        };
+    }
+
+    if (
+        "message" in responseData &&
+        "status" in responseData &&
+        responseData.message &&
         responseData.status !== "success"
     ) {
         return {
@@ -313,20 +334,19 @@ export async function registerAction(
         };
     }
 
-    if ("refreshToken" in responseData && "accessToken" in responseData) {
-        const cookieStore = await cookies();
-        cookieStore.set(
-            "refreshToken",
-            responseData.refreshToken,
-            refreshTokenConfig,
-        );
-        cookieStore.set(
-            "accessToken",
-            responseData.accessToken,
-            accessTokenConfig,
-        );
-
-        redirect("/overview");
+    if (
+        "message" in responseData &&
+        "status" in responseData &&
+        responseData.message
+    ) {
+        return {
+            formData: null,
+            zodErrors: null,
+            error: null,
+            status: responseData.status,
+            details: null,
+            message: responseData.message,
+        };
     }
 }
 
@@ -1883,8 +1903,6 @@ export async function exchangeGoogleCodeAction(
 export async function mfaSetupAction(): Promise<MfaSetupAction | undefined> {
     const responseData = await mutateData("POST", "/auth/mfa/setup");
 
-    console.log(responseData);
-
     if (!responseData) {
         return {
             formData: null,
@@ -2169,6 +2187,80 @@ export async function mfaRegenerateBackupCodesAction(
             data: {
                 backupCodes: responseData.data.backupCodes,
             },
+        };
+    }
+}
+
+export async function resendVerificationAction(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    prevState: any,
+    formData: FormData,
+): Promise<ResendVerificationAction | undefined> {
+    const validatedFields = resendVerificationSchema.safeParse({
+        email: formData.get("email"),
+    });
+
+    if (!validatedFields.success) {
+        return {
+            formData,
+            zodErrors: z.flattenError(validatedFields.error).fieldErrors,
+            error: null,
+            status: null,
+            details: null,
+            message: null,
+        };
+    }
+
+    const responseData = await resendVerificationService(
+        validatedFields.data.email,
+    );
+
+    if (!responseData) {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: "error",
+            details: null,
+            message: "Ops! Something went wrong. Please try again.",
+        };
+    }
+
+    if (
+        "message" in responseData &&
+        "status" in responseData &&
+        responseData.message &&
+        responseData.status === "error"
+    ) {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: responseData.status,
+            details: null,
+            message: responseData.message,
+        };
+    }
+
+    if ("error" in responseData && responseData.error) {
+        return {
+            formData,
+            zodErrors: null,
+            error: responseData.error,
+            status: null,
+            details: responseData.details,
+            message: null,
+        };
+    }
+
+    if ("status" in responseData && responseData.status === "success") {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: responseData.status,
+            details: null,
+            message: responseData.message,
         };
     }
 }

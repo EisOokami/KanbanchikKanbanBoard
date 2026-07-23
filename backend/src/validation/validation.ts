@@ -836,3 +836,12 @@ export const mfaBackupCodesSchema = z.object({
             "Password must contain at least one uppercase letter, one lowercase letter, one special character and one number",
         ),
 });
+
+export const resendVerificationSchema = z.object({
+    email: z
+        .email("Invalid email format")
+        .trim()
+        .toLowerCase()
+        .min(1, "Email is required")
+        .max(255, "Email must be less than 255 characters long"),
+});
