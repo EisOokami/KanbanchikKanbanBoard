@@ -9,12 +9,12 @@ export function ZodErrors({ error }: Readonly<ZodErrorsProps>) {
         return null;
     }
 
-    return error.map((err: string, index: number) => (
+    return error.map((error: string, index: number) => (
         <div key={index} className="flex gap-1 py-1 text-sm text-red-500">
             <div>
-                <CircleAlert className="w-4 h-4 mt-0.5" />
+                <CircleAlert className="mt-0.5 size-4 shrink-0" />
             </div>
-            <p>{err}</p>
+            <p>{error}</p>
         </div>
     ));
 }

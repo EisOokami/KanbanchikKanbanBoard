@@ -425,7 +425,7 @@ export default function TaskDetailsSheet({
                                         >
                                             <InfoIcon
                                                 weight="duotone"
-                                                className="size-4"
+                                                className="size-4 shrink-0"
                                             />
                                             <p>{formState?.message}</p>
                                         </div>

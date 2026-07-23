@@ -234,7 +234,7 @@ export default function MfaSetupModal({
                                     <div className="flex items-center justify-center gap-2 text-sm text-red-500">
                                         <InfoIcon
                                             weight="duotone"
-                                            className="size-4"
+                                            className="size-4 shrink-0"
                                         />
                                         <p>{formState.message}</p>
                                     </div>

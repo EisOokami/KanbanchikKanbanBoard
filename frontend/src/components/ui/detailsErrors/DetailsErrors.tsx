@@ -14,7 +14,7 @@ export function DetailsErrors({ error }: Readonly<DetailsErrorsProps>) {
 
     return (
         <div className="flex items-center gap-1 py-1 text-sm text-red-500">
-            <WarningIcon weight="duotone" className="size-4" />
+            <WarningIcon weight="duotone" className="size-4 shrink-0" />
             <p>{error.message}</p>
         </div>
     );

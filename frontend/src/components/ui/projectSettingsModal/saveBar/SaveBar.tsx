@@ -40,7 +40,10 @@ export default function SaveBar({
                                 : "text-yellow-300",
                         )}
                     >
-                        <InfoIcon weight="duotone" className="size-4" />
+                        <InfoIcon
+                            weight="duotone"
+                            className="size-4 shrink-0"
+                        />
                         <p>{formState?.message}</p>
                     </div>
                 )}

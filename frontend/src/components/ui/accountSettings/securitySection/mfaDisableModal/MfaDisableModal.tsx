@@ -103,7 +103,10 @@ export default function MfaDisableModal({
                                     : "text-emerald-500",
                             )}
                         >
-                            <InfoIcon weight="duotone" className="size-4" />
+                            <InfoIcon
+                                weight="duotone"
+                                className="size-4 shrink-0"
+                            />
                             <p>{formState.message}</p>
                         </div>
                     )}
