@@ -21,6 +21,7 @@ import { ZodErrors } from "@/components/ui/zodErrors/ZodErrors";
 import { cn } from "@/libs/utils";
 import { EnvelopeSimpleIcon, InfoIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
+import { DetailsErrors } from "../detailsErrors/DetailsErrors";
 
 const INITIAL_STATE: BaseAction = {
     zodErrors: null,
@@ -133,6 +134,14 @@ export default function ResendVerificationForm({
                             </p>
                         </div>
                     )}
+                    {formState?.details &&
+                        formState?.details?.length &&
+                        formState.details.map((error) => (
+                            <DetailsErrors
+                                key={error.message + error.field}
+                                error={error}
+                            />
+                        ))}
                     <Button
                         type="submit"
                         className="mt-3 w-full bg-bright-blue text-white hover:bg-blue-600"

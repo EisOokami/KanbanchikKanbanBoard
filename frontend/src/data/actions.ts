@@ -9,6 +9,7 @@ import {
     ChangePasswordAction,
     CreateProjectAction,
     CreateTaskAction,
+    DeleteAccountAction,
     ForgotPasswordAction,
     InviteMemberAction,
     LoginAction,
@@ -46,6 +47,7 @@ import {
     changePasswordSchema,
     createProjectSchema,
     createTaskSchema,
+    deleteAccountSchema,
     forgotPasswordSchema,
     inviteMemberSchema,
     loginSchema,
@@ -1276,14 +1278,38 @@ export async function deleteAccountAction(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     prevState: any,
     formData: FormData,
-): Promise<Pick<BaseAction, "status" | "message"> | undefined> {
-    const id = formData.get("id");
+): Promise<DeleteAccountAction | undefined> {
+    const validatedFields = deleteAccountSchema.safeParse({
+        id: formData.get("id"),
+        password: formData.get("password"),
+    });
 
-    const responseData = await mutateData("DELETE", `/users/${id}`);
+    if (!validatedFields.success) {
+        return {
+            formData,
+            zodErrors: z.flattenError(validatedFields.error).fieldErrors,
+            error: null,
+            status: null,
+            details: null,
+            message: null,
+        };
+    }
+
+    const responseData = await mutateData(
+        "DELETE",
+        `/users/${validatedFields.data.id}`,
+        {
+            password: validatedFields.data.password,
+        },
+    );
 
     if (!responseData) {
         return {
+            formData,
+            zodErrors: null,
+            error: null,
             status: null,
+            details: null,
             message: "Ops! Something went wrong. Please try again.",
         };
     }
@@ -1295,8 +1321,23 @@ export async function deleteAccountAction(
         responseData.status !== "success"
     ) {
         return {
+            formData,
+            zodErrors: null,
+            error: null,
             status: responseData.status,
+            details: null,
             message: responseData.message,
+        };
+    }
+
+    if ("error" in responseData && responseData.error) {
+        return {
+            formData,
+            zodErrors: null,
+            error: responseData.error,
+            status: null,
+            details: responseData.details,
+            message: null,
         };
     }
 

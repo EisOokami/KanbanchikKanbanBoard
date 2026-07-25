@@ -103,7 +103,13 @@ export const resetPasswordSchema = z
                 /[~`!@#$%^&*()_+=\-\[\]\\|;:'",.<>/?]/,
                 "Password must contain at least one special character",
             ),
-        id: z.string("Invalid data"),
+        id: z
+            .string()
+            .regex(/^\d+$/, "Invalid data")
+            .transform(Number)
+            .refine((value) => Number.isSafeInteger(value), {
+                message: "Invalid data",
+            }),
         token: z
             .string("Invalid data")
             .trim()
@@ -833,4 +839,22 @@ export const resendVerificationSchema = z.object({
         .toLowerCase()
         .min(1, "Email is required")
         .max(255, "Email must be less than 255 characters long"),
+});
+
+export const deleteAccountSchema = z.object({
+    id: z
+        .string()
+        .regex(/^\d+$/, "Invalid data")
+        .transform(Number)
+        .refine((value) => Number.isSafeInteger(value), {
+            message: "Invalid data",
+        }),
+    password: z
+        .string()
+        .min(8, "Password must be at least 8 characters long")
+        .max(255, "Password must be less than 255 characters long")
+        .regex(
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).+$/,
+            "Password must contain at least one uppercase letter, one lowercase letter, one special character and one number",
+        ),
 });

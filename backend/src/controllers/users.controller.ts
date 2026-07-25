@@ -1,6 +1,7 @@
 import type { Response } from "express";
 import {
     changePasswordSchema,
+    deleteAccountSchema,
     updateProfileSchema,
     validateIdSchema,
 } from "../validation/validation";
@@ -288,7 +289,7 @@ export const changePassword = async (
 
         const user = users[0];
 
-        if (!user) {
+        if (!user || !user.password) {
             res.status(404).json({
                 status: "error",
                 message: "User not found",
@@ -373,6 +374,7 @@ export const deleteAccount = async (
 ): Promise<void> => {
     try {
         validateIdSchema.parse(req.params);
+        deleteAccountSchema.parse(req.body);
 
         if (!req.params.id) {
             res.status(400).json({
@@ -395,15 +397,38 @@ export const deleteAccount = async (
             return;
         }
 
-        const [user] = await pool.execute<(Pick<User, "id"> & RowDataPacket)[]>(
-            "SELECT id FROM users WHERE id = ?",
-            [paramId],
-        );
+        const { password } = req.body;
 
-        if (!user.length) {
+        const [users] = await pool.execute<
+            (Pick<User, "id" | "password"> & RowDataPacket)[]
+        >("SELECT id, password FROM users WHERE id = ?", [paramId]);
+
+        if (!users.length) {
             res.status(404).json({
                 status: "error",
                 message: "User not found",
+            });
+
+            return;
+        }
+
+        const user = users[0];
+
+        if (!user || !user.password) {
+            res.status(404).json({
+                status: "error",
+                message: "User not found",
+            });
+
+            return;
+        }
+
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+
+        if (!isPasswordValid) {
+            res.status(401).json({
+                status: "error",
+                message: "Incorrect password",
             });
 
             return;

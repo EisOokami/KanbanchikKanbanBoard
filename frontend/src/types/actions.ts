@@ -137,6 +137,11 @@ export interface ResendVerificationZodErrors extends BaseZodErrors {
     email?: string[];
 }
 
+export interface DeleteAccountZodErrors extends BaseZodErrors {
+    id?: string[];
+    password?: string[];
+}
+
 export interface LoginAction extends BaseAction {
     zodErrors: LoginZodErrors | null;
 }
@@ -199,4 +204,8 @@ export interface MfaBackupCodesAction extends BaseAction {
 
 export interface ResendVerificationAction extends BaseAction {
     zodErrors: ResendVerificationZodErrors | null;
+}
+
+export interface DeleteAccountAction extends BaseAction {
+    zodErrors: DeleteAccountZodErrors | null;
 }
