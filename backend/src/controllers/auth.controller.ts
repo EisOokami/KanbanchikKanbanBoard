@@ -30,6 +30,8 @@ import {
     getGoogleAuthUrl,
 } from "../utils/googleAuth";
 import { generateRawToken, hashToken } from "../utils/mfa";
+import { emailTemplate } from "../utils/emailTemplate";
+import { sendLoginNotificationEmail } from "../utils/loginNotificationEmail";
 
 dotenv.config();
 
@@ -143,33 +145,23 @@ export const register = async (req: Request, res: Response): Promise<void> => {
             from: process.env.EMAIL_USER,
             to: email,
             subject: "Welcome! Activate your account",
-            html: `
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f4f4f4; padding: 20px;">
-                    <table style="width: 100%; background-color: #ffffff; padding: 40px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                        <tr>
-                            <td style="text-align: center; color: #333333;">
-                                <h1 style="color: #2c3e50;">Welcome, ${name}!</h1>
-                                <p style="font-size: 16px; line-height: 1.6; color: #555555;">
-                                    Thank you for registering with us. To complete your setup and activate your account, please verify your email address by clicking the button below.
-                                </p>
-                                <p style="margin: 30px 0;">
-                                    <a href="${verificationUrl}" style="background-color: #007bff; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
-                                        Activate Account
-                                    </a>
-                                </p>
-                                <p style="font-size: 14px; color: #888888;">
-                                    If the button above doesn't work, copy and paste this link into your browser:<br>
-                                    <a href="${verificationUrl}" style="color: #007bff; word-break: break-all;">${verificationUrl}</a>
-                                </p>
-                                <hr style="border: 0; border-top: 1px solid #eeeeee; margin: 30px 0;">
-                                <p style="font-size: 12px; color: #aaaaaa;">
-                                    This link is valid for 24 hours. If you didn't request this, please ignore this email.
-                                </p>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-            `,
+            html: emailTemplate({
+                logo: "cid:app-logo",
+                title: "Verify Email",
+                heading: `Welcome, ${user.name}!`,
+                description:
+                    "Thanks for creating an account. Please verify your email address to activate your account.",
+                buttonText: "Verify Email",
+                buttonUrl: verificationUrl,
+                footer: "This verification link will expire in 24 hours. If you didn't create this account, simply ignore this email.",
+            }),
+            attachments: [
+                {
+                    filename: "logo.png",
+                    path: "./assets/generallogo.png",
+                    cid: "app-logo",
+                },
+            ],
         };
 
         transporter.sendMail(mailOptions, (error, info) => {
@@ -353,50 +345,52 @@ export const resendVerificationEmail = async (
             from: process.env.EMAIL_USER,
             to: user.email,
             subject: "Confirm your email address",
-            html: `
-                <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f4f4f4; padding: 20px; margin: 0;">
-                    <table align="center" cellpadding="0" cellspacing="0" style="width: 100%; max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-                        <tr>
-                            <td style="padding: 40px 30px; text-align: center; background-color: #ffffff; border-bottom: 1px solid #eeeeee;">
-                                <h1 style="margin: 0; color: #333333; font-size: 24px;">Confirm your email</h1>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 40px 30px; color: #555555; line-height: 1.6;">
-                                <p style="margin: 0 0 20px 0; font-size: 16px;">Hello <strong>${user.name}</strong>,</p>
-                                <p style="margin: 0 0 30px 0; font-size: 16px;">
-                                    We received a request to activate your account. Please click the button below to confirm your email address.
-                                </p>
-                                <table align="center" cellpadding="0" cellspacing="0" style="margin: 30px auto;">
-                                    <tr>
-                                        <td align="center" bgcolor="#007bff" style="border-radius: 5px;">
-                                            <a href="${verificationUrl}" target="_blank" style="display: inline-block; padding: 14px 32px; text-decoration: none; color: #ffffff; font-size: 16px; font-weight: bold; border-radius: 5px; background-color: #007bff;">
-                                                Activate Account
-                                            </a>
-                                        </td>
-                                    </tr>
-                                </table>
-                                <p style="margin: 30px 0 10px 0; font-size: 14px; color: #888888;">
-                                    Or copy and paste this link into your browser:<br>
-                                    <a href="${verificationUrl}" style="color: #007bff; word-break: break-all;">${verificationUrl}</a>
-                                </p>
-                                <div style="background-color: #f9f9f9; padding: 20px; border-radius: 5px; margin-top: 30px; border: 1px solid #eeeeee;">
-                                    <p style="margin: 0; font-size: 14px; color: #666666;">
-                                        <strong>Note:</strong> This link is valid for 24 hours. If you did not request this activation, please ignore this email.
-                                    </p>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 20px; text-align: center; background-color: #f4f4f4; border-top: 1px solid #eeeeee;">
-                                <p style="margin: 0; font-size: 12px; color: #999999;">
-                                    &copy; 2026 Your Company Name. All rights reserved.
-                                </p>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-            `,
+            html: emailTemplate({
+                logo: "cid:app-logo",
+                title: "Confirm your email",
+                heading: "Confirm your email address",
+                description: `
+                    Hello <strong>${user.name}</strong>,
+                    <br><br>
+                    We received a request to activate your account.
+                    Please confirm your email address by clicking the button below.
+                `,
+                children: `
+                    <div
+                        style="
+                            margin-top:28px;
+                            padding:20px;
+                            background:#fafafa;
+                            border:1px solid #e5e5e5;
+                            border-radius:12px;
+                        "
+                    >
+                        <p
+                            style="
+                                margin:0;
+                                font-size:14px;
+                                line-height:24px;
+                                color:#71717a;
+                            "
+                        >
+                            <strong style="color:#0a0a0a;">
+                                Security note:
+                            </strong>
+                            This verification link is valid for 24 hours.
+                        </p>
+                    </div>
+                `,
+                buttonText: "Activate Account",
+                buttonUrl: verificationUrl,
+                footer: "If you did not create this account, you can ignore this email.",
+            }),
+            attachments: [
+                {
+                    filename: "logo.png",
+                    path: "./assets/generallogo.png",
+                    cid: "app-logo",
+                },
+            ],
         };
 
         transporter.sendMail(mailOptions, (error, info) => {
@@ -568,6 +562,10 @@ export const login = async (req: Request, res: Response): Promise<void> => {
             accessToken,
             refreshToken,
         });
+
+        sendLoginNotificationEmail(user, req).catch((error) => {
+            console.error("Login notification email error:", error);
+        });
     } catch (error) {
         if (error instanceof ZodError) {
             const errorMessages = error.issues.map((issue: any) => ({
@@ -646,21 +644,22 @@ export const forgotPassword = async (
             from: process.env.EMAIL_USER,
             to: email,
             subject: "Password Reset Request",
-            html: `
-                <h2>Password Reset</h2>
-                <p>Hi ${user.name},</p>
-                <p>You requested to reset your password. Click the link below:</p>
-                <a href="${resetLink}" style="
-                    display: inline-block;
-                    padding: 10px 20px;
-                    background-color: #0096FF;
-                    color: white;
-                    text-decoration: none;
-                    border-radius: 5px;
-                ">Reset Password</a>
-                <p>This link will expire in <strong>1 hour</strong>.</p>
-                <p>If you did not request a password reset, please ignore this email.</p>
-            `,
+            html: emailTemplate({
+                logo: "cid:app-logo",
+                title: "Reset Password",
+                heading: "Reset your password",
+                description: `Hi ${user.name}, we received a request to reset your password.`,
+                buttonText: "Reset Password",
+                buttonUrl: resetLink,
+                footer: "This reset link expires in 1 hour. If you didn't request a password reset, you can safely ignore this email.",
+            }),
+            attachments: [
+                {
+                    filename: "logo.png",
+                    path: "./assets/generallogo.png",
+                    cid: "app-logo",
+                },
+            ],
         };
 
         transporter.sendMail(mailOptions, (error, info) => {
@@ -841,12 +840,42 @@ export const resetPassword = async (
             from: process.env.EMAIL_USER,
             to: user.email,
             subject: "Password Reset Successfully",
-            html: `
-                <h2>Password Changed</h2>
-                <p>Hi ${user.name},</p>
-                <p>Your password has been changed successfully.</p>
-                <p>If you did not make this change, please contact support immediately.</p>
-            `,
+            html: emailTemplate({
+                logo: "cid:app-logo",
+                title: "Password Changed",
+                heading: "Password updated",
+                description: `Hi ${user.name}, your password has been changed successfully.`,
+                children: `
+                    <div
+                        style="
+                            margin-top:30px;
+                            padding:18px;
+                            background:#fafafa;
+                            border:1px solid #e5e5e5;
+                            border-radius:10px;
+                    ">
+                        <strong style="color:#0a0a0a;">
+                            Didn't do this?
+                        </strong>
+                        <p
+                            style="
+                                margin:10px 0 0;
+                                color:#71717a;
+                                line-height:24px;
+                        ">
+                            Secure your account immediately and contact support if you believe someone accessed your account.
+                        </p>
+                    </div>
+                `,
+                footer: "This is an automated security notification.",
+            }),
+            attachments: [
+                {
+                    filename: "logo.png",
+                    path: "./assets/generallogo.png",
+                    cid: "app-logo",
+                },
+            ],
         };
 
         transporter.sendMail(mailOptions, (error, info) => {

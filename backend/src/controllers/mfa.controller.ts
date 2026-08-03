@@ -25,6 +25,7 @@ import {
 import { generateCsrfToken } from "../utils/csrf";
 import { createAccessToken, createRefreshToken } from "../utils/jwt";
 import bcrypt from "bcryptjs";
+import { sendLoginNotificationEmail } from "../utils/loginNotificationEmail";
 
 const otp = new OTP({ strategy: "totp" });
 
@@ -373,6 +374,10 @@ export const verifyMfa = async (req: Request, res: Response): Promise<void> => {
             accessToken,
             refreshToken,
         });
+
+        sendLoginNotificationEmail(user, req).catch((error) => {
+            console.error("Login notification email error:", error);
+        });
     } catch (error) {
         if (error instanceof ZodError) {
             const errorMessages = error.issues.map((issue: any) => ({
@@ -426,7 +431,7 @@ export const disableMfa = async (
 
         const user = rows[0];
 
-        if (!user) {
+        if (!user || !user.password) {
             res.status(404).json({
                 status: "error",
                 message: "User not found",
@@ -553,7 +558,7 @@ export const regenerateBackupCodes = async (
 
         const user = rows[0];
 
-        if (!user) {
+        if (!user || !user.password) {
             res.status(404).json({
                 status: "error",
                 message: "User not found",

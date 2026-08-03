@@ -16,6 +16,7 @@ import {
 } from "../validation/validation";
 import { ZodError } from "zod";
 import { transporter } from "../utils/email";
+import { emailTemplate } from "../utils/emailTemplate";
 
 dotenv.config();
 
@@ -300,38 +301,57 @@ export const memberInvite = async (
                         from: process.env.EMAIL_USER,
                         to: email,
                         subject: `Invitation to join ${project.name}`,
-                        html: `
-                            <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-                                <h2>You have been invited to a Kanban project</h2>
-                                <p>Hello ${username},</p>
-                                <p>
-                                    You have been invited to join the project 
-                                    <strong>${project.name}</strong>.
-                                </p>
-                                <p>
-                                    Open the platform to view tasks, collaborate with your team,
-                                    and manage the workflow.
-                                </p>
-                                <a 
-                                    href="${inviteUrl}"
+                        html: emailTemplate({
+                            logo: "cid:app-logo",
+                            title: "Project Invitation",
+                            heading: "You've been invited",
+                            description: `
+                                Hello <strong>${username}</strong>,
+                                <br><br>
+                                You've been invited to collaborate on
+                                <strong>${project.name}</strong>.
+                            `,
+                            children: `
+                                <div
                                     style="
-                                        display: inline-block;
-                                        padding: 12px 20px;
-                                        background-color: #4f46e5;
-                                        color: white;
-                                        text-decoration: none;
-                                        border-radius: 8px;
-                                        margin-top: 10px;
+                                        margin-top:28px;
+                                        padding:20px;
+                                        background:#fafafa;
+                                        border:1px solid #e5e5e5;
+                                        border-radius:10px;
                                     "
                                 >
-                                    Open Project
-                                </a>
-                                <p style="margin-top: 20px;">
-                                    If you believe this invitation was sent by mistake,
-                                    you can ignore this email.
-                                </p>
-                            </div>
-                        `,
+                                    <div
+                                        style="
+                                            font-size:13px;
+                                            color:#71717a;
+                                            margin-bottom:6px;
+                                        "
+                                    >
+                                        Project
+                                    </div>
+                                    <div
+                                        style="
+                                            font-size:17px;
+                                            font-weight:600;
+                                            color:#0a0a0a;
+                                        "
+                                    >
+                                        ${project.name}
+                                    </div>
+                                </div>
+                            `,
+                            buttonText: "Open Project",
+                            buttonUrl: inviteUrl,
+                            footer: "If you weren't expecting this invitation, you can safely ignore this email.",
+                        }),
+                        attachments: [
+                            {
+                                filename: "logo.png",
+                                path: "./assets/generallogo.png",
+                                cid: "app-logo",
+                            },
+                        ],
                     };
 
                     transporter.sendMail(mailOptions, (error, info) => {
