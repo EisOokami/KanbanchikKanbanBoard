@@ -600,8 +600,10 @@ export const forgotPassword = async (
         const { email } = validateData;
 
         const [rows] = await pool.execute<
-            (Pick<User, "id" | "name"> & RowDataPacket)[]
-        >("SELECT id, name FROM users WHERE email = ?", [email]);
+            (Pick<User, "id" | "name" | "password" | "email"> & RowDataPacket)[]
+        >("SELECT id, name, password, email FROM users WHERE email = ?", [
+            email,
+        ]);
 
         const user = rows[0];
 
@@ -612,6 +614,52 @@ export const forgotPassword = async (
                     "If this email exists, you will receive reset instructions",
             });
 
+            return;
+        }
+
+        if (!user.password) {
+            const mailOptions = {
+                from: process.env.EMAIL_USER,
+                to: email,
+                subject: "Password reset request",
+                html: emailTemplate({
+                    logo: "cid:app-logo",
+                    title: "Reset Password",
+                    heading: "Sign-in via Google",
+                    description: `Hi ${user.name}, we received a request to reset the password for this account, but it was created using Google Sign-In and doesn't have a password yet. Please continue signing in with Google. If you'd like, you can add a password afterward in your account security settings.`,
+                    footer: "If you didn't request this, you can safely ignore this email.",
+                }),
+                attachments: [
+                    {
+                        filename: "logo.png",
+                        path: "./assets/generallogo.png",
+                        cid: "app-logo",
+                    },
+                ],
+            };
+
+            transporter.sendMail(mailOptions, (error, info) => {
+                if (error) {
+                    console.error("Email error:", error);
+                    res.status(500).json({
+                        status: "error",
+                        message: "Error sending email",
+                    });
+                } else {
+                    console.log(`Reset email sent: ${info.response}`);
+                    res.status(200).json({
+                        status: "success",
+                        message:
+                            "If this email exists, you will receive reset instructions",
+                    });
+                }
+            });
+
+            res.status(200).json({
+                status: "success",
+                message:
+                    "If this email exists, you will receive reset instructions",
+            });
             return;
         }
 
@@ -643,7 +691,7 @@ export const forgotPassword = async (
         const mailOptions = {
             from: process.env.EMAIL_USER,
             to: email,
-            subject: "Password Reset Request",
+            subject: "Password reset request",
             html: emailTemplate({
                 logo: "cid:app-logo",
                 title: "Reset Password",
