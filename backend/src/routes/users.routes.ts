@@ -6,10 +6,12 @@ import {
     me,
     changePassword,
     updateProfile,
+    setPassword,
 } from "../controllers/users.controller";
 import { validateData } from "../middlewares/validation.middleware";
 import {
     changePasswordSchema,
+    setPasswordSchema,
     updateProfileSchema,
 } from "../validation/validation";
 import { verifyCsrf } from "../middlewares/csrf.middleware";
@@ -50,6 +52,18 @@ const deleteLimiter = rateLimit({
     legacyHeaders: false,
 });
 
+const setPasswordLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    limit: 3,
+    message: {
+        status: 429,
+        error: "Too many requests",
+        message: "Too many requests. Please try again in 60 minutes.",
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
 const router = Router();
 
 router.get("/me", authenticateToken, me);
@@ -75,6 +89,14 @@ router.delete(
     authenticateToken,
     verifyCsrf,
     deleteAccount,
+);
+router.post(
+    "/set-password",
+    setPasswordLimiter,
+    authenticateToken,
+    verifyCsrf,
+    validateData(setPasswordSchema),
+    setPassword,
 );
 
 export default router;

@@ -40,7 +40,12 @@ function renderSection(id: SectionId, userData: User): React.ReactNode {
                 </>
             );
         case "security":
-            return <SecuritySection mfaEnabled={!!userData.mfa_enabled} />;
+            return (
+                <SecuritySection
+                    mfaEnabled={!!userData.mfa_enabled}
+                    hasPassword={userData.auth_provider === "local"}
+                />
+            );
         case "appearance":
             return <AppearanceSection />;
     }

@@ -858,3 +858,27 @@ export const deleteAccountSchema = z.object({
             "Password must contain at least one uppercase letter, one lowercase letter, one special character and one number",
         ),
 });
+
+export const setPasswordSchema = z
+    .object({
+        newPassword: z
+            .string()
+            .min(8, "Password must be at least 8 characters long")
+            .max(255, "Password must be less than 255 characters long")
+            .regex(
+                /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).+$/,
+                "Password must contain at least one uppercase letter, one lowercase letter, one special character and one number",
+            ),
+        confirmPassword: z
+            .string()
+            .min(8, "Password must be at least 8 characters long")
+            .max(255, "Password must be less than 255 characters long")
+            .regex(
+                /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).+$/,
+                "Password must contain at least one uppercase letter, one lowercase letter, one special character and one number",
+            ),
+    })
+    .refine((data) => data.newPassword === data.confirmPassword, {
+        message: "Confirm New Password must be the same as New Password",
+        path: ["confirmPassword"],
+    });

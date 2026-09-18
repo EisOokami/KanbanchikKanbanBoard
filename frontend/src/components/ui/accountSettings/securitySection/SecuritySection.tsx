@@ -6,7 +6,7 @@ import FieldRow from "../fieldRow/FieldRow";
 import SaveBar from "../saveBar/SaveBar";
 import { PasswordInput } from "../../shadcn/password-input";
 import { BaseAction } from "@/types/actions";
-import { changePasswordAction } from "@/data/actions";
+import { changePasswordAction, setPasswordAction } from "@/data/actions";
 import { ZodErrors } from "../../zodErrors/ZodErrors";
 import { InfoIcon } from "@phosphor-icons/react";
 import { cn } from "@/libs/utils";
@@ -27,10 +27,12 @@ const INITIAL_STATE: BaseAction = {
 
 interface SecuritySectionProps {
     mfaEnabled: boolean;
+    hasPassword: boolean;
 }
 
 export default function SecuritySection({
     mfaEnabled,
+    hasPassword,
 }: Readonly<SecuritySectionProps>) {
     const [currentPasswordValue, setCurrentPasswordValue] =
         useState<string>("");
@@ -42,24 +44,34 @@ export default function SecuritySection({
     const [disableOpen, setDisableOpen] = useState<boolean>(false);
     const [backupCodesOpen, setBackupCodesOpen] = useState<boolean>(false);
     const [isChanged, setIsChanged] = useState<boolean>(false);
-    const [formState, formAction, isPending] = useActionState(
-        changePasswordAction,
-        INITIAL_STATE,
-    );
+    const [isSetPasswordChanged, setIsSetPasswordChanged] =
+        useState<boolean>(false);
+    const [
+        changePasswordFormState,
+        changePasswordFormAction,
+        isChangePasswordPending,
+    ] = useActionState(changePasswordAction, INITIAL_STATE);
+    const [setPasswordFormState, setPasswordFormAction, isSetPasswordPending] =
+        useActionState(setPasswordAction, INITIAL_STATE);
 
     useEffect(() => {
-        if (formState && formState.status === "success") {
+        if (
+            changePasswordFormState &&
+            changePasswordFormState.status === "success"
+        ) {
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setIsChanged(false);
         }
-    }, [formState]);
+
+        if (setPasswordFormState && setPasswordFormState.status === "success") {
+            setIsSetPasswordChanged(false);
+        }
+    }, [changePasswordFormState, setPasswordFormState]);
 
     const handleDiscard = () => {
         setCurrentPasswordValue("");
         setNewPasswordValue("");
         setConfirmPasswordValue("");
-
-        setIsChanged(false);
     };
 
     return (
@@ -70,109 +82,183 @@ export default function SecuritySection({
                     Manage your password and two-factor authentication
                 </p>
             </div>
-            <form
-                action={formAction}
-                onSubmit={() => setIsChanged(false)}
-                className="space-y-5"
-            >
-                <div className="space-y-2">
-                    <SectionTitle>Change password</SectionTitle>
-                    <div className="overflow-hidden rounded-md border border-border bg-background px-5">
-                        <FieldRow
-                            label="Current password"
-                            hint="Minimum 8 characters"
-                        >
-                            <PasswordInput
-                                name="current-password"
-                                placeholder="Current password"
-                                value={currentPasswordValue}
-                                onChange={(e) => {
-                                    setCurrentPasswordValue(e.target.value);
+            {hasPassword ? (
+                <form action={changePasswordFormAction} className="space-y-5">
+                    <div className="space-y-2">
+                        <SectionTitle>Change password</SectionTitle>
+                        <div className="overflow-hidden rounded-md border border-border bg-background px-5">
+                            <FieldRow label="Current password">
+                                <PasswordInput
+                                    name="current-password"
+                                    placeholder="Current password"
+                                    value={currentPasswordValue}
+                                    onChange={(e) => {
+                                        setCurrentPasswordValue(e.target.value);
 
-                                    if (e.target.value.trim() !== "") {
-                                        setIsChanged(true);
-                                    } else {
-                                        setIsChanged(false);
+                                        if (e.target.value.trim() !== "") {
+                                            setIsChanged(true);
+                                        } else {
+                                            setIsChanged(false);
+                                        }
+                                    }}
+                                    className="h-8 bg-control pr-9 text-sm placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue"
+                                    disabled={isChangePasswordPending}
+                                />
+                                <ZodErrors
+                                    error={
+                                        changePasswordFormState?.zodErrors
+                                            ?.currentPassword
                                     }
-                                }}
-                                className="h-8 bg-control pr-9 text-sm placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue"
-                                disabled={isPending}
-                            />
-                            <ZodErrors
-                                error={formState?.zodErrors?.currentPassword}
-                            />
-                        </FieldRow>
-                        <FieldRow
-                            label="New password"
-                            hint="Minimum 8 characters"
-                        >
-                            <PasswordInput
-                                name="new-password"
-                                placeholder="Enter your new password"
-                                value={newPasswordValue}
-                                onChange={(e) => {
-                                    setNewPasswordValue(e.target.value);
+                                />
+                            </FieldRow>
+                            <FieldRow label="New password">
+                                <PasswordInput
+                                    name="new-password"
+                                    placeholder="Enter your new password"
+                                    value={newPasswordValue}
+                                    onChange={(e) => {
+                                        setNewPasswordValue(e.target.value);
 
-                                    if (e.target.value.trim() !== "") {
-                                        setIsChanged(true);
-                                    } else {
-                                        setIsChanged(false);
+                                        if (e.target.value.trim() !== "") {
+                                            setIsChanged(true);
+                                        } else {
+                                            setIsChanged(false);
+                                        }
+                                    }}
+                                    className="h-8 bg-control pr-9 text-sm placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue"
+                                    disabled={isChangePasswordPending}
+                                />
+                                <ZodErrors
+                                    error={
+                                        changePasswordFormState?.zodErrors
+                                            ?.newPassword
                                     }
-                                }}
-                                className="h-8 bg-control pr-9 text-sm placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue"
-                                disabled={isPending}
-                            />
-                            <ZodErrors
-                                error={formState?.zodErrors?.newPassword}
-                            />
-                        </FieldRow>
-                        <FieldRow label="Confirm password">
-                            <PasswordInput
-                                name="confirm-password"
-                                placeholder="Confirm password"
-                                value={confirmPasswordValue}
-                                onChange={(e) => {
-                                    setConfirmPasswordValue(e.target.value);
+                                />
+                            </FieldRow>
+                            <FieldRow label="Confirm password">
+                                <PasswordInput
+                                    name="confirm-password"
+                                    placeholder="Confirm password"
+                                    value={confirmPasswordValue}
+                                    onChange={(e) => {
+                                        setConfirmPasswordValue(e.target.value);
 
-                                    if (e.target.value.trim() !== "") {
-                                        setIsChanged(true);
-                                    } else {
-                                        setIsChanged(false);
+                                        if (e.target.value.trim() !== "") {
+                                            setIsChanged(true);
+                                        } else {
+                                            setIsChanged(false);
+                                        }
+                                    }}
+                                    className="h-8 bg-control pr-9 text-sm placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue"
+                                    disabled={isChangePasswordPending}
+                                />
+                                <ZodErrors
+                                    error={
+                                        changePasswordFormState?.zodErrors
+                                            ?.confirmPassword
                                     }
-                                }}
-                                className="h-8 bg-control pr-9 text-sm placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue"
-                                disabled={isPending}
-                            />
-                            <ZodErrors
-                                error={formState?.zodErrors?.confirmPassword}
-                            />
-                        </FieldRow>
+                                />
+                            </FieldRow>
+                        </div>
                     </div>
-                </div>
-                {formState?.message && (
-                    <div
-                        className={cn(
-                            "flex items-center gap-2 rounded-md text-sm",
-                            formState?.status === "error"
-                                ? "text-red-500"
-                                : formState?.status === "success"
-                                  ? "text-green-500"
-                                  : "text-yellow-300",
-                        )}
-                    >
-                        <InfoIcon
-                            weight="duotone"
-                            className="size-4 shrink-0"
-                        />
-                        <p>{formState?.message}</p>
+                    {changePasswordFormState?.message && (
+                        <div
+                            className={cn(
+                                "flex items-center gap-2 rounded-md text-sm",
+                                changePasswordFormState?.status === "error"
+                                    ? "text-red-500"
+                                    : changePasswordFormState?.status ===
+                                        "success"
+                                      ? "text-green-500"
+                                      : "text-yellow-300",
+                            )}
+                        >
+                            <InfoIcon
+                                weight="duotone"
+                                className="size-4 shrink-0"
+                            />
+                            <p>{changePasswordFormState?.message}</p>
+                        </div>
+                    )}
+                    <SaveBar
+                        isChanged={isChanged}
+                        onDiscard={handleDiscard}
+                        isPending={isChangePasswordPending}
+                    />
+                </form>
+            ) : (
+                <form action={setPasswordFormAction} className="space-y-5">
+                    <div className="space-y-2">
+                        <SectionTitle>Set a password</SectionTitle>
+                        <p className="text-xs text-gray-400">
+                            You signed up with Google. Add a password to also
+                            sign in with your email.
+                        </p>
+                        <div className="overflow-hidden rounded-md border border-border bg-background px-5">
+                            <FieldRow label="New password">
+                                <PasswordInput
+                                    name="new-password"
+                                    placeholder="Enter a new password"
+                                    value={newPasswordValue}
+                                    onChange={(e) => {
+                                        setNewPasswordValue(e.target.value);
+                                        setIsSetPasswordChanged(
+                                            e.target.value.trim() !== "",
+                                        );
+                                    }}
+                                    className="h-8 bg-control pr-9 text-sm placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue"
+                                    disabled={isSetPasswordPending}
+                                />
+                                <ZodErrors
+                                    error={
+                                        setPasswordFormState?.zodErrors
+                                            ?.newPassword
+                                    }
+                                />
+                            </FieldRow>
+                            <FieldRow label="Confirm password">
+                                <PasswordInput
+                                    name="confirm-password"
+                                    placeholder="Confirm password"
+                                    value={confirmPasswordValue}
+                                    onChange={(e) =>
+                                        setConfirmPasswordValue(e.target.value)
+                                    }
+                                    className="h-8 bg-control pr-9 text-sm placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue"
+                                    disabled={isSetPasswordPending}
+                                />
+                                <ZodErrors
+                                    error={
+                                        setPasswordFormState?.zodErrors
+                                            ?.confirmPassword
+                                    }
+                                />
+                            </FieldRow>
+                        </div>
                     </div>
-                )}
-                <SaveBar
-                    isChanged={isChanged}
-                    onDiscard={handleDiscard}
-                    isPending={isPending}
-                />
-            </form>
+                    {setPasswordFormState?.message && (
+                        <div
+                            className={cn(
+                                "flex items-center gap-2 rounded-md text-sm",
+                                setPasswordFormState?.status === "error"
+                                    ? "text-red-500"
+                                    : "text-green-500",
+                            )}
+                        >
+                            <InfoIcon
+                                weight="duotone"
+                                className="size-4 shrink-0"
+                            />
+                            <p>{setPasswordFormState?.message}</p>
+                        </div>
+                    )}
+                    <SaveBar
+                        isChanged={isSetPasswordChanged}
+                        onDiscard={handleDiscard}
+                        isPending={isSetPasswordPending}
+                    />
+                </form>
+            )}
             <div className="space-y-2">
                 <SectionTitle>Two-factor authentication</SectionTitle>
                 <div className="overflow-hidden rounded-md border border-border bg-background">

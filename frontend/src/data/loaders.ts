@@ -50,6 +50,7 @@ export async function getUserData(): Promise<UserData> {
             avatar_url: fetchedData.user.avatar_url,
             color: fetchedData.user.color,
             mfa_enabled: fetchedData.user.mfa_enabled,
+            auth_provider: fetchedData.user.auth_provider,
         },
     };
 }

@@ -2,6 +2,7 @@ import type { Response } from "express";
 import {
     changePasswordSchema,
     deleteAccountSchema,
+    setPasswordSchema,
     updateProfileSchema,
     validateIdSchema,
 } from "../validation/validation";
@@ -31,6 +32,7 @@ export const me = async (
                 | "avatar_url"
                 | "color"
                 | "mfa_enabled"
+                | "auth_provider"
                 | "created_at"
                 | "updated_at"
             > &
@@ -45,6 +47,7 @@ export const me = async (
                     avatar_url,
                     color,
                     mfa_enabled,
+                    auth_provider,
                     created_at,
                     updated_at
                 FROM users 
@@ -80,6 +83,7 @@ export const me = async (
                           : user.avatar_url,
                 color: user.color,
                 mfa_enabled: user.mfa_enabled,
+                auth_provider: user.auth_provider,
                 created_at: user.created_at,
                 updated_at: user.updated_at,
             },
@@ -492,6 +496,94 @@ export const deleteAccount = async (
         res.status(500).json({
             status: "error",
             message: "Server error during deleting account",
+        });
+    }
+};
+
+export const setPassword = async (
+    req: IGetUserRequest,
+    res: Response,
+): Promise<void> => {
+    try {
+        const validateData = setPasswordSchema.parse(req.body);
+
+        const { newPassword } = validateData;
+        const userId = req.user.id;
+
+        if (!userId) {
+            res.status(401).json({
+                status: "error",
+                message: "Unauthorized",
+            });
+
+            return;
+        }
+
+        const [rows] = await pool.execute<
+            (Pick<User, "id" | "password"> & RowDataPacket)[]
+        >("SELECT id, password FROM users WHERE id = ?", [userId]);
+
+        const user = rows[0];
+
+        if (!user) {
+            res.status(404).json({
+                status: "error",
+                message: "User not found",
+            });
+
+            return;
+        }
+
+        if (user.password) {
+            res.status(400).json({
+                status: "error",
+                message: "Password already set. Use change password instead.",
+            });
+
+            return;
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+        const [result] = await pool.execute<ResultSetHeader>(
+            "UPDATE users SET password = ?, auth_provider = 'local' WHERE id = ?",
+            [hashedPassword, userId],
+        );
+
+        if (result.affectedRows === 0) {
+            res.status(400).json({
+                status: "error",
+                message: "Failed to set password",
+            });
+
+            return;
+        }
+
+        res.status(200).json({
+            status: "success",
+            message: "Password set successfully",
+        });
+    } catch (error) {
+        if (error instanceof ZodError) {
+            const errorMessages = error.issues.map((issue: any) => ({
+                field: issue.path[0],
+                message: issue.message,
+            }));
+
+            res.status(400).json({
+                status: "error",
+                message: "Invalid data",
+                details: errorMessages,
+            });
+
+            return;
+        }
+
+        console.error("Set password error:", error);
+        res.status(500).json({
+            status: "error",
+            message: "Server error while setting password",
         });
     }
 };

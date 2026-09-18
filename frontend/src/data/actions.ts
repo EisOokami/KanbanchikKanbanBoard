@@ -20,6 +20,7 @@ import {
     RegisterAction,
     ResendVerificationAction,
     ResetPasswordAction,
+    SetPasswordAction,
     UpdateProfileAction,
     UpdateProjectAction,
     UpdateTaskAction,
@@ -59,6 +60,7 @@ import {
     registerSchema,
     resendVerificationSchema,
     resetPasswordSchema,
+    setPasswordSchema,
     updateProfileSchema,
     updateProjectSchema,
     updateTaskSchema,
@@ -2297,6 +2299,67 @@ export async function resendVerificationAction(
     if ("status" in responseData && responseData.status === "success") {
         return {
             formData,
+            zodErrors: null,
+            error: null,
+            status: responseData.status,
+            details: null,
+            message: responseData.message,
+        };
+    }
+}
+
+export async function setPasswordAction(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    prevState: any,
+    formData: FormData,
+): Promise<SetPasswordAction | undefined> {
+    const validatedFields = setPasswordSchema.safeParse({
+        newPassword: formData.get("new-password"),
+        confirmPassword: formData.get("confirm-password"),
+    });
+
+    if (!validatedFields.success) {
+        return {
+            formData,
+            zodErrors: z.flattenError(validatedFields.error).fieldErrors,
+            error: null,
+            status: null,
+            details: null,
+            message: null,
+        };
+    }
+
+    const responseData = await mutateData("POST", "/users/set-password", {
+        newPassword: validatedFields.data.newPassword,
+    });
+
+    if (!responseData) {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: null,
+            details: null,
+            message: "Ops! Something went wrong. Please try again.",
+        };
+    }
+
+    if ("error" in responseData && responseData.error) {
+        return {
+            formData,
+            zodErrors: null,
+            error: responseData.error,
+            status: null,
+            details: responseData.details,
+            message: null,
+        };
+    }
+
+    revalidatePath("/");
+
+    if ("status" in responseData && responseData.status === "success") {
+        return {
+            formData: null,
             zodErrors: null,
             error: null,
             status: responseData.status,

@@ -142,6 +142,11 @@ export interface DeleteAccountZodErrors extends BaseZodErrors {
     password?: string[];
 }
 
+export interface SetPasswordZodErrors extends BaseZodErrors {
+    newPassword?: string[];
+    confirmPassword?: string[];
+}
+
 export interface LoginAction extends BaseAction {
     zodErrors: LoginZodErrors | null;
 }
@@ -208,4 +213,8 @@ export interface ResendVerificationAction extends BaseAction {
 
 export interface DeleteAccountAction extends BaseAction {
     zodErrors: DeleteAccountZodErrors | null;
+}
+
+export interface SetPasswordAction extends BaseAction {
+    zodErrors: SetPasswordZodErrors | null;
 }
