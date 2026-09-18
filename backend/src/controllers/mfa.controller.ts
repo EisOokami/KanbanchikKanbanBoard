@@ -72,10 +72,19 @@ export const setupMfa = async (
         const secret = otp.generateSecret();
         const encryptedSecret = encryptMfaSecret(secret);
 
-        await pool.execute<ResultSetHeader>(
+        const [result] = await pool.execute<ResultSetHeader>(
             "UPDATE users SET mfa_secret = ? WHERE id = ?",
             [encryptedSecret, userId],
         );
+
+        if (result.affectedRows === 0) {
+            res.status(400).json({
+                status: "error",
+                message: "Failed to setup mfa",
+            });
+
+            return;
+        }
 
         const otpauthUri = otp.generateURI({
             issuer: "Kabanchik",
@@ -163,10 +172,19 @@ export const enableMfa = async (
             return;
         }
 
-        await pool.execute<ResultSetHeader>(
+        const [result] = await pool.execute<ResultSetHeader>(
             "UPDATE users SET mfa_enabled = TRUE, mfa_enabled_at = NOW() WHERE id = ?",
             [userId],
         );
+
+        if (result.affectedRows === 0) {
+            res.status(400).json({
+                status: "error",
+                message: "Failed to enable mfa",
+            });
+
+            return;
+        }
 
         res.status(200).json({
             status: "success",
@@ -324,10 +342,19 @@ export const verifyMfa = async (req: Request, res: Response): Promise<void> => {
             if (backupRows[0]) {
                 isValid = true;
 
-                await pool.execute<ResultSetHeader>(
+                const [result] = await pool.execute<ResultSetHeader>(
                     "UPDATE mfa_backup_codes SET used_at = NOW() WHERE id = ?",
                     [backupRows[0].id],
                 );
+
+                if (result.affectedRows === 0) {
+                    res.status(400).json({
+                        status: "error",
+                        message: "Failed to verify backup code",
+                    });
+
+                    return;
+                }
             }
         }
 
@@ -345,10 +372,19 @@ export const verifyMfa = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        await pool.execute<ResultSetHeader>(
+        const [result] = await pool.execute<ResultSetHeader>(
             "DELETE FROM mfa_login_sessions WHERE id = ?",
             [session.id],
         );
+
+        if (result.affectedRows === 0) {
+            res.status(400).json({
+                status: "error",
+                message: "Failed to delete mfa login session",
+            });
+
+            return;
+        }
 
         const accessToken = await createAccessToken({
             id: user.id,
@@ -488,7 +524,7 @@ export const disableMfa = async (
             }
         }
 
-        await pool.execute<ResultSetHeader>(
+        const [mfaResult] = await pool.execute<ResultSetHeader>(
             `
                 UPDATE users
                 SET 
@@ -500,10 +536,28 @@ export const disableMfa = async (
             [userId],
         );
 
-        await pool.execute<ResultSetHeader>(
+        if (mfaResult.affectedRows === 0) {
+            res.status(400).json({
+                status: "error",
+                message: "Failed to disable mfa",
+            });
+
+            return;
+        }
+
+        const [backupCodesResult] = await pool.execute<ResultSetHeader>(
             "DELETE FROM mfa_backup_codes WHERE user_id = ?",
             [userId],
         );
+
+        if (backupCodesResult.affectedRows === 0) {
+            res.status(400).json({
+                status: "error",
+                message: "Failed to delete backup codes",
+            });
+
+            return;
+        }
 
         res.status(200).json({
             status: "success",
