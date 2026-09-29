@@ -1986,16 +1986,36 @@ export const transferOwnership = async (
             return;
         }
 
-        const [transferOwnershipResult] = await pool.execute<ResultSetHeader>(
-            `
-                UPDATE project_members 
-                SET role = "owner" 
-                WHERE user_id = ? AND project_id = ?
-            `,
-            [validatedData.memberId, project.id],
-        );
+        const [transferOwnershipInProjectMembersResult] =
+            await pool.execute<ResultSetHeader>(
+                `
+                    UPDATE project_members 
+                    SET role = "owner" 
+                    WHERE user_id = ? AND project_id = ?
+                `,
+                [validatedData.memberId, project.id],
+            );
 
-        if (transferOwnershipResult.affectedRows === 0) {
+        if (transferOwnershipInProjectMembersResult.affectedRows === 0) {
+            res.status(404).json({
+                status: "error",
+                message: "Role not changed",
+            });
+
+            return;
+        }
+
+        const [transferOwnershipInProjectResult] =
+            await pool.execute<ResultSetHeader>(
+                `
+                    UPDATE projects 
+                    SET owner_id = ? 
+                    WHERE id = ?
+                `,
+                [validatedData.memberId, project.id],
+            );
+
+        if (transferOwnershipInProjectResult.affectedRows === 0) {
             res.status(404).json({
                 status: "error",
                 message: "Role not changed",
