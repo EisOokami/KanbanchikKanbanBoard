@@ -22,6 +22,15 @@ export const me = async (
     try {
         const { id } = req.user;
 
+        if (!id) {
+            res.status(401).json({
+                status: "error",
+                message: "Unauthorized",
+            });
+
+            return;
+        }
+
         const [rows] = await pool.execute<
             (Pick<
                 User,
@@ -457,6 +466,29 @@ export const deleteAccount = async (
 
             return;
         }
+
+        await pool.execute<ResultSetHeader>(
+            "DELETE FROM attachments WHERE task_id IS NULL AND uploader_id = ?",
+            [paramId],
+        );
+
+        await pool.execute<ResultSetHeader>(
+            `
+                UPDATE attachments 
+                SET uploader_id = NULL
+                WHERE task_id IS NOT NULL AND uploader_id = ?
+            `,
+            [paramId],
+        );
+
+        await pool.execute<ResultSetHeader>(
+            `
+                UPDATE tasks 
+                SET creator_id = NULL
+                WHERE creator_id = ?
+            `,
+            [paramId],
+        );
 
         const [result] = await pool.execute<ResultSetHeader>(
             "DELETE FROM users WHERE id = ?",
