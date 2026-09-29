@@ -19,14 +19,15 @@ export interface BaseAction {
 }
 
 export interface LoginZodErrors extends BaseZodErrors {
-    identifier?: string[];
+    email?: string[];
     password?: string[];
     tempToken?: string[];
     token?: string[];
 }
 
 export interface RegisterZodErrors extends BaseZodErrors {
-    username?: string[];
+    name?: string[];
+    surname?: string[];
     email?: string[];
     password?: string[];
 }
@@ -48,6 +49,7 @@ export interface CreateProjectZodErrors extends BaseZodErrors {
     name?: string[];
     description?: string[];
     status?: string[];
+    showPriorityEmoji?: string[];
     members?: string[];
     columns?: string[];
     categories?: string[];
@@ -55,16 +57,23 @@ export interface CreateProjectZodErrors extends BaseZodErrors {
 }
 
 export interface UpdateProjectZodErrors extends BaseZodErrors {
-    id?: string[];
+    slug?: string[];
     icon?: string[];
     color?: string[];
     name?: string[];
     description?: string[];
     status?: string[];
+    showPriorityEmoji?: string[];
     members?: string[];
     columns?: string[];
+    newColumns?: string[];
+    deletedColumnIds?: string[];
     categories?: string[];
+    newCategories?: string[];
+    deletedCategoryIds?: string[];
     labels?: string[];
+    newLabels?: string[];
+    deletedLabelIds?: string[];
     emails?: string[];
 }
 
@@ -74,10 +83,16 @@ export interface CreateTaskZodErrors extends BaseZodErrors {
     startDate?: string[];
     dueDate?: string[];
     priority?: string[];
+    slug?: string[];
+    columnId?: string[];
+    showProgress?: string[];
     members?: string[];
     categories?: string[];
+    newCategories?: string[];
     subtasks?: string[];
     attachments?: string[];
+    labels?: string[];
+    newLabels?: string[];
 }
 
 export interface UpdateTaskZodErrors extends BaseZodErrors {
@@ -86,22 +101,23 @@ export interface UpdateTaskZodErrors extends BaseZodErrors {
     startDate?: string[];
     dueDate?: string[];
     priority?: string[];
+    taskId?: string[];
+    columnId?: string[];
+    showProgress?: string[];
     members?: string[];
     categories?: string[];
     subtasks?: string[];
     newSubtasks?: string[];
-    attachments?: string[];
     newAttachments?: string[];
-    newAttachmentFiles?: string[];
-    comments?: string[];
-    newComments?: string[];
+    labels?: string[];
 }
 
 export interface UpdateProfileZodErrors extends BaseZodErrors {
+    avatar?: string[];
     name?: string[];
     surname?: string[];
-    avatar?: string[];
     email?: string[];
+    color?: string[];
 }
 
 export interface ChangePasswordZodErrors extends BaseZodErrors {
@@ -112,12 +128,12 @@ export interface ChangePasswordZodErrors extends BaseZodErrors {
 
 export interface InviteMemberZodErrors extends BaseZodErrors {
     projectId?: string[];
+    role?: string[];
     members?: string[];
 }
 
-export interface MfaSetupZodErrors extends BaseZodErrors {
-    qrCode?: string[];
-    manualEntryKey?: string[];
+export interface MfaEnableZodErrors extends BaseZodErrors {
+    token?: string[];
 }
 
 export interface MfaDisableZodErrors extends BaseZodErrors {
@@ -125,12 +141,8 @@ export interface MfaDisableZodErrors extends BaseZodErrors {
     token?: string[];
 }
 
-export interface MfaEnableZodErrors extends BaseZodErrors {
-    enabled?: string[];
-}
-
-export interface MfaBackupCodesZodErrors extends BaseZodErrors {
-    backupCodes?: string[];
+export interface MfaRegenerateBackupCodesZodErrors extends BaseZodErrors {
+    password?: string[];
 }
 
 export interface ResendVerificationZodErrors extends BaseZodErrors {
@@ -191,20 +203,16 @@ export interface InviteMemberAction extends BaseAction {
     zodErrors: InviteMemberZodErrors | null;
 }
 
-export interface MfaSetupAction extends BaseAction {
-    zodErrors: MfaSetupZodErrors | null;
+export interface MfaEnableAction extends BaseAction {
+    zodErrors: MfaEnableZodErrors | null;
 }
 
 export interface MfaDisableAction extends BaseAction {
     zodErrors: MfaDisableZodErrors | null;
 }
 
-export interface MfaEnableAction extends BaseAction {
-    zodErrors: MfaEnableZodErrors | null;
-}
-
-export interface MfaBackupCodesAction extends BaseAction {
-    zodErrors: MfaBackupCodesZodErrors | null;
+export interface MfaRegenerateBackupCodesAction extends BaseAction {
+    zodErrors: MfaRegenerateBackupCodesZodErrors | null;
 }
 
 export interface ResendVerificationAction extends BaseAction {

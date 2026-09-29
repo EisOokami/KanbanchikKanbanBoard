@@ -13,10 +13,9 @@ import {
     ForgotPasswordAction,
     InviteMemberAction,
     LoginAction,
-    MfaBackupCodesAction,
     MfaDisableAction,
     MfaEnableAction,
-    MfaSetupAction,
+    MfaRegenerateBackupCodesAction,
     RegisterAction,
     ResendVerificationAction,
     ResetPasswordAction,
@@ -259,6 +258,7 @@ export async function loginAction(
 
     if ("refreshToken" in responseData && "accessToken" in responseData) {
         const cookieStore = await cookies();
+
         cookieStore.set(
             "refreshToken",
             responseData.refreshToken,
@@ -1523,12 +1523,10 @@ export async function deleteAttachmentAction(
     };
 }
 
-export async function deleteAvatarAction(
-    avatar_url: string,
-): Promise<{ ok: boolean; message: string } | undefined> {
-    const responseData = await mutateData("DELETE", `/uploads/avatar`, {
-        avatar_url,
-    });
+export async function deleteAvatarAction(): Promise<
+    { ok: boolean; message: string } | undefined
+> {
+    const responseData = await mutateData("DELETE", `/uploads/avatar`);
 
     if (!responseData) {
         console.error("Ops! Something went wrong. Please try again.");
@@ -1560,7 +1558,7 @@ export async function deleteAvatarAction(
         };
     }
 
-    revalidatePath("/");
+    revalidatePath("/", "layout");
 
     return {
         ok: true,
@@ -1880,6 +1878,8 @@ export async function transferOwnershipAction(
         };
     }
 
+    revalidatePath("/");
+
     return {
         ok: true,
         message: "Role has been changed",
@@ -1943,7 +1943,7 @@ export async function exchangeGoogleCodeAction(
     };
 }
 
-export async function mfaSetupAction(): Promise<MfaSetupAction | undefined> {
+export async function mfaSetupAction(): Promise<BaseAction | undefined> {
     const responseData = await mutateData("POST", "/auth/mfa/setup");
 
     if (!responseData) {
@@ -2159,7 +2159,7 @@ export async function mfaRegenerateBackupCodesAction(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     prevState: any,
     formData: FormData,
-): Promise<MfaBackupCodesAction | undefined> {
+): Promise<MfaRegenerateBackupCodesAction | undefined> {
     const validatedFields = mfaBackupCodesSchema.safeParse({
         password: formData.get("password"),
     });
