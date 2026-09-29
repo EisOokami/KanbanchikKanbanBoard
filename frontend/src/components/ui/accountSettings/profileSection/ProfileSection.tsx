@@ -80,10 +80,11 @@ export default function ProfileSection({
         }
 
         setAvatarPreview(userData.avatar_url);
+        setIsChanged(false);
     };
 
-    const handleDeleteAvatar = async (avatar_url: string) => {
-        const result = await deleteAvatarAction(avatar_url);
+    const handleDeleteAvatar = async () => {
+        const result = await deleteAvatarAction();
 
         if (!result || !result.ok) {
             toast.error("Error", {
@@ -177,7 +178,7 @@ export default function ProfileSection({
                         >
                             Upload photo
                         </Button>
-                        {avatarPreview !== userData.avatar_url && (
+                        {avatarPreview !== userData.avatar_url && isChanged && (
                             <Button
                                 type="button"
                                 variant="ghost"
@@ -190,7 +191,9 @@ export default function ProfileSection({
                             </Button>
                         )}
                         {userData.avatar_url &&
-                            avatarPreview === userData.avatar_url && (
+                            avatarPreview &&
+                            (avatarPreview === userData.avatar_url ||
+                                !isChanged) && (
                                 <AlertDialog>
                                     <AlertDialogTrigger
                                         asChild
@@ -231,11 +234,7 @@ export default function ProfileSection({
                                             </AlertDialogCancel>
                                             <AlertDialogAction
                                                 type="button"
-                                                onClick={() =>
-                                                    handleDeleteAvatar(
-                                                        userData.avatar_url,
-                                                    )
-                                                }
+                                                onClick={handleDeleteAvatar}
                                                 className="bg-red-600 text-sm font-semibold text-white hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-500"
                                                 disabled={isPending}
                                             >
@@ -245,7 +244,8 @@ export default function ProfileSection({
                                     </AlertDialogContent>
                                 </AlertDialog>
                             )}
-                        {!userData.avatar_url && (
+                        {(!avatarPreview ||
+                            avatarPreview === userData.avatar_url) && (
                             <>
                                 <AvatarColorPicker
                                     value={avatarColor}

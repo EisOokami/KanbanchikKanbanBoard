@@ -6,9 +6,9 @@ import type {
     Role,
     Status,
     TaskMembers,
+    User,
 } from "../types/types.js";
 import {
-    deleteAvatarSchema,
     getAttachmentsSchema,
     validateIdSchema,
 } from "../validation/validation.js";
@@ -645,21 +645,36 @@ export const deleteAvatar = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
-        const validatedData = deleteAvatarSchema.parse(req.body);
+        const [avatars] = await pool.execute<
+            (Pick<User, "avatar_url"> & RowDataPacket)[]
+        >(
+            `
+                SELECT avatar_url 
+                FROM users 
+                WHERE id = ?
+            `,
+            [userId],
+        );
 
-        if (!validatedData.avatar_url) {
-            res.status(400).json({
+        if (!avatars || !avatars.length) {
+            res.status(404).json({
                 status: "error",
-                message: "Invalid avatar url",
+                message: "Avatar not found",
             });
 
             return;
         }
 
-        const avatarUrl = validatedData.avatar_url.replace(
-            new RegExp(`^${process.env.BACKEND_URL}`),
-            "",
-        );
+        const avatar = avatars[0];
+
+        if (!avatar) {
+            res.status(404).json({
+                status: "error",
+                message: "Avatar not found",
+            });
+
+            return;
+        }
 
         const [attachments] = await pool.execute<
             (Pick<Attachment, "id" | "file_url" | "uploader_id" | "task_id"> &
@@ -670,7 +685,7 @@ export const deleteAvatar = async (req: IGetUserRequest, res: Response) => {
                 FROM attachments 
                 WHERE file_url = ? AND uploader_id = ?
             `,
-            [avatarUrl, userId],
+            [avatar.avatar_url, userId],
         );
 
         if (!attachments || !attachments.length) {

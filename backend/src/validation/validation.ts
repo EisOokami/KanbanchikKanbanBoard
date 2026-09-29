@@ -621,6 +621,7 @@ export const updateProfileSchema = z
             .trim()
             .length(7, "Color must be a valid HEX value")
             .regex(/^#[0-9A-Fa-f]{6}$/, "Color must be a valid HEX value")
+            .nullable()
             .optional(),
     })
     .refine(
@@ -703,14 +704,6 @@ export const getAttachmentsSchema = z.object({
             message: "Task ID is too large a numerical value",
         })
         .transform((value) => Number(value)),
-});
-
-export const deleteAvatarSchema = z.object({
-    avatar_url: z
-        .url("Invalid avatar URL")
-        .max(500, "Avatar URL must be less than 500 characters")
-        .nullable()
-        .optional(),
 });
 
 export const memberInviteSchema = z.object({

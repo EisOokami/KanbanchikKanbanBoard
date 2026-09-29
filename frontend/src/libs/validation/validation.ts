@@ -716,7 +716,9 @@ export const updateProfileSchema = z.object({
         .string()
         .trim()
         .length(7, "Color must be a valid HEX value")
-        .regex(/^#[0-9A-Fa-f]{6}$/, "Color must be a valid HEX value"),
+        .regex(/^#[0-9A-Fa-f]{6}$/, "Color must be a valid HEX value")
+        .nullable()
+        .optional(),
 });
 
 export const changePasswordSchema = z
