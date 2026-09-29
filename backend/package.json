@@ -1,5 +1,5 @@
 {
-    "name": "backend",
+    "name": "kanbanchik-backend",
     "version": "0.0.0",
     "description": "",
     "license": "MIT",
@@ -7,7 +7,7 @@
     "scripts": {
         "start": "node dist/app.js",
         "dev": "tsx watch src/app.ts",
-        "lint": "eslint 'src/**/*.ts'"
+        "build": "tsc"
     },
     "keywords": [],
     "author": "",
