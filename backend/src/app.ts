@@ -16,6 +16,7 @@ import authRoutes from "./routes/auth.route.js";
 import uploadsRoutes from "./routes/uploads.route.js";
 import inviteRoutes from "./routes/invites.route.js";
 import mfaRoutes from "./routes/mfa.route.js";
+import { errorMiddleware } from "./middlewares/error.middleware.js";
 
 dotenv.config();
 
@@ -55,6 +56,7 @@ app.use(limiter);
 app.use(xss());
 app.use(cookieParser());
 app.use(issueCsrfCookie);
+app.use(errorMiddleware);
 
 app.use("/projects", projectsRoutes);
 app.use("/tasks", tasksRoutes);
