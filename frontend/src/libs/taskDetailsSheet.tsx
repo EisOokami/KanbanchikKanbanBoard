@@ -111,28 +111,33 @@ export function getFileIcon(mime: string) {
 export function buildSlides(attachments: Attachment[]) {
     return attachments
         .filter(
-            (a) =>
-                isImage(a.mime_type) ||
-                isVideo(a.mime_type) ||
-                isPdf(a.mime_type),
+            (attachment) =>
+                isImage(attachment.mime_type) ||
+                isVideo(attachment.mime_type) ||
+                isPdf(attachment.mime_type),
         )
-        .map((a) => {
-            if (isVideo(a.mime_type)) {
+        .map((attachment) => {
+            if (isVideo(attachment.mime_type)) {
                 return {
                     type: "video" as const,
                     width: 1280,
                     height: 720,
-                    sources: [{ src: a.file_url, type: a.mime_type }],
+                    sources: [
+                        {
+                            src: attachment.file_url,
+                            type: attachment.mime_type,
+                        },
+                    ],
                 };
             }
 
-            if (isPdf(a.mime_type)) {
+            if (isPdf(attachment.mime_type)) {
                 return null;
             }
 
             return {
-                src: a.file_url,
-                alt: a.filename,
+                src: attachment.file_url,
+                alt: attachment.filename,
             };
         })
         .filter(Boolean) as Parameters<typeof Lightbox>[0]["slides"];
