@@ -1,4 +1,4 @@
-import { pool } from "../db/pool";
+import { pool } from "../db/pool.js";
 import crypto from "crypto";
 import type { Response } from "express";
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
@@ -16,7 +16,7 @@ import type {
     Subtask,
     Task,
     User,
-} from "../types/types";
+} from "../types/types.js";
 import {
     createProjectSchema,
     validateSlugSchema,
@@ -25,12 +25,12 @@ import {
     deleteMemberSchema,
     validateIdSchema,
     transferOwnershipSchema,
-} from "../validation/validation";
-import { transporter } from "../utils/email";
-import { generateSlug, generateUniqueSlug } from "../utils/slugify";
+} from "../validation/validation.js";
+import { transporter } from "../utils/email.js";
+import { generateSlug, generateUniqueSlug } from "../utils/slugify.js";
 import path from "path";
 import { existsSync, unlinkSync } from "fs";
-import { emailTemplate } from "../utils/emailTemplate";
+import { emailTemplate } from "../utils/emailTemplate.js";
 
 export const getProjects = async (req: IGetUserRequest, res: Response) => {
     try {

@@ -1,9 +1,9 @@
 import { UAParser } from "ua-parser-js";
 import type { Request } from "express";
-import { emailTemplate } from "./emailTemplate";
-import type { User } from "../types/types";
+import { emailTemplate } from "./emailTemplate.js";
+import type { User } from "../types/types.js";
 import dotenv from "dotenv";
-import { transporter } from "./email";
+import { transporter } from "./email.js";
 
 dotenv.config();
 

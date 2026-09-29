@@ -2,10 +2,10 @@ import { SignJWT, jwtVerify } from "jose";
 import type { JWTPayload } from "jose";
 import dotenv from "dotenv";
 import crypto from "crypto";
-import { pool } from "../db/pool";
-import type { ResultSetHeader, RowDataPacket } from "mysql2";
+import { pool } from "../db/pool.js";
+import type { ResultSetHeader } from "mysql2";
 import bcrypt from "bcryptjs";
-import type { RefreshSession } from "../types/types";
+import type { RefreshSession } from "../types/types.js";
 
 dotenv.config();
 

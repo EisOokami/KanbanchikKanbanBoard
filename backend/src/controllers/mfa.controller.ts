@@ -7,25 +7,25 @@ import type {
     MfaBackupCode,
     MfaLoginSession,
     User,
-} from "../types/types";
-import { pool } from "../db/pool";
+} from "../types/types.js";
+import { pool } from "../db/pool.js";
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import {
     decryptMfaSecret,
     encryptMfaSecret,
     generateBackupCode,
     hashToken,
-} from "../utils/mfa";
+} from "../utils/mfa.js";
 import {
     mfaBackupCodesSchema,
     mfaDisableSchema,
     mfaEnableSchema,
     mfaVerifySchema,
-} from "../validation/validation";
-import { generateCsrfToken } from "../utils/csrf";
-import { createAccessToken, createRefreshToken } from "../utils/jwt";
+} from "../validation/validation.js";
+import { generateCsrfToken } from "../utils/csrf.js";
+import { createAccessToken, createRefreshToken } from "../utils/jwt.js";
 import bcrypt from "bcryptjs";
-import { sendLoginNotificationEmail } from "../utils/loginNotificationEmail";
+import { sendLoginNotificationEmail } from "../utils/loginNotificationEmail.js";
 
 const otp = new OTP({ strategy: "totp" });
 

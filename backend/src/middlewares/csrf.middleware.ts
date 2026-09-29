@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import { generateCsrfToken, verifyCsrfToken } from "../utils/csrf";
+import { generateCsrfToken, verifyCsrfToken } from "../utils/csrf.js";
 
 const CSRF_COOKIE_NAME = "csrfToken";
 

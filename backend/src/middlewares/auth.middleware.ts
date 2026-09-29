@@ -1,6 +1,6 @@
 import type { NextFunction, Response } from "express";
-import { verifyAccessToken } from "../utils/jwt";
-import type { IGetUserRequest } from "../types/types";
+import { verifyAccessToken } from "../utils/jwt.js";
+import type { IGetUserRequest } from "../types/types.js";
 
 export async function authenticateToken(
     req: IGetUserRequest,

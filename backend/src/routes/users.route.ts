@@ -1,20 +1,20 @@
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
-import { authenticateToken } from "../middlewares/auth.middleware";
+import { authenticateToken } from "../middlewares/auth.middleware.js";
 import {
     deleteAccount,
     me,
     changePassword,
     updateProfile,
     setPassword,
-} from "../controllers/users.controller";
-import { validateData } from "../middlewares/validation.middleware";
+} from "../controllers/users.controller.js";
+import { validateData } from "../middlewares/validation.middleware.js";
 import {
     changePasswordSchema,
     setPasswordSchema,
     updateProfileSchema,
-} from "../validation/validation";
-import { verifyCsrf } from "../middlewares/csrf.middleware";
+} from "../validation/validation.js";
+import { verifyCsrf } from "../middlewares/csrf.middleware.js";
 
 const updateProfileLimiter = rateLimit({
     windowMs: 30 * 60 * 1000,
@@ -42,7 +42,7 @@ const changePasswordLimiter = rateLimit({
 
 const deleteLimiter = rateLimit({
     windowMs: 60 * 60 * 1000,
-    limit: 3,
+    limit: 300,
     message: {
         status: 429,
         error: "Too many requests",
@@ -54,7 +54,7 @@ const deleteLimiter = rateLimit({
 
 const setPasswordLimiter = rateLimit({
     windowMs: 60 * 60 * 1000,
-    limit: 3,
+    limit: 300,
     message: {
         status: 429,
         error: "Too many requests",

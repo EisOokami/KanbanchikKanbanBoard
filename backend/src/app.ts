@@ -8,14 +8,14 @@ import cookieParser from "cookie-parser";
 import { xss } from "express-xss-sanitizer";
 import hostValidation from "host-validation";
 import path from "path";
-import { issueCsrfCookie } from "./middlewares/csrf.middleware";
-import projectsRoutes from "./routes/projects.routes";
-import tasksRoutes from "./routes/tasks.routes";
-import usersRoutes from "./routes/users.routes";
-import authRoutes from "./routes/auth.routes";
-import uploadsRoutes from "./routes/uploads.routes";
-import inviteRoutes from "./routes/invites.routes";
-import mfaRoutes from "./routes/mfa.routes";
+import { issueCsrfCookie } from "./middlewares/csrf.middleware.js";
+import projectsRoutes from "./routes/projects.route.js";
+import tasksRoutes from "./routes/tasks.route.js";
+import usersRoutes from "./routes/users.route.js";
+import authRoutes from "./routes/auth.route.js";
+import uploadsRoutes from "./routes/uploads.route.js";
+import inviteRoutes from "./routes/invites.route.js";
+import mfaRoutes from "./routes/mfa.route.js";
 
 dotenv.config();
 

@@ -1,17 +1,17 @@
 import type { Response } from "express";
-import { pool } from "../db/pool";
+import { pool } from "../db/pool.js";
 import type {
     Attachment,
     IGetUserRequest,
     Role,
     Status,
     TaskMembers,
-} from "../types/types";
+} from "../types/types.js";
 import {
     deleteAvatarSchema,
     getAttachmentsSchema,
     validateIdSchema,
-} from "../validation/validation";
+} from "../validation/validation.js";
 import { ZodError } from "zod";
 import { existsSync, unlinkSync } from "fs";
 import type { ResultSetHeader, RowDataPacket } from "mysql2";

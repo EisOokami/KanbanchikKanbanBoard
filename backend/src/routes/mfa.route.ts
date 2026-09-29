@@ -1,13 +1,13 @@
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
-import { authenticateToken } from "../middlewares/auth.middleware";
+import { authenticateToken } from "../middlewares/auth.middleware.js";
 import {
     disableMfa,
     enableMfa,
     regenerateBackupCodes,
     setupMfa,
     verifyMfa,
-} from "../controllers/mfa.controller";
+} from "../controllers/mfa.controller.js";
 
 const setupMfaLimiter = rateLimit({
     windowMs: 5 * 60 * 1000,

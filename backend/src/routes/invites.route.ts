@@ -1,12 +1,12 @@
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
-import { authenticateToken } from "../middlewares/auth.middleware";
+import { authenticateToken } from "../middlewares/auth.middleware.js";
 import {
     generateInvite,
     acceptInvite,
     memberInvite,
-} from "../controllers/invites.controller";
-import { verifyCsrf } from "../middlewares/csrf.middleware";
+} from "../controllers/invites.controller.js";
+import { verifyCsrf } from "../middlewares/csrf.middleware.js";
 
 const generateLimiter = rateLimit({
     windowMs: 60 * 60 * 1000,

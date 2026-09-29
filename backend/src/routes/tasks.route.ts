@@ -7,15 +7,15 @@ import {
     getTasks,
     moveTask,
     updateTask,
-} from "../controllers/tasks.controller";
-import { authenticateToken } from "../middlewares/auth.middleware";
-import { validateData } from "../middlewares/validation.middleware";
+} from "../controllers/tasks.controller.js";
+import { authenticateToken } from "../middlewares/auth.middleware.js";
+import { validateData } from "../middlewares/validation.middleware.js";
 import {
     createTaskSchema,
     moveTaskSchema,
     updateTaskSchema,
-} from "../validation/validation";
-import { verifyCsrf } from "../middlewares/csrf.middleware";
+} from "../validation/validation.js";
+import { verifyCsrf } from "../middlewares/csrf.middleware.js";
 
 const router = Router();
 

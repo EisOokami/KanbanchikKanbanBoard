@@ -2,17 +2,17 @@ import type { Request, Response } from "express";
 import dotenv from "dotenv";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
-import { pool } from "../db/pool";
+import { pool } from "../db/pool.js";
 import {
     forgotPasswordSchema,
     loginSchema,
     registerSchema,
     resendVerificationSchema,
     resetPasswordSchema,
-} from "../validation/validation";
+} from "../validation/validation.js";
 import { ZodError } from "zod";
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
-import { transporter } from "../utils/email";
+import { transporter } from "../utils/email.js";
 import {
     createAccessToken,
     createRefreshToken,
@@ -20,18 +20,18 @@ import {
     revokeSession,
     rotateRefreshToken,
     verifyRefreshToken,
-} from "../utils/jwt";
+} from "../utils/jwt.js";
 import { jwtVerify, type JWTPayload } from "jose";
-import type { User } from "../types/types";
-import { generateCsrfToken } from "../utils/csrf";
+import type { User } from "../types/types.js";
+import { generateCsrfToken } from "../utils/csrf.js";
 import {
     exchangeCodeForProfile,
     findOrCreateGoogleUser,
     getGoogleAuthUrl,
-} from "../utils/googleAuth";
-import { generateRawToken, hashToken } from "../utils/mfa";
-import { emailTemplate } from "../utils/emailTemplate";
-import { sendLoginNotificationEmail } from "../utils/loginNotificationEmail";
+} from "../utils/googleAuth.js";
+import { generateRawToken, hashToken } from "../utils/mfa.js";
+import { emailTemplate } from "../utils/emailTemplate.js";
+import { sendLoginNotificationEmail } from "../utils/loginNotificationEmail.js";
 
 dotenv.config();
 
@@ -641,12 +641,14 @@ export const forgotPassword = async (
             transporter.sendMail(mailOptions, (error, info) => {
                 if (error) {
                     console.error("Email error:", error);
+
                     res.status(500).json({
                         status: "error",
                         message: "Error sending email",
                     });
                 } else {
                     console.log(`Reset email sent: ${info.response}`);
+
                     res.status(200).json({
                         status: "success",
                         message:
@@ -660,6 +662,7 @@ export const forgotPassword = async (
                 message:
                     "If this email exists, you will receive reset instructions",
             });
+
             return;
         }
 

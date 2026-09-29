@@ -8,16 +8,16 @@ import {
     getProjects,
     transferOwnership,
     updateProject,
-} from "../controllers/projects.controller";
-import { authenticateToken } from "../middlewares/auth.middleware";
+} from "../controllers/projects.controller.js";
+import { authenticateToken } from "../middlewares/auth.middleware.js";
 import {
     changeRoleSchema,
     createProjectSchema,
     transferOwnershipSchema,
     updateProjectSchema,
-} from "../validation/validation";
-import { validateData } from "../middlewares/validation.middleware";
-import { verifyCsrf } from "../middlewares/csrf.middleware";
+} from "../validation/validation.js";
+import { validateData } from "../middlewares/validation.middleware.js";
+import { verifyCsrf } from "../middlewares/csrf.middleware.js";
 
 const router = Router();
 

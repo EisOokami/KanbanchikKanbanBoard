@@ -3,9 +3,9 @@
   "compilerOptions": {
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
-    "moduleResolution": "bundler",
-    "module": "esnext",
-    "target": "esnext",
+    "moduleResolution": "NodeNext",
+    "module": "NodeNext",
+    "target": "es2022",
     // "types": [],
     // For nodejs:
     "lib": ["esnext"],

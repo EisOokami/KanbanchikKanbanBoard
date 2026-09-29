@@ -1,7 +1,7 @@
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
-import { upload } from "../middlewares/uploads.middleware";
-import { authenticateToken } from "../middlewares/auth.middleware";
+import { upload } from "../middlewares/uploads.middleware.js";
+import { authenticateToken } from "../middlewares/auth.middleware.js";
 import {
     deleteAttachment,
     deleteAvatar,
@@ -9,12 +9,12 @@ import {
     uploadAvatar,
     uploadMultiple,
     uploadSingle,
-} from "../controllers/uploads.controller";
+} from "../controllers/uploads.controller.js";
 import {
     filesValidation,
     fileValidation,
-} from "../middlewares/fileValidation.middleware";
-import { verifyCsrf } from "../middlewares/csrf.middleware";
+} from "../middlewares/fileValidation.middleware.js";
+import { verifyCsrf } from "../middlewares/csrf.middleware.js";
 
 const singleUploadLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,

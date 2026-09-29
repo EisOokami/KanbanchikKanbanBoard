@@ -1,22 +1,22 @@
 import crypto from "crypto";
 import dotenv from "dotenv";
 import type { Response } from "express";
-import { pool } from "../db/pool";
+import { pool } from "../db/pool.js";
 import type {
     IGetUserRequest,
     Project,
     ProjectInvite,
     ProjectMember,
-} from "../types/types";
+} from "../types/types.js";
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import {
     memberInviteSchema,
     tokenSchema,
     validateIdSchema,
-} from "../validation/validation";
+} from "../validation/validation.js";
 import { ZodError } from "zod";
-import { transporter } from "../utils/email";
-import { emailTemplate } from "../utils/emailTemplate";
+import { transporter } from "../utils/email.js";
+import { emailTemplate } from "../utils/emailTemplate.js";
 
 dotenv.config();
 

@@ -5,12 +5,12 @@ import {
     setPasswordSchema,
     updateProfileSchema,
     validateIdSchema,
-} from "../validation/validation";
-import { pool } from "../db/pool";
+} from "../validation/validation.js";
+import { pool } from "../db/pool.js";
 import { ZodError } from "zod";
 import bcrypt from "bcryptjs";
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
-import type { IGetUserRequest, User } from "../types/types";
+import type { IGetUserRequest, User } from "../types/types.js";
 import dotenv from "dotenv";
 
 dotenv.config();

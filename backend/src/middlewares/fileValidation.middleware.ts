@@ -1,6 +1,6 @@
 import { fileTypeFromBuffer } from "file-type";
 import { promises, readFileSync } from "fs";
-import type { IGetUserRequest } from "../types/types";
+import type { IGetUserRequest } from "../types/types.js";
 import type { NextFunction, Response } from "express";
 
 export const fileValidation = async (

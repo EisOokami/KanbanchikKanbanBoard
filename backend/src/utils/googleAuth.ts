@@ -1,7 +1,7 @@
 import { OAuth2Client } from "google-auth-library";
 import dotenv from "dotenv";
-import type { GoogleProfile, User } from "../types/types";
-import { pool } from "../db/pool";
+import type { GoogleProfile, User } from "../types/types.js";
+import { pool } from "../db/pool.js";
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
 
 dotenv.config();

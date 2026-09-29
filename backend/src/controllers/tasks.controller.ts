@@ -1,4 +1,4 @@
-import { pool } from "../db/pool";
+import { pool } from "../db/pool.js";
 import type { Response } from "express";
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import { ZodError } from "zod";
@@ -15,13 +15,13 @@ import type {
     Subtask,
     Task,
     User,
-} from "../types/types";
+} from "../types/types.js";
 import {
     createTaskSchema,
     moveTaskSchema,
     updateTaskSchema,
     validateIdSchema,
-} from "../validation/validation";
+} from "../validation/validation.js";
 import { existsSync, unlinkSync } from "fs";
 import path from "path";
 
