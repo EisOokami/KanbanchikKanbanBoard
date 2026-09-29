@@ -10,10 +10,12 @@ const AUTH_TAG_LENGTH = 16;
 function getEncryptionKey(): Buffer {
     const key = process.env.MFA_ENCRYPTION_KEY;
 
-    if (!key || key.length !== 64) {
-        throw new Error(
-            "MFA_ENCRYPTION_KEY must be set and be a 64-character hex string (32 bytes)",
-        );
+    if (!key) {
+        throw new Error("Invalid key");
+    }
+
+    if (!/^[0-9a-fA-F]{64}$/.test(key)) {
+        throw new Error("Invalid key");
     }
 
     return Buffer.from(key, "hex");
