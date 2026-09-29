@@ -27,7 +27,7 @@ export async function exchangeCodeForProfile(
     const { tokens } = await client.getToken(code);
 
     if (!tokens.id_token) {
-        throw new Error("No id_token returned from Google");
+        throw new Error("No token returned from Google");
     }
 
     const ticket = await client.verifyIdToken({

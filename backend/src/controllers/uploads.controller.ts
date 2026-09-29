@@ -91,7 +91,10 @@ export const getAttachments = async (req: IGetUserRequest, res: Response) => {
 export const uploadSingle = async (req: IGetUserRequest, res: Response) => {
     try {
         if (!req.file) {
-            res.status(400).json({ error: "File not found" });
+            res.status(400).json({
+                status: "error",
+                message: "File not found",
+            });
 
             return;
         }
@@ -212,7 +215,10 @@ export const uploadSingle = async (req: IGetUserRequest, res: Response) => {
 export const uploadAvatar = async (req: IGetUserRequest, res: Response) => {
     try {
         if (!req.file) {
-            res.status(400).json({ error: "File not found" });
+            res.status(400).json({
+                status: "error",
+                message: "File not found",
+            });
 
             return;
         }
@@ -320,7 +326,10 @@ export const uploadMultiple = async (req: IGetUserRequest, res: Response) => {
         const files = Array.isArray(req.files) ? req.files : [];
 
         if (!req.files || files.length === 0) {
-            res.status(400).json({ error: "Files not found" });
+            res.status(400).json({
+                status: "error",
+                message: "Files not found",
+            });
 
             return;
         }
@@ -339,7 +348,7 @@ export const uploadMultiple = async (req: IGetUserRequest, res: Response) => {
                 message: "Unauthorized",
             });
 
-            throw Error("Unauthorized");
+            return;
         }
 
         const [taskMembers] = await pool.execute<TaskMembers[]>(
@@ -413,7 +422,7 @@ export const uploadMultiple = async (req: IGetUserRequest, res: Response) => {
 
         res.status(200).json({
             status: "success",
-            message: "The file was successfully uploaded",
+            message: "Files were successfully uploaded",
             data: files.map((file) => ({
                 filename: file.originalname,
                 url: `${process.env.BACKEND_URL}/files/${file.filename}`,
@@ -489,7 +498,10 @@ export const deleteAttachment = async (req: IGetUserRequest, res: Response) => {
         );
 
         if (!attachments || !attachments.length) {
-            res.status(404).json({ error: "Attachment not found" });
+            res.status(404).json({
+                status: "error",
+                message: "Attachment not found",
+            });
 
             return;
         }
@@ -577,10 +589,6 @@ export const deleteAttachment = async (req: IGetUserRequest, res: Response) => {
         const fileUrl = attachment.file_url.replace(/^\/files/, "");
         const filePath = path.join(__dirname, "/uploads", fileUrl);
 
-        if (existsSync(filePath)) {
-            unlinkSync(filePath);
-        }
-
         const [rows] = await pool.execute<ResultSetHeader>(
             "DELETE FROM attachments WHERE id = ?",
             [id],
@@ -593,6 +601,10 @@ export const deleteAttachment = async (req: IGetUserRequest, res: Response) => {
             });
 
             return;
+        }
+
+        if (existsSync(filePath)) {
+            unlinkSync(filePath);
         }
 
         res.status(200).json({
@@ -662,7 +674,10 @@ export const deleteAvatar = async (req: IGetUserRequest, res: Response) => {
         );
 
         if (!attachments || !attachments.length) {
-            res.status(404).json({ error: "Avatar not found" });
+            res.status(404).json({
+                status: "error",
+                message: "Avatar not found",
+            });
 
             return;
         }

@@ -60,12 +60,6 @@ export async function createRefreshToken(
     return token;
 }
 
-export async function revokeAllUserTokens(userId: string | number) {
-    await pool.execute(`DELETE FROM refresh_tokens WHERE user_id = ?`, [
-        userId,
-    ]);
-}
-
 export async function verifyAccessToken(token: string) {
     const { payload } = await jwtVerify(token, accessSecret);
 

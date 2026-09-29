@@ -74,11 +74,7 @@ export const registerSchema = z.object({
 });
 
 export const resetPasswordSchema = z.object({
-    token: z.string(),
-    // .regex(
-    //     /^\$2[aby]\$(0[4-9]|[12][0-9]|3[01])\$[./A-Za-z0-9]{53}$/,
-    //     "Invalid token",
-    // ),
+    token: z.string("Invalid token"),
     password: z
         .string()
         .min(8, "Password must be at least 8 characters long")
@@ -321,9 +317,7 @@ export const updateProjectSchema = z
 
 export const subtaskSchema = z.object({
     title: z
-        .string({
-            error: "Title is required",
-        })
+        .string("Title is required")
         .trim()
         .min(1, "Title cannot be empty")
         .max(150, "Title must be less than 150 characters"),
@@ -770,6 +764,7 @@ export const deleteMemberSchema = z.object({
             message: "Member ID is too large a numerical value",
         }),
 });
+
 export const validateIdSchema = z.object({
     id: z
         .string()

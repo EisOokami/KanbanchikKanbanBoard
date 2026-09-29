@@ -33,7 +33,7 @@ export const fileValidation = async (
             return;
         }
 
-        return next();
+        next();
     } catch (error) {
         res.status(500).json({
             status: "error",

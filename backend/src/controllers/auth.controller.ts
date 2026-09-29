@@ -763,9 +763,19 @@ export const resetPassword = async (
         const { token, password, id } = validateData;
 
         const [rows] = await pool.execute<
-            (Pick<User, "id" | "email" | "name" | "reset_token"> &
+            (Pick<
+                User,
+                | "id"
+                | "email"
+                | "name"
+                | "reset_token"
+                | "reset_token_expires_at"
+            > &
                 RowDataPacket)[]
-        >("SELECT id, email, name, reset_token FROM users WHERE id = ?", [id]);
+        >(
+            "SELECT id, email, name, reset_token, reset_token_expires_at FROM users WHERE id = ?",
+            [id],
+        );
 
         if (!rows.length) {
             res.status(401).json({

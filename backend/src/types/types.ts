@@ -148,14 +148,6 @@ export interface ProjectSlugHistory extends RowDataPacket {
     created_at: string;
 }
 
-export interface RefreshTokens extends RowDataPacket {
-    id: string | number;
-    user_id: number;
-    revoked: number;
-    created_at: string;
-    revoked_at: string | null;
-}
-
 export interface TaskMembers extends RowDataPacket {
     task_id: number;
     user_id: number;
