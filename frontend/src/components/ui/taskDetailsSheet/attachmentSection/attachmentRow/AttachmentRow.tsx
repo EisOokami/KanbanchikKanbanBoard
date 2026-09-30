@@ -46,7 +46,10 @@ export default function AttachmentRow({
             </div>
             {isImage(attachment.mime_type) && (
                 <Image
-                    src={attachment.file_url}
+                    src={attachment.file_url.replace(
+                        process.env.NEXT_PUBLIC_INTERNAL_API_URL!,
+                        process.env.NEXT_PUBLIC_API_URL!,
+                    )}
                     alt={attachment.filename}
                     width={300}
                     height={300}
