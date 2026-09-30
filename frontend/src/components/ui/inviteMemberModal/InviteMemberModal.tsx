@@ -189,7 +189,7 @@ export default function InviteMemberModal({
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent
-                className="w-[95vw] max-w-[560px] gap-0 overflow-hidden border-border p-0 shadow-md [&>button:first-of-type]:hidden"
+                className="w-[95vw] max-w-[560px] gap-0 overflow-hidden border-border bg-background-secondary p-0 shadow-md [&>button:first-of-type]:hidden"
                 aria-describedby={undefined}
             >
                 <form
@@ -237,7 +237,7 @@ export default function InviteMemberModal({
                         </div>
                         {(userData.role === "admin" ||
                             userData.role === "owner") && (
-                            <div className="flex gap-1.5 rounded-md bg-background-secondary p-1.5">
+                            <div className="flex gap-1.5 rounded-md bg-background p-1.5">
                                 {(["invite", "members"] as const).map((tab) => (
                                     <Button
                                         key={tab}
@@ -342,7 +342,7 @@ export default function InviteMemberModal({
                                     />
                                 </div>
                                 <Separator />
-                                <div className="flex items-center gap-2 rounded-md border border-border p-3">
+                                <div className="flex items-center gap-2 rounded-md border border-border bg-background p-3">
                                     <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-gray-200 dark:bg-zinc-800">
                                         <LinkIcon
                                             weight="duotone"
@@ -361,10 +361,10 @@ export default function InviteMemberModal({
                                                 type="button"
                                                 onClick={handleCopyLink}
                                                 className={cn(
-                                                    "h-8 rounded-md border border-border px-3 text-xs font-medium",
+                                                    "h-8 rounded-md border border-border bg-control px-3 text-xs font-medium hover:bg-control-active",
                                                     linkCopied
-                                                        ? "border-green-300 text-green-500"
-                                                        : "bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-zinc-900 dark:text-zinc-500 dark:hover:bg-zinc-950 [&_svg]:size-3.5",
+                                                        ? "border-green-300 text-green-500 dark:border-green-700"
+                                                        : "text-control-text hover:text-foreground [&_svg]:size-3.5",
                                                 )}
                                                 disabled={isPending}
                                             >
@@ -499,7 +499,7 @@ export default function InviteMemberModal({
                                 type="button"
                                 variant="outline"
                                 onClick={() => onOpenChange(false)}
-                                className="h-9 px-4 text-sm"
+                                className="h-9 bg-control px-4 text-sm text-control-text hover:bg-control-active hover:text-foreground"
                                 disabled={isPending}
                             >
                                 Cancel
