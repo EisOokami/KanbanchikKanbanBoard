@@ -35,6 +35,9 @@ const protectedAuthRoutes = [
     "/resetPassword",
 ];
 
+const imgSrcUrl = process.env.INTERNAL_IMG_SRC_URL;
+const connectSrcUrl = process.env.INTERNAL_CONNECT_SRC_URL;
+
 function isProtectedRoute(path: string): boolean {
     return protectedRoutes.some((route) => path.startsWith(route));
 }
@@ -72,14 +75,16 @@ export async function proxy(request: NextRequest) {
             script-src 'self' 'nonce-${nonce}' 'strict-dynamic';
             style-src 'self' 'nonce-${nonce}';
             style-src-attr 'self' 'unsafe-inline';
-            img-src 'self' http://127.0.0.1:3001 http://localhost:3001 https://lh3.googleusercontent.com blob: data:;
-            connect-src 'self' http://127.0.0.1:3001 http://localhost:3001 https://cdn.jsdelivr.net;
+            img-src 'self' ${imgSrcUrl} blob: data:;
+            connect-src 'self' ${connectSrcUrl};
             font-src 'self';
             object-src 'none';
             base-uri 'self';
             form-action 'self';
             frame-ancestors 'none';
-            upgrade-insecure-requests;
+            ${process.env.NODE_ENV === "production"
+                ? "upgrade-insecure-requests;"
+                : ""}
         `
         .replace(/\s{2,}/g, " ")
         .trim();
