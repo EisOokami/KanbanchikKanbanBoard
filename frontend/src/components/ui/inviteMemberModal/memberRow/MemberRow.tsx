@@ -34,7 +34,7 @@ export default function MemberRow({
     onRemove,
 }: Readonly<MemberRowProps>) {
     return (
-        <div className="group flex items-center gap-3 rounded-md px-1 py-2.5 transition-colors hover:bg-background-secondary">
+        <div className="group flex items-center gap-3 rounded-md px-2 py-2.5 transition-colors hover:bg-control-active">
             <div className="relative">
                 <Avatar className="size-9">
                     <AvatarImage src={member.avatar_url} />
