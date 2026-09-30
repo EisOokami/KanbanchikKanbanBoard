@@ -8,7 +8,7 @@ import {
 } from "@/types/services";
 import { cookies } from "next/headers";
 
-const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+const baseUrl = process.env.API_URL ?? "http://localhost:3001";
 
 const csrfTokenConfig = {
     maxAge: 60 * 60 * 24 * 7,

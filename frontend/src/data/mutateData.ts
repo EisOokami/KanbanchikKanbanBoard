@@ -3,7 +3,7 @@
 import { getAccessToken, getRefreshToken } from "./getToken";
 import { fetchWithRefresh } from "./fetchWithRefresh";
 
-const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+const baseUrl = process.env.API_URL ?? "http://localhost:3001";
 
 export async function mutateData(
     method: string,

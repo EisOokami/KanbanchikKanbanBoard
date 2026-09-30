@@ -4,7 +4,7 @@ import { FilterOptions, Project, Task, UserData } from "@/types/types";
 import { getAccessToken, getRefreshToken } from "./getToken";
 import { fetchWithRefresh } from "./fetchWithRefresh";
 
-const baseUrl = process.env.API_URL;
+const baseUrl = process.env.API_URL ?? "http://localhost:3001";
 
 async function fetchData(url: string, options?: RequestInit) {
     const accessToken = await getAccessToken();

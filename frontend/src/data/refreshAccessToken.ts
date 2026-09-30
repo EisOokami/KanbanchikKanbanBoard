@@ -1,6 +1,6 @@
 "use server";
 
-const baseUrl = process.env.API_URL;
+const baseUrl = process.env.API_URL ?? "http://localhost:3001";
 
 export async function refreshAccessToken(
     refreshToken: string,
