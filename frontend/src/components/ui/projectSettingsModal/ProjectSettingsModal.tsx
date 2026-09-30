@@ -1,6 +1,12 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState } from "react";
+import {
+    useActionState,
+    useEffect,
+    useMemo,
+    useState,
+    useTransition,
+} from "react";
 import {
     Dialog,
     DialogContent,
@@ -27,9 +33,10 @@ import DangerSection from "./dangerSection/DangerSection";
 import { updateProjectAction } from "@/data/actions";
 import { BaseAction } from "@/types/actions";
 import { usePathname } from "next/navigation";
-import { getProjectData } from "@/data/loaders";
+import { exportProjectDataAction, getProjectData } from "@/data/loaders";
 import SaveBar from "./saveBar/SaveBar";
 import { Button } from "../shadcn/button";
+import { toast } from "sonner";
 
 interface ProjectSettingsModalProps {
     open: boolean;
@@ -81,6 +88,8 @@ export default function ProjectSettingsModal({
     const [showPriorityEmoji, setShowPriorityEmoji] = useState<boolean>(
         !!projectData.show_priority_emoji,
     );
+    const [exportingFormat, setExportingFormat] = useState<"json" | null>(null);
+    const [isExportPending, startExportTransition] = useTransition();
     const pathname = usePathname();
     const [initialValues, setInitialValues] = useState(() => ({
         name: projectData.name,
@@ -181,6 +190,43 @@ export default function ProjectSettingsModal({
         })();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [formState]);
+
+    const handleExport = () => {
+        setExportingFormat("json");
+
+        startExportTransition(async () => {
+            const result = await exportProjectDataAction(projectData.id);
+
+            if (result.status === "error") {
+                toast.error("Error", {
+                    description: result.message,
+                });
+
+                setExportingFormat(null);
+
+                return;
+            }
+
+            const blob = new Blob([result.data], {
+                type: "application/json",
+            });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+
+            link.href = url;
+            link.download = `${projectData.slug}.json`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(url);
+
+            setExportingFormat(null);
+
+            toast.success("Success", {
+                description: "Project has been exported",
+            });
+        });
+    };
 
     const hasChanges = useMemo(() => {
         const simpleChanged =
@@ -342,6 +388,8 @@ export default function ProjectSettingsModal({
                                         showPriorityEmoji={showPriorityEmoji}
                                         formState={formState}
                                         isPending={isPending}
+                                        exportingFormat={exportingFormat}
+                                        isExportPending={isExportPending}
                                         onIconChange={setIcon}
                                         onColorChange={setColor}
                                         onNameChange={setName}
@@ -350,6 +398,7 @@ export default function ProjectSettingsModal({
                                         onShowPriorityEmojiChange={
                                             setShowPriorityEmoji
                                         }
+                                        onExport={handleExport}
                                     />
                                 )}
                                 {activeSection === "columns" && (

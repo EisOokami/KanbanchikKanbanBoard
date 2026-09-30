@@ -11,6 +11,7 @@ import ProjectColorPicker from "../../projectColorPicker/ProjectColorPicker";
 import ProjectIconPicker from "../../projectIconPicker/ProjectIconPicker";
 import { Checkbox } from "../../shadcn/checkbox";
 import { Button } from "../../shadcn/button";
+import { FileArrowDownIcon } from "@phosphor-icons/react";
 
 interface GeneralSectionProps {
     icon: string;
@@ -19,14 +20,17 @@ interface GeneralSectionProps {
     description: string;
     status: Status;
     showPriorityEmoji: boolean;
+    exportingFormat: "json" | null;
     formState: BaseAction | undefined;
     isPending: boolean;
+    isExportPending: boolean;
     onIconChange: (iconValue: string) => void;
     onColorChange: (colorValue: string) => void;
     onNameChange: (nameValue: string) => void;
     onDescriptionChange: (descriptionValue: string) => void;
     onStatusChange: (status: Status) => void;
     onShowPriorityEmojiChange: (isChecked: boolean) => void;
+    onExport: (format: "json") => void;
 }
 
 export default function GeneralSection({
@@ -36,14 +40,17 @@ export default function GeneralSection({
     description,
     status,
     showPriorityEmoji,
+    exportingFormat,
     formState,
     isPending,
+    isExportPending,
     onIconChange,
     onColorChange,
     onNameChange,
     onDescriptionChange,
     onStatusChange,
     onShowPriorityEmojiChange,
+    onExport,
 }: Readonly<GeneralSectionProps>) {
     return (
         <div className="space-y-5">
@@ -184,6 +191,35 @@ export default function GeneralSection({
                     <ZodErrors
                         error={formState?.zodErrors?.showPriorityEmoji}
                     />
+                </div>
+            </div>
+            <div className="space-y-1">
+                <h3 className="font-semibold">Export Project Data</h3>
+                <p className="text-xs text-muted-foreground">
+                    Download all project data, including tasks, columns, and
+                    metadata.
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                    <Button
+                        type="button"
+                        onClick={() => onExport("json")}
+                        variant="outline"
+                        size="sm"
+                        className="h-8 gap-1.5 rounded-md bg-control text-xs font-medium text-control-text hover:bg-control-active"
+                        disabled={
+                            isPending ||
+                            exportingFormat !== null ||
+                            isExportPending
+                        }
+                    >
+                        <FileArrowDownIcon
+                            weight="duotone"
+                            className="size-4"
+                        />
+                        {exportingFormat === "json" || isExportPending
+                            ? "Exporting..."
+                            : "Export as JSON"}
+                    </Button>
                 </div>
             </div>
         </div>

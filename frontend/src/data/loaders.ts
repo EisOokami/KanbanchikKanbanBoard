@@ -172,3 +172,35 @@ export async function getVerifyEmailData(
 
     return fetchedData;
 }
+
+export async function exportProjectDataAction(
+    id: number,
+): Promise<
+    | { status: "success"; message: string; data: string }
+    | { status: "error"; message: string }
+> {
+    const url = new URL(`/projects/${id}/export`, baseUrl);
+
+    const accessToken = await getAccessToken();
+    const refreshToken = await getRefreshToken();
+
+    try {
+        const response = await fetchWithRefresh(url, accessToken, refreshToken);
+
+        if (!response.ok) {
+            return {
+                status: "error",
+                message: "Failed to export project data",
+            };
+        }
+
+        return {
+            status: "success",
+            message: "Project data have been successfully exported",
+            data: await response.text(),
+        };
+    } catch (error) {
+        console.error("Error fetching data:", error);
+        throw error;
+    }
+}

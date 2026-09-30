@@ -4,6 +4,7 @@ import {
     createProject,
     deleteMember,
     deleteProject,
+    exportProjectData,
     getProject,
     getProjects,
     transferOwnership,
@@ -84,6 +85,7 @@ const router = Router();
 
 router.get("/", authenticateToken, getProjects);
 router.get("/:slug", authenticateToken, getProject);
+router.get("/:id/export", authenticateToken, exportProjectData);
 router.post(
     "/",
     createProjectLimiter,

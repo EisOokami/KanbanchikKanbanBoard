@@ -728,6 +728,472 @@ export const getProject = async (req: IGetUserRequest, res: Response) => {
     }
 };
 
+export const exportProjectData = async (
+    req: IGetUserRequest,
+    res: Response,
+) => {
+    try {
+        validateIdSchema.parse(req.params);
+
+        const { id } = req.params;
+        const userId = req.user.id;
+
+        if (!userId) {
+            res.status(401).json({
+                status: "error",
+                message: "Unauthorized",
+            });
+
+            return;
+        }
+
+        if (!id) {
+            res.status(400).json({
+                status: "error",
+                message: "Invalid project id",
+            });
+
+            return;
+        }
+
+        const [projects] = await pool.execute<Project[]>(
+            `
+                SELECT 
+                    p.id, 
+                    p.owner_id,
+                    p.name, 
+                    p.icon, 
+                    p.color, 
+                    p.description, 
+                    p.status,
+                    p.slug,
+                    p.show_priority_emoji,
+                    p.created_at,
+                    p.updated_at
+                FROM projects p
+                WHERE p.id = ? AND (
+                    p.owner_id = ? OR p.id IN (
+                        SELECT project_id FROM project_members WHERE user_id = ?
+                    )
+                )
+            `,
+            [id, userId, userId],
+        );
+
+        if (!projects.length || !projects[0]) {
+            res.status(404).json({
+                status: "error",
+                message: "Project not found or access denied",
+            });
+
+            return;
+        }
+
+        const project = projects[0];
+
+        const [columns] = await pool.execute<
+            (Pick<
+                Column,
+                | "id"
+                | "name"
+                | "position"
+                | "wip_limit"
+                | "created_at"
+                | "updated_at"
+            > &
+                RowDataPacket)[]
+        >(
+            `
+                SELECT id, name, position, wip_limit, created_at, updated_at
+                FROM columns
+                WHERE project_id = ?
+                ORDER BY position ASC
+            `,
+            [project.id],
+        );
+
+        const [categories] = await pool.execute<
+            (Pick<
+                Category,
+                "id" | "name" | "color" | "created_at" | "updated_at"
+            > &
+                RowDataPacket)[]
+        >(
+            `
+                SELECT id, name, color, created_at, updated_at
+                FROM categories
+                WHERE project_id = ?
+                ORDER BY name ASC
+            `,
+            [project.id],
+        );
+
+        const [labels] = await pool.execute<
+            (Pick<Label, "id" | "name" | "color"> & RowDataPacket)[]
+        >(
+            `
+                SELECT id, name, color
+                FROM labels
+                WHERE project_id = ?
+                ORDER BY name ASC
+            `,
+            [project.id],
+        );
+
+        const [members] = await pool.execute<
+            (Pick<User, "id" | "name" | "surname" | "avatar_url" | "color"> &
+                Pick<ProjectMember, "role" | "status" | "joined_at"> &
+                RowDataPacket)[]
+        >(
+            `
+                SELECT 
+                    u.id,
+                    u.name,
+                    u.surname,
+                    u.avatar_url,
+                    u.color,
+                    pm.role,
+                    pm.status,
+                    pm.joined_at
+                FROM project_members pm
+                JOIN users u ON pm.user_id = u.id
+                WHERE pm.project_id = ?
+                ORDER BY pm.joined_at ASC
+            `,
+            [project.id],
+        );
+
+        const [owner] = await pool.execute<
+            (Pick<
+                User,
+                "id" | "name" | "surname" | "email" | "avatar_url" | "color"
+            > &
+                RowDataPacket)[]
+        >(
+            `
+                SELECT id, name, surname, email, avatar_url, color
+                FROM users
+                WHERE id = ?
+            `,
+            [project.owner_id],
+        );
+
+        const enrichedColumns = await Promise.all(
+            columns.map(async (column) => {
+                const [tasks] = await pool.execute<
+                    (Task & { column_name: string })[]
+                >(
+                    `
+                        SELECT
+                            t.id,
+                            t.column_id,
+                            t.creator_id,
+                            t.title,
+                            t.description,
+                            t.position,
+                            t.due_date,
+                            t.start_date,
+                            t.priority,
+                            t.show_progress,
+                            t.created_at,
+                            t.updated_at,
+                            c.name as column_name
+                        FROM tasks t
+                        JOIN columns c ON t.column_id = c.id
+                        WHERE t.column_id = ?
+                        ORDER BY t.position ASC
+                    `,
+                    [column.id],
+                );
+
+                const enrichedTasks = await Promise.all(
+                    tasks.map(async (task) => {
+                        const [members] = await pool.execute<
+                            (Pick<
+                                User,
+                                | "id"
+                                | "name"
+                                | "surname"
+                                | "avatar_url"
+                                | "color"
+                                | "email"
+                            > &
+                                Pick<
+                                    ProjectMember,
+                                    "role" | "status" | "joined_at"
+                                > &
+                                RowDataPacket)[]
+                        >(
+                            `
+                                SELECT DISTINCT
+                                    u.id,
+                                    u.name,
+                                    u.surname,
+                                    u.avatar_url,
+                                    u.color,
+                                    u.email,
+                                    pm.role,
+                                    pm.status,
+                                    pm.joined_at
+                                FROM task_members tm
+                                JOIN users u ON tm.user_id = u.id
+                                JOIN tasks t ON tm.task_id = t.id
+                                JOIN columns c ON t.column_id = c.id
+                                JOIN project_members pm ON c.project_id = pm.project_id AND tm.user_id = pm.user_id
+                                JOIN projects p ON c.project_id = p.id
+                                WHERE tm.task_id = ?
+                                ORDER BY u.name, u.surname;
+                            `,
+                            [task.id],
+                        );
+
+                        const [taskLabels] = await pool.execute<
+                            (Pick<Label, "id" | "name" | "color"> &
+                                RowDataPacket)[]
+                        >(
+                            `
+                                SELECT l.id, l.name, l.color
+                                FROM task_labels tl
+                                JOIN labels l ON tl.label_id = l.id
+                                WHERE tl.task_id = ?
+                            `,
+                            [task.id],
+                        );
+
+                        const [taskCategories] = await pool.execute<
+                            (Pick<Category, "id" | "name" | "color"> &
+                                RowDataPacket)[]
+                        >(
+                            `
+                                SELECT c.id, c.name, c.color
+                                FROM task_categories tc
+                                JOIN categories c ON tc.category_id = c.id
+                                WHERE tc.task_id = ?
+                            `,
+                            [task.id],
+                        );
+
+                        const [subtasks] = await pool.execute<
+                            (Pick<
+                                Subtask,
+                                | "id"
+                                | "title"
+                                | "position"
+                                | "is_done"
+                                | "created_at"
+                            > &
+                                RowDataPacket)[]
+                        >(
+                            `
+                                SELECT id, title, position, is_done, created_at
+                                FROM subtasks
+                                WHERE task_id = ?
+                                ORDER BY position ASC
+                            `,
+                            [task.id],
+                        );
+
+                        const [comments] = await pool.execute<
+                            (Pick<
+                                Comment,
+                                "id" | "body" | "created_at" | "updated_at"
+                            > & { user_id: string } & Pick<
+                                    User,
+                                    "name" | "surname" | "avatar_url" | "color"
+                                > &
+                                RowDataPacket)[]
+                        >(
+                            `
+                                SELECT
+                                    c.id,
+                                    c.body,
+                                    c.created_at,
+                                    c.updated_at,
+                                    u.id as user_id,
+                                    u.name,
+                                    u.surname,
+                                    u.avatar_url,
+                                    u.color
+                                FROM comments c
+                                JOIN users u ON c.user_id = u.id
+                                WHERE c.task_id = ?
+                                ORDER BY c.created_at ASC
+                            `,
+                            [task.id],
+                        );
+
+                        const [attachments] = await pool.execute<
+                            (Pick<
+                                Attachment,
+                                | "id"
+                                | "filename"
+                                | "file_url"
+                                | "mime_type"
+                                | "size_bytes"
+                                | "created_at"
+                            > & {
+                                uploader_id: number;
+                                uploader_name: string;
+                                uploader_surname: string;
+                                uploader_avatar: string;
+                            } & RowDataPacket)[]
+                        >(
+                            `
+                                SELECT
+                                    a.id,
+                                    a.filename,
+                                    a.file_url,
+                                    a.mime_type,
+                                    a.size_bytes,
+                                    a.created_at,
+                                    u.id as uploader_id,
+                                    u.name as uploader_name,
+                                    u.surname as uploader_surname,
+                                    u.avatar_url as uploader_avatar
+                                FROM attachments a
+                                JOIN users u ON a.uploader_id = u.id
+                                WHERE a.task_id = ?
+                                ORDER BY a.created_at DESC
+                            `,
+                            [task.id],
+                        );
+
+                        const subtasksTotal = subtasks.length;
+                        const subtasksDone = subtasks.filter(
+                            (subtask) => subtask.is_done,
+                        ).length;
+
+                        return {
+                            id: task.id,
+                            title: task.title,
+                            description: task.description,
+                            position: task.position,
+                            due_date: task.due_date,
+                            start_date: task.start_date,
+                            priority: task.priority,
+                            show_progress: task.show_progress,
+                            creator_id: task.creator_id,
+                            created_at: task.created_at,
+                            updated_at: task.updated_at,
+                            column: {
+                                id: task.column_id,
+                                name: task.column_name,
+                            },
+                            members: members.map((member) => ({
+                                ...member,
+                                avatar_url:
+                                    member.avatar_url === null
+                                        ? null
+                                        : member.avatar_url.startsWith("/files")
+                                          ? `${process.env.BACKEND_URL}${member.avatar_url}`
+                                          : member.avatar_url,
+                            })),
+                            labels: taskLabels,
+                            categories: taskCategories,
+                            subtasks,
+                            comments: comments.map((comment) => ({
+                                id: comment.id,
+                                member: {
+                                    id: comment.user_id,
+                                    name: comment.name,
+                                    surname: comment.surname,
+                                    avatar_url:
+                                        comment.avatar_url === null
+                                            ? null
+                                            : comment.avatar_url.startsWith(
+                                                    "/files",
+                                                )
+                                              ? `${process.env.BACKEND_URL}${comment.avatar_url}`
+                                              : comment.avatar_url,
+                                    color: comment.color,
+                                },
+                                body: comment.body,
+                                created_at: comment.created_at,
+                                updated_at: comment.updated_at,
+                            })),
+                            attachments: attachments.map((attachment) => ({
+                                ...attachment,
+                                file_url: `${process.env.BACKEND_URL}${attachment.file_url}`,
+                            })),
+                            subtasks_total: subtasksTotal,
+                            subtasks_done: subtasksDone,
+                        };
+                    }),
+                );
+
+                return {
+                    ...column,
+                    tasks: enrichedTasks,
+                };
+            }),
+        );
+
+        const [taskStats] = await pool.execute<
+            ({ total: number; done: boolean } & RowDataPacket)[]
+        >(
+            `
+                SELECT
+                    COUNT(t.id) as total,
+                    SUM(CASE WHEN c.name = 'Done' THEN 1 ELSE 0 END) as done
+                FROM tasks t
+                JOIN columns c ON t.column_id = c.id
+                WHERE c.project_id = ?
+            `,
+            [project.id],
+        );
+
+        res.status(200).json({
+            id: project.id,
+            name: project.name,
+            description: project.description,
+            icon: project.icon,
+            color: project.color,
+            status: project.status,
+            slug: project.slug,
+            show_priority_emoji: project.show_priority_emoji,
+            created_at: project.created_at,
+            updated_at: project.updated_at,
+            owner:
+                owner.length && owner[0]
+                    ? {
+                          name: owner[0].name,
+                          avatar_url:
+                              owner[0].avatar_url === null
+                                  ? null
+                                  : owner[0].avatar_url.startsWith("/files")
+                                    ? `${process.env.BACKEND_URL}${owner[0]}`
+                                    : owner[0].avatar_url,
+                      }
+                    : null,
+            members: members.map((member) => ({
+                id: member.id,
+                name: member.name,
+                surname: member.surname,
+                avatar_url:
+                    member.avatar_url === null
+                        ? null
+                        : member.avatar_url.startsWith("/files")
+                          ? `${process.env.BACKEND_URL}${member.avatar_url}`
+                          : member.avatar_url,
+                color: member.color,
+                role: member.role,
+                status: member.status,
+                joined_at: member.joined_at,
+            })),
+            columns: enrichedColumns,
+            categories,
+            labels,
+            tasks_total:
+                taskStats.length && taskStats[0] ? taskStats[0].total : 0,
+            tasks_done:
+                taskStats.length && taskStats[0] ? taskStats[0].done : 0,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: "error", message: "Database error" });
+    }
+};
+
 export const createProject = async (req: IGetUserRequest, res: Response) => {
     try {
         const userId = req.user.id;
