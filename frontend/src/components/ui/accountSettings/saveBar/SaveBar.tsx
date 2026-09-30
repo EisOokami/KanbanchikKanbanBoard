@@ -1,5 +1,6 @@
-import { CheckIcon, WarningIcon } from "@phosphor-icons/react";
+import { CheckIcon } from "@phosphor-icons/react";
 import { Button } from "../../shadcn/button";
+import { cn } from "@/libs/utils";
 
 interface SaveBarProps {
     isChanged: boolean;
@@ -19,34 +20,28 @@ export default function SaveBar({
     }
 
     return (
-        <div className="absolute bottom-0 -mx-6 mt-6 flex w-full items-center justify-between gap-3 border-t border-border bg-background px-6 py-3 backdrop-blur transition-colors">
-            <p className="flex items-center gap-1.5 text-xs text-gray-400">
-                <WarningIcon
-                    weight="duotone"
-                    className="size-4 text-amber-500"
-                />
-                You have unsaved changes
-            </p>
+        <div className="absolute bottom-0 -mx-6 mt-6 flex w-full items-center justify-end gap-3 border-t border-border bg-background-secondary px-6 py-3 transition-colors">
             <div className="flex gap-2">
                 <Button
                     type="button"
-                    variant="ghost"
-                    size="sm"
+                    variant="outline"
                     onClick={onDiscard}
-                    className="h-7 text-xs"
+                    className="h-9 rounded-md bg-control px-4 text-sm text-control-text hover:bg-control-active"
                     disabled={isPending}
                 >
-                    Discard
+                    Cancel
                 </Button>
                 <Button
                     type="submit"
-                    size="sm"
-                    className="h-7 gap-1.5 bg-bright-blue text-xs text-white hover:bg-blue-600"
-                    disabled={isPending}
                     onClick={onSave}
+                    disabled={isPending || !isChanged}
+                    className={cn(
+                        "h-9 rounded-md bg-bright-blue text-sm font-semibold text-white hover:bg-blue-600 disabled:opacity-40",
+                        !isChanged && "cursor-not-allowed opacity-50",
+                    )}
                 >
-                    <CheckIcon weight="duotone" className="size-4" /> Save
-                    changes
+                    <CheckIcon weight="duotone" size={14} />
+                    Save changes
                 </Button>
             </div>
         </div>
