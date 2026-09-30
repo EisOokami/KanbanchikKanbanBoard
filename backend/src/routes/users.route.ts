@@ -15,6 +15,7 @@ import {
     updateProfileSchema,
 } from "../validation/validation.js";
 import { verifyCsrf } from "../middlewares/csrf.middleware.js";
+import { validateEmailMiddleware } from "../middlewares/emailValidation.middleware.js";
 
 const updateProfileLimiter = rateLimit({
     windowMs: 30 * 60 * 1000,
@@ -73,6 +74,7 @@ router.post(
     authenticateToken,
     verifyCsrf,
     validateData(updateProfileSchema),
+    validateEmailMiddleware,
     updateProfile,
 );
 router.post(

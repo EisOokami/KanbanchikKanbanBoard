@@ -22,6 +22,7 @@ import {
     resetPasswordSchema,
 } from "../validation/validation.js";
 import { verifyCsrf } from "../middlewares/csrf.middleware.js";
+import { validateEmailMiddleware } from "../middlewares/emailValidation.middleware.js";
 
 const registerLimiter = rateLimit({
     windowMs: 5 * 60 * 1000,
@@ -113,6 +114,7 @@ router.post(
     "/register",
     registerLimiter,
     validateData(registerSchema),
+    validateEmailMiddleware,
     register,
 );
 router.get("/verify-email", verifyEmailLimiter, verifyEmail);
@@ -120,13 +122,21 @@ router.post(
     "/resend-verification",
     resendVerificationLimiter,
     validateData(resendVerificationSchema),
+    validateEmailMiddleware,
     resendVerificationEmail,
 );
-router.post("/login", loginLimiter, validateData(loginSchema), login);
+router.post(
+    "/login",
+    loginLimiter,
+    validateData(loginSchema),
+    validateEmailMiddleware,
+    login,
+);
 router.post(
     "/forgot-password",
     forgotPasswordLimiter,
     validateData(forgotPasswordSchema),
+    validateEmailMiddleware,
     forgotPassword,
 );
 router.post(
