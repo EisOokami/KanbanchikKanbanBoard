@@ -19,48 +19,48 @@ import { verifyCsrf } from "../middlewares/csrf.middleware.js";
 import rateLimit from "express-rate-limit";
 
 const createTaskLimiter = rateLimit({
-    windowMs: 5 * 60 * 1000,
-    limit: 20,
+    windowMs: 15 * 60 * 1000,
+    limit: 100,
     message: {
         status: 429,
         error: "Too many requests",
-        message: "Too many requests. Please try again in 5 minutes.",
+        message: "Too many requests. Please try again in 15 minutes.",
     },
     standardHeaders: true,
     legacyHeaders: false,
 });
 
 const updateTaskLimiter = rateLimit({
-    windowMs: 5 * 60 * 1000,
-    limit: 20,
+    windowMs: 15 * 60 * 1000,
+    limit: 100,
     message: {
         status: 429,
         error: "Too many requests",
-        message: "Too many requests. Please try again in 5 minutes.",
+        message: "Too many requests. Please try again in 15 minutes.",
     },
     standardHeaders: true,
     legacyHeaders: false,
 });
 
 const moveTaskLimiter = rateLimit({
-    windowMs: 5 * 60 * 1000,
-    limit: 30,
+    windowMs: 15 * 60 * 1000,
+    limit: 100,
     message: {
         status: 429,
         error: "Too many requests",
-        message: "Too many requests. Please try again in 5 minutes.",
+        message: "Too many requests. Please try again in 15 minutes.",
     },
     standardHeaders: true,
     legacyHeaders: false,
 });
 
 const deleteTaskLimiter = rateLimit({
-    windowMs: 5 * 60 * 1000,
-    limit: 10,
+    windowMs: 15 * 60 * 1000,
+    limit: 100,
     message: {
         status: 429,
         error: "Too many requests",
-        message: "Too many requests. Please try again in 5 minutes.",
+        message: "Too many requests. Please try again in 15 minutes.",
     },
     standardHeaders: true,
     legacyHeaders: false,

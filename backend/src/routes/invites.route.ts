@@ -14,7 +14,7 @@ const generateLimiter = rateLimit({
     message: {
         status: 429,
         error: "Too many requests",
-        message: "Too many requests. Please try again later.",
+        message: "Too many requests. Please try again in 1 hour.",
     },
     standardHeaders: true,
     legacyHeaders: false,
@@ -22,11 +22,11 @@ const generateLimiter = rateLimit({
 
 const acceptLimiter = rateLimit({
     windowMs: 60 * 60 * 1000,
-    limit: 20,
+    limit: 10,
     message: {
         status: 429,
         error: "Too many requests",
-        message: "Too many requests. Please try again later.",
+        message: "Too many requests. Please try again in 1 hour.",
     },
     standardHeaders: true,
     legacyHeaders: false,
@@ -34,11 +34,11 @@ const acceptLimiter = rateLimit({
 
 const memberInviteLimiter = rateLimit({
     windowMs: 60 * 60 * 1000,
-    limit: 20,
+    limit: 10,
     message: {
         status: 429,
         error: "Too many requests",
-        message: "Too many requests. Please try again later.",
+        message: "Too many requests. Please try again in 1 hour.",
     },
     standardHeaders: true,
     legacyHeaders: false,

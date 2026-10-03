@@ -18,36 +18,36 @@ import { verifyCsrf } from "../middlewares/csrf.middleware.js";
 import { validateEmailMiddleware } from "../middlewares/emailValidation.middleware.js";
 
 const updateProfileLimiter = rateLimit({
-    windowMs: 30 * 60 * 1000,
-    limit: 3,
+    windowMs: 60 * 60 * 1000,
+    limit: 5,
     message: {
         status: 429,
         error: "Too many requests",
-        message: "Too many requests. Please try again in 30 minutes.",
+        message: "Too many requests. Please try again in 1 hour.",
     },
     standardHeaders: true,
     legacyHeaders: false,
 });
 
 const changePasswordLimiter = rateLimit({
-    windowMs: 30 * 60 * 1000,
-    limit: 3,
+    windowMs: 60 * 60 * 1000,
+    limit: 5,
     message: {
         status: 429,
         error: "Too many requests",
-        message: "Too many requests. Please try again in 30 minutes.",
+        message: "Too many requests. Please try again in 1 hour.",
     },
     standardHeaders: true,
     legacyHeaders: false,
 });
 
-const deleteLimiter = rateLimit({
+const deleteAccountLimiter = rateLimit({
     windowMs: 60 * 60 * 1000,
-    limit: 300,
+    limit: 5,
     message: {
         status: 429,
         error: "Too many requests",
-        message: "Too many requests. Please try again in 60 minutes.",
+        message: "Too many requests. Please try again in 1 hour.",
     },
     standardHeaders: true,
     legacyHeaders: false,
@@ -55,11 +55,11 @@ const deleteLimiter = rateLimit({
 
 const setPasswordLimiter = rateLimit({
     windowMs: 60 * 60 * 1000,
-    limit: 300,
+    limit: 5,
     message: {
         status: 429,
         error: "Too many requests",
-        message: "Too many requests. Please try again in 60 minutes.",
+        message: "Too many requests. Please try again in 1 hour.",
     },
     standardHeaders: true,
     legacyHeaders: false,
@@ -87,7 +87,7 @@ router.post(
 );
 router.delete(
     "/:id",
-    deleteLimiter,
+    deleteAccountLimiter,
     authenticateToken,
     verifyCsrf,
     deleteAccount,

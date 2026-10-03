@@ -22,60 +22,60 @@ import { verifyCsrf } from "../middlewares/csrf.middleware.js";
 import rateLimit from "express-rate-limit";
 
 const createProjectLimiter = rateLimit({
-    windowMs: 5 * 60 * 1000,
-    limit: 20,
+    windowMs: 15 * 60 * 1000,
+    limit: 100,
     message: {
         status: 429,
         error: "Too many requests",
-        message: "Too many requests. Please try again in 5 minutes.",
+        message: "Too many requests. Please try again in 15 minutes.",
     },
     standardHeaders: true,
     legacyHeaders: false,
 });
 
 const updateProjectLimiter = rateLimit({
-    windowMs: 5 * 60 * 1000,
-    limit: 20,
+    windowMs: 15 * 60 * 1000,
+    limit: 100,
     message: {
         status: 429,
         error: "Too many requests",
-        message: "Too many requests. Please try again in 5 minutes.",
+        message: "Too many requests. Please try again in 15 minutes.",
     },
     standardHeaders: true,
     legacyHeaders: false,
 });
 
 const changeRoleLimiter = rateLimit({
-    windowMs: 5 * 60 * 1000,
-    limit: 10,
+    windowMs: 15 * 60 * 1000,
+    limit: 100,
     message: {
         status: 429,
         error: "Too many requests",
-        message: "Too many requests. Please try again in 5 minutes.",
+        message: "Too many requests. Please try again in 15 minutes.",
     },
     standardHeaders: true,
     legacyHeaders: false,
 });
 
 const transferOwnershipLimiter = rateLimit({
-    windowMs: 5 * 60 * 1000,
-    limit: 3,
+    windowMs: 60 * 60 * 1000,
+    limit: 5,
     message: {
         status: 429,
         error: "Too many requests",
-        message: "Too many requests. Please try again in 5 minutes.",
+        message: "Too many requests. Please try again in 1 hour.",
     },
     standardHeaders: true,
     legacyHeaders: false,
 });
 
 const deleteMemberLimiter = rateLimit({
-    windowMs: 5 * 60 * 1000,
-    limit: 3,
+    windowMs: 15 * 60 * 1000,
+    limit: 100,
     message: {
         status: 429,
         error: "Too many requests",
-        message: "Too many requests. Please try again in 5 minutes.",
+        message: "Too many requests. Please try again in 15 minutes.",
     },
     standardHeaders: true,
     legacyHeaders: false,

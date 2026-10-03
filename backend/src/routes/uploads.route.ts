@@ -18,7 +18,7 @@ import { verifyCsrf } from "../middlewares/csrf.middleware.js";
 
 const singleUploadLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    limit: 3,
+    limit: 5,
     message: {
         status: 429,
         error: "Too many requests",
@@ -42,7 +42,7 @@ const avatarUploadLimiter = rateLimit({
 
 const multipleUploadLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    limit: 3,
+    limit: 5,
     message: {
         status: 429,
         error: "Too many requests",
@@ -54,7 +54,7 @@ const multipleUploadLimiter = rateLimit({
 
 const deleteAttachmentLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    limit: 3,
+    limit: 5,
     message: {
         status: 429,
         error: "Too many requests",
@@ -66,7 +66,7 @@ const deleteAttachmentLimiter = rateLimit({
 
 const deleteAvatarLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    limit: 3,
+    limit: 5,
     message: {
         status: 429,
         error: "Too many requests",

@@ -10,60 +10,60 @@ import {
 } from "../controllers/mfa.controller.js";
 
 const setupMfaLimiter = rateLimit({
-    windowMs: 5 * 60 * 1000,
+    windowMs: 60 * 60 * 1000,
     limit: 5,
     message: {
         status: 429,
         error: "Too many requests",
-        message: "Too many requests. Please try again in 5 minutes.",
+        message: "Too many requests. Please try again in 1 hour.",
     },
     standardHeaders: true,
     legacyHeaders: false,
 });
 
 const enableMfaLimiter = rateLimit({
-    windowMs: 5 * 60 * 1000,
+    windowMs: 60 * 60 * 1000,
     limit: 5,
     message: {
         status: 429,
         error: "Too many requests",
-        message: "Too many requests. Please try again in 5 minutes.",
+        message: "Too many requests. Please try again in 1 hour.",
     },
     standardHeaders: true,
     legacyHeaders: false,
 });
 
 const verifyMfaLimiter = rateLimit({
-    windowMs: 5 * 60 * 1000,
+    windowMs: 60 * 60 * 1000,
     limit: 5,
     message: {
         status: 429,
         error: "Too many requests",
-        message: "Too many requests. Please try again in 5 minutes.",
+        message: "Too many requests. Please try again in 1 hour.",
     },
     standardHeaders: true,
     legacyHeaders: false,
 });
 
 const disableMfaLimiter = rateLimit({
-    windowMs: 5 * 60 * 1000,
+    windowMs: 60 * 60 * 1000,
     limit: 5,
     message: {
         status: 429,
         error: "Too many requests",
-        message: "Too many requests. Please try again in 5 minutes.",
+        message: "Too many requests. Please try again in 1 hour.",
     },
     standardHeaders: true,
     legacyHeaders: false,
 });
 
 const regenerateBackupCodesLimiter = rateLimit({
-    windowMs: 5 * 60 * 1000,
+    windowMs: 60 * 60 * 1000,
     limit: 5,
     message: {
         status: 429,
         error: "Too many requests",
-        message: "Too many requests. Please try again in 5 minutes.",
+        message: "Too many requests. Please try again in 1 hour.",
     },
     standardHeaders: true,
     legacyHeaders: false,
