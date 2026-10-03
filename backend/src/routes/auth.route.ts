@@ -9,17 +9,21 @@ import {
     logout,
     refresh,
     register,
+    resendLoginEmailCode,
     resendVerificationEmail,
     resetPassword,
     verifyEmail,
+    verifyLoginEmailCode,
 } from "../controllers/auth.controller.js";
 import { validateData } from "../middlewares/validation.middleware.js";
 import {
     forgotPasswordSchema,
     loginSchema,
     registerSchema,
+    resendEmailCodeSchema,
     resendVerificationSchema,
     resetPasswordSchema,
+    verifyEmailCodeSchema,
 } from "../validation/validation.js";
 import { verifyCsrf } from "../middlewares/csrf.middleware.js";
 import { validateEmailMiddleware } from "../middlewares/emailValidation.middleware.js";
@@ -38,7 +42,31 @@ const registerLimiter = rateLimit({
 
 const loginLimiter = rateLimit({
     windowMs: 5 * 60 * 1000,
-    limit: 50,
+    limit: 5,
+    message: {
+        status: 429,
+        error: "Too many requests",
+        message: "Too many requests. Please try again in 5 minutes.",
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const verifyLoginEmailCodeLimiter = rateLimit({
+    windowMs: 5 * 60 * 1000,
+    limit: 5,
+    message: {
+        status: 429,
+        error: "Too many requests",
+        message: "Too many requests. Please try again in 5 minutes.",
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const resendLoginEmailCodeLimiter = rateLimit({
+    windowMs: 5 * 60 * 1000,
+    limit: 5,
     message: {
         status: 429,
         error: "Too many requests",
@@ -131,6 +159,18 @@ router.post(
     validateData(loginSchema),
     validateEmailMiddleware,
     login,
+);
+router.post(
+    "/login/email-code/verify",
+    verifyLoginEmailCodeLimiter,
+    validateData(verifyEmailCodeSchema),
+    verifyLoginEmailCode,
+);
+router.post(
+    "/login/email-code/resend",
+    resendLoginEmailCodeLimiter,
+    validateData(resendEmailCodeSchema),
+    resendLoginEmailCode,
 );
 router.post(
     "/forgot-password",

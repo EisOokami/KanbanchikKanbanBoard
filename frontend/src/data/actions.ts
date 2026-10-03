@@ -25,6 +25,8 @@ import {
     UpdateTaskAction,
 } from "@/types/actions";
 import {
+    emailCodeResendService,
+    emailCodeVerifyService,
     forgotPasswordService,
     googleExchangeService,
     loginService,
@@ -48,6 +50,7 @@ import {
     createProjectSchema,
     createTaskSchema,
     deleteAccountSchema,
+    emailCodeFormSchema,
     forgotPasswordSchema,
     inviteMemberSchema,
     loginSchema,
@@ -240,6 +243,21 @@ export async function loginAction(
             message: null,
             data: {
                 requiresMfa: responseData.requiresMfa,
+                tempToken: responseData.tempToken,
+            },
+        };
+    }
+
+    if ("requiresEmailCode" in responseData && responseData.requiresEmailCode) {
+        return {
+            formData: null,
+            zodErrors: null,
+            error: null,
+            status: "success",
+            details: null,
+            message: null,
+            data: {
+                requiresEmailCode: responseData.requiresEmailCode,
                 tempToken: responseData.tempToken,
             },
         };
@@ -2367,4 +2385,199 @@ export async function setPasswordAction(
             message: responseData.message,
         };
     }
+}
+
+export async function emailCodeAction(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    prevState: any,
+    formData: FormData,
+): Promise<SetPasswordAction> {
+    const rawTempToken = formData.get("tempToken") ?? "";
+
+    const validatedFields = emailCodeFormSchema.safeParse({
+        intent: formData.get("intent") ?? "verify",
+        tempToken: formData.get("tempToken") ?? "",
+        code: formData.get("code"),
+        redirect: formData.get("redirect") ?? undefined,
+    });
+
+    if (!validatedFields.success) {
+        if (
+            z.flattenError(validatedFields.error).fieldErrors.tempToken ||
+            z.flattenError(validatedFields.error).fieldErrors.intent
+        ) {
+            return {
+                formData,
+                zodErrors: null,
+                error: null,
+                status: "error",
+                details: null,
+                message:
+                    z.flattenError(validatedFields.error).fieldErrors
+                        .tempToken?.[0] ??
+                    "Invalid request. Please log in again",
+                data: { tempToken: rawTempToken, requiresRelogin: true },
+            };
+        }
+
+        return {
+            formData,
+            zodErrors: z.flattenError(validatedFields.error).fieldErrors,
+            error: null,
+            status: null,
+            details: null,
+            message: null,
+            data: { tempToken: rawTempToken },
+        };
+    }
+
+    if (validatedFields.data.intent === "resend") {
+        const responseData = await emailCodeResendService(
+            validatedFields.data.tempToken,
+        );
+
+        if (!responseData) {
+            return {
+                formData,
+                zodErrors: null,
+                error: null,
+                status: "error",
+                details: null,
+                message: "Ops! Something went wrong. Please try again.",
+                data: { tempToken: validatedFields.data.tempToken },
+            };
+        }
+
+        if ("error" in responseData && responseData.error) {
+            return {
+                formData,
+                zodErrors: null,
+                error: responseData.error,
+                status: null,
+                details: responseData.details,
+                message: null,
+                data: { tempToken: validatedFields.data.tempToken },
+            };
+        }
+
+        if ("status" in responseData && responseData.status !== "success") {
+            return {
+                formData,
+                zodErrors: null,
+                error: null,
+                status: "error",
+                details: null,
+                message: responseData.message,
+                data: {
+                    tempToken: validatedFields.data.tempToken,
+                    requiresRelogin: responseData.data?.requiresRelogin,
+                    retryAfter: responseData.data?.retryAfter,
+                },
+            };
+        }
+
+        if ("status" in responseData && responseData.status === "success") {
+            return {
+                formData,
+                zodErrors: null,
+                error: null,
+                status: "success",
+                details: null,
+                message: responseData.message,
+                data: {
+                    tempToken: validatedFields.data.tempToken,
+                    sentAt: Date.now(),
+                },
+            };
+        }
+    }
+
+    if (validatedFields.data.intent !== "verify") {
+        return {
+            formData: null,
+            zodErrors: null,
+            error: null,
+            status: "error",
+            details: null,
+            message: "Ops! Something went wrong. Please try again.",
+            data: { tempToken: validatedFields.data.tempToken },
+        };
+    }
+
+    const responseData = await emailCodeVerifyService(
+        validatedFields.data.tempToken,
+        validatedFields.data.code,
+    );
+
+    if (!responseData) {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: null,
+            details: null,
+            message: "Ops! Something went wrong. Please try again.",
+            data: { tempToken: validatedFields.data.tempToken },
+        };
+    }
+
+    if ("error" in responseData && responseData.error) {
+        return {
+            formData,
+            zodErrors: null,
+            error: responseData.error,
+            status: null,
+            details: responseData.details,
+            message: null,
+            data: { tempToken: validatedFields.data.tempToken },
+        };
+    }
+
+    if ("status" in responseData && responseData.status !== "success") {
+        return {
+            formData: null,
+            zodErrors: null,
+            error: null,
+            status: "error",
+            details: null,
+            message:
+                responseData.data?.attemptsLeft !== undefined
+                    ? `${responseData.message}. Attempts left: ${responseData.data?.attemptsLeft}`
+                    : responseData.message,
+            data: {
+                tempToken: validatedFields.data.tempToken,
+                attemptsLeft: responseData.data?.attemptsLeft,
+                requiresRelogin: responseData.data?.requiresRelogin,
+            },
+        };
+    }
+
+    if ("refreshToken" in responseData && "accessToken" in responseData) {
+        const cookieStore = await cookies();
+
+        cookieStore.set(
+            "refreshToken",
+            responseData.refreshToken,
+            refreshTokenConfig,
+        );
+        cookieStore.set(
+            "accessToken",
+            responseData.accessToken,
+            accessTokenConfig,
+        );
+
+        const redirectPath = validatedFields.data.redirect?.toString();
+
+        redirect(redirectPath ?? "/overview");
+    }
+
+    return {
+        formData: null,
+        zodErrors: null,
+        error: null,
+        status: "error",
+        details: null,
+        message: "Ops! Something went wrong. Please try again.",
+        data: { tempToken: validatedFields.data.tempToken },
+    };
 }

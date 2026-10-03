@@ -159,6 +159,12 @@ export interface SetPasswordZodErrors extends BaseZodErrors {
     confirmPassword?: string[];
 }
 
+export interface EmailCodeZodErrors extends BaseZodErrors {
+    tempToken?: string[];
+    intent?: string[];
+    code?: string[];
+}
+
 export interface LoginAction extends BaseAction {
     zodErrors: LoginZodErrors | null;
 }
@@ -225,4 +231,8 @@ export interface DeleteAccountAction extends BaseAction {
 
 export interface SetPasswordAction extends BaseAction {
     zodErrors: SetPasswordZodErrors | null;
+}
+
+export interface EmailCodeAction extends BaseAction {
+    zodErrors: EmailCodeZodErrors | null;
 }

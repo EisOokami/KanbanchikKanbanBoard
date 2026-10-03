@@ -190,3 +190,16 @@ export interface MfaBackupCode extends RowDataPacket {
     used_at: string | null;
     created_at: string;
 }
+
+export interface LoginEmailCodes extends RowDataPacket {
+    id: number;
+    token_hash: string;
+    user_id: number;
+    code_hash: string;
+    attempts: number;
+    ip_address: string;
+    user_agent: string;
+    last_sent_at: string | null;
+    expires_at: string;
+    created_at: string;
+}

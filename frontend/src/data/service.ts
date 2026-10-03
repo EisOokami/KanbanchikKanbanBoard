@@ -44,7 +44,7 @@ export async function registerService(userData: Register): Promise<
           status: "success";
           message: string;
       }
-    | { status: "error" | "message" | "success"; message: string }
+    | { status: "error" | "success"; message: string }
     | {
           error: string;
           details: {
@@ -81,10 +81,10 @@ export async function registerService(userData: Register): Promise<
 
 export async function loginService(userData: Login): Promise<
     | {
-          accessToken: string;
-          refreshToken: string;
           status: "success";
           message: string;
+          accessToken: string;
+          refreshToken: string;
       }
     | {
           status: "success";
@@ -92,7 +92,13 @@ export async function loginService(userData: Login): Promise<
           requiresMfa: boolean;
           tempToken: string;
       }
-    | { status: "error" | "message" | "success"; message: string }
+    | {
+          status: "success";
+          message: string;
+          requiresEmailCode: boolean;
+          tempToken: string;
+      }
+    | { status: "error" | "success"; message: string }
     | {
           error: string;
           details: {
@@ -129,7 +135,7 @@ export async function loginService(userData: Login): Promise<
 }
 
 export async function forgotPasswordService(userData: ForgotPassword): Promise<
-    | { status: "error" | "message" | "success"; message: string }
+    | { status: "error" | "success"; message: string }
     | {
           error: string;
           details: {
@@ -165,7 +171,7 @@ export async function resetPasswordService(userData: ResetPassword): Promise<
           status: "success";
           message: string;
       }
-    | { status: "error" | "message" | "success"; message: string }
+    | { status: "error" | "success"; message: string }
     | {
           error: string;
           details: {
@@ -259,7 +265,7 @@ export async function mfaVerifyService(data: {
 }
 
 export async function resendVerificationService(email: string): Promise<
-    | { status: "error" | "message" | "success"; message: string }
+    | { status: "error" | "success"; message: string }
     | {
           error: string;
           details: {
@@ -284,6 +290,92 @@ export async function resendVerificationService(email: string): Promise<
         return response.json();
     } catch (error) {
         console.error("Resend Verification Service Error:", error);
+        throw error;
+    }
+}
+
+export async function emailCodeResendService(tempToken: string): Promise<
+    | {
+          status: "error";
+          message: string;
+          data?: {
+              attemptsLeft?: number;
+              requiresRelogin?: boolean;
+              retryAfter?: number;
+          };
+      }
+    | { status: "success"; message: string }
+    | {
+          error: string;
+          details: {
+              field: string;
+              message: string;
+          }[];
+      }
+    | undefined
+> {
+    const url = new URL("/auth/login/email-code/resend", baseUrl);
+
+    try {
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ tempToken }),
+            cache: "no-cache",
+        });
+
+        return response.json();
+    } catch (error) {
+        console.error("Email Code Resend Service Error:", error);
+        throw error;
+    }
+}
+
+export async function emailCodeVerifyService(
+    tempToken: string,
+    code: string,
+): Promise<
+    | {
+          status: "error";
+          message: string;
+          data?: {
+              attemptsLeft?: number;
+              requiresRelogin?: boolean;
+              retryAfter?: number;
+          };
+      }
+    | {
+          status: "success";
+          message: string;
+          accessToken: string;
+          refreshToken: string;
+      }
+    | {
+          error: string;
+          details: {
+              field: string;
+              message: string;
+          }[];
+      }
+    | undefined
+> {
+    const url = new URL("/auth/login/email-code/verify", baseUrl);
+
+    try {
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ tempToken, code }),
+            cache: "no-cache",
+        });
+
+        return response.json();
+    } catch (error) {
+        console.error("Email Code Verify Service Error:", error);
         throw error;
     }
 }

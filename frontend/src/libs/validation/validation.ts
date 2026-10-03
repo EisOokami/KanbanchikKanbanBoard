@@ -884,3 +884,31 @@ export const setPasswordSchema = z
         message: "Confirm New Password must be the same as New Password",
         path: ["confirmPassword"],
     });
+
+export const emailCodeVerifySchema = z.object({
+    intent: z.literal("verify"),
+    tempToken: z
+        .string()
+        .trim()
+        .min(1, "Session expired. Please log in again")
+        .max(256, "Invalid session"),
+    code: z
+        .string()
+        .trim()
+        .regex(/^\d{6}$/, "Enter the 6-digit code"),
+    redirect: z.string().trim().max(2048).optional(),
+});
+
+export const emailCodeResendSchema = z.object({
+    intent: z.literal("resend"),
+    tempToken: z
+        .string()
+        .trim()
+        .min(1, "Session expired. Please log in again")
+        .max(256, "Invalid session"),
+});
+
+export const emailCodeFormSchema = z.discriminatedUnion("intent", [
+    emailCodeVerifySchema,
+    emailCodeResendSchema,
+]);

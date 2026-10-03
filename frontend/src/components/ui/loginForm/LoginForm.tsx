@@ -27,6 +27,7 @@ import {
     ShieldCheckIcon,
 } from "@phosphor-icons/react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "../shadcn/input-otp";
+import EmailCodeForm from "../emailCodeForm/EmailCodeForm";
 
 const INITIAL_STATE: BaseAction = {
     zodErrors: null,
@@ -45,6 +46,7 @@ interface LoginFormProps {
 export default function LoginForm({ redirect }: Readonly<LoginFormProps>) {
     const [backupCode, setBackupCode] = useState<string>("");
     const [useBackupCode, setUseBackupCode] = useState<boolean>(false);
+    const [dismissedToken, setDismissedToken] = useState<string | null>(null);
     const [formState, formAction, isPending] = useActionState(
         loginAction,
         INITIAL_STATE,
@@ -198,6 +200,22 @@ export default function LoginForm({ redirect }: Readonly<LoginFormProps>) {
                     </form>
                 </CardContent>
             </Card>
+        );
+    }
+
+    if (
+        formState?.data?.requiresEmailCode &&
+        formState.data.tempToken &&
+        formState.data.tempToken !== dismissedToken
+    ) {
+        const emailTempToken = formState.data.tempToken;
+
+        return (
+            <EmailCodeForm
+                tempToken={emailTempToken}
+                redirect={redirect}
+                onBack={() => setDismissedToken(emailTempToken)}
+            />
         );
     }
 

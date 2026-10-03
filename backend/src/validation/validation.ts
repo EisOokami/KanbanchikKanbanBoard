@@ -35,6 +35,15 @@ export const loginSchema = z.object({
         ),
 });
 
+export const verifyEmailCodeSchema = z.object({
+    tempToken: z.string().min(1).max(255),
+    code: z.string().regex(/^\d{6}$/, "Code must be 6 digits"),
+});
+
+export const resendEmailCodeSchema = z.object({
+    tempToken: z.string().min(1).max(255),
+});
+
 export const registerSchema = z.object({
     name: z
         .string()

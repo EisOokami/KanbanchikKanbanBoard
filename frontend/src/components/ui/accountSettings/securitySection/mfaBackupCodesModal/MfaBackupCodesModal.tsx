@@ -148,7 +148,7 @@ export default function MfaBackupCodesModal({
                             )}
                         </Button>
                         <p className="text-xs text-gray-400">
-                            Save these somewhere safe — they won&apos;t be shown
+                            Save these somewhere safe - they won&apos;t be shown
                             again.
                         </p>
                     </div>

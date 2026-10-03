@@ -7,8 +7,10 @@ import {
     forgotPasswordSchema,
     loginSchema,
     registerSchema,
+    resendEmailCodeSchema,
     resendVerificationSchema,
     resetPasswordSchema,
+    verifyEmailCodeSchema,
 } from "../validation/validation.js";
 import { ZodError } from "zod";
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
@@ -22,7 +24,7 @@ import {
     verifyRefreshToken,
 } from "../utils/jwt.js";
 import { jwtVerify, type JWTPayload } from "jose";
-import type { User } from "../types/types.js";
+import type { LoginEmailCodes, User } from "../types/types.js";
 import { generateCsrfToken } from "../utils/csrf.js";
 import {
     exchangeCodeForProfile,
@@ -32,6 +34,12 @@ import {
 import { generateRawToken, hashToken } from "../utils/mfa.js";
 import { emailTemplate } from "../utils/emailTemplate.js";
 import { sendLoginNotificationEmail } from "../utils/loginNotificationEmail.js";
+import {
+    generateEmailCode,
+    hashEmailCode,
+    safeEqualHex,
+} from "../utils/loginCode.js";
+import { sendLoginCodeEmail } from "../utils/sendLoginCodeEmail.js";
 
 dotenv.config();
 
@@ -538,6 +546,174 @@ export const login = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
+        const rawTempToken = generateRawToken();
+        const tempTokenHash = hashToken(rawTempToken);
+        const code = generateEmailCode();
+
+        await pool.execute(`DELETE FROM login_email_codes WHERE user_id = ?`, [
+            user.id,
+        ]);
+
+        await pool.execute<ResultSetHeader>(
+            `
+                INSERT INTO login_email_codes
+                    (token_hash, user_id, code_hash, ip_address, user_agent, expires_at)
+                VALUES (?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL ? MINUTE))
+            `,
+            [
+                tempTokenHash,
+                user.id,
+                hashEmailCode(user.id, code),
+                req.ip ?? null,
+                req.headers["user-agent"] ?? null,
+                10,
+            ],
+        );
+
+        await sendLoginCodeEmail(user, code);
+
+        res.status(200).json({
+            status: "success",
+            message: "Verification code sent to your email",
+            requiresEmailCode: true,
+            tempToken: rawTempToken,
+        });
+    } catch (error) {
+        if (error instanceof ZodError) {
+            const errorMessages = error.issues.map((issue: any) => ({
+                field: issue.path[0],
+                message: issue.message,
+            }));
+
+            res.status(400).json({
+                status: "error",
+                message: "Invalid data",
+                details: errorMessages,
+            });
+
+            return;
+        }
+
+        console.error("Login error:", error);
+        res.status(500).json({
+            status: "error",
+            message: "Server error during login",
+        });
+    }
+};
+
+export const verifyLoginEmailCode = async (
+    req: Request,
+    res: Response,
+): Promise<void> => {
+    try {
+        const { tempToken, code } = verifyEmailCodeSchema.parse(req.body);
+
+        const tokenHash = hashToken(tempToken);
+
+        const [bump] = await pool.execute<ResultSetHeader>(
+            `
+                UPDATE login_email_codes
+                SET attempts = attempts + 1
+                WHERE token_hash = ?
+                    AND expires_at > NOW()
+                    AND attempts < ?
+            `,
+            [tokenHash, 5],
+        );
+
+        if (bump.affectedRows === 0) {
+            res.status(401).json({
+                status: "error",
+                message:
+                    "Code expired or too many attempts. Please log in again",
+                data: { requiresRelogin: true },
+            });
+
+            return;
+        }
+
+        const [rows] = await pool.execute<
+            (Pick<
+                LoginEmailCodes,
+                "id" | "user_id" | "code_hash" | "attempts"
+            > &
+                RowDataPacket)[]
+        >(
+            `
+                SELECT id, user_id, code_hash, attempts
+                FROM login_email_codes
+                WHERE token_hash = ?
+            `,
+            [tokenHash],
+        );
+
+        const session = rows[0];
+
+        if (
+            !session ||
+            !safeEqualHex(
+                session.code_hash,
+                hashEmailCode(session.user_id, code),
+            )
+        ) {
+            res.status(401).json({
+                status: "error",
+                message: "Invalid verification code",
+                data: {
+                    attemptsLeft: session ? 5 - session.attempts : 0,
+                },
+            });
+
+            return;
+        }
+
+        const [deleteRows] = await pool.execute<ResultSetHeader>(
+            `DELETE FROM login_email_codes WHERE id = ?`,
+            [session.id],
+        );
+
+        if (deleteRows.affectedRows === 0) {
+            res.status(401).json({
+                status: "error",
+                message: "Invalid verification code",
+            });
+
+            return;
+        }
+
+        const [userRows] = await pool.execute<
+            (Pick<
+                User,
+                | "id"
+                | "name"
+                | "surname"
+                | "email"
+                | "avatar_url"
+                | "color"
+                | "auth_provider"
+            > &
+                RowDataPacket)[]
+        >(
+            `
+                SELECT id, name, surname, email, avatar_url, color, auth_provider
+                FROM users
+                WHERE id = ?
+            `,
+            [session.user_id],
+        );
+
+        const user = userRows[0];
+
+        if (!user) {
+            res.status(401).json({
+                status: "error",
+                message: "Invalid verification code",
+            });
+
+            return;
+        }
+
         const accessToken = await createAccessToken({
             id: user.id,
         });
@@ -568,24 +744,118 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         });
     } catch (error) {
         if (error instanceof ZodError) {
-            const errorMessages = error.issues.map((issue: any) => ({
-                field: issue.path[0],
-                message: issue.message,
-            }));
-
             res.status(400).json({
                 status: "error",
                 message: "Invalid data",
-                details: errorMessages,
+                details: error.issues.map((issue) => ({
+                    field: issue.path[0],
+                    message: issue.message,
+                })),
             });
 
             return;
         }
 
-        console.error("Login error:", error);
+        console.error("Verify login email code error:", error);
         res.status(500).json({
             status: "error",
-            message: "Server error during login",
+            message: "Server error during verification",
+        });
+    }
+};
+
+export const resendLoginEmailCode = async (
+    req: Request,
+    res: Response,
+): Promise<void> => {
+    try {
+        const { tempToken } = resendEmailCodeSchema.parse(req.body);
+
+        const tokenHash = hashToken(tempToken);
+
+        const [rows] = await pool.execute<
+            ((Pick<LoginEmailCodes, "id" | "user_id"> & RowDataPacket) & {
+                email: string;
+                name: string;
+                seconds_since_sent: number;
+            })[]
+        >(
+            `
+                SELECT
+                    c.id,
+                    c.user_id,
+                    TIMESTAMPDIFF(SECOND, c.last_sent_at, NOW()) AS seconds_since_sent,
+                    u.email,
+                    u.name
+                FROM login_email_codes c
+                JOIN users u ON u.id = c.user_id
+                WHERE c.token_hash = ?
+            `,
+            [tokenHash],
+        );
+
+        const session = rows[0];
+
+        if (!session) {
+            res.status(401).json({
+                status: "error",
+                message: "Session expired. Please log in again",
+                data: { requiresRelogin: true },
+            });
+
+            return;
+        }
+
+        if (session.seconds_since_sent < 60) {
+            res.status(429).json({
+                status: "error",
+                message: "Please wait before requesting a new code",
+                data: {
+                    retryAfter: 60 - session.seconds_since_sent,
+                },
+            });
+
+            return;
+        }
+
+        const code = generateEmailCode();
+
+        await pool.execute(
+            `
+                UPDATE login_email_codes
+                SET code_hash = ?,
+                    attempts = 0,
+                    last_sent_at = NOW(),
+                    expires_at = DATE_ADD(NOW(), INTERVAL ? MINUTE)
+                WHERE id = ?
+            `,
+            [hashEmailCode(session.user_id, code), 10, session.id],
+        );
+
+        await sendLoginCodeEmail(session, code);
+
+        res.status(200).json({
+            status: "success",
+            message: "A new verification code has been sent",
+        });
+    } catch (error) {
+        if (error instanceof ZodError) {
+            res.status(400).json({
+                status: "error",
+                message: "Invalid data",
+                details: error.issues.map((issue) => ({
+                    field: issue.path[0],
+                    message: issue.message,
+                })),
+            });
+
+            return;
+        }
+
+        console.error("Resend login email code error:", error);
+        res.status(500).json({
+            status: "error",
+            message: "Server error while resending code",
         });
     }
 };
