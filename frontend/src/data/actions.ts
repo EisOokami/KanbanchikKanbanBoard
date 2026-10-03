@@ -303,6 +303,7 @@ export async function registerAction(
         surname: formData.get("surname"),
         email: formData.get("email"),
         password: formData.get("password"),
+        terms: formData.get("terms"),
     });
 
     if (!validatedFields.success) {

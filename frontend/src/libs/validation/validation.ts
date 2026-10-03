@@ -65,6 +65,9 @@ export const registerSchema = z.object({
             /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).+$/,
             "Password must contain at least one uppercase letter, one lowercase letter, one special character and one number",
         ),
+    terms: z.literal("on", {
+        message: "You must accept the Terms & Conditions and Privacy Policy",
+    }),
 });
 
 export const resetPasswordSchema = z

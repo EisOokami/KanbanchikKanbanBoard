@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { registerAction } from "@/data/actions";
@@ -22,6 +22,7 @@ import { DetailsErrors } from "@/components/ui/detailsErrors/DetailsErrors";
 import { PasswordInput } from "@/components/ui/shadcn/password-input";
 import { cn } from "@/libs/utils";
 import { GoogleLogoIcon, InfoIcon } from "@phosphor-icons/react";
+import { Checkbox } from "../shadcn/checkbox";
 
 const INITIAL_STATE: BaseAction = {
     zodErrors: null,
@@ -33,6 +34,8 @@ const INITIAL_STATE: BaseAction = {
 };
 
 export default function SignUpForm() {
+    const [googleTermsAccepted, setGoogleTermsAccepted] =
+        useState<boolean>(false);
     const [formState, formAction, isPending] = useActionState(
         registerAction,
         INITIAL_STATE,
@@ -130,6 +133,47 @@ export default function SignUpForm() {
                         />
                         <ZodErrors error={formState?.zodErrors?.password} />
                     </div>
+                    <div className="flex items-start gap-2">
+                        <Checkbox
+                            id="terms"
+                            name="terms"
+                            checked={googleTermsAccepted}
+                            onCheckedChange={(checked) =>
+                                setGoogleTermsAccepted(checked === true)
+                            }
+                            defaultChecked={
+                                formState?.formData?.get("terms") === "on"
+                            }
+                            className={cn(
+                                "mt-0.5",
+                                formState?.zodErrors?.terms
+                                    ? "border-red-500"
+                                    : "",
+                            )}
+                        />
+                        <Label
+                            htmlFor="terms"
+                            className="text-sm font-normal leading-snug text-muted-foreground"
+                        >
+                            I agree to the{" "}
+                            <Link
+                                href="/terms"
+                                target="_blank"
+                                className="text-primary underline"
+                            >
+                                Terms &amp; Conditions
+                            </Link>{" "}
+                            and{" "}
+                            <Link
+                                href="/privacy"
+                                target="_blank"
+                                className="text-primary underline"
+                            >
+                                Privacy Policy
+                            </Link>
+                        </Label>
+                    </div>
+                    <ZodErrors error={formState?.zodErrors?.terms} />
                     {formState?.message && (
                         <div
                             className={cn(
@@ -177,18 +221,31 @@ export default function SignUpForm() {
                     <div className="h-px flex-1 bg-border" />
                 </div>
                 <Button
-                    asChild
+                    asChild={googleTermsAccepted}
                     type="button"
                     variant="outline"
+                    disabled={!googleTermsAccepted}
                     className="w-full border-border bg-control text-foreground hover:bg-control-active"
                 >
-                    <a href={`${process.env.NEXT_PUBLIC_API_URL}/auth/google`}>
-                        <GoogleLogoIcon
-                            weight="duotone"
-                            className="mr-2 size-4"
-                        />
-                        Continue with Google
-                    </a>
+                    {googleTermsAccepted ? (
+                        <a
+                            href={`${process.env.NEXT_PUBLIC_API_URL}/auth/google`}
+                        >
+                            <GoogleLogoIcon
+                                weight="duotone"
+                                className="mr-2 size-4"
+                            />
+                            Continue with Google
+                        </a>
+                    ) : (
+                        <>
+                            <GoogleLogoIcon
+                                weight="duotone"
+                                className="mr-2 size-4"
+                            />
+                            Continue with Google
+                        </>
+                    )}
                 </Button>
             </CardContent>
             <CardFooter className="flex justify-center">
