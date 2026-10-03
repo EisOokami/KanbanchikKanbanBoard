@@ -94,9 +94,13 @@ export async function findOrCreateGoogleUser(profile: {
                     name,
                     surname,
                     avatar_url, 
-                    password
+                    password,
+                    terms_accepted_at,
+                    terms_version,
+                    privacy_accepted_at,
+                    privacy_version
                 )
-            VALUES (?, ?, 'google', ?, ?, ?, NULL)
+            VALUES (?, ?, 'google', ?, ?, ?, NULL, ?, ?, ?, ?)
         `,
         [
             profile.email,
@@ -104,6 +108,10 @@ export async function findOrCreateGoogleUser(profile: {
             profile.name,
             profile.surname,
             profile.avatarUrl,
+            new Date(),
+            process.env.TERMS_VERSION!,
+            new Date(),
+            process.env.PRIVACY_VERSION!,
         ],
     );
 

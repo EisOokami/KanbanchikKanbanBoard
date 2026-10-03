@@ -81,9 +81,13 @@ export const register = async (req: Request, res: Response): Promise<void> => {
                         color,
                         is_verified, 
                         verification_token, 
-                        verification_token_expires
+                        verification_token_expires,
+                        terms_accepted_at,
+                        terms_version,
+                        privacy_accepted_at,
+                        privacy_version
                     )
-                VALUES (?, ?, ?, ?, ?, FALSE, ?, ?)
+                VALUES (?, ?, ?, ?, ?, FALSE, ?, ?, ?, ?, ?, ?)
             `,
             [
                 name,
@@ -93,6 +97,10 @@ export const register = async (req: Request, res: Response): Promise<void> => {
                 color || "#cccccc",
                 verificationToken,
                 verificationExpires,
+                new Date(),
+                process.env.TERMS_VERSION!,
+                new Date(),
+                process.env.PRIVACY_VERSION!,
             ],
         );
 
@@ -457,6 +465,8 @@ export const login = async (req: Request, res: Response): Promise<void> => {
                 | "auth_provider"
                 | "mfa_enabled"
                 | "is_verified"
+                | "terms_version"
+                | "privacy_version"
             > &
                 RowDataPacket)[]
         >(
@@ -471,7 +481,9 @@ export const login = async (req: Request, res: Response): Promise<void> => {
                     color, 
                     auth_provider,
                     mfa_enabled,
-                    is_verified
+                    is_verified,
+                    terms_version,
+                    privacy_version
                 FROM users 
                 WHERE email = ?
             `,
@@ -484,6 +496,19 @@ export const login = async (req: Request, res: Response): Promise<void> => {
             res.status(401).json({
                 status: "error",
                 message: "Invalid email or password",
+            });
+
+            return;
+        }
+
+        if (
+            user.terms_version !== process.env.TERMS_VERSION ||
+            user.privacy_version !== process.env.PRIVACY_VERSION
+        ) {
+            res.status(401).json({
+                status: "error",
+                message:
+                    "Terms of Service and Privacy Policy update required. Please review and accept the current versions. A link to the latest documents has been sent to your email",
             });
 
             return;
@@ -1489,9 +1514,9 @@ export async function googleAuthExchange(req: Request, res: Response) {
 
         const [rows] = await pool.execute<RowDataPacket[]>(
             `
-            SELECT * FROM oauth_exchange_codes
-            WHERE code = ? AND used_at IS NULL AND expires_at > NOW()
-        `,
+                SELECT * FROM oauth_exchange_codes
+                WHERE code = ? AND used_at IS NULL AND expires_at > NOW()
+            `,
             [code],
         );
 

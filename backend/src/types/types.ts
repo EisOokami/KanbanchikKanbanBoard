@@ -25,6 +25,10 @@ export interface User extends RowDataPacket {
     is_verified: boolean;
     verification_token: string | null;
     verification_token_expires: string | null;
+    terms_accepted_at: string;
+    terms_version: string;
+    privacy_accepted_at: string;
+    privacy_version: string;
 }
 
 export interface Project extends RowDataPacket {
