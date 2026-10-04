@@ -237,7 +237,15 @@ export const getProjects = async (req: IGetUserRequest, res: Response) => {
 
         res.status(200).json(enrichedProjects);
     } catch (error) {
-        console.error(error);
+        req.log.error(
+            {
+                err: error,
+                event: "project.get_projects_failed",
+                operation: "getProjects",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({ status: "error", message: "Database error" });
     }
 };
@@ -310,6 +318,15 @@ export const getProject = async (req: IGetUserRequest, res: Response) => {
             );
 
             if (!history.length || !history[0]) {
+                req.log.warn(
+                    {
+                        audit: true,
+                        event: "security.authorization_failed",
+                        operation: "getProject",
+                    },
+                    "Authorization denied",
+                );
+
                 res.status(404).json({
                     status: "error",
                     message: "Project not found or access denied",
@@ -723,7 +740,15 @@ export const getProject = async (req: IGetUserRequest, res: Response) => {
                 taskStats.length && taskStats[0] ? taskStats[0].done : 0,
         });
     } catch (error) {
-        console.error(error);
+        req.log.error(
+            {
+                err: error,
+                event: "project.get_project_failed",
+                operation: "getProject",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({ status: "error", message: "Database error" });
     }
 };
@@ -781,6 +806,15 @@ export const exportProjectData = async (
         );
 
         if (!projects.length || !projects[0]) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "exportProjectData",
+                },
+                "Authorization denied",
+            );
+
             res.status(404).json({
                 status: "error",
                 message: "Project not found or access denied",
@@ -1142,6 +1176,16 @@ export const exportProjectData = async (
             [project.id],
         );
 
+        req.log.info(
+            {
+                event: "project.exported",
+                audit: true,
+                userId,
+                projectId: project.id,
+            },
+            "Operation completed",
+        );
+
         res.status(200).json({
             id: project.id,
             name: project.name,
@@ -1189,7 +1233,15 @@ export const exportProjectData = async (
                 taskStats.length && taskStats[0] ? taskStats[0].done : 0,
         });
     } catch (error) {
-        console.error(error);
+        req.log.error(
+            {
+                err: error,
+                event: "project.export_project_data_failed",
+                operation: "exportProjectData",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({ status: "error", message: "Database error" });
     }
 };
@@ -1395,15 +1447,31 @@ export const createProject = async (req: IGetUserRequest, res: Response) => {
                         ],
                     };
 
-                    transporter.sendMail(mailOptions, (error, info) => {
+                    transporter.sendMail(mailOptions, (error) => {
                         if (error) {
-                            console.error(error);
-                            res.status(500).send({
-                                status: "error",
-                                message: "Error sending email",
-                            });
+                            req.log.error(
+                                {
+                                    err: error,
+                                    event: "email.delivery_failed",
+                                    operation: "createProject",
+                                },
+                                "Operation failed",
+                            );
+
+                            if (!res.headersSent) {
+                                res.status(500).send({
+                                    status: "error",
+                                    message: "Error sending email",
+                                });
+                            }
                         } else {
-                            console.log(`Email sent: ${info.response}`);
+                            req.log.debug(
+                                {
+                                    event: "email.sent",
+                                    operation: "createProject",
+                                },
+                                "Email accepted by transport",
+                            );
                         }
                     });
                 }),
@@ -1430,6 +1498,11 @@ export const createProject = async (req: IGetUserRequest, res: Response) => {
             [projectId],
         );
 
+        req.log.info(
+            { event: "project.created", userId, projectId },
+            "Operation completed",
+        );
+
         res.status(201).json({
             status: "success",
             message: "The project has been successfully created",
@@ -1451,7 +1524,15 @@ export const createProject = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
-        console.error(error);
+        req.log.error(
+            {
+                err: error,
+                event: "project.create_project_failed",
+                operation: "createProject",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({ status: "error", message: "Database error" });
     }
 };
@@ -1503,6 +1584,15 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
         );
 
         if (!projects.length) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "updateProject",
+                },
+                "Authorization denied",
+            );
+
             res.status(404).json({
                 status: "error",
                 message: "Project not found or access denied",
@@ -1514,6 +1604,15 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
         const project = projects[0];
 
         if (!project) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "updateProject",
+                },
+                "Authorization denied",
+            );
+
             res.status(404).json({
                 status: "error",
                 message: "Project not found or access denied",
@@ -1871,15 +1970,31 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
                         ],
                     };
 
-                    transporter.sendMail(mailOptions, (error, info) => {
+                    transporter.sendMail(mailOptions, (error) => {
                         if (error) {
-                            console.error(error);
-                            res.status(500).send({
-                                status: "error",
-                                message: "Error sending email",
-                            });
+                            req.log.error(
+                                {
+                                    err: error,
+                                    event: "email.delivery_failed",
+                                    operation: "updateProject",
+                                },
+                                "Operation failed",
+                            );
+
+                            if (!res.headersSent) {
+                                res.status(500).send({
+                                    status: "error",
+                                    message: "Error sending email",
+                                });
+                            }
                         } else {
-                            console.log(`Email sent: ${info.response}`);
+                            req.log.debug(
+                                {
+                                    event: "email.sent",
+                                    operation: "updateProject",
+                                },
+                                "Email accepted by transport",
+                            );
                         }
                     });
                 }),
@@ -1906,6 +2021,11 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
             [project.id],
         );
 
+        req.log.info(
+            { event: "project.updated", userId, projectId: project.id },
+            "Operation completed",
+        );
+
         res.status(200).json({
             status: "success",
             message: "The project has been successfully updated",
@@ -1927,7 +2047,15 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
-        console.error(error);
+        req.log.error(
+            {
+                err: error,
+                event: "project.update_project_failed",
+                operation: "updateProject",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({ status: "error", message: "Database error" });
     }
 };
@@ -1962,6 +2090,15 @@ export const deleteProject = async (req: IGetUserRequest, res: Response) => {
         >(`SELECT id, owner_id FROM projects WHERE slug = ?`, [slug]);
 
         if (projects.length === 0) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "deleteProject",
+                },
+                "Authorization denied",
+            );
+
             res.status(404).json({
                 status: "error",
                 message: "Project not found or access denied",
@@ -1973,6 +2110,15 @@ export const deleteProject = async (req: IGetUserRequest, res: Response) => {
         const project = projects[0];
 
         if (!project) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "deleteProject",
+                },
+                "Authorization denied",
+            );
+
             res.status(404).json({
                 status: "error",
                 message: "Project not found or access denied",
@@ -1982,6 +2128,15 @@ export const deleteProject = async (req: IGetUserRequest, res: Response) => {
         }
 
         if (project.owner_id !== userId) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "deleteProject",
+                },
+                "Authorization denied",
+            );
+
             res.status(403).json({
                 status: "error",
                 message: "Only project owner can delete the project",
@@ -2023,29 +2178,26 @@ export const deleteProject = async (req: IGetUserRequest, res: Response) => {
         );
 
         if (attachments && attachments.length) {
-            attachments.map(async (attachment) => {
-                const __dirname = path.resolve(path.dirname(""));
-                const fileUrl = attachment.file_url.replace(/^\/files/, "");
-                const filePath = path.join(__dirname, "/uploads", fileUrl);
+            await Promise.all(
+                attachments.map(async (attachment) => {
+                    const __dirname = path.resolve(path.dirname(""));
+                    const fileUrl = attachment.file_url.replace(/^\/files/, "");
+                    const filePath = path.join(__dirname, "/uploads", fileUrl);
 
-                if (existsSync(filePath)) {
-                    unlinkSync(filePath);
-                }
+                    if (existsSync(filePath)) {
+                        unlinkSync(filePath);
+                    }
 
-                const [rows] = await pool.execute<ResultSetHeader>(
-                    "DELETE FROM attachments WHERE id = ?",
-                    [attachment.id],
-                );
+                    const [rows] = await pool.execute<ResultSetHeader>(
+                        "DELETE FROM attachments WHERE id = ?",
+                        [attachment.id],
+                    );
 
-                if (rows.affectedRows === 0) {
-                    res.status(400).json({
-                        status: "error",
-                        message: "Failed to delete file",
-                    });
-
-                    throw Error("Failed to delete file");
-                }
-            });
+                    if (rows.affectedRows === 0) {
+                        throw Error("Failed to delete file");
+                    }
+                }),
+            );
         }
 
         const [result] = await pool.execute<ResultSetHeader>(
@@ -2054,6 +2206,15 @@ export const deleteProject = async (req: IGetUserRequest, res: Response) => {
         );
 
         if (result.affectedRows === 0) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "deleteProject",
+                },
+                "Authorization denied",
+            );
+
             res.status(404).json({
                 status: "error",
                 message: "Project not found or access denied",
@@ -2061,6 +2222,11 @@ export const deleteProject = async (req: IGetUserRequest, res: Response) => {
 
             return;
         }
+
+        req.log.info(
+            { event: "project.deleted", userId, projectId: project.id },
+            "Operation completed",
+        );
 
         res.status(200).json({
             status: "success",
@@ -2082,7 +2248,15 @@ export const deleteProject = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
-        console.error(error);
+        req.log.error(
+            {
+                err: error,
+                event: "project.delete_project_failed",
+                operation: "deleteProject",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({ status: "error", message: "Database error" });
     }
 };
@@ -2134,6 +2308,15 @@ export const changeRole = async (req: IGetUserRequest, res: Response) => {
         );
 
         if (projects.length === 0) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "changeRole",
+                },
+                "Authorization denied",
+            );
+
             res.status(404).json({
                 status: "error",
                 message: "Project not found or access denied",
@@ -2145,6 +2328,15 @@ export const changeRole = async (req: IGetUserRequest, res: Response) => {
         const project = projects[0];
 
         if (!project) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "changeRole",
+                },
+                "Authorization denied",
+            );
+
             res.status(404).json({
                 status: "error",
                 message: "Project not found or access denied",
@@ -2164,6 +2356,15 @@ export const changeRole = async (req: IGetUserRequest, res: Response) => {
         );
 
         if (members.length === 0) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "changeRole",
+                },
+                "Authorization denied",
+            );
+
             res.status(404).json({
                 status: "error",
                 message: "Member not found or access denied",
@@ -2175,6 +2376,15 @@ export const changeRole = async (req: IGetUserRequest, res: Response) => {
         const member = members[0];
 
         if (!member) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "changeRole",
+                },
+                "Authorization denied",
+            );
+
             res.status(404).json({
                 status: "error",
                 message: "Member not found or access denied",
@@ -2201,6 +2411,18 @@ export const changeRole = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
+        req.log.info(
+            {
+                event: "project.member_role_changed",
+                audit: true,
+                userId,
+                projectId: project.id,
+                memberId: validatedData.memberId,
+                role: validatedData.role,
+            },
+            "Operation completed",
+        );
+
         res.status(200).json({
             status: "success",
             message: "The role has been successfully changed",
@@ -2221,7 +2443,15 @@ export const changeRole = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
-        console.error(error);
+        req.log.error(
+            {
+                err: error,
+                event: "project.change_role_failed",
+                operation: "changeRole",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({ status: "error", message: "Database error" });
     }
 };
@@ -2272,6 +2502,15 @@ export const deleteMember = async (
         );
 
         if (!userAccess.length || !userAccess[0]) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "deleteMember",
+                },
+                "Authorization denied",
+            );
+
             res.status(403).json({
                 status: "error",
                 message: "Forbidden",
@@ -2328,6 +2567,17 @@ export const deleteMember = async (
             return;
         }
 
+        req.log.info(
+            {
+                event: "project.member_removed",
+                audit: true,
+                userId,
+                projectId,
+                memberId: validatedData.memberId,
+            },
+            "Operation completed",
+        );
+
         res.status(201).json({
             status: "success",
             message: "Member has been deleted",
@@ -2348,7 +2598,15 @@ export const deleteMember = async (
             return;
         }
 
-        console.error(error);
+        req.log.error(
+            {
+                err: error,
+                event: "project.delete_member_failed",
+                operation: "deleteMember",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({ status: "error", message: "Database error" });
     }
 };
@@ -2403,6 +2661,15 @@ export const transferOwnership = async (
         );
 
         if (projects.length === 0) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "transferOwnership",
+                },
+                "Authorization denied",
+            );
+
             res.status(404).json({
                 status: "error",
                 message: "Project not found or access denied",
@@ -2414,6 +2681,15 @@ export const transferOwnership = async (
         const project = projects[0];
 
         if (!project) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "transferOwnership",
+                },
+                "Authorization denied",
+            );
+
             res.status(404).json({
                 status: "error",
                 message: "Project not found or access denied",
@@ -2433,6 +2709,15 @@ export const transferOwnership = async (
         );
 
         if (members.length === 0) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "transferOwnership",
+                },
+                "Authorization denied",
+            );
+
             res.status(404).json({
                 status: "error",
                 message: "Member not found or access denied",
@@ -2444,6 +2729,15 @@ export const transferOwnership = async (
         const member = members[0];
 
         if (!member) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "transferOwnership",
+                },
+                "Authorization denied",
+            );
+
             res.status(404).json({
                 status: "error",
                 message: "Member not found or access denied",
@@ -2508,6 +2802,17 @@ export const transferOwnership = async (
             return;
         }
 
+        req.log.info(
+            {
+                event: "project.ownership_transferred",
+                audit: true,
+                userId,
+                projectId: project.id,
+                memberId: validatedData.memberId,
+            },
+            "Operation completed",
+        );
+
         res.status(200).json({
             status: "success",
             message: "Ownership rights have been successfully transferred",
@@ -2528,7 +2833,15 @@ export const transferOwnership = async (
             return;
         }
 
-        console.error(error);
+        req.log.error(
+            {
+                err: error,
+                event: "project.transfer_ownership_failed",
+                operation: "transferOwnership",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({ status: "error", message: "Database error" });
     }
 };

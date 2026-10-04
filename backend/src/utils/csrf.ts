@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import { createHmac, randomBytes, timingSafeEqual } from "crypto";
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const CSRF_SECRET = process.env.CSRF_SECRET!;
 

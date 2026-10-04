@@ -18,7 +18,7 @@ import { ZodError } from "zod";
 import { transporter } from "../utils/email.js";
 import { emailTemplate } from "../utils/emailTemplate.js";
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const frontendUrl = process.env.FRONTEND_URL;
 const inviteTime = 7 * 24 * 60 * 60 * 1000;
@@ -65,6 +65,15 @@ export const generateInvite = async (
         );
 
         if (!members[0]) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "generateInvite",
+                },
+                "Authorization denied",
+            );
+
             res.status(403).json({
                 status: "error",
                 message: "Forbidden",
@@ -94,13 +103,32 @@ export const generateInvite = async (
             return;
         }
 
+        req.log.info(
+            {
+                event: "invite.created",
+                audit: true,
+                userId,
+                projectId,
+                inviteId: rows.insertId,
+            },
+            "Operation completed",
+        );
+
         res.status(201).json({
             status: "success",
             message: "The invitation has been created",
             data: { inviteUrl: `${frontendUrl}/invite/${token}` },
         });
     } catch (error) {
-        console.error(error);
+        req.log.error(
+            {
+                err: error,
+                event: "invite.generate_invite_failed",
+                operation: "generateInvite",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({ status: "error", message: "Database error" });
     }
 };
@@ -146,6 +174,16 @@ export const acceptInvite = async (
         const invite = invites[0];
 
         if (!invite) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "invite.rejected",
+                    userId,
+                    reason: "not_found",
+                },
+                "Invitation rejected",
+            );
+
             res.status(404).json({
                 status: "error",
                 message: "Invite not found",
@@ -155,6 +193,16 @@ export const acceptInvite = async (
         }
 
         if (invite.used) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "invite.rejected",
+                    userId,
+                    reason: "already_used",
+                },
+                "Invitation rejected",
+            );
+
             res.status(400).json({
                 status: "error",
                 message: "Invite already used",
@@ -164,6 +212,16 @@ export const acceptInvite = async (
         }
 
         if (new Date(invite.expires_at) < new Date()) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "invite.rejected",
+                    userId,
+                    reason: "expired",
+                },
+                "Invitation rejected",
+            );
+
             res.status(400).json({
                 status: "error",
                 message: "Invite expired",
@@ -222,13 +280,32 @@ export const acceptInvite = async (
             connection.release();
         }
 
+        req.log.info(
+            {
+                event: "invite.accepted",
+                audit: true,
+                userId,
+                projectId: invite.project_id,
+                inviteId: invite.id,
+            },
+            "Operation completed",
+        );
+
         res.status(200).json({
             status: "success",
             message: "Successfully joined the project",
             data: { projectId: invite.project_id },
         });
     } catch (error) {
-        console.error(error);
+        req.log.error(
+            {
+                err: error,
+                event: "invite.accept_invite_failed",
+                operation: "acceptInvite",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({ status: "error", message: "Database error" });
     }
 };
@@ -354,20 +431,47 @@ export const memberInvite = async (
                         ],
                     };
 
-                    transporter.sendMail(mailOptions, (error, info) => {
+                    transporter.sendMail(mailOptions, (error) => {
                         if (error) {
-                            console.error(error);
-                            res.status(500).send({
-                                status: "error",
-                                message: "Error sending email",
-                            });
+                            req.log.error(
+                                {
+                                    err: error,
+                                    event: "email.delivery_failed",
+                                    operation: "memberInvite",
+                                },
+                                "Operation failed",
+                            );
+
+                            if (!res.headersSent) {
+                                res.status(500).send({
+                                    status: "error",
+                                    message: "Error sending email",
+                                });
+                            }
                         } else {
-                            console.log(`Email sent: ${info.response}`);
+                            req.log.debug(
+                                {
+                                    event: "email.sent",
+                                    operation: "memberInvite",
+                                },
+                                "Email accepted by transport",
+                            );
                         }
                     });
                 }),
             );
         }
+
+        req.log.info(
+            {
+                event: "invite.created",
+                audit: true,
+                userId,
+                projectId: project.id,
+                count: validatedData.members?.length ?? 0,
+            },
+            "Operation completed",
+        );
 
         res.status(200).json({
             status: "success",
@@ -389,7 +493,15 @@ export const memberInvite = async (
             return;
         }
 
-        console.error(error);
+        req.log.error(
+            {
+                err: error,
+                event: "invite.member_invite_failed",
+                operation: "memberInvite",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({ status: "error", message: "Database error" });
     }
 };

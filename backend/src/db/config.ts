@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import type { PoolOptions } from "mysql2";
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const config: PoolOptions = {
     host: process.env.DB_HOST ?? "localhost",

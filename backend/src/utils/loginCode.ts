@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import dotenv from "dotenv";
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 export const generateEmailCode = (): string =>
     crypto.randomInt(0, 1_000_000).toString().padStart(6, "0");

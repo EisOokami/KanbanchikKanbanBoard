@@ -207,3 +207,15 @@ export interface LoginEmailCodes extends RowDataPacket {
     expires_at: string;
     created_at: string;
 }
+
+export type AuditReason =
+    | "suspicious_query"
+    | "suspicious_body"
+    | "suspicious_path"
+    | "suspicious_user_agent"
+    | "rate_limit_exceeded"
+    | "not_found";
+
+export interface RequestWithAuditFlag extends Request {
+    flaggedSuspicious?: boolean;
+}

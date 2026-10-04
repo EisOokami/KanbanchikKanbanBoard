@@ -93,6 +93,11 @@ export const setupMfa = async (
         });
         const qrCodeDataUrl = await QRCode.toDataURL(otpauthUri);
 
+        req.log.info(
+            { event: "auth.mfa_setup", audit: true, userId },
+            "Operation completed",
+        );
+
         res.status(200).json({
             status: "success",
             message: "Scan the QR code with your authenticator app",
@@ -102,7 +107,15 @@ export const setupMfa = async (
             },
         });
     } catch (error) {
-        console.error("MFA setup error:", error);
+        req.log.error(
+            {
+                err: error,
+                event: "auth.setup_mfa_failed",
+                operation: "setupMfa",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({
             status: "error",
             message: "Server error during MFA setup",
@@ -118,6 +131,15 @@ export const enableMfa = async (
         const userId = req.user.id;
 
         if (!userId) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "auth.mfa_failed",
+                    operation: "enableMfa",
+                },
+                "Authentication rejected",
+            );
+
             res.status(401).json({
                 status: "error",
                 message: "Unauthorized",
@@ -164,6 +186,15 @@ export const enableMfa = async (
         });
 
         if (!valid) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "auth.mfa_failed",
+                    operation: "enableMfa",
+                },
+                "Authentication rejected",
+            );
+
             res.status(401).json({
                 status: "error",
                 message: "Invalid verification code",
@@ -186,6 +217,11 @@ export const enableMfa = async (
             return;
         }
 
+        req.log.info(
+            { event: "auth.mfa_enabled", audit: true, userId },
+            "Operation completed",
+        );
+
         res.status(200).json({
             status: "success",
             message: "MFA has been enabled",
@@ -206,7 +242,15 @@ export const enableMfa = async (
             return;
         }
 
-        console.error("MFA enable error:", error);
+        req.log.error(
+            {
+                err: error,
+                event: "auth.enable_mfa_failed",
+                operation: "enableMfa",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({
             status: "error",
             message: "Server error during MFA enable",
@@ -243,6 +287,15 @@ export const verifyMfa = async (req: Request, res: Response): Promise<void> => {
         const session = sessionRows[0];
 
         if (!session) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "auth.mfa_failed",
+                    operation: "verifyMfa",
+                },
+                "Authentication rejected",
+            );
+
             res.status(401).json({
                 status: "error",
                 message: "Invalid or expired session, please log in again",
@@ -257,6 +310,15 @@ export const verifyMfa = async (req: Request, res: Response): Promise<void> => {
                 [session.id],
             );
 
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "auth.mfa_failed",
+                    operation: "verifyMfa",
+                },
+                "Authentication rejected",
+            );
+
             res.status(401).json({
                 status: "error",
                 message: "Session expired, please log in again",
@@ -269,6 +331,17 @@ export const verifyMfa = async (req: Request, res: Response): Promise<void> => {
             await pool.execute<ResultSetHeader>(
                 "DELETE FROM mfa_login_sessions WHERE id = ?",
                 [session.id],
+            );
+
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.rate_limit_exceeded",
+                    reason: "mfa_attempt_limit",
+                    userId: session.user_id,
+                    operation: "verifyMfa",
+                },
+                "Authentication rejected",
             );
 
             res.status(429).json({
@@ -304,6 +377,15 @@ export const verifyMfa = async (req: Request, res: Response): Promise<void> => {
         const user = userRows[0];
 
         if (!user || !user.mfa_secret) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "auth.mfa_failed",
+                    operation: "verifyMfa",
+                },
+                "Authentication rejected",
+            );
+
             res.status(401).json({
                 status: "error",
                 message: "Invalid or expired session, please log in again",
@@ -364,6 +446,15 @@ export const verifyMfa = async (req: Request, res: Response): Promise<void> => {
                 [session.id],
             );
 
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "auth.mfa_failed",
+                    operation: "verifyMfa",
+                },
+                "Authentication rejected",
+            );
+
             res.status(401).json({
                 status: "error",
                 message: "Invalid verification code",
@@ -404,6 +495,16 @@ export const verifyMfa = async (req: Request, res: Response): Promise<void> => {
             maxAge: 7 * 24 * 60 * 60 * 1000,
         });
 
+        req.log.info(
+            {
+                event: "auth.login_success",
+                audit: true,
+                userId: user.id,
+                method: isTotpFormat ? "totp" : "backup_code",
+            },
+            "Operation completed",
+        );
+
         res.status(200).json({
             status: "success",
             message: "User logged in successfully",
@@ -412,7 +513,14 @@ export const verifyMfa = async (req: Request, res: Response): Promise<void> => {
         });
 
         sendLoginNotificationEmail(user, req).catch((error) => {
-            console.error("Login notification email error:", error);
+            req.log.error(
+                {
+                    err: error,
+                    event: "email.delivery_failed",
+                    operation: "verifyMfa",
+                },
+                "Operation failed",
+            );
         });
     } catch (error) {
         if (error instanceof ZodError) {
@@ -430,7 +538,15 @@ export const verifyMfa = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        console.error("MFA verify error:", error);
+        req.log.error(
+            {
+                err: error,
+                event: "auth.verify_mfa_failed",
+                operation: "verifyMfa",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({
             status: "error",
             message: "Server error during MFA verification",
@@ -446,6 +562,15 @@ export const disableMfa = async (
         const userId = req.user.id;
 
         if (!userId) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "auth.mfa_failed",
+                    operation: "disableMfa",
+                },
+                "Authentication rejected",
+            );
+
             res.status(401).json({
                 status: "error",
                 message: "Unauthorized",
@@ -488,6 +613,15 @@ export const disableMfa = async (
         const isPasswordValid = await bcrypt.compare(password, user.password);
 
         if (!isPasswordValid) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "auth.mfa_failed",
+                    operation: "disableMfa",
+                },
+                "Authentication rejected",
+            );
+
             res.status(401).json({
                 status: "error",
                 message: "Invalid password",
@@ -515,6 +649,15 @@ export const disableMfa = async (
             });
 
             if (!valid) {
+                req.log.warn(
+                    {
+                        audit: true,
+                        event: "auth.mfa_failed",
+                        operation: "disableMfa",
+                    },
+                    "Authentication rejected",
+                );
+
                 res.status(401).json({
                     status: "error",
                     message: "Invalid verification code",
@@ -559,6 +702,11 @@ export const disableMfa = async (
             return;
         }
 
+        req.log.info(
+            { event: "auth.mfa_disabled", audit: true, userId },
+            "Operation completed",
+        );
+
         res.status(200).json({
             status: "success",
             message: "MFA has been disabled",
@@ -579,7 +727,15 @@ export const disableMfa = async (
             return;
         }
 
-        console.error("MFA disable error:", error);
+        req.log.error(
+            {
+                err: error,
+                event: "auth.disable_mfa_failed",
+                operation: "disableMfa",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({
             status: "error",
             message: "Server error during MFA disable",
@@ -595,6 +751,15 @@ export const regenerateBackupCodes = async (
         const userId = req.user.id;
 
         if (!userId) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "auth.mfa_failed",
+                    operation: "regenerateBackupCodes",
+                },
+                "Authentication rejected",
+            );
+
             res.status(401).json({
                 status: "error",
                 message: "Unauthorized",
@@ -633,6 +798,15 @@ export const regenerateBackupCodes = async (
         const isPasswordValid = await bcrypt.compare(password, user.password);
 
         if (!isPasswordValid) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "auth.mfa_failed",
+                    operation: "regenerateBackupCodes",
+                },
+                "Authentication rejected",
+            );
+
             res.status(401).json({
                 status: "error",
                 message: "Invalid password",
@@ -671,6 +845,11 @@ export const regenerateBackupCodes = async (
             connection.release();
         }
 
+        req.log.info(
+            { event: "auth.mfa_backup_codes_regenerated", audit: true, userId },
+            "Operation completed",
+        );
+
         res.status(200).json({
             status: "success",
             message: "Backup codes have been regenerated",
@@ -694,7 +873,15 @@ export const regenerateBackupCodes = async (
             return;
         }
 
-        console.error("Regenerate backup codes error:", error);
+        req.log.error(
+            {
+                err: error,
+                event: "auth.regenerate_backup_codes_failed",
+                operation: "regenerateBackupCodes",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({
             status: "error",
             message: "Server error during backup codes regeneration",

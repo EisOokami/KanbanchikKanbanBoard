@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import { transporter } from "./email.js";
 import type { User } from "../types/types.js";
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 export const sendLoginCodeEmail = async (
     user: Pick<User, "id" | "name" | "email">,
@@ -35,13 +35,12 @@ export const sendLoginCodeEmail = async (
     };
 
     await new Promise<void>((resolve, reject) => {
-        transporter.sendMail(mailOptions, (error, info) => {
+        transporter.sendMail(mailOptions, (error) => {
             if (error) {
                 reject(error);
                 return;
             }
 
-            console.log(`Code notification email sent: ${info.response}`);
             resolve();
         });
     });

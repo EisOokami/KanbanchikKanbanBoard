@@ -4,7 +4,7 @@ import type { GoogleProfile, User } from "../types/types.js";
 import { pool } from "../db/pool.js";
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const client = new OAuth2Client(
     process.env.GOOGLE_CLIENT_ID,

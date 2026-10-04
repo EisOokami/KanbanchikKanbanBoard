@@ -354,7 +354,15 @@ export const getTasks = async (req: IGetUserRequest, res: Response) => {
 
         res.status(200).json(enrichedTasks);
     } catch (error) {
-        console.error(error);
+        req.log.error(
+            {
+                err: error,
+                event: "task.get_tasks_failed",
+                operation: "getTasks",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({ status: "error", message: "Database error" });
     }
 };
@@ -434,6 +442,15 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
         );
 
         if (!tasks.length) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "getTaskById",
+                },
+                "Authorization denied",
+            );
+
             res.status(404).json({
                 status: "error",
                 message: "Task not found or access denied",
@@ -445,6 +462,15 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
         const task = tasks[0];
 
         if (!task) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "getTaskById",
+                },
+                "Authorization denied",
+            );
+
             res.status(404).json({
                 status: "error",
                 message: "Task not found or access denied",
@@ -678,7 +704,15 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
-        console.error(error);
+        req.log.error(
+            {
+                err: error,
+                event: "task.get_task_by_id_failed",
+                operation: "getTaskById",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({ status: "error", message: "Database error" });
     }
 };
@@ -720,6 +754,15 @@ export const createTask = async (req: IGetUserRequest, res: Response) => {
         );
 
         if (!projects.length) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "createTask",
+                },
+                "Authorization denied",
+            );
+
             res.status(403).json({
                 status: "error",
                 message: "Access denied or project not found",
@@ -731,6 +774,15 @@ export const createTask = async (req: IGetUserRequest, res: Response) => {
         const project = projects[0];
 
         if (!project) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "createTask",
+                },
+                "Authorization denied",
+            );
+
             res.status(404).json({
                 status: "error",
                 message: "Project not found or access denied",
@@ -769,6 +821,15 @@ export const createTask = async (req: IGetUserRequest, res: Response) => {
         );
 
         if (!columns.length) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "createTask",
+                },
+                "Authorization denied",
+            );
+
             res.status(403).json({
                 status: "error",
                 message: "Access denied or column not found",
@@ -780,6 +841,15 @@ export const createTask = async (req: IGetUserRequest, res: Response) => {
         const column = columns[0];
 
         if (!column) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "createTask",
+                },
+                "Authorization denied",
+            );
+
             res.status(404).json({
                 status: "error",
                 message: "Column not found or access denied",
@@ -812,6 +882,15 @@ export const createTask = async (req: IGetUserRequest, res: Response) => {
         );
 
         if (!rows.length) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "createTask",
+                },
+                "Authorization denied",
+            );
+
             res.status(404).json({
                 status: "error",
                 message: "Tasks not found or access denied",
@@ -826,6 +905,15 @@ export const createTask = async (req: IGetUserRequest, res: Response) => {
         const position = maxPos + INITIAL_GAP;
 
         if (!position) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "createTask",
+                },
+                "Authorization denied",
+            );
+
             res.status(404).json({
                 status: "error",
                 message: "Tasks not found or access denied",
@@ -979,6 +1067,11 @@ export const createTask = async (req: IGetUserRequest, res: Response) => {
             [taskId],
         );
 
+        req.log.info(
+            { event: "task.created", userId, taskId, projectId: project.id },
+            "Operation completed",
+        );
+
         res.status(201).json({
             status: "success",
             message: "The task was created successfully",
@@ -1000,7 +1093,15 @@ export const createTask = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
-        console.error(error);
+        req.log.error(
+            {
+                err: error,
+                event: "task.create_task_failed",
+                operation: "createTask",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({ status: "error", message: "Database error" });
     }
 };
@@ -1051,6 +1152,15 @@ export const updateTask = async (req: IGetUserRequest, res: Response) => {
         );
 
         if (!tasks.length) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "updateTask",
+                },
+                "Authorization denied",
+            );
+
             res.status(404).json({
                 status: "error",
                 message: "Task not found or access denied",
@@ -1236,6 +1346,16 @@ export const updateTask = async (req: IGetUserRequest, res: Response) => {
             [id],
         );
 
+        req.log.info(
+            {
+                event: "task.updated",
+                userId,
+                taskId: Number(id),
+                projectId: tasks[0]?.project_id,
+            },
+            "Operation completed",
+        );
+
         res.status(200).json({
             status: "success",
             message: "The task has been successfully updated",
@@ -1257,7 +1377,15 @@ export const updateTask = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
-        console.error(error);
+        req.log.error(
+            {
+                err: error,
+                event: "task.update_task_failed",
+                operation: "updateTask",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({ status: "error", message: "Database error" });
     }
 };
@@ -1308,6 +1436,15 @@ export const deleteTask = async (req: IGetUserRequest, res: Response) => {
         );
 
         if (!tasks.length) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "deleteTask",
+                },
+                "Authorization denied",
+            );
+
             res.status(404).json({
                 status: "error",
                 message: "Task not found or access denied",
@@ -1332,29 +1469,26 @@ export const deleteTask = async (req: IGetUserRequest, res: Response) => {
         );
 
         if (attachments && attachments.length) {
-            attachments.map(async (attachment) => {
-                const __dirname = path.resolve(path.dirname(""));
-                const fileUrl = attachment.file_url.replace(/^\/files/, "");
-                const filePath = path.join(__dirname, "/uploads", fileUrl);
+            await Promise.all(
+                attachments.map(async (attachment) => {
+                    const __dirname = path.resolve(path.dirname(""));
+                    const fileUrl = attachment.file_url.replace(/^\/files/, "");
+                    const filePath = path.join(__dirname, "/uploads", fileUrl);
 
-                if (existsSync(filePath)) {
-                    unlinkSync(filePath);
-                }
+                    if (existsSync(filePath)) {
+                        unlinkSync(filePath);
+                    }
 
-                const [rows] = await pool.execute<ResultSetHeader>(
-                    "DELETE FROM attachments WHERE id = ?",
-                    [attachment.id],
-                );
+                    const [rows] = await pool.execute<ResultSetHeader>(
+                        "DELETE FROM attachments WHERE id = ?",
+                        [attachment.id],
+                    );
 
-                if (rows.affectedRows === 0) {
-                    res.status(400).json({
-                        status: "error",
-                        message: "Failed to delete file",
-                    });
-
-                    throw Error("Failed to delete file");
-                }
-            });
+                    if (rows.affectedRows === 0) {
+                        throw Error("Failed to delete file");
+                    }
+                }),
+            );
         }
 
         const [result] = await pool.execute<ResultSetHeader>(
@@ -1363,6 +1497,15 @@ export const deleteTask = async (req: IGetUserRequest, res: Response) => {
         );
 
         if (result.affectedRows === 0) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "deleteTask",
+                },
+                "Authorization denied",
+            );
+
             res.status(404).json({
                 status: "error",
                 message: "Task not found or access denied",
@@ -1371,12 +1514,30 @@ export const deleteTask = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
+        req.log.info(
+            {
+                event: "task.deleted",
+                userId,
+                taskId: Number(id),
+                projectId: tasks[0]?.project_id,
+            },
+            "Operation completed",
+        );
+
         res.status(200).json({
             status: "success",
             message: "The task has been successfully deleted",
         });
     } catch (error) {
-        console.error(error);
+        req.log.error(
+            {
+                err: error,
+                event: "task.delete_task_failed",
+                operation: "deleteTask",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({ status: "error", message: "Database error" });
     }
 };
@@ -1448,7 +1609,15 @@ export const getTaskFilterOptions = async (
 
         res.status(200).json(filterOptions);
     } catch (error) {
-        console.error(error);
+        req.log.error(
+            {
+                err: error,
+                event: "task.get_task_filter_options_failed",
+                operation: "getTaskFilterOptions",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({
             status: "error",
             message: "Database error",
@@ -1509,6 +1678,15 @@ export const moveTask = async (req: IGetUserRequest, res: Response) => {
         );
 
         if (!columns.length) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "moveTask",
+                },
+                "Authorization denied",
+            );
+
             res.status(404).json({
                 status: "error",
                 message: "Column not found or access denied",
@@ -1520,6 +1698,15 @@ export const moveTask = async (req: IGetUserRequest, res: Response) => {
         const column = columns[0];
 
         if (!column) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "moveTask",
+                },
+                "Authorization denied",
+            );
+
             res.status(404).json({
                 status: "error",
                 message: "Column not found or access denied",
@@ -1623,6 +1810,17 @@ export const moveTask = async (req: IGetUserRequest, res: Response) => {
             }
         }
 
+        req.log.info(
+            {
+                event: "task.moved",
+                userId,
+                taskId: validatedData.taskId,
+                projectId: column.project_id,
+                columnId: validatedData.columnId,
+            },
+            "Operation completed",
+        );
+
         res.status(200).json({
             status: "success",
             message: "The task has been successfully moved",
@@ -1643,7 +1841,15 @@ export const moveTask = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
-        console.error(error);
+        req.log.error(
+            {
+                err: error,
+                event: "task.move_task_failed",
+                operation: "moveTask",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({ status: "error", message: "Database error" });
     }
 };

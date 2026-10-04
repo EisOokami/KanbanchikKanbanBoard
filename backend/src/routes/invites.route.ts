@@ -1,3 +1,4 @@
+import { rateLimitHandler } from "../middlewares/securityAudit.middleware.js";
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { authenticateToken } from "../middlewares/auth.middleware.js";
@@ -18,6 +19,7 @@ const generateLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    handler: rateLimitHandler,
 });
 
 const acceptLimiter = rateLimit({
@@ -30,6 +32,7 @@ const acceptLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    handler: rateLimitHandler,
 });
 
 const memberInviteLimiter = rateLimit({
@@ -42,6 +45,7 @@ const memberInviteLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    handler: rateLimitHandler,
 });
 
 const router = Router();

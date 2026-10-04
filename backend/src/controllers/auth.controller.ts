@@ -23,7 +23,7 @@ import {
     rotateRefreshToken,
     verifyRefreshToken,
 } from "../utils/jwt.js";
-import { jwtVerify, type JWTPayload } from "jose";
+import { jwtVerify, errors as joseErrors, type JWTPayload } from "jose";
 import type { LoginEmailCodes, User } from "../types/types.js";
 import { generateCsrfToken } from "../utils/csrf.js";
 import {
@@ -41,7 +41,7 @@ import {
 } from "../utils/loginCode.js";
 import { sendLoginCodeEmail } from "../utils/sendLoginCodeEmail.js";
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const refreshSecret = new TextEncoder().encode(process.env.JWT_REFRESH_SECRET);
 
@@ -180,13 +180,28 @@ export const register = async (req: Request, res: Response): Promise<void> => {
             ],
         };
 
-        transporter.sendMail(mailOptions, (error, info) => {
+        transporter.sendMail(mailOptions, (error) => {
             if (error) {
-                console.error("Verification email error:", error);
+                req.log.error(
+                    {
+                        err: error,
+                        event: "email.delivery_failed",
+                        operation: "register",
+                    },
+                    "Operation failed",
+                );
             } else {
-                console.log(`Verification email sent: ${info.response}`);
+                req.log.debug(
+                    { event: "email.sent", operation: "register" },
+                    "Email accepted by transport",
+                );
             }
         });
+
+        req.log.info(
+            { event: "auth.registered", audit: true, userId },
+            "Operation completed",
+        );
 
         res.status(201).json({
             status: "success",
@@ -209,7 +224,15 @@ export const register = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        console.error("Registration error:", error);
+        req.log.error(
+            {
+                err: error,
+                event: "auth.register_failed",
+                operation: "register",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({
             status: "error",
             message: "Server error during registration",
@@ -248,6 +271,15 @@ export const verifyEmail = async (
         const user = rows[0];
 
         if (!user) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "auth.verification_rejected",
+                    reason: "invalid_or_expired",
+                },
+                "Email verification rejected",
+            );
+
             res.status(400).json({
                 status: "error",
                 message: "Invalid verification token",
@@ -269,6 +301,15 @@ export const verifyEmail = async (
             !user.verification_token_expires ||
             new Date(user.verification_token_expires) < new Date()
         ) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "auth.verification_rejected",
+                    reason: "invalid_or_expired",
+                },
+                "Email verification rejected",
+            );
+
             res.status(400).json({
                 status: "error",
                 message: "Verification token has expired",
@@ -288,12 +329,25 @@ export const verifyEmail = async (
             [user.id],
         );
 
+        req.log.info(
+            { audit: true, event: "auth.email_verified", userId: user.id },
+            "Email verified",
+        );
+
         res.status(200).json({
             status: "success",
             message: "Email successfully verified. You can now log in.",
         });
     } catch (error) {
-        console.error("Email verification error:", error);
+        req.log.error(
+            {
+                err: error,
+                event: "auth.verify_email_failed",
+                operation: "verifyEmail",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({
             status: "error",
             message: "Server error during email verification",
@@ -409,11 +463,24 @@ export const resendVerificationEmail = async (
             ],
         };
 
-        transporter.sendMail(mailOptions, (error, info) => {
+        transporter.sendMail(mailOptions, (error) => {
             if (error) {
-                console.error("Resend verification email error:", error);
+                req.log.error(
+                    {
+                        err: error,
+                        event: "email.delivery_failed",
+                        operation: "resendVerificationEmail",
+                    },
+                    "Operation failed",
+                );
             } else {
-                console.log(`Verification email resent: ${info.response}`);
+                req.log.debug(
+                    {
+                        event: "email.sent",
+                        operation: "resendVerificationEmail",
+                    },
+                    "Email accepted by transport",
+                );
             }
         });
 
@@ -438,7 +505,15 @@ export const resendVerificationEmail = async (
             return;
         }
 
-        console.error("Resend verification error:", error);
+        req.log.error(
+            {
+                err: error,
+                event: "auth.resend_verification_email_failed",
+                operation: "resendVerificationEmail",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({
             status: "error",
             message: "Server error while resending verification email",
@@ -493,6 +568,11 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         const user = rows[0];
 
         if (!user || user.auth_provider === "google" || !user.password) {
+            req.log.warn(
+                { audit: true, event: "auth.login_failed", operation: "login" },
+                "Authentication rejected",
+            );
+
             res.status(401).json({
                 status: "error",
                 message: "Invalid email or password",
@@ -505,6 +585,11 @@ export const login = async (req: Request, res: Response): Promise<void> => {
             user.terms_version !== process.env.TERMS_VERSION ||
             user.privacy_version !== process.env.PRIVACY_VERSION
         ) {
+            req.log.warn(
+                { audit: true, event: "auth.login_failed", operation: "login" },
+                "Authentication rejected",
+            );
+
             res.status(401).json({
                 status: "error",
                 message:
@@ -515,6 +600,11 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         }
 
         if (!user.is_verified) {
+            req.log.warn(
+                { audit: true, event: "auth.login_failed", operation: "login" },
+                "Authentication rejected",
+            );
+
             res.status(403).json({
                 status: "error",
                 message: "Please verify your email before logging in",
@@ -529,6 +619,11 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         const isPasswordValid = await bcrypt.compare(password, user.password);
 
         if (!isPasswordValid) {
+            req.log.warn(
+                { audit: true, event: "auth.login_failed", operation: "login" },
+                "Authentication rejected",
+            );
+
             res.status(401).json({
                 status: "error",
                 message: "Invalid email or password",
@@ -559,6 +654,15 @@ export const login = async (req: Request, res: Response): Promise<void> => {
                     req.ip ?? null,
                     req.headers["user-agent"] ?? null,
                 ],
+            );
+
+            req.log.debug(
+                {
+                    event: "auth.challenge_created",
+                    userId: user.id,
+                    method: "totp",
+                },
+                "Login challenge created",
             );
 
             res.status(200).json({
@@ -619,7 +723,11 @@ export const login = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        console.error("Login error:", error);
+        req.log.error(
+            { err: error, event: "auth.login_error", operation: "login" },
+            "Operation failed",
+        );
+
         res.status(500).json({
             status: "error",
             message: "Server error during login",
@@ -648,6 +756,15 @@ export const verifyLoginEmailCode = async (
         );
 
         if (bump.affectedRows === 0) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "auth.login_failed",
+                    operation: "verifyLoginEmailCode",
+                },
+                "Authentication rejected",
+            );
+
             res.status(401).json({
                 status: "error",
                 message:
@@ -682,6 +799,15 @@ export const verifyLoginEmailCode = async (
                 hashEmailCode(session.user_id, code),
             )
         ) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "auth.login_failed",
+                    operation: "verifyLoginEmailCode",
+                },
+                "Authentication rejected",
+            );
+
             res.status(401).json({
                 status: "error",
                 message: "Invalid verification code",
@@ -699,6 +825,15 @@ export const verifyLoginEmailCode = async (
         );
 
         if (deleteRows.affectedRows === 0) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "auth.login_failed",
+                    operation: "verifyLoginEmailCode",
+                },
+                "Authentication rejected",
+            );
+
             res.status(401).json({
                 status: "error",
                 message: "Invalid verification code",
@@ -731,6 +866,15 @@ export const verifyLoginEmailCode = async (
         const user = userRows[0];
 
         if (!user) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "auth.login_failed",
+                    operation: "verifyLoginEmailCode",
+                },
+                "Authentication rejected",
+            );
+
             res.status(401).json({
                 status: "error",
                 message: "Invalid verification code",
@@ -757,6 +901,16 @@ export const verifyLoginEmailCode = async (
             maxAge: 7 * 24 * 60 * 60 * 1000,
         });
 
+        req.log.info(
+            {
+                event: "auth.login_success",
+                audit: true,
+                userId: user.id,
+                method: "email_code",
+            },
+            "Operation completed",
+        );
+
         res.status(200).json({
             status: "success",
             message: "User logged in successfully",
@@ -765,7 +919,14 @@ export const verifyLoginEmailCode = async (
         });
 
         sendLoginNotificationEmail(user, req).catch((error) => {
-            console.error("Login notification email error:", error);
+            req.log.error(
+                {
+                    err: error,
+                    event: "email.delivery_failed",
+                    operation: "verifyLoginEmailCode",
+                },
+                "Operation failed",
+            );
         });
     } catch (error) {
         if (error instanceof ZodError) {
@@ -781,7 +942,15 @@ export const verifyLoginEmailCode = async (
             return;
         }
 
-        console.error("Verify login email code error:", error);
+        req.log.error(
+            {
+                err: error,
+                event: "auth.verify_login_email_code_failed",
+                operation: "verifyLoginEmailCode",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({
             status: "error",
             message: "Server error during verification",
@@ -822,6 +991,15 @@ export const resendLoginEmailCode = async (
         const session = rows[0];
 
         if (!session) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "auth.login_challenge_rejected",
+                    operation: "resendLoginEmailCode",
+                },
+                "Authentication rejected",
+            );
+
             res.status(401).json({
                 status: "error",
                 message: "Session expired. Please log in again",
@@ -832,6 +1010,15 @@ export const resendLoginEmailCode = async (
         }
 
         if (session.seconds_since_sent < 60) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.rate_limit_exceeded",
+                    operation: "resendLoginEmailCode",
+                },
+                "Authentication rejected",
+            );
+
             res.status(429).json({
                 status: "error",
                 message: "Please wait before requesting a new code",
@@ -877,7 +1064,15 @@ export const resendLoginEmailCode = async (
             return;
         }
 
-        console.error("Resend login email code error:", error);
+        req.log.error(
+            {
+                err: error,
+                event: "auth.resend_login_email_code_failed",
+                operation: "resendLoginEmailCode",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({
             status: "error",
             message: "Server error while resending code",
@@ -893,6 +1088,11 @@ export const forgotPassword = async (
         const validateData = forgotPasswordSchema.parse(req.body);
 
         const { email } = validateData;
+
+        req.log.info(
+            { audit: true, event: "auth.password_reset_requested" },
+            "Password reset requested",
+        );
 
         const [rows] = await pool.execute<
             (Pick<User, "id" | "name" | "password" | "email"> & RowDataPacket)[]
@@ -933,22 +1133,36 @@ export const forgotPassword = async (
                 ],
             };
 
-            transporter.sendMail(mailOptions, (error, info) => {
+            transporter.sendMail(mailOptions, (error) => {
                 if (error) {
-                    console.error("Email error:", error);
+                    req.log.error(
+                        {
+                            err: error,
+                            event: "email.delivery_failed",
+                            operation: "forgotPassword",
+                        },
+                        "Operation failed",
+                    );
 
-                    res.status(500).json({
-                        status: "error",
-                        message: "Error sending email",
-                    });
+                    if (!res.headersSent) {
+                        res.status(500).json({
+                            status: "error",
+                            message: "Error sending email",
+                        });
+                    }
                 } else {
-                    console.log(`Reset email sent: ${info.response}`);
+                    req.log.debug(
+                        { event: "email.sent", operation: "forgotPassword" },
+                        "Email accepted by transport",
+                    );
 
-                    res.status(200).json({
-                        status: "success",
-                        message:
-                            "If this email exists, you will receive reset instructions",
-                    });
+                    if (!res.headersSent) {
+                        res.status(200).json({
+                            status: "success",
+                            message:
+                                "If this email exists, you will receive reset instructions",
+                        });
+                    }
                 }
             });
 
@@ -1008,20 +1222,36 @@ export const forgotPassword = async (
             ],
         };
 
-        transporter.sendMail(mailOptions, (error, info) => {
+        transporter.sendMail(mailOptions, (error) => {
             if (error) {
-                console.error("Email error:", error);
-                res.status(500).json({
-                    status: "error",
-                    message: "Error sending email",
-                });
+                req.log.error(
+                    {
+                        err: error,
+                        event: "email.delivery_failed",
+                        operation: "forgotPassword",
+                    },
+                    "Operation failed",
+                );
+
+                if (!res.headersSent) {
+                    res.status(500).json({
+                        status: "error",
+                        message: "Error sending email",
+                    });
+                }
             } else {
-                console.log(`Reset email sent: ${info.response}`);
-                res.status(200).json({
-                    status: "success",
-                    message:
-                        "If this email exists, you will receive reset instructions",
-                });
+                req.log.debug(
+                    { event: "email.sent", operation: "forgotPassword" },
+                    "Email accepted by transport",
+                );
+
+                if (!res.headersSent) {
+                    res.status(200).json({
+                        status: "success",
+                        message:
+                            "If this email exists, you will receive reset instructions",
+                    });
+                }
             }
         });
     } catch (error) {
@@ -1040,7 +1270,15 @@ export const forgotPassword = async (
             return;
         }
 
-        console.error("Error:", error);
+        req.log.error(
+            {
+                err: error,
+                event: "auth.forgot_password_failed",
+                operation: "forgotPassword",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({
             status: "error",
             message: "Server error",
@@ -1073,6 +1311,15 @@ export const resetPassword = async (
         );
 
         if (!rows.length) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "auth.password_reset_rejected",
+                    operation: "resetPassword",
+                },
+                "Authentication rejected",
+            );
+
             res.status(401).json({
                 status: "error",
                 message: "Invalid or expired password reset token",
@@ -1101,6 +1348,15 @@ export const resetPassword = async (
                 [id],
             );
 
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "auth.password_reset_rejected",
+                    operation: "resetPassword",
+                },
+                "Authentication rejected",
+            );
+
             res.status(401).json({
                 status: "error",
                 message: "Password reset token has expired",
@@ -1112,6 +1368,15 @@ export const resetPassword = async (
         const isTokenValid = await bcrypt.compare(token, user.reset_token);
 
         if (!isTokenValid) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "auth.password_reset_rejected",
+                    operation: "resetPassword",
+                },
+                "Authentication rejected",
+            );
+
             res.status(401).json({
                 status: "error",
                 message: "Invalid or expired password reset token",
@@ -1125,6 +1390,15 @@ export const resetPassword = async (
         >("SELECT password FROM users WHERE id = ?", [id]);
 
         if (!currentUser || !currentUser[0] || !currentUser[0].password) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "auth.password_reset_rejected",
+                    operation: "resetPassword",
+                },
+                "Authentication rejected",
+            );
+
             res.status(401).json({
                 status: "error",
                 message: "Failed to retrieve user",
@@ -1184,6 +1458,11 @@ export const resetPassword = async (
         );
 
         if (!refreshToken) {
+            req.log.error(
+                { event: "auth.session_creation_failed" },
+                "Session operation returned no token",
+            );
+
             res.status(500).json({
                 status: "error",
                 message: "Failed to create session",
@@ -1234,17 +1513,39 @@ export const resetPassword = async (
             ],
         };
 
-        transporter.sendMail(mailOptions, (error, info) => {
+        transporter.sendMail(mailOptions, (error) => {
             if (error) {
-                console.error(error);
-                res.status(500).send({
-                    status: "error",
-                    message: "Error sending email",
-                });
+                req.log.error(
+                    {
+                        err: error,
+                        event: "email.delivery_failed",
+                        operation: "resetPassword",
+                    },
+                    "Operation failed",
+                );
+
+                if (!res.headersSent) {
+                    res.status(500).send({
+                        status: "error",
+                        message: "Error sending email",
+                    });
+                }
             } else {
-                console.log(`Email sent: ${info.response}`);
+                req.log.debug(
+                    { event: "email.sent", operation: "resetPassword" },
+                    "Email accepted by transport",
+                );
             }
         });
+
+        req.log.info(
+            {
+                event: "auth.password_reset_completed",
+                audit: true,
+                userId: user.id,
+            },
+            "Operation completed",
+        );
 
         res.status(201).json({
             status: "success",
@@ -1268,7 +1569,15 @@ export const resetPassword = async (
             return;
         }
 
-        console.error("Error:", error);
+        req.log.error(
+            {
+                err: error,
+                event: "auth.reset_password_failed",
+                operation: "resetPassword",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({
             status: "error",
             message: "Server error",
@@ -1281,6 +1590,15 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
         const refreshToken = req.cookies.refreshToken;
 
         if (!refreshToken) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "auth.token_rejected",
+                    operation: "refresh",
+                },
+                "Authentication rejected",
+            );
+
             res.status(401).json({
                 status: "error",
                 message: "Invalid token",
@@ -1294,7 +1612,23 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
 
         try {
             ({ payload, session } = await verifyRefreshToken(refreshToken));
-        } catch {
+        } catch (error) {
+            if (error instanceof joseErrors.JOSEError) {
+                req.log.warn(
+                    {
+                        audit: true,
+                        event: "auth.token_rejected",
+                        operation: "refresh",
+                    },
+                    "Authentication rejected",
+                );
+            } else {
+                req.log.error(
+                    { err: error, event: "auth.refresh_failed" },
+                    "Refresh verification failed unexpectedly",
+                );
+            }
+
             res.status(401).json({
                 status: "error",
                 message: "Invalid token",
@@ -1306,6 +1640,15 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
         const userId = payload.sub;
 
         if (!userId) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "auth.token_rejected",
+                    operation: "refresh",
+                },
+                "Authentication rejected",
+            );
+
             res.status(401).json({
                 status: "error",
                 message: "Invalid token",
@@ -1321,6 +1664,11 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
         );
 
         if (!newRefreshToken) {
+            req.log.error(
+                { event: "auth.session_creation_failed" },
+                "Session operation returned no token",
+            );
+
             res.status(500).json({
                 status: "error",
                 message: "Failed to refresh session",
@@ -1362,7 +1710,26 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        console.error("Error:", error);
+        if (error instanceof joseErrors.JOSEError) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "auth.token_rejected",
+                    operation: "refresh",
+                },
+                "Token rejected",
+            );
+        } else {
+            req.log.error(
+                {
+                    err: error,
+                    event: "auth.refresh_failed",
+                    operation: "refresh",
+                },
+                "Operation failed",
+            );
+        }
+
         res.status(500).json({
             status: "error",
             message: "Server error",
@@ -1375,6 +1742,15 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
         const refreshToken = req.cookies.refreshToken;
 
         if (!refreshToken) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "auth.token_rejected",
+                    operation: "logout",
+                },
+                "Authentication rejected",
+            );
+
             res.status(401).json({
                 status: "error",
                 message: "Invalid token",
@@ -1388,6 +1764,15 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
         const sid = payload.sid;
 
         if (!sid || typeof sid !== "string") {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "auth.token_rejected",
+                    operation: "logout",
+                },
+                "Authentication rejected",
+            );
+
             res.status(401).json({
                 status: "error",
                 message: "Invalid token",
@@ -1400,6 +1785,11 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
 
         res.clearCookie("refreshToken");
         res.clearCookie("csrfToken");
+
+        req.log.info(
+            { event: "auth.logout", audit: true, userId: payload.sub },
+            "Operation completed",
+        );
 
         res.status(201).json({
             status: "success",
@@ -1421,7 +1811,26 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        console.error("Error:", error);
+        if (error instanceof joseErrors.JOSEError) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "auth.token_rejected",
+                    operation: "logout",
+                },
+                "Token rejected",
+            );
+        } else {
+            req.log.error(
+                {
+                    err: error,
+                    event: "auth.logout_failed",
+                    operation: "logout",
+                },
+                "Operation failed",
+            );
+        }
+
         res.status(500).json({
             status: "error",
             message: "Server error",
@@ -1457,6 +1866,11 @@ export async function googleAuthCallback(req: Request, res: Response) {
             !state ||
             state !== savedState
         ) {
+            req.log.warn(
+                { audit: true, event: "auth.oauth_rejected" },
+                "OAuth callback rejected",
+            );
+
             res.redirect(
                 `${process.env.FRONTEND_URL}/signIn?error=oauth_state_mismatch`,
             );
@@ -1467,6 +1881,11 @@ export async function googleAuthCallback(req: Request, res: Response) {
         const profile = await exchangeCodeForProfile(code);
 
         if (!profile.emailVerified) {
+            req.log.warn(
+                { audit: true, event: "auth.oauth_rejected" },
+                "OAuth callback rejected",
+            );
+
             res.redirect(
                 `${process.env.FRONTEND_URL}/signIn?error=email_not_verified`,
             );
@@ -1495,7 +1914,15 @@ export async function googleAuthCallback(req: Request, res: Response) {
             `${process.env.FRONTEND_URL}/callback?code=${exchangeCode}`,
         );
     } catch (error) {
-        console.error("Error:", error);
+        req.log.error(
+            {
+                err: error,
+                event: "auth.google_auth_callback_failed",
+                operation: "googleAuthCallback",
+            },
+            "Operation failed",
+        );
+
         return res.redirect(
             `${process.env.FRONTEND_URL}/signIn?error=oauth_failed`,
         );
@@ -1523,6 +1950,15 @@ export async function googleAuthExchange(req: Request, res: Response) {
         const record = rows[0];
 
         if (!record) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "auth.oauth_rejected",
+                    reason: "invalid_or_expired",
+                },
+                "OAuth exchange rejected",
+            );
+
             res.status(400).json({
                 status: "error",
                 message: "Invalid or expired code",
@@ -1553,6 +1989,11 @@ export async function googleAuthExchange(req: Request, res: Response) {
         );
 
         if (!refreshToken) {
+            req.log.error(
+                { event: "auth.session_creation_failed" },
+                "Session operation returned no token",
+            );
+
             res.status(500).json({
                 status: "error",
                 message: "Failed to create session",
@@ -1572,6 +2013,16 @@ export async function googleAuthExchange(req: Request, res: Response) {
             maxAge: 7 * 24 * 60 * 60 * 1000,
         });
 
+        req.log.info(
+            {
+                event: "auth.login_success",
+                audit: true,
+                userId,
+                method: "google",
+            },
+            "Operation completed",
+        );
+
         res.status(200).json({
             status: "success",
             message: "User logged in successfully",
@@ -1579,7 +2030,15 @@ export async function googleAuthExchange(req: Request, res: Response) {
             refreshToken,
         });
     } catch (error) {
-        console.error("Error:", error);
+        req.log.error(
+            {
+                err: error,
+                event: "auth.google_auth_exchange_failed",
+                operation: "googleAuthExchange",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({
             status: "error",
             message: "Server error",

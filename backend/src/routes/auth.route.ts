@@ -1,3 +1,4 @@
+import { rateLimitHandler } from "../middlewares/securityAudit.middleware.js";
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import {
@@ -38,6 +39,7 @@ const registerLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    handler: rateLimitHandler,
 });
 
 const loginLimiter = rateLimit({
@@ -50,6 +52,7 @@ const loginLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    handler: rateLimitHandler,
 });
 
 const verifyLoginEmailCodeLimiter = rateLimit({
@@ -62,6 +65,7 @@ const verifyLoginEmailCodeLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    handler: rateLimitHandler,
 });
 
 const resendLoginEmailCodeLimiter = rateLimit({
@@ -74,6 +78,7 @@ const resendLoginEmailCodeLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    handler: rateLimitHandler,
 });
 
 const forgotPasswordLimiter = rateLimit({
@@ -86,6 +91,7 @@ const forgotPasswordLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    handler: rateLimitHandler,
 });
 
 const resetPasswordLimiter = rateLimit({
@@ -98,6 +104,7 @@ const resetPasswordLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    handler: rateLimitHandler,
 });
 
 const googleAuthExchangeLimiter = rateLimit({
@@ -110,6 +117,7 @@ const googleAuthExchangeLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    handler: rateLimitHandler,
 });
 
 const verifyEmailLimiter = rateLimit({
@@ -122,6 +130,7 @@ const verifyEmailLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    handler: rateLimitHandler,
 });
 
 const resendVerificationLimiter = rateLimit({
@@ -134,6 +143,7 @@ const resendVerificationLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    handler: rateLimitHandler,
 });
 
 const router = Router();

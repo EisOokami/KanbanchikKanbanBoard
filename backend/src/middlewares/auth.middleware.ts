@@ -1,3 +1,4 @@
+import { errors as joseErrors } from "jose";
 import type { NextFunction, Response } from "express";
 import { verifyAccessToken } from "../utils/jwt.js";
 import type { IGetUserRequest } from "../types/types.js";
@@ -23,8 +24,28 @@ export async function authenticateToken(
         const { payload } = await verifyAccessToken(token);
         req.user = payload;
 
+        req.log = req.log.child({
+            userId: typeof payload.id === "number" ? payload.id : undefined,
+        });
+
         next();
-    } catch {
+    } catch (error) {
+        if (error instanceof joseErrors.JOSEError) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "auth.token_rejected",
+                    reason: "invalid_or_expired",
+                },
+                "Access token rejected",
+            );
+        } else {
+            req.log.error(
+                { err: error, event: "auth.token_verification_failed" },
+                "Token verification failed unexpectedly",
+            );
+        }
+
         res.status(401).json({
             status: "error",
             message: "Invalid or expired token",

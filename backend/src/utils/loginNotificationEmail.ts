@@ -5,7 +5,7 @@ import type { User } from "../types/types.js";
 import dotenv from "dotenv";
 import { transporter } from "./email.js";
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const formatLoginTime = (date: Date): string => {
     return `${new Intl.DateTimeFormat("en-US", {
@@ -73,13 +73,12 @@ export const sendLoginNotificationEmail = async (
     };
 
     await new Promise<void>((resolve, reject) => {
-        transporter.sendMail(mailOptions, (error, info) => {
+        transporter.sendMail(mailOptions, (error) => {
             if (error) {
                 reject(error);
                 return;
             }
 
-            console.log(`Login notification email sent: ${info.response}`);
             resolve();
         });
     });

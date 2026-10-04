@@ -1,3 +1,4 @@
+import { rateLimitHandler } from "../middlewares/securityAudit.middleware.js";
 import { Router } from "express";
 import {
     changeRole,
@@ -31,6 +32,7 @@ const createProjectLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    handler: rateLimitHandler,
 });
 
 const updateProjectLimiter = rateLimit({
@@ -43,6 +45,7 @@ const updateProjectLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    handler: rateLimitHandler,
 });
 
 const changeRoleLimiter = rateLimit({
@@ -55,6 +58,7 @@ const changeRoleLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    handler: rateLimitHandler,
 });
 
 const transferOwnershipLimiter = rateLimit({
@@ -67,6 +71,7 @@ const transferOwnershipLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    handler: rateLimitHandler,
 });
 
 const deleteMemberLimiter = rateLimit({
@@ -79,6 +84,7 @@ const deleteMemberLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    handler: rateLimitHandler,
 });
 
 const router = Router();

@@ -18,7 +18,7 @@ import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import path from "path";
 import dotenv from "dotenv";
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 export const getAttachments = async (req: IGetUserRequest, res: Response) => {
     try {
@@ -48,6 +48,15 @@ export const getAttachments = async (req: IGetUserRequest, res: Response) => {
         );
 
         if (!projectMember || !projectMember.length) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "getAttachments",
+                },
+                "Authorization denied",
+            );
+
             res.status(403).json({
                 status: "error",
                 message: "Access denied or task not found",
@@ -83,7 +92,15 @@ export const getAttachments = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
-        console.error(error);
+        req.log.error(
+            {
+                err: error,
+                event: "upload.get_attachments_failed",
+                operation: "getAttachments",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({ status: "error", message: "Database error" });
     }
 };
@@ -138,6 +155,15 @@ export const uploadSingle = async (req: IGetUserRequest, res: Response) => {
         if (!taskMembers || !taskMembers.length) {
             unlinkSync(req.file.path);
 
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "uploadSingle",
+                },
+                "Authorization denied",
+            );
+
             res.status(403).json({
                 status: "error",
                 message: "Access denied or task not found",
@@ -173,6 +199,18 @@ export const uploadSingle = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
+        req.log.info(
+            {
+                event: "upload.completed",
+                userId,
+                fileId: result.insertId,
+                taskId: validatedData.taskId,
+                size: req.file.size,
+                mimeType: req.file.mimetype,
+            },
+            "Operation completed",
+        );
+
         res.status(200).json({
             status: "success",
             message: "The file was successfully uploaded",
@@ -207,7 +245,15 @@ export const uploadSingle = async (req: IGetUserRequest, res: Response) => {
             unlinkSync(req.file.path);
         }
 
-        console.error(error);
+        req.log.error(
+            {
+                err: error,
+                event: "upload.upload_single_failed",
+                operation: "uploadSingle",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({ status: "error", message: "Database error" });
     }
 };
@@ -282,6 +328,18 @@ export const uploadAvatar = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
+        req.log.info(
+            {
+                event: "upload.completed",
+                userId,
+                fileId: uploadResult.insertId,
+                size: req.file.size,
+                kind: "avatar",
+                mimeType: req.file?.mimetype,
+            },
+            "Operation completed",
+        );
+
         res.status(200).json({
             status: "success",
             message: "The avatar was uploaded successfully",
@@ -316,7 +374,15 @@ export const uploadAvatar = async (req: IGetUserRequest, res: Response) => {
             unlinkSync(req.file.path);
         }
 
-        console.error(error);
+        req.log.error(
+            {
+                err: error,
+                event: "upload.upload_avatar_failed",
+                operation: "uploadAvatar",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({ status: "error", message: "Database error" });
     }
 };
@@ -377,6 +443,15 @@ export const uploadMultiple = async (req: IGetUserRequest, res: Response) => {
                 unlinkSync(file.path);
             });
 
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "uploadMultiple",
+                },
+                "Authorization denied",
+            );
+
             res.status(403).json({
                 status: "error",
                 message: "Access denied or task not found",
@@ -420,6 +495,16 @@ export const uploadMultiple = async (req: IGetUserRequest, res: Response) => {
             }
         }
 
+        req.log.info(
+            {
+                event: "upload.completed",
+                userId,
+                taskId: validatedData.taskId,
+                count: files.length,
+            },
+            "Operation completed",
+        );
+
         res.status(200).json({
             status: "success",
             message: "Files were successfully uploaded",
@@ -459,7 +544,15 @@ export const uploadMultiple = async (req: IGetUserRequest, res: Response) => {
             });
         }
 
-        console.error(error);
+        req.log.error(
+            {
+                err: error,
+                event: "upload.upload_multiple_failed",
+                operation: "uploadMultiple",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({ status: "error", message: "Database error" });
     }
 };
@@ -550,6 +643,15 @@ export const deleteAttachment = async (req: IGetUserRequest, res: Response) => {
         const memberAccess = memberAccessRow[0];
 
         if (!memberAccess) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "deleteAttachment",
+                },
+                "Authorization denied",
+            );
+
             res.status(404).json({
                 status: "error",
                 message: "Access denied or data not found",
@@ -562,6 +664,15 @@ export const deleteAttachment = async (req: IGetUserRequest, res: Response) => {
             !memberAccess.project_role ||
             memberAccess.project_status !== "active"
         ) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "deleteAttachment",
+                },
+                "Authorization denied",
+            );
+
             res.status(404).json({
                 status: "error",
                 message: "User is not a project member",
@@ -577,6 +688,15 @@ export const deleteAttachment = async (req: IGetUserRequest, res: Response) => {
             ) ||
             !memberAccess.task_member_id
         ) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "deleteAttachment",
+                },
+                "Authorization denied",
+            );
+
             res.status(404).json({
                 status: "error",
                 message: "Access denied",
@@ -607,6 +727,16 @@ export const deleteAttachment = async (req: IGetUserRequest, res: Response) => {
             unlinkSync(filePath);
         }
 
+        req.log.info(
+            {
+                event: "upload.deleted",
+                userId,
+                fileId: attachment.id,
+                taskId: attachment.task_id,
+            },
+            "Operation completed",
+        );
+
         res.status(200).json({
             status: "success",
             message: "The file was successfully deleted",
@@ -627,7 +757,15 @@ export const deleteAttachment = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
-        console.error(error);
+        req.log.error(
+            {
+                err: error,
+                event: "upload.delete_attachment_failed",
+                operation: "deleteAttachment",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({ status: "error", message: "Database error" });
     }
 };
@@ -744,6 +882,16 @@ export const deleteAvatar = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
+        req.log.info(
+            {
+                event: "upload.deleted",
+                userId,
+                fileId: attachment.id,
+                kind: "avatar",
+            },
+            "Operation completed",
+        );
+
         res.status(200).json({
             status: "success",
             message: "The file was successfully deleted",
@@ -764,7 +912,15 @@ export const deleteAvatar = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
-        console.error(error);
+        req.log.error(
+            {
+                err: error,
+                event: "upload.delete_avatar_failed",
+                operation: "deleteAvatar",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({ status: "error", message: "Database error" });
     }
 };

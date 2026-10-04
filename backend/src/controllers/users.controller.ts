@@ -13,7 +13,7 @@ import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import type { IGetUserRequest, User } from "../types/types.js";
 import dotenv from "dotenv";
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 export const me = async (
     req: IGetUserRequest,
@@ -98,7 +98,11 @@ export const me = async (
             },
         });
     } catch (error) {
-        console.error("User error:", error);
+        req.log.error(
+            { err: error, event: "user.me_failed", operation: "me" },
+            "Operation failed",
+        );
+
         res.status(500).json({
             status: "error",
             message: "Server error during getting user",
@@ -239,6 +243,11 @@ export const updateProfile = async (
             return;
         }
 
+        req.log.info(
+            { event: "user.profile_updated", audit: true, userId: id },
+            "Operation completed",
+        );
+
         res.status(200).json({
             status: "success",
             message: "The profile has been successfully updated",
@@ -269,7 +278,15 @@ export const updateProfile = async (
             return;
         }
 
-        console.error("User error:", error);
+        req.log.error(
+            {
+                err: error,
+                event: "user.update_profile_failed",
+                operation: "updateProfile",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({
             status: "error",
             message: "Server error during updating profile",
@@ -317,6 +334,11 @@ export const changePassword = async (
         );
 
         if (!isPasswordValid) {
+            req.log.warn(
+                { audit: true, event: "auth.password_verification_failed" },
+                "Password verification failed",
+            );
+
             res.status(400).json({
                 status: "error",
                 message: "Current password is incorrect",
@@ -353,6 +375,11 @@ export const changePassword = async (
             return;
         }
 
+        req.log.info(
+            { event: "auth.password_changed", audit: true, userId: id },
+            "Operation completed",
+        );
+
         res.status(200).json({
             status: "success",
             message: "The password has been successfully changed",
@@ -373,7 +400,15 @@ export const changePassword = async (
             return;
         }
 
-        console.error("User error:", error);
+        req.log.error(
+            {
+                err: error,
+                event: "user.change_password_failed",
+                operation: "changePassword",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({
             status: "error",
             message: "Server error during changing password",
@@ -402,6 +437,15 @@ export const deleteAccount = async (
         const paramId = +req.params.id;
 
         if (userId !== paramId) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "deleteAccount",
+                },
+                "Authorization denied",
+            );
+
             res.status(403).json({
                 status: "error",
                 message: "You can only delete your own account",
@@ -439,6 +483,11 @@ export const deleteAccount = async (
         const isPasswordValid = await bcrypt.compare(password, user.password);
 
         if (!isPasswordValid) {
+            req.log.warn(
+                { audit: true, event: "auth.password_verification_failed" },
+                "Password verification failed",
+            );
+
             res.status(401).json({
                 status: "error",
                 message: "Incorrect password",
@@ -504,6 +553,11 @@ export const deleteAccount = async (
             return;
         }
 
+        req.log.info(
+            { event: "user.deleted", audit: true, userId },
+            "Operation completed",
+        );
+
         res.status(200).json({
             status: "success",
             message: "The account has been successfully deleted",
@@ -524,7 +578,15 @@ export const deleteAccount = async (
             return;
         }
 
-        console.error("User error:", error);
+        req.log.error(
+            {
+                err: error,
+                event: "user.delete_account_failed",
+                operation: "deleteAccount",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({
             status: "error",
             message: "Server error during deleting account",
@@ -592,6 +654,11 @@ export const setPassword = async (
             return;
         }
 
+        req.log.info(
+            { event: "auth.password_set", audit: true, userId },
+            "Operation completed",
+        );
+
         res.status(200).json({
             status: "success",
             message: "Password set successfully",
@@ -612,7 +679,15 @@ export const setPassword = async (
             return;
         }
 
-        console.error("Set password error:", error);
+        req.log.error(
+            {
+                err: error,
+                event: "user.set_password_failed",
+                operation: "setPassword",
+            },
+            "Operation failed",
+        );
+
         res.status(500).json({
             status: "error",
             message: "Server error while setting password",

@@ -1,3 +1,4 @@
+import { rateLimitHandler } from "../middlewares/securityAudit.middleware.js";
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { authenticateToken } from "../middlewares/auth.middleware.js";
@@ -27,6 +28,7 @@ const updateProfileLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    handler: rateLimitHandler,
 });
 
 const changePasswordLimiter = rateLimit({
@@ -39,6 +41,7 @@ const changePasswordLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    handler: rateLimitHandler,
 });
 
 const deleteAccountLimiter = rateLimit({
@@ -51,6 +54,7 @@ const deleteAccountLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    handler: rateLimitHandler,
 });
 
 const setPasswordLimiter = rateLimit({
@@ -63,6 +67,7 @@ const setPasswordLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    handler: rateLimitHandler,
 });
 
 const router = Router();

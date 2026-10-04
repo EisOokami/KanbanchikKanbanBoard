@@ -2,7 +2,7 @@ import type { Request, Response, NextFunction } from "express";
 import { z, ZodError } from "zod";
 import dotenv from "dotenv";
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 export function validateData(schema: z.ZodObject<any, any>) {
     return (req: Request, res: Response, next: NextFunction) => {
@@ -22,6 +22,11 @@ export function validateData(schema: z.ZodObject<any, any>) {
                     details: errorMessages,
                 });
             } else {
+                req.log.error(
+                    { err: error, event: "request.validation_failed" },
+                    "Validation failed unexpectedly",
+                );
+
                 res.status(500).json({ error: "Internal Server Error" });
             }
         }

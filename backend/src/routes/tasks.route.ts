@@ -1,3 +1,4 @@
+import { rateLimitHandler } from "../middlewares/securityAudit.middleware.js";
 import { Router } from "express";
 import {
     createTask,
@@ -28,6 +29,7 @@ const createTaskLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    handler: rateLimitHandler,
 });
 
 const updateTaskLimiter = rateLimit({
@@ -40,6 +42,7 @@ const updateTaskLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    handler: rateLimitHandler,
 });
 
 const moveTaskLimiter = rateLimit({
@@ -52,6 +55,7 @@ const moveTaskLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    handler: rateLimitHandler,
 });
 
 const deleteTaskLimiter = rateLimit({
@@ -64,6 +68,7 @@ const deleteTaskLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    handler: rateLimitHandler,
 });
 
 const router = Router();

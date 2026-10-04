@@ -1,3 +1,4 @@
+import { rateLimitHandler } from "../middlewares/securityAudit.middleware.js";
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { upload } from "../middlewares/uploads.middleware.js";
@@ -26,6 +27,7 @@ const singleUploadLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    handler: rateLimitHandler,
 });
 
 const avatarUploadLimiter = rateLimit({
@@ -38,6 +40,7 @@ const avatarUploadLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    handler: rateLimitHandler,
 });
 
 const multipleUploadLimiter = rateLimit({
@@ -50,6 +53,7 @@ const multipleUploadLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    handler: rateLimitHandler,
 });
 
 const deleteAttachmentLimiter = rateLimit({
@@ -62,6 +66,7 @@ const deleteAttachmentLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    handler: rateLimitHandler,
 });
 
 const deleteAvatarLimiter = rateLimit({
@@ -74,6 +79,7 @@ const deleteAvatarLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    handler: rateLimitHandler,
 });
 
 const router = Router();

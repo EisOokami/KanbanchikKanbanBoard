@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import dotenv from "dotenv";
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 12;

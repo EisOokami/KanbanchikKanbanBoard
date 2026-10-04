@@ -1,5 +1,5 @@
 import { fileTypeFromBuffer } from "file-type";
-import { promises, readFileSync } from "fs";
+import { promises } from "fs";
 import type { IGetUserRequest } from "../types/types.js";
 import type { NextFunction, Response } from "express";
 
@@ -23,6 +23,15 @@ export const fileValidation = async (
         const type = await fileTypeFromBuffer(buffer);
 
         if (!type || type.mime !== req.file.mimetype) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "upload.rejected",
+                    reason: "content_type_mismatch",
+                },
+                "Upload rejected",
+            );
+
             await promises.unlink(filePath);
 
             res.status(415).json({
@@ -35,6 +44,11 @@ export const fileValidation = async (
 
         next();
     } catch (error) {
+        req.log.error(
+            { err: error, event: "upload.validation_failed" },
+            "Upload validation failed",
+        );
+
         res.status(500).json({
             status: "error",
             message: "Internal server error",
@@ -66,14 +80,23 @@ export const filesValidation = async (
             const type = await fileTypeFromBuffer(buffer);
 
             if (!type || type.mime !== file.mimetype) {
+                req.log.warn(
+                    {
+                        audit: true,
+                        event: "upload.rejected",
+                        reason: "content_type_mismatch",
+                    },
+                    "Upload rejected",
+                );
+
                 await Promise.all(
                     files.map(async (file) => {
                         try {
                             await promises.unlink(file.path);
                         } catch (error) {
-                            console.error(
-                                `Failed to delete file "${file.path}":`,
-                                error,
+                            req.log.error(
+                                { err: error, event: "upload.cleanup_failed" },
+                                "Failed to delete rejected upload",
                             );
                         }
                     }),
@@ -90,6 +113,11 @@ export const filesValidation = async (
 
         next();
     } catch (error) {
+        req.log.error(
+            { err: error, event: "upload.validation_failed" },
+            "Upload validation failed",
+        );
+
         res.status(500).json({
             status: "error",
             message: "Internal server error",

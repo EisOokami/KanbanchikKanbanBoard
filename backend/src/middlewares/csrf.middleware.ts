@@ -38,6 +38,11 @@ export function verifyCsrf(req: Request, res: Response, next: NextFunction) {
         cookieToken !== headerToken ||
         !verifyCsrfToken(cookieToken)
     ) {
+        req.log.warn(
+            { audit: true, event: "security.csrf_rejected" },
+            "CSRF validation failed",
+        );
+
         res.status(403).json({
             status: "error",
             message: "CSRF_TOKEN_INVALID",

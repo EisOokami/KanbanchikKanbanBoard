@@ -1,4 +1,4 @@
-import { SignJWT, jwtVerify } from "jose";
+import { SignJWT, jwtVerify, errors as joseErrors } from "jose";
 import type { JWTPayload } from "jose";
 import dotenv from "dotenv";
 import crypto from "crypto";
@@ -7,7 +7,7 @@ import type { ResultSetHeader } from "mysql2";
 import bcrypt from "bcryptjs";
 import type { RefreshSession } from "../types/types.js";
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const accessSecret = new TextEncoder().encode(process.env.JWT_ACCESS_SECRET);
 const refreshSecret = new TextEncoder().encode(process.env.JWT_REFRESH_SECRET);
@@ -74,7 +74,7 @@ export async function verifyRefreshToken(token: string) {
     const sid = payload.sid;
 
     if (!sid || typeof sid !== "string") {
-        throw new Error("Missing sid");
+        throw new joseErrors.JWTInvalid("Missing sid");
     }
 
     const [rows] = await pool.execute<RefreshSession[]>(
@@ -89,7 +89,7 @@ export async function verifyRefreshToken(token: string) {
     );
 
     if (!rows.length || !rows[0]) {
-        throw new Error("Session not found");
+        throw new joseErrors.JWTInvalid("Session not found");
     }
 
     const session = rows[0];
@@ -97,7 +97,7 @@ export async function verifyRefreshToken(token: string) {
     const valid = await bcrypt.compare(token, session.refresh_token_hash);
 
     if (!valid) {
-        throw new Error("Invalid refresh token");
+        throw new joseErrors.JWTInvalid("Invalid refresh token");
     }
 
     if (!session.revoked) {
@@ -114,7 +114,7 @@ export async function verifyRefreshToken(token: string) {
         Date.now() - replacedAt < ROTATION_GRACE_PERIOD_MS;
 
     if (!withinGracePeriod) {
-        throw new Error("Session not found");
+        throw new joseErrors.JWTInvalid("Session not found");
     }
 
     return {
@@ -131,7 +131,7 @@ export async function rotateRefreshToken(
     const { payload, session } = await verifyRefreshToken(token);
 
     if (!payload.sub) {
-        throw new Error("Missing user id");
+        throw new joseErrors.JWTInvalid("Missing user id");
     }
 
     if (session.revoked && session.replaced_by) {
@@ -160,7 +160,7 @@ export async function rotateRefreshToken(
                 .sign(refreshSecret);
         }
 
-        throw new Error("Session not found");
+        throw new joseErrors.JWTInvalid("Session not found");
     }
 
     const newToken = await createRefreshToken(+payload.sub, ip, userAgent);
