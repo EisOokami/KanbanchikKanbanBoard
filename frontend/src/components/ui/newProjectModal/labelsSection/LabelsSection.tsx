@@ -88,7 +88,7 @@ export default function LabelsSection({
                             <Input
                                 id="labels"
                                 name="label"
-                                placeholder="Label name…"
+                                placeholder="Label name..."
                                 value={newLabelName}
                                 onChange={(e) =>
                                     setNewLabelName(e.target.value)

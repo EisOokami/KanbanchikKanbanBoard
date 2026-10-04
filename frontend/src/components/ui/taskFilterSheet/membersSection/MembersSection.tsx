@@ -46,7 +46,7 @@ export default function MembersSection({
                         className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-control-text"
                     />
                     <Input
-                        placeholder="Search…"
+                        placeholder="Search..."
                         value={memberSearch}
                         onChange={(e) => setMemberSearch(e.target.value)}
                         className="h-8 rounded-md bg-control pl-8 text-xs placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue"

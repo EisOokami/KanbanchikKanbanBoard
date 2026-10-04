@@ -395,7 +395,7 @@ export default function InviteMemberModal({
                                     />
                                     <Input
                                         name="search"
-                                        placeholder="Search members…"
+                                        placeholder="Search members..."
                                         value={search}
                                         onChange={(e) =>
                                             setSearch(e.target.value)

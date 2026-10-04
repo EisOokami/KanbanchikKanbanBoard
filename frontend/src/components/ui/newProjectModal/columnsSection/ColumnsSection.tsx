@@ -140,7 +140,7 @@ export default function ColumnsSection({
                         <Input
                             id="column"
                             name="column"
-                            placeholder="Column name…"
+                            placeholder="Column name..."
                             value={newColumnName}
                             onChange={(e) => setNewColumnName(e.target.value)}
                             onKeyDown={(e) =>

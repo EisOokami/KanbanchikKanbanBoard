@@ -25,7 +25,7 @@ export default function CategoriesSection({
     onFormDataChange,
 }: Readonly<CategoriesSectionProps>) {
     const [newCategoryName, setNewCategoryName] = useState<string>("");
-    const [newCatColor, setNewCatColor] = useState<string>("#000000");
+    const [newCategoryColor, setNewCategoryColor] = useState<string>("#000000");
 
     const addCategory = () => {
         if (!newCategoryName.trim()) {
@@ -39,7 +39,7 @@ export default function CategoriesSection({
                 {
                     id: formData.categories.length + 1,
                     name: newCategoryName.trim(),
-                    color: newCatColor,
+                    color: newCategoryColor,
                 },
             ],
         });
@@ -82,15 +82,15 @@ export default function CategoriesSection({
                 <div>
                     <div className="flex items-center gap-2">
                         <ColorPicker
-                            value={newCatColor}
-                            onChange={setNewCatColor}
+                            value={newCategoryColor}
+                            onChange={setNewCategoryColor}
                             isPending={isPending}
                         />
                         <div className="flex w-full gap-2">
                             <Input
                                 id="categories"
                                 name="category"
-                                placeholder="Category name…"
+                                placeholder="Category name..."
                                 value={newCategoryName}
                                 onChange={(e) =>
                                     setNewCategoryName(e.target.value)

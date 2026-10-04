@@ -250,7 +250,7 @@ export default function CategoriesSection({
                     <div className="flex w-full items-center gap-2">
                         <Input
                             name="category"
-                            placeholder="New category…"
+                            placeholder="New category..."
                             value={categoryInputValues.name}
                             defaultValue={
                                 formState?.formData

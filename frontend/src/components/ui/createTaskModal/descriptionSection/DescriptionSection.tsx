@@ -26,7 +26,7 @@ export default function DescriptionSection({
                 id="description"
                 name="description"
                 value={description}
-                placeholder="Add context, goals, or acceptance criteria…"
+                placeholder="Add context, goals, or acceptance criteria..."
                 defaultValue={
                     formState?.formData?.get("description")?.toString() ??
                     undefined

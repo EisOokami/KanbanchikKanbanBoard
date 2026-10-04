@@ -247,7 +247,7 @@ export default function LabelsSection({
                         />
                         <Input
                             name="label"
-                            placeholder="Label name…"
+                            placeholder="Label name..."
                             value={labelInputValues.name}
                             defaultValue={
                                 formState?.formData?.get("label")?.toString() ??

@@ -87,7 +87,7 @@ export default function ProjectsOverview({
                             className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-control-text"
                         />
                         <Input
-                            placeholder="Search projects…"
+                            placeholder="Search projects..."
                             onChange={(e) => setSearch(e.target.value)}
                             className="h-9 bg-control pl-9 text-sm placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue"
                         />

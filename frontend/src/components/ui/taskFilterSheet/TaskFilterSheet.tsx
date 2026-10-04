@@ -123,7 +123,7 @@ export default function TaskFilterSheet({
                             />
                             <Input
                                 value={filters.search}
-                                placeholder="Search tasks…"
+                                placeholder="Search tasks..."
                                 onChange={(e) => {
                                     setFilters((prev) => ({
                                         ...prev,

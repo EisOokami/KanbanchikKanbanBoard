@@ -204,7 +204,7 @@ export default function Tasks({
                                     onChange={(e) =>
                                         setF("search", e.target.value)
                                     }
-                                    placeholder="Search tasks…"
+                                    placeholder="Search tasks..."
                                     className="bg-control pl-8 pr-6 text-xs placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue"
                                 />
                                 {filter.search && (

@@ -1240,23 +1240,21 @@ export const updateTask = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
-        if (validatedData.categories && validatedData.categories.length) {
-            await pool.execute<ResultSetHeader>(
-                `DELETE FROM task_categories WHERE task_id = ?`,
-                [id],
-            );
+        await pool.execute<ResultSetHeader>(
+            `DELETE FROM task_categories WHERE task_id = ?`,
+            [id],
+        );
 
-            await Promise.all(
-                validatedData.categories.map(async (category) => {
-                    if (category.id) {
-                        await pool.execute<ResultSetHeader>(
-                            `INSERT INTO task_categories (task_id, category_id) VALUES (?, ?)`,
-                            [id, category.id],
-                        );
-                    }
-                }),
-            );
-        }
+        await Promise.all(
+            validatedData.categories.map(async (category) => {
+                if (category.id) {
+                    await pool.execute<ResultSetHeader>(
+                        `INSERT INTO task_categories (task_id, category_id) VALUES (?, ?)`,
+                        [id, category.id],
+                    );
+                }
+            }),
+        );
 
         if (validatedData.members && validatedData.members.length) {
             await pool.execute<ResultSetHeader>(
@@ -1274,42 +1272,38 @@ export const updateTask = async (req: IGetUserRequest, res: Response) => {
             );
         }
 
-        if (validatedData.labels && validatedData.labels.length) {
-            await pool.execute<ResultSetHeader>(
-                `DELETE FROM task_labels WHERE task_id = ?`,
-                [id],
-            );
+        await pool.execute<ResultSetHeader>(
+            `DELETE FROM task_labels WHERE task_id = ?`,
+            [id],
+        );
 
-            await Promise.all(
-                validatedData.labels.map(async (label) => {
-                    if (label.id) {
-                        await pool.execute<ResultSetHeader>(
-                            `INSERT INTO task_labels (task_id, label_id) VALUES (?, ?)`,
-                            [id, label.id],
-                        );
-                    }
-                }),
-            );
-        }
-
-        if (validatedData.subtasks && validatedData.subtasks.length) {
-            await pool.execute<ResultSetHeader>(
-                `DELETE FROM subtasks WHERE task_id = ?`,
-                [id],
-            );
-
-            await Promise.all(
-                validatedData.subtasks.map(async (subtask) => {
+        await Promise.all(
+            validatedData.labels.map(async (label) => {
+                if (label.id) {
                     await pool.execute<ResultSetHeader>(
-                        `
+                        `INSERT INTO task_labels (task_id, label_id) VALUES (?, ?)`,
+                        [id, label.id],
+                    );
+                }
+            }),
+        );
+
+        await pool.execute<ResultSetHeader>(
+            `DELETE FROM subtasks WHERE task_id = ?`,
+            [id],
+        );
+
+        await Promise.all(
+            validatedData.subtasks.map(async (subtask) => {
+                await pool.execute<ResultSetHeader>(
+                    `
                             INSERT INTO subtasks (task_id, title, position, is_done) 
                             VALUES (?, ?, ?, ?)
                         `,
-                        [id, subtask.title, subtask.position, subtask.is_done],
-                    );
-                }),
-            );
-        }
+                    [id, subtask.title, subtask.position, subtask.is_done],
+                );
+            }),
+        );
 
         if (validatedData.newSubtasks && validatedData.newSubtasks.length) {
             await Promise.all(

@@ -148,7 +148,7 @@ export default function SubtasksSection({
                 <div className="flex gap-2">
                     <Input
                         id="subtasks"
-                        placeholder="Add subtasks item…"
+                        placeholder="Add subtasks item..."
                         value={newSubtaskName}
                         defaultValue={
                             formState?.formData?.get("subtasks")?.toString() ??

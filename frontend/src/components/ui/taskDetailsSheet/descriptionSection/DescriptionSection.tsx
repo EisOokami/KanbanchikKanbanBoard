@@ -49,7 +49,7 @@ export default function DescriptionSection({
                     onBlur={() => setEditingDesc(false)}
                     rows={5}
                     className="min-h-32 max-w-[550px] break-words rounded-md bg-control text-sm leading-relaxed placeholder:text-control-active focus-visible:ring-1 focus-visible:ring-bright-blue"
-                    placeholder="Add a description…"
+                    placeholder="Add a description..."
                     disabled={isPending}
                 />
             ) : (
@@ -72,7 +72,7 @@ export default function DescriptionSection({
                                 !description && "text-control-text",
                             )}
                         >
-                            {description || "Add a description…"}
+                            {description || "Add a description..."}
                             {hasPermission && (
                                 <PencilSimpleIcon
                                     weight="duotone"

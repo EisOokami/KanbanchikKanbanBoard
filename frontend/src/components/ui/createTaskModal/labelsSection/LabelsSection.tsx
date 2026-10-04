@@ -86,7 +86,7 @@ export default function LabelsSection({
     return (
         <div className="space-y-1">
             <label className="font-semibold" htmlFor="label">
-                Labels <span className="text-red-500">*</span>
+                Labels
             </label>
             <div className="space-y-3">
                 {formData.labels.length || formData.newLabels.length ? (
@@ -144,7 +144,7 @@ export default function LabelsSection({
                             <Input
                                 id="label"
                                 name="label"
-                                placeholder="Label name…"
+                                placeholder="Label name..."
                                 value={newLabelName}
                                 defaultValue={
                                     formState?.formData

@@ -163,7 +163,7 @@ export default function ColumnsSection({
                 <div className="flex items-center gap-2">
                     <Input
                         name="column"
-                        placeholder="Column name…"
+                        placeholder="Column name..."
                         value={newColumnName}
                         defaultValue={
                             formState?.formData?.get("column")?.toString() ??

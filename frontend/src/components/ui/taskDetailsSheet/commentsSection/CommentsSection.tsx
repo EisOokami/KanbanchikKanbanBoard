@@ -65,7 +65,7 @@ export default function CommentsSection({
                 </Avatar>
                 <div className="flex-1">
                     <Textarea
-                        placeholder="Write a comment…"
+                        placeholder="Write a comment..."
                         value={newComment}
                         onChange={(e) => setNewComment(e.target.value)}
                         onKeyDown={(e) => {

@@ -86,7 +86,7 @@ export default function CategoriesSection({
     return (
         <div className="space-y-1">
             <label className="font-semibold" htmlFor="category">
-                Categories <span className="text-red-500">*</span>
+                Categories
             </label>
             <div className="space-y-3">
                 {formData.categories.length || formData.newCategories.length ? (
@@ -144,7 +144,7 @@ export default function CategoriesSection({
                             <Input
                                 id="category"
                                 name="category"
-                                placeholder="Category name…"
+                                placeholder="Category name..."
                                 value={newCategoryName}
                                 defaultValue={
                                     formState?.formData

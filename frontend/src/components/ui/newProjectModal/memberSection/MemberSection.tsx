@@ -102,7 +102,7 @@ export default function MemberSection({
                             id="members"
                             name="email"
                             type="email"
-                            placeholder="Invite by email…"
+                            placeholder="Invite by email..."
                             value={emailInput}
                             defaultValue={
                                 formState?.formData?.get("email")?.toString() ??

@@ -160,10 +160,12 @@ export const createProjectSchema = z.object({
         "Invalid project status",
     ),
     showPriorityEmoji: z.boolean(),
-    labels: z.array(namedColorSchema).min(1, "At least one label is required"),
+    labels: z
+        .array(namedColorSchema)
+        .max(100, "A maximum of 100 labels is allowed"),
     categories: z
         .array(namedColorSchema)
-        .min(1, "At least one category is required"),
+        .max(100, "A maximum of 100 categories is allowed"),
     members: z.array(
         z
             .email("Invalid email")
@@ -172,7 +174,10 @@ export const createProjectSchema = z.object({
             .min(1, "Email is required")
             .max(255, "Email must be less than 255 characters long"),
     ),
-    columns: z.array(columnSchema).min(1, "At least one column is required"),
+    columns: z
+        .array(columnSchema)
+        .min(1, "At least one column is required")
+        .max(100, "A maximum of 100 columns is allowed"),
 });
 
 const memberSchema = z.object({
@@ -244,8 +249,12 @@ export const updateProjectSchema = z
             "Invalid project status",
         ),
         showPriorityEmoji: z.boolean(),
-        labels: z.array(namedColorSchema),
-        newLabels: z.array(namedColorSchema),
+        labels: z
+            .array(namedColorSchema)
+            .max(100, "A maximum of 100 labels is allowed"),
+        newLabels: z
+            .array(namedColorSchema)
+            .max(100, "A maximum of 100 labels is allowed"),
         deletedLabelIds: z
             .array(
                 z
@@ -258,8 +267,12 @@ export const updateProjectSchema = z
             )
             .optional()
             .default([]),
-        categories: z.array(namedColorSchema),
-        newCategories: z.array(namedColorSchema),
+        categories: z
+            .array(namedColorSchema)
+            .max(100, "A maximum of 100 categories is allowed"),
+        newCategories: z
+            .array(namedColorSchema)
+            .max(100, "A maximum of 100 categories is allowed"),
         deletedCategoryIds: z
             .array(
                 z
@@ -280,8 +293,12 @@ export const updateProjectSchema = z
                 .min(1, "Email is required")
                 .max(255, "Email must be less than 255 characters long"),
         ),
-        columns: z.array(columnSchema),
-        newColumns: z.array(columnSchema),
+        columns: z
+            .array(columnSchema)
+            .max(100, "A maximum of 100 columns is allowed"),
+        newColumns: z
+            .array(columnSchema)
+            .max(100, "A maximum of 100 columns is allowed"),
         deletedColumnIds: z
             .array(
                 z
@@ -299,26 +316,34 @@ export const updateProjectSchema = z
             .min(1, "At least one member is required"),
     })
     .superRefine((data, ctx) => {
-        if (!data.categories.length && !data.newCategories.length) {
-            ctx.addIssue({
-                code: "custom",
-                message: "At least one category (existing or new) is required",
-                path: ["categories"],
-            });
-        }
-
-        if (!data.labels.length && !data.newLabels.length) {
-            ctx.addIssue({
-                code: "custom",
-                message: "At least one label (existing or new) is required",
-                path: ["labels"],
-            });
-        }
-
         if (!data.columns.length && !data.newColumns.length) {
             ctx.addIssue({
                 code: "custom",
                 message: "At least one column (existing or new) is required",
+                path: ["columns"],
+            });
+        }
+
+        if (data.labels.length + data.newLabels.length > 100) {
+            ctx.addIssue({
+                code: "custom",
+                message: "A maximum of 100 labels is allowed in total",
+                path: ["labels"],
+            });
+        }
+
+        if (data.categories.length + data.newCategories.length > 100) {
+            ctx.addIssue({
+                code: "custom",
+                message: "A maximum of 100 categories is allowed in total",
+                path: ["categories"],
+            });
+        }
+
+        if (data.columns.length + data.newColumns.length > 100) {
+            ctx.addIssue({
+                code: "custom",
+                message: "A maximum of 100 columns is allowed in total",
                 path: ["columns"],
             });
         }
@@ -394,13 +419,21 @@ export const createTaskSchema = z
             .refine((value) => Number.isSafeInteger(value), {
                 message: "ID is too large a numerical value",
             }),
-        categories: z.array(namedColorSchema),
-        newCategories: z.array(namedColorSchema),
+        categories: z
+            .array(namedColorSchema)
+            .max(100, "A maximum of 100 categories is allowed"),
+        newCategories: z
+            .array(namedColorSchema)
+            .max(100, "A maximum of 100 categories is allowed"),
         members: z
             .array(memberSchema)
             .min(1, "At least one member is required"),
-        labels: z.array(namedColorSchema),
-        newLabels: z.array(namedColorSchema),
+        labels: z
+            .array(namedColorSchema)
+            .max(100, "A maximum of 100 labels is allowed"),
+        newLabels: z
+            .array(namedColorSchema)
+            .max(100, "A maximum of 100 labels is allowed"),
         attachments: z
             .preprocess(
                 (value) => {
@@ -466,146 +499,172 @@ export const createTaskSchema = z
                     .max(3, "Attachments must be less than 3"),
             )
             .optional(),
-        subtasks: z.array(subtaskSchema),
+        subtasks: z
+            .array(subtaskSchema)
+            .max(100, "A maximum of 100 subtasks is allowed"),
     })
     .superRefine((data, ctx) => {
-        if (!data.categories.length && !data.newCategories.length) {
+        if (data.labels.length + data.newLabels.length > 100) {
             ctx.addIssue({
                 code: "custom",
-                message: "At least one category (existing or new) is required",
-                path: ["categories"],
+                message: "A maximum of 100 labels is allowed in total",
+                path: ["labels"],
             });
         }
 
-        if (!data.labels.length && !data.newLabels.length) {
+        if (data.categories.length + data.newCategories.length > 100) {
             ctx.addIssue({
                 code: "custom",
-                message: "At least one label (existing or new) is required",
-                path: ["labels"],
+                message: "A maximum of 100 categories is allowed in total",
+                path: ["categories"],
             });
         }
     });
 
-export const updateTaskSchema = z.object({
-    title: z
-        .string()
-        .trim()
-        .min(1, "Title must be at least 1 characters")
-        .max(255, "Title must be less than 255 characters"),
-    description: z
-        .string()
-        .trim()
-        .max(5000, "Description must be less than 5000 characters long")
-        .nullable()
-        .optional(),
-    priority: z.enum(
-        ["low", "medium", "high", "critical"],
-        "Invalid task priority",
-    ),
-    dueDate: z.preprocess(
-        (value) => (value === "" ? undefined : value),
-        z.iso
-            .date()
+export const updateTaskSchema = z
+    .object({
+        title: z
+            .string()
+            .trim()
+            .min(1, "Title must be at least 1 characters")
+            .max(255, "Title must be less than 255 characters"),
+        description: z
+            .string()
+            .trim()
+            .max(5000, "Description must be less than 5000 characters long")
             .nullable()
-            .optional()
-            .refine((value) => value == null || isWithinDateRange(value), {
-                message: "Date must be within 3 years from the current date",
+            .optional(),
+        priority: z.enum(
+            ["low", "medium", "high", "critical"],
+            "Invalid task priority",
+        ),
+        dueDate: z.preprocess(
+            (value) => (value === "" ? undefined : value),
+            z.iso
+                .date()
+                .nullable()
+                .optional()
+                .refine((value) => value == null || isWithinDateRange(value), {
+                    message:
+                        "Date must be within 3 years from the current date",
+                }),
+        ),
+        startDate: z.preprocess(
+            (value) => (value === "" ? undefined : value),
+            z.iso
+                .date()
+                .nullable()
+                .optional()
+                .refine((value) => value == null || isWithinDateRange(value), {
+                    message:
+                        "Date must be within 3 years from the current date",
+                }),
+        ),
+        showProgress: z.boolean(),
+        taskId: z
+            .number()
+            .positive()
+            .int("Task ID must be an integer")
+            .refine((value) => Number.isSafeInteger(value), {
+                message: "Task ID is too large a numerical value",
             }),
-    ),
-    startDate: z.preprocess(
-        (value) => (value === "" ? undefined : value),
-        z.iso
-            .date()
-            .nullable()
-            .optional()
-            .refine((value) => value == null || isWithinDateRange(value), {
-                message: "Date must be within 3 years from the current date",
+        columnId: z
+            .number()
+            .positive()
+            .int("Column ID must be an integer")
+            .refine((value) => Number.isSafeInteger(value), {
+                message: "Column ID is too large a numerical value",
             }),
-    ),
-    showProgress: z.boolean(),
-    taskId: z
-        .number()
-        .positive()
-        .int("Task ID must be an integer")
-        .refine((value) => Number.isSafeInteger(value), {
-            message: "Task ID is too large a numerical value",
-        }),
-    columnId: z
-        .number()
-        .positive()
-        .int("Column ID must be an integer")
-        .refine((value) => Number.isSafeInteger(value), {
-            message: "Column ID is too large a numerical value",
-        }),
-    categories: z
-        .array(namedColorSchema)
-        .min(1, "At least one category is required"),
-    members: z.array(memberSchema).min(1, "At least one member is required"),
-    labels: z.array(namedColorSchema).min(1, "At least one label is required"),
-    newAttachments: z
-        .preprocess(
-            (value) => {
-                if (!value) return [undefined];
+        categories: z
+            .array(namedColorSchema)
+            .max(100, "A maximum of 100 categories is allowed"),
+        members: z
+            .array(memberSchema)
+            .min(1, "At least one member is required"),
+        labels: z
+            .array(namedColorSchema)
+            .max(100, "A maximum of 100 labels is allowed"),
+        newAttachments: z
+            .preprocess(
+                (value) => {
+                    if (!value) return [undefined];
 
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                return Array.from(value as Iterable<any>).filter(
-                    (file) =>
-                        file instanceof File &&
-                        file.name !== "" &&
-                        file.size > 0,
-                );
-            },
-            z
-                .array(
-                    z
-                        .instanceof(File, {
-                            message: "Attachment is required",
-                        })
-                        .refine((file) => file.size <= 5 * 1024 * 1024, {
-                            message: "Maximum file size is 5MB",
-                        })
-                        .refine(
-                            (file) => {
-                                const fileNameWithoutExtension =
-                                    file.name.replace(/\.[^/.]+$/, "");
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    return Array.from(value as Iterable<any>).filter(
+                        (file) =>
+                            file instanceof File &&
+                            file.name !== "" &&
+                            file.size > 0,
+                    );
+                },
+                z
+                    .array(
+                        z
+                            .instanceof(File, {
+                                message: "Attachment is required",
+                            })
+                            .refine((file) => file.size <= 5 * 1024 * 1024, {
+                                message: "Maximum file size is 5MB",
+                            })
+                            .refine(
+                                (file) => {
+                                    const fileNameWithoutExtension =
+                                        file.name.replace(/\.[^/.]+$/, "");
 
-                                return fileNameWithoutExtension.length <= 50;
-                            },
-                            {
-                                message:
-                                    "File name must be less than or equal to 50 characters",
-                            },
-                        )
-                        .refine(
-                            (file) =>
-                                [
-                                    "image/jpeg",
-                                    "image/png",
-                                    "image/svg+xml",
-                                    "image/webp",
-                                    "image/gif",
-                                    "image/avif",
-                                    "application/pdf",
-                                    "video/mp4",
-                                    "video/webm",
-                                    "video/mpeg",
-                                    "application/msword",
-                                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                    "text/plain",
-                                    "application/vnd.ms-",
-                                    "application/vnd.openxmlformats-",
-                                ].some((type) => file.type.startsWith(type)),
-                            {
-                                message: "File type is not allowed",
-                            },
-                        ),
-                )
-                .max(3, "Attachments must be less than 3"),
-        )
-        .optional(),
-    subtasks: z.array(subtaskSchema),
-    newSubtasks: z.array(subtaskSchema),
-});
+                                    return (
+                                        fileNameWithoutExtension.length <= 50
+                                    );
+                                },
+                                {
+                                    message:
+                                        "File name must be less than or equal to 50 characters",
+                                },
+                            )
+                            .refine(
+                                (file) =>
+                                    [
+                                        "image/jpeg",
+                                        "image/png",
+                                        "image/svg+xml",
+                                        "image/webp",
+                                        "image/gif",
+                                        "image/avif",
+                                        "application/pdf",
+                                        "video/mp4",
+                                        "video/webm",
+                                        "video/mpeg",
+                                        "application/msword",
+                                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                        "text/plain",
+                                        "application/vnd.ms-",
+                                        "application/vnd.openxmlformats-",
+                                    ].some((type) =>
+                                        file.type.startsWith(type),
+                                    ),
+                                {
+                                    message: "File type is not allowed",
+                                },
+                            ),
+                    )
+                    .max(3, "Attachments must be less than 3"),
+            )
+            .optional(),
+        subtasks: z
+            .array(subtaskSchema)
+            .max(100, "A maximum of 100 subtasks is allowed"),
+        newSubtasks: z
+            .array(subtaskSchema)
+            .max(100, "A maximum of 100 subtasks is allowed"),
+    })
+    .superRefine((data, ctx) => {
+        if (data.subtasks.length + data.newSubtasks.length > 100) {
+            ctx.addIssue({
+                code: "custom",
+                message: "A maximum of 100 subtasks is allowed in total",
+                path: ["subtasks"],
+            });
+        }
+    });
 
 export const updateProfileSchema = z
     .object({

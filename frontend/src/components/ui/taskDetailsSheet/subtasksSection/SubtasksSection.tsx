@@ -262,7 +262,7 @@ export default function SubtasksSection({
                 <div className="mt-3 flex gap-2">
                     <Input
                         name="add-subtask"
-                        placeholder="Add subtask…"
+                        placeholder="Add subtask..."
                         value={newSubtaskText}
                         onChange={(e) => setNewSubtaskText(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && addSubtask()}
