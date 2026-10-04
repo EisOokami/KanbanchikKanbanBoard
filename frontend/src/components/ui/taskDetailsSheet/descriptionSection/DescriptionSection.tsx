@@ -89,6 +89,18 @@ export default function DescriptionSection({
                     />
                 </>
             )}
+            <div className="text-right">
+                <span
+                    className={cn(
+                        "text-xs",
+                        description.length > 5000
+                            ? "text-red-500"
+                            : "text-muted-foreground",
+                    )}
+                >
+                    {description.length}/5000
+                </span>
+            </div>
             <ZodErrors error={formState?.zodErrors?.description} />
         </div>
     );

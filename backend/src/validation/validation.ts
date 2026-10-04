@@ -349,7 +349,7 @@ export const createTaskSchema = z
         description: z
             .string()
             .trim()
-            .max(500, "Description must be less than 500 characters long")
+            .max(5000, "Description must be less than 5000 characters long")
             .nullable()
             .optional(),
         priority: z.enum(
@@ -495,7 +495,7 @@ export const updateTaskSchema = z.object({
     description: z
         .string()
         .trim()
-        .max(500, "Description must be less than 500 characters long")
+        .max(5000, "Description must be less than 5000 characters long")
         .nullable()
         .optional(),
     priority: z.enum(

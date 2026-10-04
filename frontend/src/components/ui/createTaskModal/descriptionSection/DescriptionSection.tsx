@@ -42,12 +42,12 @@ export default function DescriptionSection({
                 <span
                     className={cn(
                         "text-xs",
-                        description.length > 300
+                        description.length > 5000
                             ? "text-red-500"
                             : "text-muted-foreground",
                     )}
                 >
-                    {description.length}/300
+                    {description.length}/5000
                 </span>
             </div>
             <div>
