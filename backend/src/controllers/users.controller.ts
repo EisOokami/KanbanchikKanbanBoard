@@ -516,41 +516,62 @@ export const deleteAccount = async (
             return;
         }
 
-        await pool.execute<ResultSetHeader>(
-            "DELETE FROM attachments WHERE task_id IS NULL AND uploader_id = ?",
-            [paramId],
-        );
+        const connection = await pool.getConnection();
 
-        await pool.execute<ResultSetHeader>(
-            `
-                UPDATE attachments 
-                SET uploader_id = NULL
-                WHERE task_id IS NOT NULL AND uploader_id = ?
-            `,
-            [paramId],
-        );
+        try {
+            await connection.beginTransaction();
 
-        await pool.execute<ResultSetHeader>(
-            `
-                UPDATE tasks 
-                SET creator_id = NULL
-                WHERE creator_id = ?
-            `,
-            [paramId],
-        );
+            await connection.execute<ResultSetHeader>(
+                "DELETE FROM attachments WHERE task_id IS NULL AND uploader_id = ?",
+                [paramId],
+            );
 
-        const [result] = await pool.execute<ResultSetHeader>(
-            "DELETE FROM users WHERE id = ?",
-            [paramId],
-        );
+            await connection.execute<ResultSetHeader>(
+                `
+                    UPDATE attachments
+                    SET uploader_id = NULL
+                    WHERE task_id IS NOT NULL AND uploader_id = ?
+                `,
+                [paramId],
+            );
 
-        if (result.affectedRows === 0) {
-            res.status(404).json({
-                status: "error",
-                message: "Account not found",
-            });
+            await connection.execute<ResultSetHeader>(
+                `
+                    UPDATE tasks
+                    SET creator_id = NULL
+                    WHERE creator_id = ?
+                `,
+                [paramId],
+            );
 
-            return;
+            await connection.execute<ResultSetHeader>(
+                "UPDATE comments SET user_id = NULL WHERE user_id = ?",
+                [paramId],
+            );
+
+            const [result] = await connection.execute<ResultSetHeader>(
+                "DELETE FROM users WHERE id = ?",
+                [paramId],
+            );
+
+            if (result.affectedRows === 0) {
+                await connection.rollback();
+
+                res.status(404).json({
+                    status: "error",
+                    message: "Account not found",
+                });
+
+                return;
+            }
+
+            await connection.commit();
+        } catch (error) {
+            await connection.rollback();
+
+            throw error;
+        } finally {
+            connection.release();
         }
 
         req.log.info(

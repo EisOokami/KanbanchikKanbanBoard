@@ -974,3 +974,40 @@ export const emailCodeFormSchema = z.discriminatedUnion("intent", [
     emailCodeVerifySchema,
     emailCodeResendSchema,
 ]);
+
+export const createCommentSchema = z.object({
+    taskId: z
+        .number()
+        .positive()
+        .int("Task ID must be an integer")
+        .refine((value) => Number.isSafeInteger(value), {
+            message: "Task ID is too large a numerical value",
+        }),
+    body: z
+        .string()
+        .trim()
+        .min(1, "Comment cannot be empty")
+        .max(2000, "Comment must be less than 2000 characters long"),
+});
+
+export const updateCommentSchema = z.object({
+    taskId: z
+        .number()
+        .positive()
+        .int("Task ID must be an integer")
+        .refine((value) => Number.isSafeInteger(value), {
+            message: "Task ID is too large a numerical value",
+        }),
+    commentId: z
+        .number()
+        .positive()
+        .int("Comment ID must be an integer")
+        .refine((value) => Number.isSafeInteger(value), {
+            message: "Comment ID is too large a numerical value",
+        }),
+    body: z
+        .string()
+        .trim()
+        .min(1, "Comment cannot be empty")
+        .max(2000, "Comment must be less than 2000 characters long"),
+});

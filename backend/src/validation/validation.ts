@@ -923,3 +923,36 @@ export const setPasswordSchema = z.object({
             "Password must contain at least one uppercase letter, one lowercase letter, one special character and one number",
         ),
 });
+
+export const createTaskCommentSchema = z.object({
+    body: z
+        .string()
+        .trim()
+        .min(1, "Comment cannot be empty")
+        .max(2000, "Comment is too long (max 2000 characters)"),
+});
+
+export const taskCommentParamsSchema = z.object({
+    id: z
+        .string()
+        .regex(/^\d+$/)
+        .transform(Number)
+        .refine((value) => Number.isSafeInteger(value), {
+            message: "Task ID is too large a numerical value",
+        }),
+    commentId: z
+        .string()
+        .regex(/^\d+$/)
+        .transform(Number)
+        .refine((value) => Number.isSafeInteger(value), {
+            message: "Comment ID is too large a numerical value",
+        }),
+});
+
+export const updateTaskCommentSchema = z.object({
+    body: z
+        .string()
+        .trim()
+        .min(1, "Comment cannot be empty")
+        .max(2000, "Comment is too long (max 2000 characters)"),
+});

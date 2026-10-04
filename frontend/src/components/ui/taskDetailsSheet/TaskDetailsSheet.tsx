@@ -81,7 +81,7 @@ export default function TaskDetailsSheet({
         task.description ?? "",
     );
     const [activity, setActivity] = useState<ActivityEntry[]>(() =>
-        commentsToActivity(selectedTask.comments),
+        commentsToActivity(task.comments),
     );
     const [showProgress, setShowProgress] = useState<boolean>(
         !!task.show_progress,
@@ -105,8 +105,6 @@ export default function TaskDetailsSheet({
             attachments: task.attachments,
             newAttachments: [],
             labels: task.labels,
-            comments: task.comments,
-            newComments: [],
         }),
     );
     const [formData, setFormData] = useState<UpdateTaskFormData>({
@@ -117,8 +115,6 @@ export default function TaskDetailsSheet({
         attachments: task.attachments,
         newAttachments: [],
         labels: task.labels,
-        comments: task.comments,
-        newComments: [],
     });
     const [formState, formAction, isPending] = useActionState(
         updateTaskAction.bind(null, formData, currentPath),
@@ -171,8 +167,6 @@ export default function TaskDetailsSheet({
             attachments: task.attachments,
             newAttachments: [],
             labels: task.labels,
-            comments: task.comments,
-            newComments: [],
         });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open]);
@@ -190,7 +184,6 @@ export default function TaskDetailsSheet({
         const hasFormDataChanged =
             formData.newSubtasks.length > 0 ||
             formData.newAttachments.length > 0 ||
-            formData.newComments.length > 0 ||
             formData.categories.length !== initialFormData.categories.length ||
             formData.members.length !== initialFormData.members.length ||
             formData.labels.length !== initialFormData.labels.length ||
@@ -388,13 +381,25 @@ export default function TaskDetailsSheet({
                                 <>
                                     <Separator />
                                     <CommentsSection
-                                        formState={formState}
+                                        task={task}
+                                        commentsData={task.comments}
                                         isPending={isPending}
-                                        formData={formData}
                                         userData={userData}
-                                        activity={activity}
                                         onActivityChange={setActivity}
-                                        onFormDataChange={setFormData}
+                                        onTaskChange={setTask}
+                                        canModerate={
+                                            !(
+                                                userData.role === "viewer" ||
+                                                (userData.role === "member" &&
+                                                    userData.id !==
+                                                        task.creator_id &&
+                                                    !task.members.some(
+                                                        (member) =>
+                                                            member.id ===
+                                                            userData.id,
+                                                    ))
+                                            )
+                                        }
                                     />
                                 </>
                             )}

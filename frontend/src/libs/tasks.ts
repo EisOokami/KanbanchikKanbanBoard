@@ -8,9 +8,11 @@ import {
 import { isOverdue } from "./utils";
 
 export const dt = (offset: number) => {
-    const d = new Date();
-    d.setDate(d.getDate() + offset);
-    return d.toISOString().split("T")[0];
+    const date = new Date();
+
+    date.setDate(date.getDate() + offset);
+
+    return date.toISOString().split("T")[0];
 };
 
 export function applyTasksFilter(
@@ -19,25 +21,39 @@ export function applyTasksFilter(
 ): Task[] {
     return tasks.filter((task) => {
         if (filter.search.trim()) {
-            const q = filter.search.toLowerCase();
-            if (!task.title.toLowerCase().includes(q)) return false;
-        }
+            const value = filter.search.toLowerCase();
 
-        if (filter.columns.length > 0) {
-            if (!filter.columns.includes(task.column.name)) return false;
-        }
-
-        if (filter.priorities.length > 0) {
-            if (!filter.priorities.includes(task.priority)) return false;
-        }
-
-        if (filter.projects.length > 0) {
-            if (!filter.projects.includes(task.project.name)) return false;
-        }
-
-        if (filter.overdue) {
-            if (!isOverdue(task.due_date ?? undefined, task.column.name))
+            if (!task.title.toLowerCase().includes(value)) {
                 return false;
+            }
+        }
+
+        if (
+            filter.columns.length > 0 &&
+            !filter.columns.includes(task.column.name)
+        ) {
+            return false;
+        }
+
+        if (
+            filter.priorities.length > 0 &&
+            !filter.priorities.includes(task.priority)
+        ) {
+            return false;
+        }
+
+        if (
+            filter.projects.length > 0 &&
+            !filter.projects.includes(task.project.name)
+        ) {
+            return false;
+        }
+
+        if (
+            filter.overdue &&
+            !isOverdue(task.due_date ?? undefined, task.column.name)
+        ) {
+            return false;
         }
 
         return true;
@@ -80,7 +96,9 @@ export function sortTasks(
                 const db = b.due_date
                     ? new Date(b.due_date).getTime()
                     : Infinity;
+
                 cmp = da - db;
+
                 break;
             }
 
@@ -91,7 +109,9 @@ export function sortTasks(
                 const pb = b.subtasks_total
                     ? (b.subtasks_done ?? 0) / b.subtasks_total
                     : 0;
+
                 cmp = pa - pb;
+
                 break;
             }
         }

@@ -88,7 +88,7 @@ export default function ActivitySection({
                                     </p>
                                 )}
                                 {entry.type === "comment" && (
-                                    <div className="mt-1.5 rounded-md rounded-tl-sm border px-3 py-2.5 text-sm leading-relaxed text-gray-700">
+                                    <div className="mt-1.5 rounded-md rounded-tl-sm border bg-control px-3 py-1.5 text-sm leading-relaxed text-gray-700">
                                         {entry.body}
                                     </div>
                                 )}

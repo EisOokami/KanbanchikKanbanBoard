@@ -2,18 +2,23 @@ import { rateLimitHandler } from "../middlewares/securityAudit.middleware.js";
 import { Router } from "express";
 import {
     createTask,
+    createTaskComment,
     deleteTask,
+    deleteTaskComment,
     getTaskById,
     getTaskFilterOptions,
     getTasks,
     moveTask,
     updateTask,
+    updateTaskComment,
 } from "../controllers/tasks.controller.js";
 import { authenticateToken } from "../middlewares/auth.middleware.js";
 import { validateData } from "../middlewares/validation.middleware.js";
 import {
+    createTaskCommentSchema,
     createTaskSchema,
     moveTaskSchema,
+    updateTaskCommentSchema,
     updateTaskSchema,
 } from "../validation/validation.js";
 import { verifyCsrf } from "../middlewares/csrf.middleware.js";
@@ -71,6 +76,45 @@ const deleteTaskLimiter = rateLimit({
     handler: rateLimitHandler,
 });
 
+const createTaskCommentLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 100,
+    message: {
+        status: 429,
+        error: "Too many requests",
+        message: "Too many requests. Please try again in 15 minutes.",
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: rateLimitHandler,
+});
+
+const updateTaskCommentLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 100,
+    message: {
+        status: 429,
+        error: "Too many requests",
+        message: "Too many requests. Please try again in 15 minutes.",
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: rateLimitHandler,
+});
+
+const deleteTaskCommentLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 100,
+    message: {
+        status: 429,
+        error: "Too many requests",
+        message: "Too many requests. Please try again in 15 minutes.",
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: rateLimitHandler,
+});
+
 const router = Router();
 
 router.get("/", authenticateToken, getTasks);
@@ -106,6 +150,29 @@ router.patch(
     verifyCsrf,
     validateData(moveTaskSchema),
     moveTask,
+);
+router.post(
+    "/:id/comments",
+    createTaskCommentLimiter,
+    authenticateToken,
+    verifyCsrf,
+    validateData(createTaskCommentSchema),
+    createTaskComment,
+);
+router.patch(
+    "/:id/comments/:commentId",
+    updateTaskCommentLimiter,
+    authenticateToken,
+    verifyCsrf,
+    validateData(updateTaskCommentSchema),
+    updateTaskComment,
+);
+router.delete(
+    "/:id/comments/:commentId",
+    deleteTaskCommentLimiter,
+    authenticateToken,
+    verifyCsrf,
+    deleteTaskComment,
 );
 
 export default router;

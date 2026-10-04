@@ -89,7 +89,7 @@ export interface Attachment extends Base {
 }
 
 export interface Comment extends ExtendedBase {
-    member: Omit<User, "email">;
+    member: Omit<User, "email"> | null;
     body: string;
 }
 
@@ -203,8 +203,6 @@ export interface UpdateTaskFormData {
     attachments: Attachment[];
     newAttachments: { id: number | string; file: File }[];
     labels: Label[];
-    comments: Comment[];
-    newComments: Omit<Comment, "created_at" | "updated_at">[];
 }
 
 export interface GridCell {

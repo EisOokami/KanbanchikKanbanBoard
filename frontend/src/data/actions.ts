@@ -47,6 +47,7 @@ import {
 import { revalidatePath } from "next/cache";
 import {
     changePasswordSchema,
+    createCommentSchema,
     createProjectSchema,
     createTaskSchema,
     deleteAccountSchema,
@@ -63,6 +64,7 @@ import {
     resendVerificationSchema,
     resetPasswordSchema,
     setPasswordSchema,
+    updateCommentSchema,
     updateProfileSchema,
     updateProjectSchema,
     updateTaskSchema,
@@ -2580,5 +2582,193 @@ export async function emailCodeAction(
         details: null,
         message: "Ops! Something went wrong. Please try again.",
         data: { tempToken: validatedFields.data.tempToken },
+    };
+}
+
+export async function createCommentAction(
+    taskId: number,
+    body: string,
+): Promise<{
+    status: "success" | "error";
+    message: string;
+    zodErrors?: { body?: string[] };
+}> {
+    const validatedFields = createCommentSchema.safeParse({
+        taskId: taskId,
+        body: body,
+    });
+
+    if (!validatedFields.success) {
+        return {
+            status: "error",
+            message: "Invalid data",
+            zodErrors: z.flattenError(validatedFields.error).fieldErrors,
+        };
+    }
+
+    const responseData = await mutateData(
+        "POST",
+        `/tasks/${validatedFields.data.taskId}/comments`,
+        {
+            body: validatedFields.data.body,
+        },
+    );
+
+    if (!responseData) {
+        return {
+            status: "error",
+            message: "Ops! Something went wrong. Please try again.",
+        };
+    }
+
+    if (
+        "message" in responseData &&
+        "status" in responseData &&
+        responseData.message &&
+        responseData.status !== "success"
+    ) {
+        return {
+            status: "error",
+            message: responseData.message,
+        };
+    }
+
+    if ("error" in responseData && responseData.error) {
+        return {
+            status: "error",
+            message: responseData.error,
+        };
+    }
+
+    revalidatePath(`/project`);
+
+    return {
+        status: "success",
+        message: "The comment has been added",
+    };
+}
+
+export async function updateCommentAction(
+    taskId: number,
+    commentId: number,
+    body: string,
+): Promise<{
+    status: "success" | "error";
+    message: string;
+    zodErrors?: { body?: string[] };
+}> {
+    const validatedFields = updateCommentSchema.safeParse({
+        taskId: taskId,
+        commentId: commentId,
+        body: body,
+    });
+
+    if (!validatedFields.success) {
+        return {
+            status: "error",
+            message: "Invalid data",
+            zodErrors: z.flattenError(validatedFields.error).fieldErrors,
+        };
+    }
+
+    const responseData = await mutateData(
+        "PATCH",
+        `/tasks/${validatedFields.data.taskId}/comments/${validatedFields.data.commentId}`,
+        {
+            body: validatedFields.data.body,
+        },
+    );
+
+    if (!responseData) {
+        return {
+            status: "error",
+            message: "Ops! Something went wrong. Please try again.",
+        };
+    }
+
+    if (
+        "message" in responseData &&
+        "status" in responseData &&
+        responseData.message &&
+        responseData.status !== "success"
+    ) {
+        return {
+            status: "error",
+            message: responseData.message,
+        };
+    }
+
+    if ("error" in responseData && responseData.error) {
+        return {
+            status: "error",
+            message: responseData.error,
+        };
+    }
+
+    revalidatePath(`/project`);
+
+    return {
+        status: "success",
+        message: "The comment has been updated",
+    };
+}
+
+export async function deleteCommentAction(
+    taskId: number,
+    commentId: number,
+): Promise<{
+    status: "success" | "error";
+    message: string;
+    zodErrors?: { body?: string[] };
+}> {
+    const validatedFields = updateCommentSchema.safeParse({
+        taskId: taskId,
+        commentId: commentId,
+    });
+
+    if (!validatedFields.success) {
+        return {
+            status: "error",
+            message: "Invalid data",
+            zodErrors: z.flattenError(validatedFields.error).fieldErrors,
+        };
+    }
+
+    const responseData = await mutateData(
+        "DELETE",
+        `/tasks/${validatedFields.data.taskId}/comments/${validatedFields.data.commentId}`,
+    );
+
+    if (!responseData) {
+        return {
+            status: "error",
+            message: "Ops! Something went wrong. Please try again.",
+        };
+    }
+
+    if (
+        "message" in responseData &&
+        "status" in responseData &&
+        responseData.message &&
+        responseData.status !== "success"
+    ) {
+        return {
+            status: "error",
+            message: responseData.message,
+        };
+    }
+
+    if ("error" in responseData && responseData.error) {
+        return {
+            status: "error",
+            message: responseData.error,
+        };
+    }
+
+    revalidatePath(`/project`);
+
+    return {
+        status: "success",
+        message: "The comment has been deleted",
     };
 }

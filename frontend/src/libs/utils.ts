@@ -15,17 +15,21 @@ export function toDateStr(year: number, month: number, day: number): string {
 }
 
 export function todayStr(): string {
-    const d = new Date();
-    return toDateStr(d.getFullYear(), d.getMonth(), d.getDate());
+    const date = new Date();
+
+    return toDateStr(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
 export function getFirstDayOfMonth(year: number, month: number): number {
     return new Date(year, month, 1).getDay();
 }
 
-export function toDate(v: string | Date | undefined | null): Date | null {
-    if (!v) return null;
-    return v instanceof Date ? v : new Date(v);
+export function toDate(value: string | Date | undefined | null): Date | null {
+    if (!value) {
+        return null;
+    }
+
+    return value instanceof Date ? value : new Date(value);
 }
 
 export function getInitials(name: string, surname: string) {
@@ -36,13 +40,20 @@ export function isOverdue(
     dueDate: string | Date | undefined,
     status: string,
 ): boolean {
-    if (!dueDate || status === "done") return false;
+    if (!dueDate || status === "done") {
+        return false;
+    }
+
     return isPast(dueDate) && !isToday(dueDate);
 }
 
 export function formatDate(date: string | Date): string {
-    if (isToday(date)) return "Today";
-    if (isTomorrow(date)) return "Tomorrow";
+    if (isToday(date)) {
+        return "Today";
+    }
+    if (isTomorrow(date)) {
+        return "Tomorrow";
+    }
 
     return new Date(date).toLocaleDateString("en-US", {
         month: "short",

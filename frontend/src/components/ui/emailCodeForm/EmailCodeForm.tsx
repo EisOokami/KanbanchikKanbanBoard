@@ -60,7 +60,10 @@ export default function EmailCodeForm({
             return;
         }
 
-        const timer = setTimeout(() => setCooldown((prev) => prev - 1), 1000);
+        const timer = setTimeout(
+            () => setCooldown((prevState) => prevState - 1),
+            1000,
+        );
 
         return () => clearTimeout(timer);
     }, [cooldown]);

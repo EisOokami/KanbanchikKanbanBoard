@@ -566,7 +566,7 @@ export const getProject = async (req: IGetUserRequest, res: Response) => {
                                     u.avatar_url,
                                     u.color
                                 FROM comments c
-                                JOIN users u ON c.user_id = u.id
+                                LEFT JOIN users u ON u.id = c.user_id
                                 WHERE c.task_id = ?
                                 ORDER BY c.created_at ASC
                             `,
@@ -644,20 +644,23 @@ export const getProject = async (req: IGetUserRequest, res: Response) => {
                             subtasks,
                             comments: comments.map((comment) => ({
                                 id: comment.id,
-                                member: {
-                                    id: comment.user_id,
-                                    name: comment.name,
-                                    surname: comment.surname,
-                                    avatar_url:
-                                        comment.avatar_url === null
-                                            ? null
-                                            : comment.avatar_url.startsWith(
-                                                    "/files",
-                                                )
-                                              ? `${process.env.BACKEND_URL}${comment.avatar_url}`
-                                              : comment.avatar_url,
-                                    color: comment.color,
-                                },
+                                member:
+                                    comment.user_id !== null
+                                        ? {
+                                              id: comment.user_id,
+                                              name: comment.name,
+                                              surname: comment.surname,
+                                              avatar_url:
+                                                  comment.avatar_url === null
+                                                      ? null
+                                                      : comment.avatar_url.startsWith(
+                                                              "/files",
+                                                          )
+                                                        ? `${process.env.BACKEND_URL}${comment.avatar_url}`
+                                                        : comment.avatar_url,
+                                              color: comment.color,
+                                          }
+                                        : null,
                                 body: comment.body,
                                 created_at: comment.created_at,
                                 updated_at: comment.updated_at,
@@ -1049,7 +1052,7 @@ export const exportProjectData = async (
                                     u.avatar_url,
                                     u.color
                                 FROM comments c
-                                JOIN users u ON c.user_id = u.id
+                                LEFT JOIN users u ON u.id = c.user_id
                                 WHERE c.task_id = ?
                                 ORDER BY c.created_at ASC
                             `,
@@ -1127,20 +1130,23 @@ export const exportProjectData = async (
                             subtasks,
                             comments: comments.map((comment) => ({
                                 id: comment.id,
-                                member: {
-                                    id: comment.user_id,
-                                    name: comment.name,
-                                    surname: comment.surname,
-                                    avatar_url:
-                                        comment.avatar_url === null
-                                            ? null
-                                            : comment.avatar_url.startsWith(
-                                                    "/files",
-                                                )
-                                              ? `${process.env.BACKEND_URL}${comment.avatar_url}`
-                                              : comment.avatar_url,
-                                    color: comment.color,
-                                },
+                                member:
+                                    comment.user_id !== null
+                                        ? {
+                                              id: comment.user_id,
+                                              name: comment.name,
+                                              surname: comment.surname,
+                                              avatar_url:
+                                                  comment.avatar_url === null
+                                                      ? null
+                                                      : comment.avatar_url.startsWith(
+                                                              "/files",
+                                                          )
+                                                        ? `${process.env.BACKEND_URL}${comment.avatar_url}`
+                                                        : comment.avatar_url,
+                                              color: comment.color,
+                                          }
+                                        : null,
                                 body: comment.body,
                                 created_at: comment.created_at,
                                 updated_at: comment.updated_at,

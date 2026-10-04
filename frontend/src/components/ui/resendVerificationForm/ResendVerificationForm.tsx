@@ -54,7 +54,7 @@ export default function ResendVerificationForm({
         setSecondsLeft(30);
 
         const interval = setInterval(() => {
-            setSecondsLeft((prev) => (prev > 0 ? prev - 1 : 0));
+            setSecondsLeft((prevState) => (prevState > 0 ? prevState - 1 : 0));
         }, 1000);
 
         const timeout = setTimeout(() => {

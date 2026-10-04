@@ -125,8 +125,8 @@ export default function TaskFilterSheet({
                                 value={filters.search}
                                 placeholder="Search tasks..."
                                 onChange={(e) => {
-                                    setFilters((prev) => ({
-                                        ...prev,
+                                    setFilters((prevState) => ({
+                                        ...prevState,
                                         search: e.target.value,
                                     }));
 

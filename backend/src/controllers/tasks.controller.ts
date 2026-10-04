@@ -17,8 +17,11 @@ import type {
     User,
 } from "../types/types.js";
 import {
+    createTaskCommentSchema,
     createTaskSchema,
     moveTaskSchema,
+    taskCommentParamsSchema,
+    updateTaskCommentSchema,
     updateTaskSchema,
     validateIdSchema,
 } from "../validation/validation.js";
@@ -202,7 +205,7 @@ export const getTasks = async (req: IGetUserRequest, res: Response) => {
                     (Pick<
                         Comment,
                         "id" | "body" | "created_at" | "updated_at"
-                    > & { user_id: string } & Pick<
+                    > & { user_id: number | null } & Pick<
                             User,
                             "name" | "surname" | "avatar_url" | "color"
                         > &
@@ -220,7 +223,7 @@ export const getTasks = async (req: IGetUserRequest, res: Response) => {
                             u.avatar_url,
                             u.color
                         FROM comments c
-                        JOIN users u ON c.user_id = u.id
+                        LEFT JOIN users u ON u.id = c.user_id
                         WHERE c.task_id = ?
                         ORDER BY c.created_at ASC
                     `,
@@ -333,18 +336,23 @@ export const getTasks = async (req: IGetUserRequest, res: Response) => {
                         body: comment.body,
                         created_at: comment.created_at,
                         updated_at: comment.updated_at,
-                        member: {
-                            id: comment.user_id,
-                            name: comment.name,
-                            surname: comment.surname,
-                            avatar_url:
-                                comment.avatar_url === null
-                                    ? null
-                                    : comment.avatar_url.startsWith("/files")
-                                      ? `${process.env.BACKEND_URL}${comment.avatar_url}`
-                                      : comment.avatar_url,
-                            color: comment.color,
-                        },
+                        member:
+                            comment.user_id !== null
+                                ? {
+                                      id: comment.user_id,
+                                      name: comment.name,
+                                      surname: comment.surname,
+                                      avatar_url:
+                                          comment.avatar_url === null
+                                              ? null
+                                              : comment.avatar_url.startsWith(
+                                                      "/files",
+                                                  )
+                                                ? `${process.env.BACKEND_URL}${comment.avatar_url}`
+                                                : comment.avatar_url,
+                                      color: comment.color,
+                                  }
+                                : null,
                     })),
                     subtasks_total: subtasksTotal,
                     subtasks_done: subtasksDone,
@@ -552,7 +560,7 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
 
         const [comments] = await pool.execute<
             (Pick<Comment, "id" | "body" | "created_at" | "updated_at"> & {
-                user_id: string;
+                user_id: number | null;
             } & Pick<User, "name" | "surname" | "avatar_url" | "color"> &
                 RowDataPacket)[]
         >(
@@ -568,7 +576,7 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
                     u.avatar_url,
                     u.color
                 FROM comments c
-                JOIN users u ON c.user_id = u.id
+                LEFT JOIN users u ON u.id = c.user_id
                 WHERE c.task_id = ?
                 ORDER BY c.created_at DESC
             `,
@@ -672,18 +680,21 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
                 body: comment.body,
                 created_at: comment.created_at,
                 updated_at: comment.updated_at,
-                member: {
-                    id: comment.user_id,
-                    name: comment.name,
-                    surname: comment.surname,
-                    avatar_url:
-                        comment.avatar_url === null
-                            ? null
-                            : comment.avatar_url.startsWith("/files")
-                              ? `${process.env.BACKEND_URL}${comment.avatar_url}`
-                              : comment.avatar_url,
-                    color: comment.color,
-                },
+                member:
+                    comment.user_id !== null
+                        ? {
+                              id: comment.user_id,
+                              name: comment.name,
+                              surname: comment.surname,
+                              avatar_url:
+                                  comment.avatar_url === null
+                                      ? null
+                                      : comment.avatar_url.startsWith("/files")
+                                        ? `${process.env.BACKEND_URL}${comment.avatar_url}`
+                                        : comment.avatar_url,
+                              color: comment.color,
+                          }
+                        : null,
             })),
             subtasks_total: subtasksTotal,
             subtasks_done: subtasksDone,
@@ -1344,7 +1355,7 @@ export const updateTask = async (req: IGetUserRequest, res: Response) => {
             {
                 event: "task.updated",
                 userId,
-                taskId: Number(id),
+                taskId: +id,
                 projectId: tasks[0]?.project_id,
             },
             "Operation completed",
@@ -1512,7 +1523,7 @@ export const deleteTask = async (req: IGetUserRequest, res: Response) => {
             {
                 event: "task.deleted",
                 userId,
-                taskId: Number(id),
+                taskId: +id,
                 projectId: tasks[0]?.project_id,
             },
             "Operation completed",
@@ -1840,6 +1851,675 @@ export const moveTask = async (req: IGetUserRequest, res: Response) => {
                 err: error,
                 event: "task.move_task_failed",
                 operation: "moveTask",
+            },
+            "Operation failed",
+        );
+
+        res.status(500).json({ status: "error", message: "Database error" });
+    }
+};
+
+export const createTaskComment = async (
+    req: IGetUserRequest,
+    res: Response,
+) => {
+    try {
+        validateIdSchema.parse(req.params);
+
+        const { id } = req.params;
+        const userId = req.user.id;
+
+        if (!userId) {
+            res.status(401).json({
+                status: "error",
+                message: "Unauthorized",
+            });
+
+            return;
+        }
+
+        if (!id) {
+            res.status(400).json({
+                status: "error",
+                message: "Invalid task ID",
+            });
+
+            return;
+        }
+
+        const [tasks] = await pool.execute<
+            (Pick<Task, "id"> & Pick<Column, "project_id"> & RowDataPacket)[]
+        >(
+            `
+                SELECT t.id, c.project_id
+                FROM tasks t
+                JOIN columns c ON t.column_id = c.id
+                JOIN projects p ON c.project_id = p.id
+                WHERE t.id = ? AND (
+                    p.id IN (
+                        SELECT 
+                            project_id 
+                            FROM project_members 
+                            WHERE user_id = ? AND role IN ("owner", "admin")
+                    ) OR p.owner_id = ? OR t.creator_id = ?
+                )
+            `,
+            [id, userId, userId],
+        );
+
+        if (!tasks.length) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "createTaskComment",
+                },
+                "Authorization denied",
+            );
+
+            res.status(404).json({
+                status: "error",
+                message: "Task not found or access denied",
+            });
+
+            return;
+        }
+
+        const task = tasks[0];
+
+        if (!task) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "createTaskComment",
+                },
+                "Authorization denied",
+            );
+
+            res.status(404).json({
+                status: "error",
+                message: "Task not found or access denied",
+            });
+
+            return;
+        }
+
+        const validatedData = createTaskCommentSchema.parse(req.body);
+
+        const [result] = await pool.execute<ResultSetHeader>(
+            `
+                INSERT INTO comments (task_id, user_id, body)
+                VALUES (?, ?, ?)
+            `,
+            [id, userId, validatedData.body],
+        );
+
+        const [comments] = await pool.execute<
+            (Pick<Comment, "id" | "body" | "created_at" | "updated_at"> &
+                Pick<User, "name" | "surname" | "avatar_url" | "color"> & {
+                    user_id: number | null;
+                } & RowDataPacket)[]
+        >(
+            `
+                SELECT
+                    c.id,
+                    c.body,
+                    c.created_at,
+                    c.updated_at,
+                    u.id AS user_id,
+                    u.name,
+                    u.surname,
+                    u.avatar_url,
+                    u.color
+                FROM comments c
+                LEFT JOIN users u ON u.id = c.user_id
+                WHERE c.id = ?
+            `,
+            [result.insertId],
+        );
+
+        if (!comments.length) {
+            req.log.error(
+                {
+                    event: "task.comment_created",
+                    operation: "createTaskComment",
+                },
+                "Comment not found",
+            );
+
+            res.status(404).json({
+                status: "error",
+                message: "Comment not found",
+            });
+
+            return;
+        }
+
+        const comment = comments[0];
+
+        if (!comment) {
+            req.log.error(
+                {
+                    event: "task.comment_created",
+                    operation: "createTaskComment",
+                },
+                "Comment not found",
+            );
+
+            res.status(404).json({
+                status: "error",
+                message: "Comment not found",
+            });
+
+            return;
+        }
+
+        req.log.info(
+            {
+                event: "task.comment_created",
+                userId,
+                taskId: +id,
+                projectId: task.project_id,
+                commentId: result.insertId,
+            },
+            "Operation completed",
+        );
+
+        res.status(200).json({
+            status: "success",
+            message: "The comment has been successfully created",
+            data: {
+                id: comment.id,
+                body: comment.body,
+                created_at: comment.created_at,
+                updated_at: comment.updated_at,
+                member: {
+                    id: comment.user_id,
+                    name: comment.name,
+                    surname: comment.surname,
+                    avatar_url: comment.avatar_url,
+                    color: comment.color,
+                },
+            },
+        });
+    } catch (error) {
+        if (error instanceof ZodError) {
+            const errorMessages = error.issues.map((issue) => ({
+                field: issue.path[0],
+                message: issue.message,
+            }));
+
+            res.status(400).json({
+                status: "error",
+                message: "Invalid data",
+                details: errorMessages,
+            });
+
+            return;
+        }
+
+        req.log.error(
+            {
+                err: error,
+                event: "task.comment_created",
+                operation: "createTaskComment",
+            },
+            "Operation failed",
+        );
+
+        res.status(500).json({ status: "error", message: "Database error" });
+    }
+};
+
+export const updateTaskComment = async (
+    req: IGetUserRequest,
+    res: Response,
+) => {
+    try {
+        taskCommentParamsSchema.parse(req.params);
+
+        const { id, commentId } = req.params;
+        const userId = req.user.id;
+
+        if (!userId) {
+            res.status(401).json({
+                status: "error",
+                message: "Unauthorized",
+            });
+
+            return;
+        }
+
+        if (!id || !commentId) {
+            res.status(400).json({
+                status: "error",
+                message: "Invalid task or comment ID",
+            });
+
+            return;
+        }
+
+        const [tasks] = await pool.execute<
+            (Pick<Task, "id"> & Pick<Column, "project_id"> & RowDataPacket)[]
+        >(
+            `
+                SELECT t.id, c.project_id
+                FROM tasks t
+                JOIN columns c ON t.column_id = c.id
+                JOIN projects p ON c.project_id = p.id
+                WHERE t.id = ? AND (
+                    p.id IN (
+                        SELECT project_id
+                        FROM project_members
+                        WHERE user_id = ?
+                    ) OR p.owner_id = ?
+                )
+            `,
+            [id, userId, userId],
+        );
+
+        if (!tasks.length) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "updateTaskComment",
+                },
+                "Authorization denied",
+            );
+
+            res.status(404).json({
+                status: "error",
+                message: "Task not found or access denied",
+            });
+
+            return;
+        }
+
+        const task = tasks[0];
+
+        if (!task) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "updateTaskComment",
+                },
+                "Authorization denied",
+            );
+
+            res.status(404).json({
+                status: "error",
+                message: "Task not found or access denied",
+            });
+
+            return;
+        }
+
+        const [existingComments] = await pool.execute<
+            (Pick<Comment, "id" | "user_id"> & RowDataPacket)[]
+        >(`SELECT id, user_id FROM comments WHERE id = ? AND task_id = ?`, [
+            commentId,
+            id,
+        ]);
+
+        if (!existingComments.length) {
+            res.status(404).json({
+                status: "error",
+                message: "Comment not found",
+            });
+
+            return;
+        }
+
+        const existingComment = existingComments[0];
+
+        if (!existingComment) {
+            res.status(404).json({
+                status: "error",
+                message: "Comment not found",
+            });
+
+            return;
+        }
+
+        if (existingComment.user_id !== userId) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "updateTaskComment",
+                },
+                "Authorization denied",
+            );
+
+            res.status(403).json({
+                status: "error",
+                message: "You can only modify your own comments",
+            });
+
+            return;
+        }
+
+        const validatedData = updateTaskCommentSchema.parse(req.body);
+
+        const [result] = await pool.execute<ResultSetHeader>(
+            `
+                UPDATE comments
+                SET body = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            `,
+            [validatedData.body, commentId],
+        );
+
+        const [comments] = await pool.execute<
+            (Pick<Comment, "id" | "body" | "created_at" | "updated_at"> &
+                Pick<User, "name" | "surname" | "avatar_url" | "color"> & {
+                    user_id: number | null;
+                } & RowDataPacket)[]
+        >(
+            `
+                SELECT
+                    c.id,
+                    c.body,
+                    c.created_at,
+                    c.updated_at,
+                    u.id AS user_id,
+                    u.name,
+                    u.surname,
+                    u.avatar_url,
+                    u.color
+                FROM comments c
+                LEFT JOIN users u ON u.id = c.user_id
+                WHERE c.id = ?
+            `,
+            [commentId],
+        );
+
+        if (!comments.length) {
+            req.log.error(
+                {
+                    event: "task.comment_updated",
+                    operation: "updateTaskComment",
+                },
+                "Comment not found",
+            );
+
+            res.status(404).json({
+                status: "error",
+                message: "Comment not found",
+            });
+
+            return;
+        }
+
+        const comment = comments[0];
+
+        if (!comment) {
+            req.log.error(
+                {
+                    event: "task.comment_updated",
+                    operation: "updateTaskComment",
+                },
+                "Comment not found",
+            );
+
+            res.status(404).json({
+                status: "error",
+                message: "Comment not found",
+            });
+
+            return;
+        }
+
+        req.log.info(
+            {
+                event: "task.comment_updated",
+                userId,
+                taskId: +id,
+                projectId: task.project_id,
+                commentId: result.insertId,
+            },
+            "Operation completed",
+        );
+
+        res.status(200).json({
+            status: "success",
+            message: "The comment has been successfully updated",
+            data: {
+                id: comment.id,
+                body: comment.body,
+                created_at: comment.created_at,
+                updated_at: comment.updated_at,
+                member: {
+                    id: comment.user_id,
+                    name: comment.name,
+                    surname: comment.surname,
+                    avatar_url: comment.avatar_url,
+                    color: comment.color,
+                },
+            },
+        });
+    } catch (error) {
+        if (error instanceof ZodError) {
+            const errorMessages = error.issues.map((issue) => ({
+                field: issue.path[0],
+                message: issue.message,
+            }));
+
+            res.status(400).json({
+                status: "error",
+                message: "Invalid data",
+                details: errorMessages,
+            });
+
+            return;
+        }
+
+        req.log.error(
+            {
+                err: error,
+                event: "task.comment_updated",
+                operation: "updateTaskComment",
+            },
+            "Operation failed",
+        );
+
+        res.status(500).json({ status: "error", message: "Database error" });
+    }
+};
+
+export const deleteTaskComment = async (
+    req: IGetUserRequest,
+    res: Response,
+) => {
+    try {
+        taskCommentParamsSchema.parse(req.params);
+
+        const { id, commentId } = req.params;
+        const userId = req.user.id;
+
+        if (!userId) {
+            res.status(401).json({
+                status: "error",
+                message: "Unauthorized",
+            });
+
+            return;
+        }
+
+        if (!id || !commentId) {
+            res.status(400).json({
+                status: "error",
+                message: "Invalid task or comment ID",
+            });
+
+            return;
+        }
+
+        const [tasks] = await pool.execute<
+            (Pick<Task, "id"> &
+                Pick<Column, "project_id"> & {
+                    can_moderate: number;
+                } & RowDataPacket)[]
+        >(
+            `
+                SELECT 
+                    t.id, 
+                    c.project_id
+                    (
+                        p.owner_id = ? OR EXISTS (
+                            SELECT 1
+                            FROM project_members pm
+                            WHERE pm.project_id = p.id
+                                AND pm.user_id = ?
+                                AND pm.role IN ("owner", "admin")
+                        )
+                    ) AS can_moderate
+                FROM tasks t
+                JOIN columns c ON t.column_id = c.id
+                JOIN projects p ON c.project_id = p.id
+                WHERE t.id = ? AND (
+                    p.id IN (
+                        SELECT 
+                            project_id 
+                            FROM project_members 
+                            WHERE user_id = ? AND role IN ("owner", "admin")
+                    ) OR p.owner_id = ? OR t.creator_id = ?
+                )
+            `,
+            [userId, userId, id, userId, userId],
+        );
+
+        if (!tasks.length) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "deleteTaskComment",
+                },
+                "Authorization denied",
+            );
+
+            res.status(404).json({
+                status: "error",
+                message: "Task not found or access denied",
+            });
+
+            return;
+        }
+
+        const task = tasks[0];
+
+        if (!task) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "deleteTaskComment",
+                },
+                "Authorization denied",
+            );
+
+            res.status(404).json({
+                status: "error",
+                message: "Task not found or access denied",
+            });
+
+            return;
+        }
+
+        const [existingComments] = await pool.execute<
+            (Pick<Comment, "id" | "user_id"> & RowDataPacket)[]
+        >(`SELECT id, user_id FROM comments WHERE id = ? AND task_id = ?`, [
+            commentId,
+            id,
+        ]);
+
+        if (!existingComments.length) {
+            res.status(404).json({
+                status: "error",
+                message: "Comment not found",
+            });
+
+            return;
+        }
+
+        const existingComment = existingComments[0];
+
+        if (!existingComment) {
+            res.status(404).json({
+                status: "error",
+                message: "Comment not found",
+            });
+
+            return;
+        }
+
+        if (existingComment.user_id !== userId || task.can_moderate) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "deleteTaskComment",
+                },
+                "Authorization denied",
+            );
+
+            res.status(403).json({
+                status: "error",
+                message: "You can only modify your own comments",
+            });
+
+            return;
+        }
+
+        await pool.execute<ResultSetHeader>(
+            `DELETE FROM comments WHERE id = ?`,
+            [commentId],
+        );
+
+        req.log.info(
+            {
+                event: "task.comment_deleted",
+                userId,
+                taskId: +id,
+                projectId: task.project_id,
+                commentId: +commentId,
+                moderated: !existingComment.user_id !== userId,
+                ...(!existingComment.user_id !== userId && {
+                    commentAuthorId: existingComment.user_id,
+                }),
+            },
+            "Operation completed",
+        );
+
+        res.status(200).json({
+            status: "success",
+            message: "The comment has been successfully deleted",
+        });
+    } catch (error) {
+        if (error instanceof ZodError) {
+            const errorMessages = error.issues.map((issue) => ({
+                field: issue.path[0],
+                message: issue.message,
+            }));
+
+            res.status(400).json({
+                status: "error",
+                message: "Invalid data",
+                details: errorMessages,
+            });
+
+            return;
+        }
+
+        req.log.error(
+            {
+                err: error,
+                event: "task.comment_deleted",
+                operation: "deleteTaskComment",
             },
             "Operation failed",
         );

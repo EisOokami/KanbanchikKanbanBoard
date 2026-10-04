@@ -68,10 +68,10 @@ export interface Attachment extends RowDataPacket {
 export interface Comment extends RowDataPacket {
     id: number;
     task_id: number;
-    user_id: number;
+    user_id: number | null;
     body: string;
     created_at: string;
-    updated_at: string;
+    updated_at: string | null;
 }
 
 export interface Category extends RowDataPacket {

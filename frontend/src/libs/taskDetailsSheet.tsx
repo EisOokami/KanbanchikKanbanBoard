@@ -1,6 +1,9 @@
 import Lightbox from "yet-another-react-lightbox";
-import { ActivityEntry } from "@/types/taskDetailsSheet";
-import { Attachment, Task } from "@/types/types";
+import {
+    ActivityEntry,
+    OptimisticCommentAction,
+} from "@/types/taskDetailsSheet";
+import { Attachment, Comment, Task } from "@/types/types";
 import { format, isPast, isToday, isTomorrow } from "date-fns";
 import {
     FileIcon,
@@ -54,15 +57,15 @@ export function dateMeta(
 export function commentsToActivity(
     comments: Task["comments"],
 ): ActivityEntry[] {
-    return comments.map((c) => ({
-        id: c.id,
+    return comments.map((comment) => ({
+        id: comment.id,
         type: "comment" as const,
-        author: c.member,
-        body: c.body,
+        author: comment.member,
+        body: comment.body,
         timestamp:
-            c.created_at instanceof Date
-                ? c.created_at
-                : new Date(c.created_at),
+            comment.created_at instanceof Date
+                ? comment.created_at
+                : new Date(comment.created_at),
     }));
 }
 
@@ -142,3 +145,32 @@ export function buildSlides(attachments: Attachment[]) {
         })
         .filter(Boolean) as Parameters<typeof Lightbox>[0]["slides"];
 }
+
+export function formatDateTime(iso: string): string {
+    return new Intl.DateTimeFormat(undefined, {
+        dateStyle: "medium",
+        timeStyle: "short",
+    }).format(new Date(iso));
+}
+
+export const applyCommentAction = (
+    comments: Comment[],
+    action: OptimisticCommentAction,
+): Comment[] => {
+    switch (action.type) {
+        case "add":
+            return [action.comment, ...comments];
+        case "update":
+            return comments.map((comment) =>
+                comment.id === action.id
+                    ? {
+                          ...comment,
+                          body: action.body,
+                          updated_at: action.updatedAt,
+                      }
+                    : comment,
+            );
+        case "delete":
+            return comments.filter((comment) => comment.id !== action.id);
+    }
+};
