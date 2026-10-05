@@ -30,7 +30,7 @@ import {
 import { transporter } from "../utils/email.js";
 import { generateSlug, generateUniqueSlug } from "../utils/slugify.js";
 import path from "path";
-import { existsSync, unlinkSync } from "fs";
+import { unlink } from "node:fs/promises";
 import { emailTemplate } from "../utils/emailTemplate.js";
 
 export const getProjects = async (req: IGetUserRequest, res: Response) => {
@@ -2153,29 +2153,10 @@ export const deleteProject = async (req: IGetUserRequest, res: Response) => {
         }
 
         const [attachments] = await pool.execute<
-            (Pick<
-                Attachment,
-                | "id"
-                | "task_id"
-                | "uploader_id"
-                | "filename"
-                | "file_url"
-                | "mime_type"
-                | "size_bytes"
-                | "created_at"
-            > &
-                RowDataPacket)[]
+            (Pick<Attachment, "id" | "file_url"> & RowDataPacket)[]
         >(
             `
-                SELECT 
-                    a.id, 
-                    a.task_id, 
-                    a.uploader_id, 
-                    a.filename, 
-                    a.file_url, 
-                    a.mime_type, 
-                    a.size_bytes, 
-                    a.created_at
+                SELECT a.id, a.file_url
                 FROM attachments a
                 JOIN tasks t ON a.task_id = t.id
                 JOIN columns c ON t.column_id = c.id
@@ -2184,51 +2165,89 @@ export const deleteProject = async (req: IGetUserRequest, res: Response) => {
             [project.id],
         );
 
-        if (attachments && attachments.length) {
-            await Promise.all(
-                attachments.map(async (attachment) => {
-                    const __dirname = path.resolve(path.dirname(""));
-                    const fileUrl = attachment.file_url.replace(/^\/files/, "");
-                    const filePath = path.join(__dirname, "/uploads", fileUrl);
+        const connection = await pool.getConnection();
 
-                    if (existsSync(filePath)) {
-                        unlinkSync(filePath);
-                    }
+        try {
+            await connection.beginTransaction();
 
-                    const [rows] = await pool.execute<ResultSetHeader>(
-                        "DELETE FROM attachments WHERE id = ?",
-                        [attachment.id],
-                    );
-
-                    if (rows.affectedRows === 0) {
-                        throw Error("Failed to delete file");
-                    }
-                }),
+            await connection.execute(
+                `
+                    DELETE a
+                    FROM attachments a
+                    JOIN tasks t ON a.task_id = t.id
+                    JOIN columns c ON t.column_id = c.id
+                    WHERE c.project_id = ?
+                `,
+                [project.id],
             );
+
+            await connection.execute(
+                `
+                    DELETE tm
+                    FROM task_members tm
+                    JOIN tasks t ON tm.task_id = t.id
+                    JOIN columns c ON t.column_id = c.id
+                    WHERE c.project_id = ?
+                `,
+                [project.id],
+            );
+
+            const [result] = await connection.execute<ResultSetHeader>(
+                `DELETE FROM projects WHERE id = ?`,
+                [project.id],
+            );
+
+            if (result.affectedRows === 0) {
+                await connection.rollback();
+
+                req.log.warn(
+                    {
+                        audit: true,
+                        event: "security.authorization_failed",
+                        operation: "deleteProject",
+                    },
+                    "Authorization denied",
+                );
+
+                res.status(404).json({
+                    status: "error",
+                    message: "Project not found or access denied",
+                });
+
+                return;
+            }
+
+            await connection.commit();
+        } catch (error) {
+            await connection.rollback();
+
+            throw error;
+        } finally {
+            connection.release();
         }
 
-        const [result] = await pool.execute<ResultSetHeader>(
-            `DELETE FROM projects WHERE id = ?`,
-            [project.id],
+        const uploadsDir = path.join(path.resolve(path.dirname("")), "uploads");
+
+        await Promise.all(
+            attachments.map(async (attachment) => {
+                const fileUrl = attachment.file_url.replace(/^\/files/, "");
+
+                try {
+                    await unlink(path.join(uploadsDir, fileUrl));
+                } catch (error) {
+                    if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+                        req.log.warn(
+                            {
+                                error,
+                                event: "project.attachment_cleanup_failed",
+                                attachmentId: attachment.id,
+                            },
+                            "Failed to delete attachment file",
+                        );
+                    }
+                }
+            }),
         );
-
-        if (result.affectedRows === 0) {
-            req.log.warn(
-                {
-                    audit: true,
-                    event: "security.authorization_failed",
-                    operation: "deleteProject",
-                },
-                "Authorization denied",
-            );
-
-            res.status(404).json({
-                status: "error",
-                message: "Project not found or access denied",
-            });
-
-            return;
-        }
 
         req.log.info(
             { event: "project.deleted", userId, projectId: project.id },

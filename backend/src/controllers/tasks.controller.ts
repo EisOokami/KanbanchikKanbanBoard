@@ -25,7 +25,7 @@ import {
     updateTaskSchema,
     validateIdSchema,
 } from "../validation/validation.js";
-import { existsSync, unlinkSync } from "fs";
+import { unlink } from "node:fs/promises";
 import path from "path";
 
 export const getTasks = async (req: IGetUserRequest, res: Response) => {
@@ -1460,64 +1460,79 @@ export const deleteTask = async (req: IGetUserRequest, res: Response) => {
 
         const [attachments] = await pool.execute<
             (Pick<Attachment, "id" | "file_url"> & RowDataPacket)[]
-        >(
-            `
-                SELECT
-                    a.id,
-                    a.file_url
-                FROM attachments a
-                JOIN users u ON a.uploader_id = u.id
-                WHERE a.task_id = ?
-                ORDER BY a.created_at DESC
-            `,
-            [id],
-        );
+        >(`SELECT id, file_url FROM attachments WHERE task_id = ?`, [id]);
 
-        if (attachments && attachments.length) {
-            await Promise.all(
-                attachments.map(async (attachment) => {
-                    const __dirname = path.resolve(path.dirname(""));
-                    const fileUrl = attachment.file_url.replace(/^\/files/, "");
-                    const filePath = path.join(__dirname, "/uploads", fileUrl);
+        const connection = await pool.getConnection();
 
-                    if (existsSync(filePath)) {
-                        unlinkSync(filePath);
-                    }
+        try {
+            await connection.beginTransaction();
 
-                    const [rows] = await pool.execute<ResultSetHeader>(
-                        "DELETE FROM attachments WHERE id = ?",
-                        [attachment.id],
-                    );
-
-                    if (rows.affectedRows === 0) {
-                        throw Error("Failed to delete file");
-                    }
-                }),
-            );
-        }
-
-        const [result] = await pool.execute<ResultSetHeader>(
-            `DELETE FROM tasks WHERE id = ?`,
-            [id],
-        );
-
-        if (result.affectedRows === 0) {
-            req.log.warn(
-                {
-                    audit: true,
-                    event: "security.authorization_failed",
-                    operation: "deleteTask",
-                },
-                "Authorization denied",
+            await connection.execute(
+                `DELETE FROM attachments WHERE task_id = ?`,
+                [id],
             );
 
-            res.status(404).json({
-                status: "error",
-                message: "Task not found or access denied",
-            });
+            await connection.execute(
+                `DELETE FROM task_members WHERE task_id = ?`,
+                [id],
+            );
 
-            return;
+            const [result] = await connection.execute<ResultSetHeader>(
+                `DELETE FROM tasks WHERE id = ?`,
+                [id],
+            );
+
+            if (result.affectedRows === 0) {
+                await connection.rollback();
+
+                req.log.warn(
+                    {
+                        audit: true,
+                        event: "security.authorization_failed",
+                        operation: "deleteTask",
+                    },
+                    "Authorization denied",
+                );
+
+                res.status(404).json({
+                    status: "error",
+                    message: "Task not found or access denied",
+                });
+
+                return;
+            }
+
+            await connection.commit();
+        } catch (error) {
+            await connection.rollback();
+
+            throw error;
+        } finally {
+            connection.release();
         }
+
+        const uploadsDir = path.join(path.resolve(path.dirname("")), "uploads");
+
+        await Promise.all(
+            attachments.map(async (attachment) => {
+                const fileUrl = attachment.file_url.replace(/^\/files/, "");
+
+                try {
+                    await unlink(path.join(uploadsDir, fileUrl));
+                } catch (error) {
+                    if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+                        req.log.warn(
+                            {
+                                error,
+                                event: "task.attachment_cleanup_failed",
+                                attachmentId: attachment.id,
+                            },
+                            "Failed to delete attachment file",
+                        );
+                    }
+                }
+            }),
+        );
 
         req.log.info(
             {
