@@ -844,6 +844,14 @@ export const transferOwnershipSchema = z.object({
         .refine((value) => Number.isSafeInteger(value), {
             message: "Member ID is too large a numerical value",
         }),
+    password: z
+        .string()
+        .min(8, "Password must be at least 8 characters long")
+        .max(255, "Password must be less than 255 characters long")
+        .regex(
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).+$/,
+            "Password must contain at least one uppercase letter, one lowercase letter, one special character and one number",
+        ),
 });
 
 export const tokenSchema = z.object({
@@ -972,4 +980,22 @@ export const reorderColumnsSchema = z.object({
         .refine((ids) => new Set(ids).size === ids.length, {
             message: "Column IDs must be unique",
         }),
+});
+
+export const confirmAccountDeletionSchema = z.object({
+    tempToken: z.string().min(1, "Session expired. Please try again"),
+    code: z.string().trim().min(1, "Enter a verification code").max(20),
+});
+
+export const resendAccountDeletionSchema = z.object({
+    tempToken: z.string().min(1),
+});
+
+export const confirmOwnershipTransferSchema = z.object({
+    tempToken: z.string().min(1, "Session expired. Please try again"),
+    code: z.string().trim().min(1, "Enter a verification code").max(20),
+});
+
+export const resendOwnershipTransferSchema = z.object({
+    tempToken: z.string().min(1),
 });

@@ -76,6 +76,7 @@ export const sendLoginNotificationEmail = async (
         transporter.sendMail(mailOptions, (error) => {
             if (error) {
                 reject(error);
+
                 return;
             }
 

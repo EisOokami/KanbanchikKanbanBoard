@@ -3,15 +3,20 @@ import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { authenticateToken } from "../middlewares/auth.middleware.js";
 import {
-    deleteAccount,
     me,
     changePassword,
     updateProfile,
     setPassword,
+    initiateAccountDeletion,
+    confirmAccountDeletion,
+    resendAccountDeletionCode,
 } from "../controllers/users.controller.js";
 import { validateData } from "../middlewares/validation.middleware.js";
 import {
     changePasswordSchema,
+    confirmAccountDeletionSchema,
+    deleteAccountSchema,
+    resendAccountDeletionSchema,
     setPasswordSchema,
     updateProfileSchema,
 } from "../validation/validation.js";
@@ -44,7 +49,7 @@ const changePasswordLimiter = rateLimit({
     handler: rateLimitHandler,
 });
 
-const deleteAccountLimiter = rateLimit({
+const setPasswordLimiter = rateLimit({
     windowMs: 60 * 60 * 1000,
     limit: 5,
     message: {
@@ -57,7 +62,33 @@ const deleteAccountLimiter = rateLimit({
     handler: rateLimitHandler,
 });
 
-const setPasswordLimiter = rateLimit({
+const initiateAccountDeletionLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    limit: 5,
+    message: {
+        status: 429,
+        error: "Too many requests",
+        message: "Too many requests. Please try again in 1 hour.",
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: rateLimitHandler,
+});
+
+const confirmAccountDeletionLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    limit: 5,
+    message: {
+        status: 429,
+        error: "Too many requests",
+        message: "Too many requests. Please try again in 1 hour.",
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: rateLimitHandler,
+});
+
+const resendAccountDeletionCodeLimiter = rateLimit({
     windowMs: 60 * 60 * 1000,
     limit: 5,
     message: {
@@ -90,13 +121,6 @@ router.post(
     validateData(changePasswordSchema),
     changePassword,
 );
-router.delete(
-    "/:id",
-    deleteAccountLimiter,
-    authenticateToken,
-    verifyCsrf,
-    deleteAccount,
-);
 router.post(
     "/set-password",
     setPasswordLimiter,
@@ -104,6 +128,30 @@ router.post(
     verifyCsrf,
     validateData(setPasswordSchema),
     setPassword,
+);
+router.post(
+    "/:id/delete/initiate",
+    initiateAccountDeletionLimiter,
+    authenticateToken,
+    verifyCsrf,
+    validateData(deleteAccountSchema),
+    initiateAccountDeletion,
+);
+router.post(
+    "/:id/delete/confirm",
+    confirmAccountDeletionLimiter,
+    authenticateToken,
+    verifyCsrf,
+    validateData(confirmAccountDeletionSchema),
+    confirmAccountDeletion,
+);
+router.post(
+    "/:id/delete/resend-code",
+    resendAccountDeletionCodeLimiter,
+    authenticateToken,
+    verifyCsrf,
+    validateData(resendAccountDeletionSchema),
+    resendAccountDeletionCode,
 );
 
 export default router;

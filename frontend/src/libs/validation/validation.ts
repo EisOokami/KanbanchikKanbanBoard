@@ -905,24 +905,6 @@ export const resendVerificationSchema = z.object({
         .max(255, "Email must be less than 255 characters long"),
 });
 
-export const deleteAccountSchema = z.object({
-    id: z
-        .string()
-        .regex(/^\d+$/, "Invalid data")
-        .transform(Number)
-        .refine((value) => Number.isSafeInteger(value), {
-            message: "Invalid data",
-        }),
-    password: z
-        .string()
-        .min(8, "Password must be at least 8 characters long")
-        .max(255, "Password must be less than 255 characters long")
-        .regex(
-            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).+$/,
-            "Password must contain at least one uppercase letter, one lowercase letter, one special character and one number",
-        ),
-});
-
 export const setPasswordSchema = z
     .object({
         newPassword: z
@@ -1034,4 +1016,74 @@ export const moveColumnSchema = z.object({
         .refine((ids) => new Set(ids).size === ids.length, {
             message: "Column IDs must be unique",
         }),
+});
+
+export const deleteAccountPasswordSchema = z.object({
+    id: z
+        .string()
+        .regex(/^\d+$/, "Invalid data")
+        .transform(Number)
+        .refine((value) => Number.isSafeInteger(value), {
+            message: "Invalid data",
+        }),
+    password: z
+        .string()
+        .min(8, "Password must be at least 8 characters long")
+        .max(255, "Password must be less than 255 characters long")
+        .regex(
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).+$/,
+            "Password must contain at least one uppercase letter, one lowercase letter, one special character and one number",
+        ),
+});
+
+export const deleteAccountConfirmSchema = z.object({
+    id: z
+        .string()
+        .regex(/^\d+$/, "Invalid data")
+        .transform(Number)
+        .refine((value) => Number.isSafeInteger(value), {
+            message: "Invalid data",
+        }),
+    tempToken: z.string().min(1, "Session expired. Please start again"),
+    code: z
+        .string()
+        .trim()
+        .regex(/^\d{6}$/, "Enter the 6-digit code"),
+});
+
+export const deleteAccountResendSchema = z.object({
+    id: z
+        .string()
+        .regex(/^\d+$/, "Invalid data")
+        .transform(Number)
+        .refine((value) => Number.isSafeInteger(value), {
+            message: "Invalid data",
+        }),
+    tempToken: z.string().min(1),
+});
+
+export const initiateOwnershipTransferSchema = z.object({
+    slug: z
+        .string()
+        .min(1, "Slug must be at least 1 characters")
+        .max(200, "Slug must be 200 characters or less")
+        .regex(
+            /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+            "Slug can only contain lowercase letters, numbers, and single hyphens",
+        ),
+    memberId: z
+        .number()
+        .positive()
+        .int("Project ID must be an integer")
+        .refine((value) => Number.isSafeInteger(value), {
+            message: "Project ID is too large a numerical value",
+        }),
+    password: z
+        .string()
+        .min(8, "Password must be at least 8 characters long")
+        .max(255, "Password must be less than 255 characters long")
+        .regex(
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).+$/,
+            "Password must contain at least one uppercase letter, one lowercase letter, one special character and one number",
+        ),
 });

@@ -219,3 +219,29 @@ export type AuditReason =
 export interface RequestWithAuditFlag extends Request {
     flaggedSuspicious?: boolean;
 }
+
+export interface AccountDeletionSession extends RowDataPacket {
+    id: number;
+    token_hash: string;
+    user_id: number;
+    method: "totp" | "email";
+    code_hash: string;
+    attempts: number;
+    last_sent_at: string;
+    expires_at: string;
+    created_at: string;
+}
+
+export interface OwnershipTransferSession extends RowDataPacket {
+    id: number;
+    token_hash: string;
+    user_id: number;
+    project_id: number;
+    target_member_id: number;
+    method: "totp" | "email";
+    code_hash: string;
+    attempts: number;
+    last_sent_at: string;
+    expires_at: string;
+    created_at: string;
+}

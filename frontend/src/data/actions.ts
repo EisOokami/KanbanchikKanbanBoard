@@ -40,6 +40,7 @@ import {
     Category,
     Column,
     Label,
+    OwnershipTransferChallenge,
     Role,
     Subtask,
     User,
@@ -50,9 +51,12 @@ import {
     createCommentSchema,
     createProjectSchema,
     createTaskSchema,
-    deleteAccountSchema,
+    deleteAccountConfirmSchema,
+    deleteAccountPasswordSchema,
+    deleteAccountResendSchema,
     emailCodeFormSchema,
     forgotPasswordSchema,
+    initiateOwnershipTransferSchema,
     inviteMemberSchema,
     loginSchema,
     mfaBackupCodesSchema,
@@ -1303,7 +1307,173 @@ export async function deleteAccountAction(
     prevState: any,
     formData: FormData,
 ): Promise<DeleteAccountAction | undefined> {
-    const validatedFields = deleteAccountSchema.safeParse({
+    const id = formData.get("id");
+    const tempToken = formData.get("tempToken");
+    const method = formData.get("method");
+    const intent = formData.get("intent");
+
+    if (tempToken) {
+        const requiresMfa = method === "totp";
+        const requiresEmailCode = method === "email";
+
+        if (intent === "resend") {
+            const validatedFields = deleteAccountResendSchema.safeParse({
+                id: id,
+                tempToken: tempToken,
+            });
+
+            if (!validatedFields.success) {
+                return {
+                    formData,
+                    zodErrors: z.flattenError(validatedFields.error)
+                        .fieldErrors,
+                    error: null,
+                    status: "error",
+                    details: null,
+                    message: "Invalid request. Please start again",
+                    data: { requiresRestart: true },
+                };
+            }
+
+            const responseData = await mutateData(
+                "POST",
+                `/users/${id}/delete/resend-code`,
+                {
+                    tempToken: validatedFields.data.tempToken,
+                },
+            );
+
+            if (!responseData) {
+                return {
+                    formData,
+                    zodErrors: null,
+                    error: null,
+                    status: "error",
+                    details: null,
+                    message: "Ops! Something went wrong. Please try again.",
+                    data: {
+                        tempToken,
+                        requiresEmailCode: true,
+                    },
+                };
+            }
+
+            if (
+                "message" in responseData &&
+                "status" in responseData &&
+                responseData.message &&
+                responseData.status !== "success"
+            ) {
+                return {
+                    formData,
+                    zodErrors: null,
+                    error: null,
+                    status: responseData.status,
+                    details: null,
+                    message: responseData.message,
+                    data: {
+                        tempToken,
+                        requiresEmailCode: true,
+                        requiresRestart: responseData.data.requiresRelogin,
+                        retryAfter: responseData.data.retryAfter,
+                    },
+                };
+            }
+
+            return {
+                formData,
+                zodErrors: null,
+                error: null,
+                status: "success",
+                details: null,
+                message: "A new verification code has been sent",
+                data: {
+                    tempToken,
+                    requiresEmailCode: true,
+                    sentAt: Date.now(),
+                },
+            };
+        }
+
+        const validatedFields = deleteAccountConfirmSchema.safeParse({
+            id: id,
+            tempToken: tempToken,
+            code: formData.get("code"),
+        });
+
+        if (!validatedFields.success) {
+            return {
+                formData,
+                zodErrors: z.flattenError(validatedFields.error).fieldErrors,
+                error: null,
+                status: null,
+                details: null,
+                message: null,
+                data: {
+                    tempToken: tempToken,
+                    requiresMfa: requiresMfa,
+                    requiresEmailCode: requiresEmailCode,
+                },
+            };
+        }
+
+        const responseData = await mutateData(
+            "POST",
+            `/users/${id}/delete/confirm`,
+            {
+                tempToken: validatedFields.data.tempToken,
+                code: validatedFields.data.code,
+            },
+        );
+
+        if (!responseData) {
+            return {
+                formData,
+                zodErrors: null,
+                error: null,
+                status: "error",
+                details: null,
+                message: "Ops! Something went wrong. Please try again.",
+                data: {
+                    tempToken: tempToken,
+                    requiresMfa: requiresMfa,
+                    requiresEmailCode: requiresEmailCode,
+                },
+            };
+        }
+
+        if (
+            "message" in responseData &&
+            "status" in responseData &&
+            responseData.message &&
+            responseData.status !== "success"
+        ) {
+            return {
+                formData,
+                zodErrors: null,
+                error: null,
+                status: responseData.status,
+                details: null,
+                message:
+                    responseData.data.attemptsLeft !== undefined
+                        ? `${responseData.message}. Attempts left: ${responseData.data.attemptsLeft}`
+                        : responseData.message,
+                data: {
+                    tempToken,
+                    requiresMfa,
+                    requiresEmailCode,
+                    attemptsLeft: responseData.data.attemptsLeft,
+                    requiresRestart: responseData.data.requiresRestart,
+                },
+            };
+        }
+
+        await logoutAction();
+
+        redirect("/");
+    }
+
+    const validatedFields = deleteAccountPasswordSchema.safeParse({
         id: formData.get("id"),
         password: formData.get("password"),
     });
@@ -1320,8 +1490,8 @@ export async function deleteAccountAction(
     }
 
     const responseData = await mutateData(
-        "DELETE",
-        `/users/${validatedFields.data.id}`,
+        "POST",
+        `/users/${id}/delete/initiate`,
         {
             password: validatedFields.data.password,
         },
@@ -1332,7 +1502,7 @@ export async function deleteAccountAction(
             formData,
             zodErrors: null,
             error: null,
-            status: null,
+            status: "error",
             details: null,
             message: "Ops! Something went wrong. Please try again.",
         };
@@ -1365,9 +1535,17 @@ export async function deleteAccountAction(
         };
     }
 
-    await logoutAction();
-
-    redirect("/");
+    if ("status" in responseData && responseData.status === "success") {
+        return {
+            formData,
+            zodErrors: null,
+            error: null,
+            status: responseData.status,
+            details: null,
+            message: responseData.message,
+            data: responseData.data,
+        };
+    }
 }
 
 export async function changePasswordAction(
@@ -1858,15 +2036,46 @@ export async function deleteMemberAction(
     };
 }
 
-export async function transferOwnershipAction(
+export async function initiateOwnershipTransferAction(
     slug: string,
     memberId: number,
-): Promise<{ ok: boolean; message: string } | undefined> {
+    password: string,
+): Promise<
+    | {
+          ok: false;
+          message: string;
+      }
+    | {
+          ok: true;
+          challenge: OwnershipTransferChallenge;
+      }
+> {
+    const validatedFields = initiateOwnershipTransferSchema.safeParse({
+        slug: slug,
+        memberId: memberId,
+        password: password,
+    });
+
+    if (!validatedFields.success) {
+        const fieldErrors = z.flattenError(validatedFields.error).fieldErrors;
+
+        const message = Object.values(fieldErrors)
+            .flat()
+            .filter((error): error is string => Boolean(error))
+            .join(", ");
+
+        return {
+            ok: false,
+            message: message || "Invalid data",
+        };
+    }
+
     const responseData = await mutateData(
         "POST",
-        `/projects/transfer-ownership/${slug}`,
+        `/projects/transfer-ownership/${slug}/initiate`,
         {
-            memberId,
+            memberId: validatedFields.data.memberId,
+            password: validatedFields.data.password,
         },
     );
 
@@ -1883,10 +2092,10 @@ export async function transferOwnershipAction(
         "message" in responseData &&
         "status" in responseData &&
         responseData.message &&
-        responseData.status
+        responseData.status === "error"
     ) {
         return {
-            ok: responseData.status === "error" ? false : true,
+            ok: false,
             message: responseData.message,
         };
     }
@@ -1896,15 +2105,165 @@ export async function transferOwnershipAction(
 
         return {
             ok: false,
-            message: "Failed to change a role",
+            message: "Failed to initiate ownership transfer",
         };
     }
 
-    revalidatePath("/");
+    if ("status" in responseData && responseData.status === "success") {
+        return {
+            ok: true,
+            challenge: {
+                tempToken: responseData.data.tempToken,
+                requiresMfa: responseData.data.requiresMfa,
+                requiresEmailCode: responseData.data.requiresEmailCode,
+            },
+        };
+    }
 
     return {
-        ok: true,
-        message: "Role has been changed",
+        ok: false,
+        message:
+            "message" in responseData && responseData.message
+                ? responseData.message
+                : "Ops! Something went wrong. Please try again or later",
+    };
+}
+
+export async function confirmOwnershipTransferAction(
+    slug: string,
+    tempToken: string,
+    code: string,
+): Promise<{
+    ok: boolean;
+    message: string;
+    attemptsLeft?: number;
+    requiresRestart?: boolean;
+}> {
+    const responseData = await mutateData(
+        "POST",
+        `/projects/transfer-ownership/${slug}/confirm`,
+        { tempToken, code },
+    );
+
+    if (!responseData) {
+        console.error("Ops! Something went wrong. Please try again.");
+
+        return {
+            ok: false,
+            message: "Ops! Something went wrong. Please try again or later",
+        };
+    }
+
+    if (
+        "message" in responseData &&
+        "status" in responseData &&
+        responseData.message &&
+        responseData.status === "error"
+    ) {
+        return {
+            ok: false,
+            message: responseData.message,
+        };
+    }
+
+    if ("error" in responseData && responseData.error) {
+        console.error(responseData.error);
+
+        return {
+            ok: false,
+            message: "Failed to confirm ownership transfer",
+        };
+    }
+
+    if ("status" in responseData && responseData.status === "success") {
+        return {
+            ok: true,
+            message: responseData.message ?? "Role has been changed",
+        };
+    }
+
+    if ("data" in responseData) {
+        return {
+            ok: false,
+            message:
+                "message" in responseData && responseData.message
+                    ? responseData.message
+                    : "Invalid verification code",
+            attemptsLeft: responseData.data.attemptsLeft,
+            requiresRestart: responseData.data.requiresRestart,
+        };
+    }
+
+    return {
+        ok: false,
+        message:
+            "message" in responseData && responseData.message
+                ? responseData.message
+                : "Ops! Something went wrong. Please try again or later",
+    };
+}
+
+export async function resendOwnershipTransferCodeAction(
+    slug: string,
+    tempToken: string,
+): Promise<{ ok: boolean; message: string; retryAfter?: number }> {
+    const responseData = await mutateData(
+        "POST",
+        `/projects/transfer-ownership/${slug}/resend-code`,
+        { tempToken },
+    );
+
+    if (!responseData) {
+        console.error("Ops! Something went wrong. Please try again.");
+
+        return {
+            ok: false,
+            message: "Ops! Something went wrong. Please try again or later",
+        };
+    }
+
+    if (
+        "message" in responseData &&
+        "status" in responseData &&
+        responseData.message &&
+        responseData.status === "error"
+    ) {
+        return {
+            ok: false,
+            message: responseData.message,
+        };
+    }
+
+    if ("error" in responseData && responseData.error) {
+        console.error(responseData.error);
+
+        return {
+            ok: false,
+            message: "Failed to confirm ownership transfer",
+        };
+    }
+
+    if ("status" in responseData && responseData.status === "success") {
+        return { ok: true, message: responseData.message };
+    }
+
+    if ("data" in responseData) {
+        return {
+            ok: false,
+            message:
+                "message" in responseData && responseData.message
+                    ? responseData.message
+                    : "Failed to resend the code",
+            retryAfter: responseData.data.retryAfter,
+        };
+    }
+
+    return {
+        ok: false,
+        message:
+            "message" in responseData && responseData.message
+                ? responseData.message
+                : "Ops! Something went wrong. Please try again or later",
     };
 }
 

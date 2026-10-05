@@ -15,13 +15,19 @@ import { Button } from "../../shadcn/button";
 import {
     ArchiveIcon,
     CrownIcon,
+    InfoIcon,
     TrashSimpleIcon,
     WarningIcon,
 } from "@phosphor-icons/react";
-import { deleteProjectAction, transferOwnershipAction } from "@/data/actions";
+import {
+    confirmOwnershipTransferAction,
+    deleteProjectAction,
+    initiateOwnershipTransferAction,
+    resendOwnershipTransferCodeAction,
+} from "@/data/actions";
 import { toast } from "sonner";
-import { NavSection, User } from "@/types/types";
-import { useState, useTransition } from "react";
+import { NavSection, OwnershipTransferChallenge, User } from "@/types/types";
+import { useEffect, useState, useTransition } from "react";
 import {
     Select,
     SelectContent,
@@ -29,8 +35,12 @@ import {
     SelectTrigger,
     SelectValue,
 } from "../../shadcn/select";
-import { getInitials } from "@/libs/utils";
+import { formatBackupCode, getInitials } from "@/libs/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "../../shadcn/avatar";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "../../shadcn/input-otp";
+import { Input } from "../../shadcn/input";
+import { Label } from "../../shadcn/label";
+import { PasswordInput } from "../../shadcn/password-input";
 
 interface DangerSectionProps {
     name: string;
@@ -52,11 +62,40 @@ export default function DangerSection({
     const [selectedId, setSelectedId] = useState<number | null>(null);
     const [isSuccess, setIsSuccess] = useState<boolean>(false);
     const [isTransferPending, startTransferTransition] = useTransition();
+    const [transferStep, setTransferStep] = useState<"confirm" | "code">(
+        "confirm",
+    );
+    const [transferDialogOpen, setTransferDialogOpen] =
+        useState<boolean>(false);
+    const [challenge, setChallenge] =
+        useState<OwnershipTransferChallenge | null>(null);
+    const [code, setCode] = useState<string>("");
+    const [backupCode, setBackupCode] = useState<string>("");
+    const [useBackupCode, setUseBackupCode] = useState<boolean>(false);
+    const [cooldown, setCooldown] = useState<number>(60);
+    const [transferError, setTransferError] = useState<string | null>(null);
+    const [requiresRestart, setRequiresRestart] = useState<boolean>(false);
+    const [transferPassword, setTransferPassword] = useState<string>("");
+    const [passwordError, setPasswordError] = useState<string | null>(null);
+    const [isResendPending, startResendTransition] = useTransition();
 
     const candidates = members.filter((member) => member.role !== "owner");
     const selectedMember = candidates.find(
         (member) => member.id === selectedId,
     );
+
+    useEffect(() => {
+        if (transferStep !== "code" || cooldown <= 0) {
+            return;
+        }
+
+        const timer = setTimeout(
+            () => setCooldown((cooldown) => cooldown - 1),
+            1000,
+        );
+
+        return () => clearTimeout(timer);
+    }, [transferStep, cooldown]);
 
     const handleDeleteProject = async () => {
         const result = await deleteProjectAction(slug);
@@ -77,27 +116,105 @@ export default function DangerSection({
         }
     };
 
-    const handleTransfer = () => {
-        if (selectedId === null || !selectedMember) {
+    const handleStartTransfer = () => {
+        if (
+            selectedId === null ||
+            !selectedMember ||
+            transferPassword.length === 0
+        ) {
             return;
         }
 
         startTransferTransition(async () => {
-            const result = await transferOwnershipAction(slug, selectedId);
+            const result = await initiateOwnershipTransferAction(
+                slug,
+                selectedId,
+                transferPassword,
+            );
 
-            if (result && result.ok) {
-                toast.success("Success", {
-                    description: `${selectedMember.name} ${selectedMember.surname} is now the project owner`,
-                });
+            if (!result.ok) {
+                toast.error("Error", { description: result.message });
 
-                setSelectedId(null);
+                return;
             }
 
-            if (result && !result.ok) {
-                toast.error("Error", {
-                    description: result.message,
-                });
+            setChallenge(result.challenge);
+            setTransferStep("code");
+            setCooldown(60);
+        });
+    };
+
+    const handleConfirmTransfer = (overrideCode?: string) => {
+        if (!challenge) {
+            return;
+        }
+
+        const enteredCode = useBackupCode ? backupCode : (overrideCode ?? code);
+
+        if (enteredCode.length === 0) {
+            return;
+        }
+
+        startTransferTransition(async () => {
+            const result = await confirmOwnershipTransferAction(
+                slug,
+                challenge.tempToken,
+                enteredCode,
+            );
+
+            if (!result.ok) {
+                setTransferError(result.message);
+                setRequiresRestart(result.requiresRestart === true);
+                setCode("");
+                setBackupCode("");
+
+                return;
             }
+
+            toast.success("Success", {
+                description: `${selectedMember?.name} ${selectedMember?.surname} is now the project owner`,
+            });
+
+            setSelectedId(null);
+            setTransferDialogOpen(false);
+            setTransferStep("confirm");
+            setChallenge(null);
+            setCode("");
+            setBackupCode("");
+            setUseBackupCode(false);
+            setTransferError(null);
+            setRequiresRestart(false);
+            setTransferPassword("");
+            setPasswordError(null);
+
+            window.location.reload();
+        });
+    };
+
+    const handleResendCode = () => {
+        if (!challenge) {
+            return;
+        }
+
+        startResendTransition(async () => {
+            const result = await resendOwnershipTransferCodeAction(
+                slug,
+                challenge.tempToken,
+            );
+
+            if (!result.ok) {
+                setTransferError(result.message);
+
+                if (result.retryAfter) {
+                    setCooldown(result.retryAfter);
+                }
+
+                return;
+            }
+
+            setTransferError(null);
+            setCooldown(60);
+            toast.success("Code sent", { description: result.message });
         });
     };
 
@@ -201,7 +318,31 @@ export default function DangerSection({
                                     ))}
                                 </SelectContent>
                             </Select>
-                            <AlertDialog>
+                            <AlertDialog
+                                open={transferDialogOpen}
+                                onOpenChange={(nextOpen) => {
+                                    if (isTransferPending) {
+                                        return;
+                                    }
+
+                                    if (!nextOpen) {
+                                        setTransferDialogOpen(false);
+                                        setTransferStep("confirm");
+                                        setChallenge(null);
+                                        setCode("");
+                                        setBackupCode("");
+                                        setUseBackupCode(false);
+                                        setTransferError(null);
+                                        setRequiresRestart(false);
+                                        setTransferPassword("");
+                                        setPasswordError(null);
+
+                                        return;
+                                    }
+
+                                    setTransferDialogOpen(true);
+                                }}
+                            >
                                 <AlertDialogTrigger asChild>
                                     <Button
                                         variant="outline"
@@ -224,29 +365,214 @@ export default function DangerSection({
                                                 weight="duotone"
                                                 className="size-5 text-amber-500"
                                             />
-                                            Transfer ownership to{" "}
-                                            {selectedMember?.name}?
+                                            {transferStep === "confirm"
+                                                ? `Transfer ownership to ${selectedMember?.name}?`
+                                                : "Confirm transfer"}
                                         </AlertDialogTitle>
                                         <AlertDialogDescription>
-                                            You will lose owner privileges for
-                                            this project. The new owner will
-                                            have to transfer it back if you
-                                            change your mind.
+                                            {transferStep === "confirm"
+                                                ? "You will lose owner privileges for this project. The new owner will have to transfer it back if you change your mind."
+                                                : challenge?.requiresMfa
+                                                  ? "Enter the 6-digit code from your authenticator app."
+                                                  : "We sent a 6-digit code to your email."}
                                         </AlertDialogDescription>
                                     </AlertDialogHeader>
+                                    {transferStep === "confirm" && (
+                                        <div className="space-y-1.5">
+                                            <Label
+                                                htmlFor="transfer-password"
+                                                className="text-sm"
+                                            >
+                                                Enter your password to confirm
+                                            </Label>
+                                            <PasswordInput
+                                                id="transfer-password"
+                                                autoComplete="current-password"
+                                                autoFocus
+                                                value={transferPassword}
+                                                onChange={(e) =>
+                                                    setTransferPassword(
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                onKeyDown={(e) => {
+                                                    if (e.key === "Enter") {
+                                                        e.preventDefault();
+
+                                                        if (
+                                                            !isTransferPending &&
+                                                            transferPassword.length >
+                                                                0
+                                                        ) {
+                                                            handleStartTransfer();
+                                                        }
+                                                    }
+                                                }}
+                                                placeholder="Your password"
+                                                disabled={isTransferPending}
+                                                className="bg-control placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue"
+                                            />
+                                        </div>
+                                    )}
+                                    {transferStep === "code" && (
+                                        <div className="space-y-3">
+                                            {challenge?.requiresMfa &&
+                                            useBackupCode ? (
+                                                <div className="grid gap-2">
+                                                    <Label
+                                                        htmlFor="transfer-backup-code"
+                                                        className="text-sm"
+                                                    >
+                                                        Backup code
+                                                    </Label>
+                                                    <Input
+                                                        id="transfer-backup-code"
+                                                        type="text"
+                                                        placeholder="XXXX-XXXX"
+                                                        autoComplete="one-time-code"
+                                                        autoFocus
+                                                        value={backupCode}
+                                                        onChange={(e) =>
+                                                            setBackupCode(
+                                                                formatBackupCode(
+                                                                    e.target
+                                                                        .value,
+                                                                ),
+                                                            )
+                                                        }
+                                                        maxLength={9}
+                                                        disabled={
+                                                            isTransferPending ||
+                                                            requiresRestart
+                                                        }
+                                                        className="bg-control text-center font-mono uppercase tracking-widest placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue"
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <div className="flex justify-center">
+                                                    <InputOTP
+                                                        maxLength={6}
+                                                        value={code}
+                                                        onChange={setCode}
+                                                        autoFocus
+                                                        disabled={
+                                                            isTransferPending ||
+                                                            requiresRestart
+                                                        }
+                                                        onComplete={(value) =>
+                                                            handleConfirmTransfer(
+                                                                value,
+                                                            )
+                                                        }
+                                                    >
+                                                        <InputOTPGroup>
+                                                            {[
+                                                                0, 1, 2, 3, 4,
+                                                                5,
+                                                            ].map((index) => (
+                                                                <InputOTPSlot
+                                                                    key={index}
+                                                                    index={
+                                                                        index
+                                                                    }
+                                                                    className="border-border bg-control"
+                                                                />
+                                                            ))}
+                                                        </InputOTPGroup>
+                                                    </InputOTP>
+                                                </div>
+                                            )}
+                                            {challenge?.requiresMfa && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setUseBackupCode(
+                                                            (prevState) =>
+                                                                !prevState,
+                                                        );
+                                                        setCode("");
+                                                        setBackupCode("");
+                                                    }}
+                                                    className="block w-full text-center text-sm text-muted-foreground underline"
+                                                >
+                                                    {useBackupCode
+                                                        ? "Use authenticator code instead"
+                                                        : "Use a backup code instead"}
+                                                </button>
+                                            )}
+                                            {challenge?.requiresEmailCode && (
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="w-full border-border bg-control text-foreground hover:bg-control-active"
+                                                    disabled={
+                                                        isResendPending ||
+                                                        cooldown > 0 ||
+                                                        requiresRestart
+                                                    }
+                                                    onClick={handleResendCode}
+                                                >
+                                                    {isResendPending
+                                                        ? "Sending..."
+                                                        : cooldown > 0
+                                                          ? `Resend code in ${cooldown}s`
+                                                          : "Resend code"}
+                                                </Button>
+                                            )}
+                                            {transferError && (
+                                                <div className="flex items-center gap-2 rounded-md text-sm text-red-500">
+                                                    <InfoIcon
+                                                        weight="duotone"
+                                                        className="size-4 shrink-0"
+                                                    />
+                                                    <p>{transferError}</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                     <AlertDialogFooter>
                                         <AlertDialogCancel
                                             disabled={isTransferPending}
                                         >
                                             Cancel
                                         </AlertDialogCancel>
-                                        <AlertDialogAction
-                                            onClick={handleTransfer}
-                                            disabled={isTransferPending}
-                                            className="bg-amber-600 font-semibold text-white hover:bg-amber-700 dark:bg-amber-700 dark:hover:bg-amber-600"
-                                        >
-                                            Transfer ownership
-                                        </AlertDialogAction>
+                                        {transferStep === "confirm" ? (
+                                            <Button
+                                                type="button"
+                                                onClick={handleStartTransfer}
+                                                disabled={
+                                                    isTransferPending ||
+                                                    transferPassword.length ===
+                                                        0
+                                                }
+                                                className="bg-amber-600 font-semibold text-white hover:bg-amber-700 dark:bg-amber-700 dark:hover:bg-amber-600"
+                                            >
+                                                {isTransferPending
+                                                    ? "Checking..."
+                                                    : "Continue"}
+                                            </Button>
+                                        ) : (
+                                            <Button
+                                                type="button"
+                                                onClick={() =>
+                                                    handleConfirmTransfer()
+                                                }
+                                                disabled={
+                                                    isTransferPending ||
+                                                    requiresRestart ||
+                                                    (useBackupCode
+                                                        ? backupCode.length ===
+                                                          0
+                                                        : code.length !== 6)
+                                                }
+                                                className="bg-amber-600 font-semibold text-white hover:bg-amber-700 dark:bg-amber-700 dark:hover:bg-amber-600"
+                                            >
+                                                {isTransferPending
+                                                    ? "Transferring..."
+                                                    : "Confirm transfer"}
+                                            </Button>
+                                        )}
                                     </AlertDialogFooter>
                                 </AlertDialogContent>
                             </AlertDialog>

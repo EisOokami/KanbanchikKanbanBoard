@@ -13,7 +13,7 @@ export async function mutateData(
     isImage?: boolean,
 ): Promise<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    | { status: "error" | "message" | "success"; message: string; data?: any }
+    | { status: "error" | "success"; message: string; data?: any }
     | {
           error: string;
           details: {

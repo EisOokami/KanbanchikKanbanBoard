@@ -2,21 +2,25 @@ import { rateLimitHandler } from "../middlewares/securityAudit.middleware.js";
 import { Router } from "express";
 import {
     changeRole,
+    confirmOwnershipTransfer,
     createProject,
     deleteMember,
     deleteProject,
     exportProjectData,
     getProject,
     getProjects,
+    initiateOwnershipTransfer,
     reorderColumns,
-    transferOwnership,
+    resendOwnershipTransferCode,
     updateProject,
 } from "../controllers/projects.controller.js";
 import { authenticateToken } from "../middlewares/auth.middleware.js";
 import {
     changeRoleSchema,
+    confirmOwnershipTransferSchema,
     createProjectSchema,
     reorderColumnsSchema,
+    resendOwnershipTransferSchema,
     transferOwnershipSchema,
     updateProjectSchema,
 } from "../validation/validation.js";
@@ -63,19 +67,6 @@ const changeRoleLimiter = rateLimit({
     handler: rateLimitHandler,
 });
 
-const transferOwnershipLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000,
-    limit: 5,
-    message: {
-        status: 429,
-        error: "Too many requests",
-        message: "Too many requests. Please try again in 1 hour.",
-    },
-    standardHeaders: true,
-    legacyHeaders: false,
-    handler: rateLimitHandler,
-});
-
 const deleteMemberLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     limit: 100,
@@ -96,6 +87,45 @@ const updateTaskCommentLimiter = rateLimit({
         status: 429,
         error: "Too many requests",
         message: "Too many requests. Please try again in 15 minutes.",
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: rateLimitHandler,
+});
+
+const initiateOwnershipTransferLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    limit: 5,
+    message: {
+        status: 429,
+        error: "Too many requests",
+        message: "Too many requests. Please try again in 1 hour.",
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: rateLimitHandler,
+});
+
+const confirmOwnershipTransferLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    limit: 5,
+    message: {
+        status: 429,
+        error: "Too many requests",
+        message: "Too many requests. Please try again in 1 hour.",
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: rateLimitHandler,
+});
+
+const resendOwnershipTransferCodeLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    limit: 5,
+    message: {
+        status: 429,
+        error: "Too many requests",
+        message: "Too many requests. Please try again in 1 hour.",
     },
     standardHeaders: true,
     legacyHeaders: false,
@@ -132,14 +162,6 @@ router.post(
     validateData(changeRoleSchema),
     changeRole,
 );
-router.post(
-    "/transfer-ownership/:slug",
-    transferOwnershipLimiter,
-    authenticateToken,
-    verifyCsrf,
-    validateData(transferOwnershipSchema),
-    transferOwnership,
-);
 router.delete(
     "/delete-member/:id",
     deleteMemberLimiter,
@@ -154,6 +176,30 @@ router.patch(
     verifyCsrf,
     validateData(reorderColumnsSchema),
     reorderColumns,
+);
+router.post(
+    "/transfer-ownership/:slug/initiate",
+    initiateOwnershipTransferLimiter,
+    authenticateToken,
+    verifyCsrf,
+    validateData(transferOwnershipSchema),
+    initiateOwnershipTransfer,
+);
+router.post(
+    "/transfer-ownership/:slug/confirm",
+    confirmOwnershipTransferLimiter,
+    authenticateToken,
+    verifyCsrf,
+    validateData(confirmOwnershipTransferSchema),
+    confirmOwnershipTransfer,
+);
+router.post(
+    "/transfer-ownership/:slug/resend-code",
+    resendOwnershipTransferCodeLimiter,
+    authenticateToken,
+    verifyCsrf,
+    validateData(resendOwnershipTransferSchema),
+    resendOwnershipTransferCode,
 );
 
 export default router;

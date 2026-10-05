@@ -1,7 +1,9 @@
 import type { Response } from "express";
 import {
     changePasswordSchema,
+    confirmAccountDeletionSchema,
     deleteAccountSchema,
+    resendAccountDeletionSchema,
     setPasswordSchema,
     updateProfileSchema,
     validateIdSchema,
@@ -10,10 +12,26 @@ import { pool } from "../db/pool.js";
 import { ZodError } from "zod";
 import bcrypt from "bcryptjs";
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
-import type { IGetUserRequest, User } from "../types/types.js";
+import type {
+    AccountDeletionSession,
+    IGetUserRequest,
+    MfaBackupCode,
+    User,
+} from "../types/types.js";
 import dotenv from "dotenv";
+import {
+    generateEmailCode,
+    hashDeletionCode,
+    safeEqualHex,
+} from "../utils/codes.js";
+import { decryptMfaSecret, generateRawToken, hashToken } from "../utils/mfa.js";
+import { OTP } from "otplib";
+import { emailTemplate } from "../utils/emailTemplate.js";
+import { transporter } from "../utils/email.js";
 
 dotenv.config({ quiet: true });
+
+const otp = new OTP({ strategy: "totp" });
 
 export const me = async (
     req: IGetUserRequest,
@@ -335,7 +353,7 @@ export const changePassword = async (
 
         if (!isPasswordValid) {
             req.log.warn(
-                { audit: true, event: "auth.password_verification_failed" },
+                { audit: true, event: "user.password_verification_failed" },
                 "Password verification failed",
             );
 
@@ -376,7 +394,7 @@ export const changePassword = async (
         }
 
         req.log.info(
-            { event: "auth.password_changed", audit: true, userId: id },
+            { event: "user.password_changed", audit: true, userId: id },
             "Operation completed",
         );
 
@@ -416,32 +434,44 @@ export const changePassword = async (
     }
 };
 
-export const deleteAccount = async (
+export const initiateAccountDeletion = async (
     req: IGetUserRequest,
     res: Response,
 ): Promise<void> => {
     try {
         validateIdSchema.parse(req.params);
-        deleteAccountSchema.parse(req.body);
 
-        if (!req.params.id) {
-            res.status(400).json({
+        const { password } = deleteAccountSchema.parse(req.body);
+
+        const userId = +req.user.id;
+        const { id } = req.params;
+
+        if (!userId) {
+            res.status(401).json({
                 status: "error",
-                message: "ID is required",
+                message: "Unauthorized",
             });
 
             return;
         }
 
-        const userId = +req.user.id;
-        const paramId = +req.params.id;
+        if (!id) {
+            res.status(400).json({
+                status: "error",
+                message: "Invalid project ID",
+            });
+
+            return;
+        }
+
+        const paramId = +id;
 
         if (userId !== paramId) {
             req.log.warn(
                 {
                     audit: true,
                     event: "security.authorization_failed",
-                    operation: "deleteAccount",
+                    operation: "initiateAccountDeletion",
                 },
                 "Authorization denied",
             );
@@ -454,20 +484,17 @@ export const deleteAccount = async (
             return;
         }
 
-        const { password } = req.body;
-
         const [users] = await pool.execute<
-            (Pick<User, "id" | "password"> & RowDataPacket)[]
-        >("SELECT id, password FROM users WHERE id = ?", [paramId]);
-
-        if (!users.length) {
-            res.status(404).json({
-                status: "error",
-                message: "User not found",
-            });
-
-            return;
-        }
+            (Pick<User, "id" | "password" | "email" | "name" | "mfa_enabled"> &
+                RowDataPacket)[]
+        >(
+            `
+                SELECT id, password, email, name, mfa_enabled
+                FROM users
+                WHERE id = ?
+            `,
+            [paramId],
+        );
 
         const user = users[0];
 
@@ -484,7 +511,11 @@ export const deleteAccount = async (
 
         if (!isPasswordValid) {
             req.log.warn(
-                { audit: true, event: "auth.password_verification_failed" },
+                {
+                    audit: true,
+                    event: "user.password_verification_failed",
+                    operation: "initiateAccountDeletion",
+                },
                 "Password verification failed",
             );
 
@@ -511,6 +542,355 @@ export const deleteAccount = async (
                 status: "error",
                 message:
                     "Cannot delete account with owned projects. Transfer or delete projects first.",
+            });
+
+            return;
+        }
+
+        await pool.execute(
+            `DELETE FROM account_deletion_sessions WHERE user_id = ?`,
+            [paramId],
+        );
+
+        const rawTempToken = generateRawToken();
+        const tempTokenHash = hashToken(rawTempToken);
+
+        if (user.mfa_enabled) {
+            await pool.execute<ResultSetHeader>(
+                `
+                    INSERT INTO account_deletion_sessions
+                        (token_hash, user_id, method, expires_at)
+                    VALUES (?, ?, 'totp', DATE_ADD(NOW(), INTERVAL ? MINUTE))
+                `,
+                [tempTokenHash, paramId, 10],
+            );
+
+            req.log.debug(
+                {
+                    event: "user.challenge_created",
+                    userId: paramId,
+                    method: "totp",
+                    operation: "initiateAccountDeletion",
+                },
+                "Account deletion challenge created",
+            );
+
+            res.status(200).json({
+                status: "success",
+                message:
+                    "Enter the code from your authenticator app to confirm",
+                requiresMfa: true,
+                tempToken: rawTempToken,
+            });
+
+            return;
+        }
+
+        const code = generateEmailCode();
+
+        await pool.execute<ResultSetHeader>(
+            `
+                INSERT INTO account_deletion_sessions
+                    (token_hash, user_id, method, code_hash, expires_at)
+                VALUES (?, ?, 'email', ?, DATE_ADD(NOW(), INTERVAL ? MINUTE))
+            `,
+            [tempTokenHash, paramId, hashDeletionCode(paramId, code), 10],
+        );
+
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: user.email,
+            subject: `${code} - confirm ownership transfer`,
+            html: emailTemplate({
+                logo: "cid:app-logo",
+                title: "Ownership transfer code",
+                heading: `Hi, ${user.name}!`,
+                description: `
+                        Use this code to confirm transferring project ownership:
+                        <br />
+                        <p style="font-size:28px;font-weight:700;letter-spacing:6px">${code}</p>
+                        It expires in 10 minutes.
+                    `,
+                footer: "If this wasn't you, please change your password immediately and contact support.",
+            }),
+            attachments: [
+                {
+                    filename: "logo.png",
+                    path: "./assets/generallogo.png",
+                    cid: "app-logo",
+                },
+            ],
+        };
+
+        transporter.sendMail(mailOptions, (error) => {
+            if (error) {
+                req.log.error(
+                    {
+                        err: error,
+                        event: "email.delivery_failed",
+                        operation: "initiateAccountDeletion",
+                    },
+                    "Operation failed",
+                );
+
+                if (!res.headersSent) {
+                    res.status(500).send({
+                        status: "error",
+                        message: "Error sending email",
+                    });
+                }
+            } else {
+                req.log.debug(
+                    {
+                        event: "email.sent",
+                        operation: "initiateAccountDeletion",
+                    },
+                    "Email accepted by transport",
+                );
+            }
+        });
+
+        req.log.debug(
+            {
+                event: "user.challenge_created",
+                userId: paramId,
+                method: "email",
+                operation: "initiateAccountDeletion",
+            },
+            "Account deletion challenge created",
+        );
+
+        res.status(200).json({
+            status: "success",
+            message: "Verification code sent to your email",
+            data: {
+                requiresEmailCode: true,
+                tempToken: rawTempToken,
+            },
+        });
+    } catch (error) {
+        if (error instanceof ZodError) {
+            res.status(400).json({
+                status: "error",
+                message: "Invalid data",
+                details: error.issues.map((issue) => ({
+                    field: issue.path[0],
+                    message: issue.message,
+                })),
+            });
+
+            return;
+        }
+
+        req.log.error(
+            {
+                err: error,
+                event: "user.initiate_account_deletion_failed",
+                operation: "initiateAccountDeletion",
+            },
+            "Operation failed",
+        );
+
+        res.status(500).json({
+            status: "error",
+            message: "Server error while starting account deletion",
+        });
+    }
+};
+
+export const confirmAccountDeletion = async (
+    req: IGetUserRequest,
+    res: Response,
+): Promise<void> => {
+    try {
+        validateIdSchema.parse(req.params);
+
+        const { tempToken, code } = confirmAccountDeletionSchema.parse(
+            req.body,
+        );
+
+        const userId = +req.user.id;
+        const { id } = req.params;
+
+        if (!userId) {
+            res.status(401).json({
+                status: "error",
+                message: "Unauthorized",
+            });
+
+            return;
+        }
+
+        if (!id) {
+            res.status(400).json({
+                status: "error",
+                message: "Invalid project ID",
+            });
+
+            return;
+        }
+
+        const paramId = +id;
+
+        if (userId !== paramId) {
+            res.status(403).json({
+                status: "error",
+                message: "You can only delete your own account",
+            });
+
+            return;
+        }
+
+        const tokenHash = hashToken(tempToken);
+
+        const [bump] = await pool.execute<ResultSetHeader>(
+            `
+                UPDATE account_deletion_sessions
+                SET attempts = attempts + 1
+                WHERE token_hash = ?
+                    AND user_id = ?
+                    AND expires_at > NOW()
+                    AND attempts < ?
+            `,
+            [tokenHash, paramId, 5],
+        );
+
+        if (bump.affectedRows === 0) {
+            res.status(401).json({
+                status: "error",
+                message:
+                    "Code expired or too many attempts. Please start again",
+                data: { requiresRestart: true },
+            });
+
+            return;
+        }
+
+        const [sessions] = await pool.execute<
+            (Pick<
+                AccountDeletionSession,
+                "id" | "user_id" | "method" | "code_hash" | "attempts"
+            > &
+                RowDataPacket)[]
+        >(
+            `
+                SELECT id, user_id, method, code_hash, attempts
+                FROM account_deletion_sessions
+                WHERE token_hash = ?
+            `,
+            [tokenHash],
+        );
+
+        const session = sessions[0];
+
+        if (!session) {
+            res.status(401).json({
+                status: "error",
+                message: "Invalid or expired session",
+                data: { requiresRestart: true },
+            });
+
+            return;
+        }
+
+        let isCodeValid = false;
+
+        if (session.method === "email") {
+            isCodeValid =
+                session.code_hash !== null &&
+                safeEqualHex(
+                    session.code_hash,
+                    hashDeletionCode(paramId, code),
+                );
+        }
+
+        if (session.method !== "email") {
+            const [userRows] = await pool.execute<
+                (Pick<User, "id"> &
+                    RowDataPacket & { mfa_secret: Buffer | null })[]
+            >("SELECT id, mfa_secret FROM users WHERE id = ?", [paramId]);
+
+            const user = userRows[0];
+
+            if (!user || !user.password) {
+                res.status(404).json({
+                    status: "error",
+                    message: "User not found",
+                });
+
+                return;
+            }
+
+            if (user.mfa_secret && /^\d{6}$/.test(code)) {
+                const decryptedSecret = decryptMfaSecret(user.mfa_secret);
+
+                const result = await otp.verify({
+                    token: code,
+                    secret: decryptedSecret,
+                    epochTolerance: 1,
+                });
+
+                isCodeValid = result.valid;
+            }
+
+            if (user.mfa_secret && !/^\d{6}$/.test(code)) {
+                const codeHash = hashToken(code.toUpperCase());
+
+                const [backupRows] = await pool.execute<
+                    (Pick<MfaBackupCode, "id"> & RowDataPacket)[]
+                >(
+                    `
+                            SELECT id
+                            FROM mfa_backup_codes
+                            WHERE user_id = ? AND code_hash = ? AND used_at IS NULL
+                        `,
+                    [paramId, codeHash],
+                );
+
+                const backupCode = backupRows[0];
+
+                if (backupCode) {
+                    const [updateResult] = await pool.execute<ResultSetHeader>(
+                        "UPDATE mfa_backup_codes SET used_at = NOW() WHERE id = ? AND used_at IS NULL",
+                        [backupCode.id],
+                    );
+
+                    isCodeValid = updateResult.affectedRows > 0;
+                }
+            }
+        }
+
+        if (!isCodeValid) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "account.deletion_verification_failed",
+                    operation: "confirmAccountDeletion",
+                    userId: paramId,
+                },
+                "Verification rejected",
+            );
+
+            res.status(401).json({
+                status: "error",
+                message: "Invalid verification code",
+                data: {
+                    attemptsLeft: 5 - session.attempts,
+                },
+            });
+
+            return;
+        }
+
+        const [deleteRows] = await pool.execute<ResultSetHeader>(
+            `DELETE FROM account_deletion_sessions WHERE id = ?`,
+            [session.id],
+        );
+
+        if (deleteRows.affectedRows === 0) {
+            res.status(401).json({
+                status: "error",
+                message: "Invalid verification code",
             });
 
             return;
@@ -585,15 +965,13 @@ export const deleteAccount = async (
         });
     } catch (error) {
         if (error instanceof ZodError) {
-            const errorMessages = error.issues.map((issue: any) => ({
-                field: issue.path[0],
-                message: issue.message,
-            }));
-
             res.status(400).json({
                 status: "error",
                 message: "Invalid data",
-                details: errorMessages,
+                details: error.issues.map((issue) => ({
+                    field: issue.path[0],
+                    message: issue.message,
+                })),
             });
 
             return;
@@ -602,15 +980,206 @@ export const deleteAccount = async (
         req.log.error(
             {
                 err: error,
-                event: "user.delete_account_failed",
-                operation: "deleteAccount",
+                event: "user.confirm_account_deletion_failed",
+                operation: "confirmAccountDeletion",
             },
             "Operation failed",
         );
 
         res.status(500).json({
             status: "error",
-            message: "Server error during deleting account",
+            message: "Server error while deleting account",
+        });
+    }
+};
+
+export const resendAccountDeletionCode = async (
+    req: IGetUserRequest,
+    res: Response,
+): Promise<void> => {
+    try {
+        validateIdSchema.parse(req.params);
+
+        const { tempToken } = resendAccountDeletionSchema.parse(req.body);
+
+        const { id } = req.params;
+        const userId = +req.user.id;
+
+        if (!userId) {
+            res.status(401).json({
+                status: "error",
+                message: "Unauthorized",
+            });
+
+            return;
+        }
+
+        if (!id) {
+            res.status(400).json({
+                status: "error",
+                message: "Invalid ID",
+            });
+
+            return;
+        }
+
+        const paramId = +id;
+
+        if (userId !== paramId) {
+            res.status(403).json({
+                status: "error",
+                message: "You can only delete your own account",
+            });
+
+            return;
+        }
+
+        const tokenHash = hashToken(tempToken);
+
+        const [sessions] = await pool.execute<
+            (Pick<
+                AccountDeletionSession,
+                "id" | "user_id" | "method" | "attempts"
+            > & { seconds_since_sent: number } & Pick<User, "email" | "name"> &
+                RowDataPacket)[]
+        >(
+            `
+                SELECT
+                    s.id,
+                    s.user_id,
+                    s.method,
+                    s.attempts,
+                    TIMESTAMPDIFF(SECOND, s.last_sent_at, NOW()) AS seconds_since_sent,
+                    u.email,
+                    u.name
+                FROM account_deletion_sessions s
+                JOIN users u ON u.id = s.user_id
+                WHERE s.token_hash = ? AND s.user_id = ?
+            `,
+            [tokenHash, paramId],
+        );
+
+        const session = sessions[0];
+
+        if (!session || session.method !== "email") {
+            res.status(401).json({
+                status: "error",
+                message: "Session expired. Please start again",
+                data: { requiresRestart: true },
+            });
+
+            return;
+        }
+
+        if (session.seconds_since_sent < 60) {
+            res.status(429).json({
+                status: "error",
+                message: "Please wait before requesting a new code",
+                data: {
+                    retryAfter: 60 - session.seconds_since_sent,
+                },
+            });
+
+            return;
+        }
+
+        const code = generateEmailCode();
+
+        await pool.execute(
+            `
+                UPDATE account_deletion_sessions
+                SET code_hash = ?,
+                    attempts = 0,
+                    last_sent_at = NOW(),
+                    expires_at = DATE_ADD(NOW(), INTERVAL ? MINUTE)
+                WHERE id = ?
+            `,
+            [hashDeletionCode(paramId, code), 10, session.id],
+        );
+
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: session.email,
+            subject: `${code} - confirm ownership transfer`,
+            html: emailTemplate({
+                logo: "cid:app-logo",
+                title: "Ownership transfer code",
+                heading: `Hi, ${session.name}!`,
+                description: `
+                        Use this code to confirm transferring project ownership:
+                        <br />
+                        <p style="font-size:28px;font-weight:700;letter-spacing:6px">${code}</p>
+                        It expires in 10 minutes.
+                    `,
+                footer: "If this wasn't you, please change your password immediately and contact support.",
+            }),
+            attachments: [
+                {
+                    filename: "logo.png",
+                    path: "./assets/generallogo.png",
+                    cid: "app-logo",
+                },
+            ],
+        };
+
+        transporter.sendMail(mailOptions, (error) => {
+            if (error) {
+                req.log.error(
+                    {
+                        err: error,
+                        event: "email.delivery_failed",
+                        operation: "initiateAccountDeletion",
+                    },
+                    "Operation failed",
+                );
+
+                if (!res.headersSent) {
+                    res.status(500).send({
+                        status: "error",
+                        message: "Error sending email",
+                    });
+                }
+            } else {
+                req.log.debug(
+                    {
+                        event: "email.sent",
+                        operation: "initiateAccountDeletion",
+                    },
+                    "Email accepted by transport",
+                );
+            }
+        });
+
+        res.status(200).json({
+            status: "success",
+            message: "A new verification code has been sent",
+        });
+    } catch (error) {
+        if (error instanceof ZodError) {
+            res.status(400).json({
+                status: "error",
+                message: "Invalid data",
+                details: error.issues.map((issue) => ({
+                    field: issue.path[0],
+                    message: issue.message,
+                })),
+            });
+
+            return;
+        }
+
+        req.log.error(
+            {
+                err: error,
+                event: "user.resend_account_deletion_code_failed",
+                operation: "resendAccountDeletionCode",
+            },
+            "Operation failed",
+        );
+
+        res.status(500).json({
+            status: "error",
+            message: "Server error while resending code",
         });
     }
 };
@@ -676,7 +1245,7 @@ export const setPassword = async (
         }
 
         req.log.info(
-            { event: "auth.password_set", audit: true, userId },
+            { event: "user.password_set", audit: true, userId },
             "Operation completed",
         );
 

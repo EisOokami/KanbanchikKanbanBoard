@@ -227,3 +227,9 @@ export type TasksSortField =
     | "members"
     | "dueDate"
     | "progress";
+
+export interface OwnershipTransferChallenge {
+    tempToken: string;
+    requiresMfa?: boolean;
+    requiresEmailCode?: boolean;
+}

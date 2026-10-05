@@ -38,8 +38,7 @@ import {
     generateEmailCode,
     hashEmailCode,
     safeEqualHex,
-} from "../utils/loginCode.js";
-import { sendLoginCodeEmail } from "../utils/sendLoginCodeEmail.js";
+} from "../utils/codes.js";
 
 dotenv.config({ quiet: true });
 
@@ -699,7 +698,58 @@ export const login = async (req: Request, res: Response): Promise<void> => {
             ],
         );
 
-        await sendLoginCodeEmail(user, code);
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: user.email,
+            subject: `${code} - your login code`,
+            html: emailTemplate({
+                logo: "cid:app-logo",
+                title: "Login code",
+                heading: `Hi, ${user.name}!`,
+                description: `
+                        Your verification code is:
+                        <br />
+                        <p style="font-size:28px;font-weight:700;letter-spacing:6px">${code}</p>
+                        It expires in 10 minutes.
+                    `,
+                footer: "If this wasn't you, please change your password immediately and contact support.",
+            }),
+            attachments: [
+                {
+                    filename: "logo.png",
+                    path: "./assets/generallogo.png",
+                    cid: "app-logo",
+                },
+            ],
+        };
+
+        transporter.sendMail(mailOptions, (error) => {
+            if (error) {
+                req.log.error(
+                    {
+                        err: error,
+                        event: "email.delivery_failed",
+                        operation: "login",
+                    },
+                    "Operation failed",
+                );
+
+                if (!res.headersSent) {
+                    res.status(500).send({
+                        status: "error",
+                        message: "Error sending email",
+                    });
+                }
+            } else {
+                req.log.debug(
+                    {
+                        event: "email.sent",
+                        operation: "login",
+                    },
+                    "Email accepted by transport",
+                );
+            }
+        });
 
         res.status(200).json({
             status: "success",
@@ -1044,7 +1094,58 @@ export const resendLoginEmailCode = async (
             [hashEmailCode(session.user_id, code), 10, session.id],
         );
 
-        await sendLoginCodeEmail(session, code);
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: session.email,
+            subject: `${code} - your login code`,
+            html: emailTemplate({
+                logo: "cid:app-logo",
+                title: "Login code",
+                heading: `Hi, ${session.name}!`,
+                description: `
+                        Your verification code is:
+                        <br />
+                        <p style="font-size:28px;font-weight:700;letter-spacing:6px">${code}</p>
+                        It expires in 10 minutes.
+                    `,
+                footer: "If this wasn't you, please change your password immediately and contact support.",
+            }),
+            attachments: [
+                {
+                    filename: "logo.png",
+                    path: "./assets/generallogo.png",
+                    cid: "app-logo",
+                },
+            ],
+        };
+
+        transporter.sendMail(mailOptions, (error) => {
+            if (error) {
+                req.log.error(
+                    {
+                        err: error,
+                        event: "email.delivery_failed",
+                        operation: "login",
+                    },
+                    "Operation failed",
+                );
+
+                if (!res.headersSent) {
+                    res.status(500).send({
+                        status: "error",
+                        message: "Error sending email",
+                    });
+                }
+            } else {
+                req.log.debug(
+                    {
+                        event: "email.sent",
+                        operation: "login",
+                    },
+                    "Email accepted by transport",
+                );
+            }
+        });
 
         res.status(200).json({
             status: "success",

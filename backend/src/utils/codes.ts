@@ -12,6 +12,24 @@ export const hashEmailCode = (userId: number | string, code: string): string =>
         .update(`${userId}:${code}`)
         .digest("hex");
 
+export const hashDeletionCode = (
+    userId: number | string,
+    code: string,
+): string =>
+    crypto
+        .createHmac("sha256", process.env.DELETION_CODE_SECRET!)
+        .update(`delete:${userId}:${code}`)
+        .digest("hex");
+
+export const hashTransferCode = (
+    userId: number | string,
+    code: string,
+): string =>
+    crypto
+        .createHmac("sha256", process.env.TRANSFER_CODE_SECRET!)
+        .update(`transfer:${userId}:${code}`)
+        .digest("hex");
+
 export const safeEqualHex = (a: string, b: string): boolean => {
     const bufA = Buffer.from(a, "hex");
     const bufB = Buffer.from(b, "hex");

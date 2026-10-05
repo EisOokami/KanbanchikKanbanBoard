@@ -10,6 +10,8 @@ import type {
     Comment,
     IGetUserRequest,
     Label,
+    MfaBackupCode,
+    OwnershipTransferSession,
     Project,
     ProjectMember,
     ProjectSlugHistory,
@@ -26,12 +28,24 @@ import {
     validateIdSchema,
     transferOwnershipSchema,
     reorderColumnsSchema,
+    confirmOwnershipTransferSchema,
+    resendOwnershipTransferSchema,
 } from "../validation/validation.js";
 import { transporter } from "../utils/email.js";
 import { generateSlug, generateUniqueSlug } from "../utils/slugify.js";
 import path from "path";
 import { unlink } from "node:fs/promises";
 import { emailTemplate } from "../utils/emailTemplate.js";
+import bcrypt from "bcryptjs";
+import { decryptMfaSecret, generateRawToken, hashToken } from "../utils/mfa.js";
+import {
+    generateEmailCode,
+    hashTransferCode,
+    safeEqualHex,
+} from "../utils/codes.js";
+import { OTP } from "otplib";
+
+const otp = new OTP({ strategy: "totp" });
 
 export const getProjects = async (req: IGetUserRequest, res: Response) => {
     try {
@@ -2637,7 +2651,7 @@ export const deleteMember = async (
     }
 };
 
-export const transferOwnership = async (
+export const initiateOwnershipTransfer = async (
     req: IGetUserRequest,
     res: Response,
 ) => {
@@ -2772,76 +2786,179 @@ export const transferOwnership = async (
             return;
         }
 
-        const [transferOwnershipInProjectMembersResult] =
-            await pool.execute<ResultSetHeader>(
-                `
-                    UPDATE project_members 
-                    SET role = "owner" 
-                    WHERE user_id = ? AND project_id = ?
-                `,
-                [validatedData.memberId, project.id],
-            );
-
-        if (transferOwnershipInProjectMembersResult.affectedRows === 0) {
-            res.status(404).json({
-                status: "error",
-                message: "Role not changed",
-            });
-
-            return;
-        }
-
-        const [transferOwnershipInProjectResult] =
-            await pool.execute<ResultSetHeader>(
-                `
-                    UPDATE projects 
-                    SET owner_id = ? 
-                    WHERE id = ?
-                `,
-                [validatedData.memberId, project.id],
-            );
-
-        if (transferOwnershipInProjectResult.affectedRows === 0) {
-            res.status(404).json({
-                status: "error",
-                message: "Role not changed",
-            });
-
-            return;
-        }
-
-        const [changeOwnerRoleResult] = await pool.execute<ResultSetHeader>(
+        const [users] = await pool.execute<
+            (Pick<User, "id" | "password" | "email" | "name" | "mfa_enabled"> &
+                RowDataPacket)[]
+        >(
             `
-                UPDATE project_members 
-                SET role = "admin" 
-                WHERE user_id = ? AND project_id = ?
+                SELECT id, password, email, name, mfa_enabled
+                FROM users
+                WHERE id = ?
             `,
+            [userId],
+        );
+
+        const user = users[0];
+
+        if (!user || !user.password) {
+            res.status(404).json({
+                status: "error",
+                message: "User not found",
+            });
+
+            return;
+        }
+
+        const isPasswordValid = await bcrypt.compare(
+            validatedData.password,
+            user.password,
+        );
+
+        if (!isPasswordValid) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "project.password_verification_failed",
+                    operation: "initiateOwnershipTransfer",
+                },
+                "Password verification failed",
+            );
+
+            res.status(401).json({
+                status: "error",
+                message: "Incorrect password",
+            });
+
+            return;
+        }
+
+        await pool.execute(
+            `DELETE FROM ownership_transfer_sessions WHERE user_id = ? AND project_id = ?`,
             [userId, project.id],
         );
 
-        if (changeOwnerRoleResult.affectedRows === 0) {
-            res.status(404).json({
-                status: "error",
-                message: "Role not changed",
+        const rawTempToken = generateRawToken();
+        const tempTokenHash = hashToken(rawTempToken);
+
+        if (user.mfa_enabled) {
+            await pool.execute<ResultSetHeader>(
+                `
+                    INSERT INTO ownership_transfer_sessions
+                        (token_hash, user_id, project_id, target_member_id, method, expires_at)
+                    VALUES (?, ?, ?, ?, 'totp', DATE_ADD(NOW(), INTERVAL ? MINUTE))
+                `,
+                [tempTokenHash, userId, project.id, validatedData.memberId, 10],
+            );
+
+            req.log.debug(
+                {
+                    event: "project.challenge_created",
+                    userId: userId,
+                    method: "totp",
+                    operation: "initiateOwnershipTransfer",
+                },
+                "Ownership transfer challenge created",
+            );
+
+            res.status(200).json({
+                status: "success",
+                message:
+                    "Enter the code from your authenticator app to confirm",
+                requiresMfa: true,
+                tempToken: rawTempToken,
             });
 
             return;
         }
 
+        const code = generateEmailCode();
+
+        await pool.execute<ResultSetHeader>(
+            `
+                INSERT INTO ownership_transfer_sessions
+                    (token_hash, user_id, project_id, target_member_id, method, code_hash, expires_at)
+                VALUES (?, ?, ?, ?, 'email', ?, DATE_ADD(NOW(), INTERVAL ? MINUTE))
+            `,
+            [
+                tempTokenHash,
+                userId,
+                project.id,
+                validatedData.memberId,
+                hashTransferCode(userId, code),
+                10,
+            ],
+        );
+
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: user.email,
+            subject: `${code} - confirm ownership transfer`,
+            html: emailTemplate({
+                logo: "cid:app-logo",
+                title: "Ownership transfer code",
+                heading: `Hi, ${user.name}!`,
+                description: `
+                    Use this code to confirm transferring project ownership:
+                    <br />
+                    <p style="font-size:28px;font-weight:700;letter-spacing:6px">${code}</p>
+                    It expires in 10 minutes.
+                `,
+                footer: "If this wasn't you, please change your password immediately and contact support.",
+            }),
+            attachments: [
+                {
+                    filename: "logo.png",
+                    path: "./assets/generallogo.png",
+                    cid: "app-logo",
+                },
+            ],
+        };
+
+        transporter.sendMail(mailOptions, (error) => {
+            if (error) {
+                req.log.error(
+                    {
+                        err: error,
+                        event: "email.delivery_failed",
+                        operation: "initiateOwnershipTransfer",
+                    },
+                    "Operation failed",
+                );
+
+                if (!res.headersSent) {
+                    res.status(500).send({
+                        status: "error",
+                        message: "Error sending email",
+                    });
+                }
+            } else {
+                req.log.debug(
+                    {
+                        event: "email.sent",
+                        operation: "initiateOwnershipTransfer",
+                    },
+                    "Email accepted by transport",
+                );
+            }
+        });
+
         req.log.info(
             {
-                event: "project.ownership_transferred",
-                audit: true,
-                userId,
-                projectId: project.id,
-                memberId: validatedData.memberId,
+                event: "project.challenge_created",
+                userId: userId,
+                method: "email",
+                operation: "initiateOwnershipTransfer",
             },
-            "Operation completed",
+            "Ownership transfer challenge created",
         );
 
         res.status(200).json({
             status: "success",
-            message: "Ownership rights have been successfully transferred",
+            message: "Verification code sent to your email",
+            data: {
+                requiresEmailCode: true,
+                tempToken: rawTempToken,
+            },
         });
     } catch (error) {
         if (error instanceof ZodError) {
@@ -2862,8 +2979,499 @@ export const transferOwnership = async (
         req.log.error(
             {
                 err: error,
-                event: "project.transfer_ownership_failed",
-                operation: "transferOwnership",
+                event: "project.initiate_ownership_transfer_failed",
+                operation: "initiateOwnershipTransfer",
+            },
+            "Operation failed",
+        );
+
+        res.status(500).json({ status: "error", message: "Database error" });
+    }
+};
+
+export const confirmOwnershipTransfer = async (
+    req: IGetUserRequest,
+    res: Response,
+): Promise<void> => {
+    try {
+        validateSlugSchema.parse(req.params);
+
+        const { slug } = req.params;
+        const userId = +req.user.id;
+
+        if (!userId) {
+            res.status(401).json({
+                status: "error",
+                message: "Unauthorized",
+            });
+
+            return;
+        }
+
+        if (!slug) {
+            res.status(400).json({
+                status: "error",
+                message: "Invalid project slug",
+            });
+
+            return;
+        }
+
+        const { tempToken, code } = confirmOwnershipTransferSchema.parse(
+            req.body,
+        );
+
+        const tokenHash = hashToken(tempToken);
+
+        const [bump] = await pool.execute<ResultSetHeader>(
+            `
+                UPDATE ownership_transfer_sessions
+                SET attempts = attempts + 1
+                WHERE token_hash = ?
+                    AND user_id = ?
+                    AND expires_at > NOW()
+                    AND attempts < ?
+            `,
+            [tokenHash, userId, 5],
+        );
+
+        if (bump.affectedRows === 0) {
+            res.status(401).json({
+                status: "error",
+                message:
+                    "Code expired or too many attempts. Please start again",
+                data: { requiresRestart: true },
+            });
+
+            return;
+        }
+
+        const [sessions] = await pool.execute<
+            (Pick<
+                OwnershipTransferSession,
+                | "id"
+                | "user_id"
+                | "project_id"
+                | "target_member_id"
+                | "method"
+                | "code_hash"
+                | "attempts"
+            > &
+                RowDataPacket)[]
+        >(
+            `
+                SELECT id, user_id, project_id, target_member_id, method, code_hash, attempts
+                FROM ownership_transfer_sessions
+                WHERE token_hash = ?
+            `,
+            [tokenHash],
+        );
+
+        const session = sessions[0];
+
+        if (!session) {
+            res.status(401).json({
+                status: "error",
+                message: "Invalid or expired session",
+                data: { requiresRestart: true },
+            });
+
+            return;
+        }
+
+        const [projects] = await pool.execute<
+            (Pick<Project, "id"> & RowDataPacket)[]
+        >("SELECT id FROM projects WHERE slug = ? AND id = ?", [
+            slug,
+            session.project_id,
+        ]);
+
+        const project = projects[0];
+
+        if (!project) {
+            res.status(404).json({
+                status: "error",
+                message: "Project not found or access denied",
+            });
+
+            return;
+        }
+
+        let isCodeValid = false;
+
+        if (session.method === "email") {
+            isCodeValid =
+                session.code_hash !== null &&
+                safeEqualHex(session.code_hash, hashTransferCode(userId, code));
+        }
+
+        if (session.method !== "email") {
+            const [userRows] = await pool.execute<
+                (RowDataPacket & { mfa_secret: Buffer | null })[]
+            >("SELECT mfa_secret FROM users WHERE id = ?", [userId]);
+
+            const user = userRows[0];
+
+            if (!user || !user.password) {
+                res.status(404).json({
+                    status: "error",
+                    message: "User not found",
+                });
+
+                return;
+            }
+
+            if (user.mfa_secret && /^\d{6}$/.test(code)) {
+                const decryptedSecret = decryptMfaSecret(user.mfa_secret);
+
+                const result = await otp.verify({
+                    token: code,
+                    secret: decryptedSecret,
+                    epochTolerance: 1,
+                });
+
+                isCodeValid = result.valid;
+            }
+
+            if (user.mfa_secret && !/^\d{6}$/.test(code)) {
+                const codeHash = hashToken(code.toUpperCase());
+
+                const [backupRows] = await pool.execute<
+                    (Pick<MfaBackupCode, "id"> & RowDataPacket)[]
+                >(
+                    `
+                            SELECT id
+                            FROM mfa_backup_codes
+                            WHERE user_id = ? AND code_hash = ? AND used_at IS NULL
+                        `,
+                    [userId, codeHash],
+                );
+
+                const backupCode = backupRows[0];
+
+                if (backupCode) {
+                    const [updateResult] = await pool.execute<ResultSetHeader>(
+                        "UPDATE mfa_backup_codes SET used_at = NOW() WHERE id = ? AND used_at IS NULL",
+                        [backupCode.id],
+                    );
+
+                    isCodeValid = updateResult.affectedRows > 0;
+                }
+            }
+        }
+
+        if (!isCodeValid) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "project.ownership_transfer_verification_failed",
+                    operation: "confirmOwnershipTransfer",
+                    userId,
+                },
+                "Verification rejected",
+            );
+
+            res.status(401).json({
+                status: "error",
+                message: "Invalid verification code",
+                data: {
+                    attemptsLeft: 5 - session.attempts,
+                },
+            });
+
+            return;
+        }
+
+        const [deleteRows] = await pool.execute<ResultSetHeader>(
+            `DELETE FROM ownership_transfer_sessions WHERE id = ?`,
+            [session.id],
+        );
+
+        if (deleteRows.affectedRows === 0) {
+            res.status(401).json({
+                status: "error",
+                message: "Invalid verification code",
+            });
+
+            return;
+        }
+
+        const connection = await pool.getConnection();
+
+        try {
+            await connection.beginTransaction();
+
+            const [transferResult] = await connection.execute<ResultSetHeader>(
+                `UPDATE project_members SET role = "owner" WHERE user_id = ? AND project_id = ?`,
+                [session.target_member_id, session.project_id],
+            );
+
+            if (transferResult.affectedRows === 0) {
+                await connection.rollback();
+
+                res.status(404).json({
+                    status: "error",
+                    message: "Role not changed",
+                });
+
+                return;
+            }
+
+            const [projectResult] = await connection.execute<ResultSetHeader>(
+                `UPDATE projects SET owner_id = ? WHERE id = ?`,
+                [session.target_member_id, session.project_id],
+            );
+
+            if (projectResult.affectedRows === 0) {
+                await connection.rollback();
+
+                res.status(404).json({
+                    status: "error",
+                    message: "Role not changed",
+                });
+
+                return;
+            }
+
+            const [ownerResult] = await connection.execute<ResultSetHeader>(
+                `UPDATE project_members SET role = "admin" WHERE user_id = ? AND project_id = ?`,
+                [userId, session.project_id],
+            );
+
+            if (ownerResult.affectedRows === 0) {
+                await connection.rollback();
+
+                res.status(404).json({
+                    status: "error",
+                    message: "Role not changed",
+                });
+
+                return;
+            }
+
+            await connection.commit();
+        } catch (error) {
+            await connection.rollback();
+
+            throw error;
+        } finally {
+            connection.release();
+        }
+
+        req.log.info(
+            {
+                event: "project.ownership_transferred",
+                audit: true,
+                userId,
+                projectId: session.project_id,
+                memberId: session.target_member_id,
+            },
+            "Operation completed",
+        );
+
+        res.status(200).json({
+            status: "success",
+            message: "Ownership rights have been successfully transferred",
+        });
+    } catch (error) {
+        if (error instanceof ZodError) {
+            res.status(400).json({
+                status: "error",
+                message: "Invalid data",
+                details: error.issues.map((issue) => ({
+                    field: issue.path[0],
+                    message: issue.message,
+                })),
+            });
+
+            return;
+        }
+
+        req.log.error(
+            {
+                err: error,
+                event: "project.confirm_ownership_transfer_failed",
+                operation: "confirmOwnershipTransfer",
+            },
+            "Operation failed",
+        );
+
+        res.status(500).json({ status: "error", message: "Database error" });
+    }
+};
+
+export const resendOwnershipTransferCode = async (
+    req: IGetUserRequest,
+    res: Response,
+): Promise<void> => {
+    try {
+        validateSlugSchema.parse(req.params);
+
+        const { slug } = req.params;
+        const userId = +req.user.id;
+
+        if (!userId) {
+            res.status(401).json({
+                status: "error",
+                message: "Unauthorized",
+            });
+
+            return;
+        }
+
+        if (!slug) {
+            res.status(400).json({
+                status: "error",
+                message: "Invalid project slug",
+            });
+
+            return;
+        }
+
+        const { tempToken } = resendOwnershipTransferSchema.parse(req.body);
+
+        const tokenHash = hashToken(tempToken);
+
+        const [sessions] = await pool.execute<
+            (Pick<
+                OwnershipTransferSession,
+                | "id"
+                | "user_id"
+                | "project_id"
+                | "target_member_id"
+                | "method"
+                | "attempts"
+            > & {
+                seconds_since_sent: number;
+            } & Pick<User, "email" | "name"> &
+                RowDataPacket)[]
+        >(
+            `
+                SELECT
+                    s.id, s.user_id, s.project_id, s.target_member_id,
+                    s.method, s.attempts,
+                    TIMESTAMPDIFF(SECOND, s.last_sent_at, NOW()) AS seconds_since_sent,
+                    u.email, u.name
+                FROM ownership_transfer_sessions s
+                JOIN users u ON u.id = s.user_id
+                JOIN projects p ON p.id = s.project_id
+                WHERE s.token_hash = ? AND s.user_id = ? AND p.slug = ?
+            `,
+            [tokenHash, userId, slug],
+        );
+
+        const session = sessions[0];
+
+        if (!session || session.method !== "email") {
+            res.status(401).json({
+                status: "error",
+                message: "Session expired. Please start again",
+                data: { requiresRestart: true },
+            });
+
+            return;
+        }
+
+        if (session.seconds_since_sent < 60) {
+            res.status(429).json({
+                status: "error",
+                message: "Please wait before requesting a new code",
+                data: {
+                    retryAfter: 60 - session.seconds_since_sent,
+                },
+            });
+
+            return;
+        }
+
+        const code = generateEmailCode();
+
+        await pool.execute(
+            `
+                UPDATE ownership_transfer_sessions
+                SET code_hash = ?, attempts = 0, last_sent_at = NOW(),
+                    expires_at = DATE_ADD(NOW(), INTERVAL ? MINUTE)
+                WHERE id = ?
+            `,
+            [hashTransferCode(userId, code), 10, session.id],
+        );
+
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: session.email,
+            subject: `${code} - confirm ownership transfer`,
+            html: emailTemplate({
+                logo: "cid:app-logo",
+                title: "Ownership transfer code",
+                heading: `Hi, ${session.name}!`,
+                description: `
+                    Use this code to confirm transferring project ownership:
+                    <br />
+                    <p style="font-size:28px;font-weight:700;letter-spacing:6px">${code}</p>
+                    It expires in 10 minutes.
+                `,
+                footer: "If this wasn't you, please change your password immediately and contact support.",
+            }),
+            attachments: [
+                {
+                    filename: "logo.png",
+                    path: "./assets/generallogo.png",
+                    cid: "app-logo",
+                },
+            ],
+        };
+
+        transporter.sendMail(mailOptions, (error) => {
+            if (error) {
+                req.log.error(
+                    {
+                        err: error,
+                        event: "email.delivery_failed",
+                        operation: "initiateAccountDeletion",
+                    },
+                    "Operation failed",
+                );
+
+                if (!res.headersSent) {
+                    res.status(500).send({
+                        status: "error",
+                        message: "Error sending email",
+                    });
+                }
+            } else {
+                req.log.debug(
+                    {
+                        event: "email.sent",
+                        operation: "initiateAccountDeletion",
+                    },
+                    "Email accepted by transport",
+                );
+            }
+        });
+
+        res.status(200).json({
+            status: "success",
+            message: "A new verification code has been sent",
+        });
+    } catch (error) {
+        if (error instanceof ZodError) {
+            res.status(400).json({
+                status: "error",
+                message: "Invalid data",
+                details: error.issues.map((issue) => ({
+                    field: issue.path[0],
+                    message: issue.message,
+                })),
+            });
+
+            return;
+        }
+
+        req.log.error(
+            {
+                err: error,
+                event: "project.resend_ownership_transfer_code_failed",
+                operation: "resendOwnershipTransferCode",
             },
             "Operation failed",
         );
