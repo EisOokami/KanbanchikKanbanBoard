@@ -8,6 +8,7 @@ import {
     exportProjectData,
     getProject,
     getProjects,
+    reorderColumns,
     transferOwnership,
     updateProject,
 } from "../controllers/projects.controller.js";
@@ -15,6 +16,7 @@ import { authenticateToken } from "../middlewares/auth.middleware.js";
 import {
     changeRoleSchema,
     createProjectSchema,
+    reorderColumnsSchema,
     transferOwnershipSchema,
     updateProjectSchema,
 } from "../validation/validation.js";
@@ -87,6 +89,19 @@ const deleteMemberLimiter = rateLimit({
     handler: rateLimitHandler,
 });
 
+const updateTaskCommentLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 30,
+    message: {
+        status: 429,
+        error: "Too many requests",
+        message: "Too many requests. Please try again in 15 minutes.",
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: rateLimitHandler,
+});
+
 const router = Router();
 
 router.get("/", authenticateToken, getProjects);
@@ -131,6 +146,14 @@ router.delete(
     authenticateToken,
     verifyCsrf,
     deleteMember,
+);
+router.patch(
+    "/:id/columns/reorder",
+    updateTaskCommentLimiter,
+    authenticateToken,
+    verifyCsrf,
+    validateData(reorderColumnsSchema),
+    reorderColumns,
 );
 
 export default router;

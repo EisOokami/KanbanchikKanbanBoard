@@ -48,8 +48,13 @@ import {
 } from "@phosphor-icons/react";
 import CreateTaskModal from "@/components/ui/createTaskModal/CreateTaskModal";
 import { cn, getInitials } from "@/libs/utils";
-import { deleteTaskAction, moveTaskAction } from "@/data/actions";
 import {
+    deleteTaskAction,
+    moveColumnAction,
+    moveTaskAction,
+} from "@/data/actions";
+import {
+    collisionDetection,
     getSurroundingPositions,
     midpoint,
     needsRebalance,
@@ -59,6 +64,12 @@ import { DEFAULT_FILTER } from "@/constants/taskFilterSheet";
 import { applyTaskFilters } from "@/libs/taskFilterSheet";
 import ListDragOverlay from "@/components/ui/listDragOverlay/ListDragOverlay";
 import { toast } from "sonner";
+import {
+    arrayMove,
+    horizontalListSortingStrategy,
+    SortableContext,
+} from "@dnd-kit/sortable";
+import ColumnOverlay from "@/components/ui/columnOverlay/ColumnOverlay";
 
 interface ProjectProps {
     userData: User;
@@ -72,6 +83,7 @@ export default function Project({
     const [columns, setColumns] = useState<Column[]>(
         Object.values(projectData.columns),
     );
+    const [activeColumn, setActiveColumn] = useState<Column | null>(null);
     const [activeTask, setActiveTask] = useState<Task | null>(null);
     const [selectedTask, setSelectedTask] = useState<Task | null>(null);
     const [showInvite, setShowInvite] = useState<boolean>(false);
@@ -105,6 +117,12 @@ export default function Project({
     );
 
     const handleDragStart = (event: DragStartEvent) => {
+        if (event.active.data.current?.type === "column") {
+            setActiveColumn(event.active.data.current.column as Column);
+
+            return;
+        }
+
         const activeId = event.active.id as number;
         const column = columns.find((column) =>
             column.tasks.some((task) => task.id === activeId),
@@ -125,6 +143,10 @@ export default function Project({
 
     const handleDragOver = (event: DragOverEvent) => {
         const { active, over } = event;
+
+        if (active.data.current?.type === "column") {
+            return;
+        }
 
         if (!over || active.id === over.id) {
             return;
@@ -275,8 +297,55 @@ export default function Project({
         });
     };
 
+    const handleColumnDragEnd = async (event: DragEndEvent) => {
+        const { active, over } = event;
+
+        setActiveColumn(null);
+
+        if (!over || active.id === over.id) {
+            return;
+        }
+
+        const oldIndex = columns.findIndex(
+            (column) => `column-${column.id}` === active.id,
+        );
+        const newIndex = columns.findIndex(
+            (column) => `column-${column.id}` === over.id,
+        );
+
+        if (oldIndex === -1 || newIndex === -1) {
+            return;
+        }
+
+        const previous = columns;
+        const reordered = arrayMove(columns, oldIndex, newIndex).map(
+            (column, index) => ({ ...column, position: index }),
+        );
+
+        setColumns(reordered);
+
+        const result = await moveColumnAction(
+            projectData.id,
+            reordered.map((column) => column.id),
+        );
+
+        if (result) {
+            setColumns(previous);
+
+            toast.error("Error", {
+                description: result.message ?? "Something went wrong",
+            });
+        }
+    };
+
     const handleDragEnd = async (event: DragEndEvent) => {
         const { active } = event;
+
+        if (active.data.current?.type === "column") {
+            await handleColumnDragEnd(event);
+
+            return;
+        }
 
         setActiveTask(null);
 
@@ -553,7 +622,7 @@ export default function Project({
             </header>
             <DndContext
                 sensors={sensors}
-                collisionDetection={closestCorners}
+                collisionDetection={collisionDetection}
                 onDragStart={handleDragStart}
                 onDragOver={handleDragOver}
                 onDragEnd={handleDragEnd}
@@ -594,29 +663,40 @@ export default function Project({
                         <>
                             {selectedMode === "kanban" && (
                                 <div className="overflow-x-auto p-8">
-                                    <div className="flex items-start gap-4">
-                                        {filteredColumns.map((column) => (
-                                            <KanbanColumn
-                                                key={column.id}
-                                                column={column}
-                                                onDeleteTask={handleDeleteTask}
-                                                showCreateTask={
-                                                    createTaskState.isOpen
-                                                }
-                                                showPriorityEmoji={
-                                                    projectData.show_priority_emoji
-                                                }
-                                                userData={updatedUserData}
-                                                onOpenCreateTask={
-                                                    handleToggleCreateTask
-                                                }
-                                                onOpenDetails={(task: Task) => {
-                                                    handleShowTaskDetails();
-                                                    setSelectedTask(task);
-                                                }}
-                                            />
-                                        ))}
-                                    </div>
+                                    <SortableContext
+                                        items={filteredColumns.map(
+                                            (column) => `column-${column.id}`,
+                                        )}
+                                        strategy={horizontalListSortingStrategy}
+                                    >
+                                        <div className="flex items-start gap-4">
+                                            {filteredColumns.map((column) => (
+                                                <KanbanColumn
+                                                    key={column.id}
+                                                    column={column}
+                                                    onDeleteTask={
+                                                        handleDeleteTask
+                                                    }
+                                                    showCreateTask={
+                                                        createTaskState.isOpen
+                                                    }
+                                                    showPriorityEmoji={
+                                                        projectData.show_priority_emoji
+                                                    }
+                                                    userData={updatedUserData}
+                                                    onOpenCreateTask={
+                                                        handleToggleCreateTask
+                                                    }
+                                                    onOpenDetails={(
+                                                        task: Task,
+                                                    ) => {
+                                                        handleShowTaskDetails();
+                                                        setSelectedTask(task);
+                                                    }}
+                                                />
+                                            ))}
+                                        </div>
+                                    </SortableContext>
                                 </div>
                             )}
                             {selectedMode === "list" && (
@@ -653,12 +733,14 @@ export default function Project({
                     )}
                 </main>
                 <DragOverlay
-                    dropAnimation={{
-                        duration: 160,
-                        easing: "ease-out",
-                    }}
+                    dropAnimation={{ duration: 160, easing: "ease-out" }}
                 >
-                    {activeTask ? (
+                    {activeColumn ? (
+                        <ColumnOverlay
+                            column={activeColumn}
+                            showPriorityEmoji={projectData.show_priority_emoji}
+                        />
+                    ) : activeTask ? (
                         selectedMode === "kanban" ? (
                             <OverlayTask
                                 task={activeTask}

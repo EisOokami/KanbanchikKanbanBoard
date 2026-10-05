@@ -25,6 +25,7 @@ import {
     deleteMemberSchema,
     validateIdSchema,
     transferOwnershipSchema,
+    reorderColumnsSchema,
 } from "../validation/validation.js";
 import { transporter } from "../utils/email.js";
 import { generateSlug, generateUniqueSlug } from "../utils/slugify.js";
@@ -2844,6 +2845,155 @@ export const transferOwnership = async (
                 err: error,
                 event: "project.transfer_ownership_failed",
                 operation: "transferOwnership",
+            },
+            "Operation failed",
+        );
+
+        res.status(500).json({ status: "error", message: "Database error" });
+    }
+};
+
+export const reorderColumns = async (req: IGetUserRequest, res: Response) => {
+    try {
+        validateIdSchema.parse(req.params);
+
+        const { id } = req.params;
+        const userId = req.user.id;
+
+        if (!userId) {
+            res.status(401).json({
+                status: "error",
+                message: "Unauthorized",
+            });
+
+            return;
+        }
+
+        if (!id) {
+            res.status(400).json({
+                status: "error",
+                message: "Invalid project ID",
+            });
+
+            return;
+        }
+
+        const projectId = Number(id);
+        const validatedData = reorderColumnsSchema.parse(req.body);
+
+        const [columns] = await pool.execute<
+            (Pick<Column, "id"> & RowDataPacket)[]
+        >(
+            `
+                SELECT c.id
+                FROM columns c
+                JOIN projects p ON p.id = c.project_id
+                WHERE c.project_id = ? AND (
+                    p.owner_id = ? OR p.id IN (
+                        SELECT 
+                            project_id 
+                        FROM project_members 
+                        WHERE user_id = ? AND role IN ("owner", "admin")
+                    )
+                )
+            `,
+            [projectId, userId, userId],
+        );
+
+        if (!columns.length) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "reorderColumns",
+                },
+                "Authorization denied",
+            );
+
+            res.status(404).json({
+                status: "error",
+                message: "Project not found or access denied",
+            });
+
+            return;
+        }
+
+        const existingIds = new Set(columns.map((column) => column.id));
+
+        if (
+            existingIds.size !== validatedData.columnIds.length ||
+            !validatedData.columnIds.every((columnId) =>
+                existingIds.has(columnId),
+            )
+        ) {
+            res.status(400).json({
+                status: "error",
+                message: "Column list does not match the project",
+            });
+
+            return;
+        }
+
+        const cases = validatedData.columnIds
+            .map(() => "WHEN ? THEN ?")
+            .join(" ");
+        const params = validatedData.columnIds.flatMap((columnId, index) => [
+            columnId,
+            index,
+        ]);
+
+        const [result] = await pool.execute<ResultSetHeader>(
+            `
+                UPDATE columns
+                SET position = CASE id ${cases} END
+                WHERE project_id = ?
+            `,
+            [...params, projectId],
+        );
+
+        if (result.affectedRows === 0) {
+            res.status(400).json({
+                status: "error",
+                message: "Failed to reorder columns",
+            });
+
+            return;
+        }
+
+        req.log.info(
+            {
+                event: "column.reordered",
+                userId,
+                projectId,
+            },
+            "Operation completed",
+        );
+
+        res.status(200).json({
+            status: "success",
+            message: "The columns have been successfully reordered",
+        });
+    } catch (error) {
+        if (error instanceof ZodError) {
+            const errorMessages = error.issues.map((issue: any) => ({
+                field: issue.path[0],
+                message: issue.message,
+            }));
+
+            res.status(400).json({
+                status: "error",
+                message: "Invalid data",
+                details: errorMessages,
+            });
+
+            return;
+        }
+
+        req.log.error(
+            {
+                err: error,
+                event: "column.reorder_columns_failed",
+                operation: "reorderColumns",
             },
             "Operation failed",
         );

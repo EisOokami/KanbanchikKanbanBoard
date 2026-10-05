@@ -956,3 +956,20 @@ export const updateTaskCommentSchema = z.object({
         .min(1, "Comment cannot be empty")
         .max(2000, "Comment is too long (max 2000 characters)"),
 });
+
+export const reorderColumnsSchema = z.object({
+    columnIds: z
+        .array(
+            z
+                .number()
+                .positive()
+                .int("Member ID must be an integer")
+                .refine((value) => Number.isSafeInteger(value), {
+                    message: "Member ID is too large a numerical value",
+                }),
+        )
+        .min(1, "At least one column is required")
+        .refine((ids) => new Set(ids).size === ids.length, {
+            message: "Column IDs must be unique",
+        }),
+});

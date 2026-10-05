@@ -1,5 +1,10 @@
 import { PRIORITY_ORDER } from "@/constants/constants";
 import { SortDirection, SortField, Task } from "@/types/types";
+import {
+    closestCenter,
+    closestCorners,
+    CollisionDetection,
+} from "@dnd-kit/core";
 
 const EPSILON = 1e-9;
 const INITIAL_GAP = 65536;
@@ -103,4 +108,16 @@ export const getSortedTasks = (
 
         return sortDir === "asc" ? cmp : -cmp;
     });
+};
+
+export const collisionDetection: CollisionDetection = (args) => {
+    const isColumn = args.active.data.current?.type === "column";
+
+    const droppableContainers = args.droppableContainers.filter(
+        (container) => (container.data.current?.type === "column") === isColumn,
+    );
+
+    return isColumn
+        ? closestCenter({ ...args, droppableContainers })
+        : closestCorners({ ...args, droppableContainers });
 };

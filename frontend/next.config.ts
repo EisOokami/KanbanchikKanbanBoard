@@ -10,7 +10,6 @@ const additionalHostname = process.env.ADDITIONAL_HOSTNAME ?? "localhost";
 const additionalPort = process.env.ADDITIONAL_PORT ?? "3001";
 
 const nextConfig: NextConfig = {
-    /* config options here */
     reactCompiler: true,
     output: "standalone",
     experimental: {

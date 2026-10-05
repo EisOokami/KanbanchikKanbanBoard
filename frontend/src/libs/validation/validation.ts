@@ -1011,3 +1011,27 @@ export const updateCommentSchema = z.object({
         .min(1, "Comment cannot be empty")
         .max(2000, "Comment must be less than 2000 characters long"),
 });
+
+export const moveColumnSchema = z.object({
+    projectId: z
+        .number()
+        .positive()
+        .int("Project ID must be an integer")
+        .refine((value) => Number.isSafeInteger(value), {
+            message: "Project ID is too large a numerical value",
+        }),
+    columnIds: z
+        .array(
+            z
+                .number()
+                .positive()
+                .int("Column ID must be an integer")
+                .refine((value) => Number.isSafeInteger(value), {
+                    message: "Column ID is too large a numerical value",
+                }),
+        )
+        .min(1, "At least one column is required")
+        .refine((ids) => new Set(ids).size === ids.length, {
+            message: "Column IDs must be unique",
+        }),
+});

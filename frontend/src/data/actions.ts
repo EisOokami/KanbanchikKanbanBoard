@@ -59,6 +59,7 @@ import {
     mfaDisableSchema,
     mfaEnableSchema,
     mfaVerifySchema,
+    moveColumnSchema,
     moveTaskSchema,
     registerSchema,
     resendVerificationSchema,
@@ -2771,4 +2772,53 @@ export async function deleteCommentAction(
         status: "success",
         message: "The comment has been deleted",
     };
+}
+
+export async function moveColumnAction(
+    projectId: number,
+    columnIds: number[],
+): Promise<Pick<BaseAction, "status" | "message" | "zodErrors"> | undefined> {
+    const validatedFields = moveColumnSchema.safeParse({
+        projectId: projectId,
+        columnIds: columnIds,
+    });
+
+    if (!validatedFields.success) {
+        return {
+            status: "error",
+            zodErrors: z.flattenError(validatedFields.error).fieldErrors,
+            message: null,
+        };
+    }
+
+    const responseData = await mutateData(
+        "PATCH",
+        `/projects/${projectId}/columns/reorder`,
+        {
+            columnIds: columnIds,
+        },
+    );
+
+    if (!responseData) {
+        return {
+            status: null,
+            zodErrors: null,
+            message: "Ops! Something went wrong. Please try again.",
+        };
+    }
+
+    if (
+        "message" in responseData &&
+        "status" in responseData &&
+        responseData.message &&
+        responseData.status !== "success"
+    ) {
+        return {
+            status: responseData.status,
+            zodErrors: null,
+            message: responseData.message,
+        };
+    }
+
+    revalidatePath(`/project`);
 }

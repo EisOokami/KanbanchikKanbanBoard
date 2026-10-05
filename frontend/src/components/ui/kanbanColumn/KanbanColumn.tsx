@@ -3,14 +3,16 @@
 import { useDroppable } from "@dnd-kit/core";
 import {
     SortableContext,
+    useSortable,
     verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { useRef } from "react";
 import KanbanTask from "../kanbanTask/KanbanTask";
 import { Column, Task, User } from "@/types/types";
-import { PlusIcon } from "@phosphor-icons/react";
+import { DotsSixVerticalIcon, PlusIcon } from "@phosphor-icons/react";
 import { cn } from "@/libs/utils";
 import { Button } from "../shadcn/button";
+import { CSS } from "@dnd-kit/utilities";
 
 interface KanbanColumnProps {
     column: Column;
@@ -35,6 +37,20 @@ export default function KanbanColumn({
 
     const { setNodeRef, isOver } = useDroppable({ id: column.id });
 
+    const {
+        attributes,
+        listeners,
+        setNodeRef: setSortableRef,
+        setActivatorNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({
+        id: `column-${column.id}`,
+        data: { type: "column", column },
+        disabled: !(userData.role === "admin" || userData.role === "owner"),
+    });
+
     const startAdding = () => {
         onOpenCreateTask(column.id);
         setTimeout(() => inputRef.current?.focus(), 50);
@@ -47,13 +63,32 @@ export default function KanbanColumn({
 
     return (
         <div
+            ref={setSortableRef}
+            style={{ transform: CSS.Translate.toString(transform), transition }}
             className={cn(
                 "flex w-[320px] flex-shrink-0 flex-col rounded-xl p-2 transition-colors duration-150",
                 isOver ? "bg-column-is-over" : "bg-column",
+                isDragging && "opacity-40",
             )}
         >
             <div className="relative mb-3 flex items-center justify-between rounded-md border border-border bg-background-secondary px-3 py-2">
                 <div className="flex items-center gap-1.5">
+                    {userData.role === "admin" ||
+                        (userData.role === "owner" && (
+                            <button
+                                ref={setActivatorNodeRef}
+                                {...attributes}
+                                {...listeners}
+                                type="button"
+                                aria-label="Move column"
+                                className="-ml-1 cursor-grab touch-none text-control-text active:cursor-grabbing"
+                            >
+                                <DotsSixVerticalIcon
+                                    weight="bold"
+                                    className="size-4"
+                                />
+                            </button>
+                        ))}
                     <span className="text-sm font-medium">{column.name}</span>
                     <span className="text-center text-xs">
                         ({column.tasks.length})
