@@ -141,7 +141,7 @@ export default function MfaSetupModal({
                     </div>
                 )}
                 {setupError && (
-                    <div className="flex items-center gap-2 rounded-md bg-red-50 p-3 text-sm text-red-500">
+                    <div className="flex items-center gap-2 rounded-md bg-red-50 p-3 text-sm text-red-500 dark:bg-red-950">
                         <WarningCircleIcon
                             weight="duotone"
                             className="size-4"

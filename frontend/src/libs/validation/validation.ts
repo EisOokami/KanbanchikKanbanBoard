@@ -1033,7 +1033,8 @@ export const deleteAccountPasswordSchema = z.object({
         .regex(
             /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).+$/,
             "Password must contain at least one uppercase letter, one lowercase letter, one special character and one number",
-        ),
+        )
+        .optional(),
 });
 
 export const deleteAccountConfirmSchema = z.object({
@@ -1085,5 +1086,6 @@ export const initiateOwnershipTransferSchema = z.object({
         .regex(
             /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).+$/,
             "Password must contain at least one uppercase letter, one lowercase letter, one special character and one number",
-        ),
+        )
+        .optional(),
 });

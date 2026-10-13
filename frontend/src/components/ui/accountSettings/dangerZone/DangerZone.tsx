@@ -154,13 +154,16 @@ export default function DangerZone({ userData }: Readonly<DangerZoneProps>) {
                             </AlertDialogTitle>
                             <AlertDialogDescription>
                                 {step === "password"
-                                    ? "This will permanently delete your account, all your projects, tasks, and data. This action cannot be undone."
+                                    ? userData.auth_provider === "google"
+                                        ? "This will permanently delete your account, all your projects, tasks, and data. We'll send a verification code to your email to confirm. This action cannot be undone."
+                                        : "This will permanently delete your account, all your projects, tasks, and data. This action cannot be undone."
                                     : formState?.data?.requiresMfa
                                       ? "Enter the 6-digit code from your authenticator app."
                                       : "We sent a 6-digit code to your email."}
                             </AlertDialogDescription>
                         </AlertDialogHeader>
-                        {step === "password" ? (
+                        {step === "password" &&
+                        userData.auth_provider !== "google" ? (
                             <div className="space-y-1.5">
                                 <Label
                                     htmlFor="delete-account-password"
@@ -361,7 +364,8 @@ export default function DangerZone({ userData }: Readonly<DangerZoneProps>) {
                                     isPending ||
                                     requiresRestart ||
                                     (step === "password"
-                                        ? password.length === 0
+                                        ? userData.auth_provider !== "google" &&
+                                          password.length === 0
                                         : useBackupCode
                                           ? backupCode.length === 0
                                           : code.length !== 6)

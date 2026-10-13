@@ -2039,7 +2039,7 @@ export async function deleteMemberAction(
 export async function initiateOwnershipTransferAction(
     slug: string,
     memberId: number,
-    password: string,
+    password?: string,
 ): Promise<
     | {
           ok: false;

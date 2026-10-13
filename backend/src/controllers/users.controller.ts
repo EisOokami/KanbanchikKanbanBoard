@@ -441,8 +441,6 @@ export const initiateAccountDeletion = async (
     try {
         validateIdSchema.parse(req.params);
 
-        const { password } = deleteAccountSchema.parse(req.body);
-
         const userId = +req.user.id;
         const { id } = req.params;
 
@@ -484,12 +482,22 @@ export const initiateAccountDeletion = async (
             return;
         }
 
+        const validatedData = deleteAccountSchema.parse(req.body);
+
         const [users] = await pool.execute<
-            (Pick<User, "id" | "password" | "email" | "name" | "mfa_enabled"> &
+            (Pick<
+                User,
+                | "id"
+                | "password"
+                | "email"
+                | "name"
+                | "mfa_enabled"
+                | "auth_provider"
+            > &
                 RowDataPacket)[]
         >(
             `
-                SELECT id, password, email, name, mfa_enabled
+                SELECT id, password, email, name, mfa_enabled, auth_provider
                 FROM users
                 WHERE id = ?
             `,
@@ -498,7 +506,7 @@ export const initiateAccountDeletion = async (
 
         const user = users[0];
 
-        if (!user || !user.password) {
+        if (!user) {
             res.status(404).json({
                 status: "error",
                 message: "User not found",
@@ -507,24 +515,38 @@ export const initiateAccountDeletion = async (
             return;
         }
 
-        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (user.auth_provider !== "google" || user.password) {
+            if (!validatedData.password || !user.password) {
+                res.status(401).json({
+                    status: "error",
+                    message: "Incorrect password",
+                });
 
-        if (!isPasswordValid) {
-            req.log.warn(
-                {
-                    audit: true,
-                    event: "user.password_verification_failed",
-                    operation: "initiateAccountDeletion",
-                },
-                "Password verification failed",
+                return;
+            }
+
+            const isPasswordValid = await bcrypt.compare(
+                validatedData.password,
+                user.password,
             );
 
-            res.status(401).json({
-                status: "error",
-                message: "Incorrect password",
-            });
+            if (!isPasswordValid) {
+                req.log.warn(
+                    {
+                        audit: true,
+                        event: "user.password_verification_failed",
+                        operation: "initiateAccountDeletion",
+                    },
+                    "Password verification failed",
+                );
 
-            return;
+                res.status(401).json({
+                    status: "error",
+                    message: "Incorrect password",
+                });
+
+                return;
+            }
         }
 
         const [ownedProjects] = await pool.execute<
@@ -555,7 +577,10 @@ export const initiateAccountDeletion = async (
         const rawTempToken = generateRawToken();
         const tempTokenHash = hashToken(rawTempToken);
 
-        if (user.mfa_enabled) {
+        if (
+            (user.auth_provider !== "google" || user.password) &&
+            user.mfa_enabled
+        ) {
             await pool.execute<ResultSetHeader>(
                 `
                     INSERT INTO account_deletion_sessions
@@ -579,8 +604,10 @@ export const initiateAccountDeletion = async (
                 status: "success",
                 message:
                     "Enter the code from your authenticator app to confirm",
-                requiresMfa: true,
-                tempToken: rawTempToken,
+                data: {
+                    requiresMfa: true,
+                    tempToken: rawTempToken,
+                },
             });
 
             return;
@@ -806,9 +833,10 @@ export const confirmAccountDeletion = async (
 
         if (session.method !== "email") {
             const [userRows] = await pool.execute<
-                (Pick<User, "id"> &
-                    RowDataPacket & { mfa_secret: Buffer | null })[]
-            >("SELECT id, mfa_secret FROM users WHERE id = ?", [paramId]);
+                (Pick<User, "id" | "mfa_secret" | "password"> & RowDataPacket)[]
+            >("SELECT id, mfa_secret, password FROM users WHERE id = ?", [
+                paramId,
+            ]);
 
             const user = userRows[0];
 

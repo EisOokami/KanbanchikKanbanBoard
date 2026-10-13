@@ -189,7 +189,7 @@ export default function MembersSection({
                                                 isActive
                                                     ? ROLE_META[role]
                                                           .activeClass
-                                                    : "border-transparent text-muted-foreground hover:border-border hover:bg-muted",
+                                                    : "border-transparent bg-control text-control-text hover:bg-control-active",
                                             )}
                                         >
                                             {ROLE_META[role].label}

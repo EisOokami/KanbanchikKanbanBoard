@@ -46,6 +46,7 @@ interface DangerSectionProps {
     name: string;
     slug: string;
     members: Omit<User, "email">[];
+    isGoogleOnly: boolean;
     isPending: boolean;
     onSectionChange: (section: NavSection) => void;
     onOpenChange: (open: boolean) => void;
@@ -55,6 +56,7 @@ export default function DangerSection({
     name,
     slug,
     members,
+    isGoogleOnly,
     isPending,
     onSectionChange,
     onOpenChange,
@@ -76,7 +78,6 @@ export default function DangerSection({
     const [transferError, setTransferError] = useState<string | null>(null);
     const [requiresRestart, setRequiresRestart] = useState<boolean>(false);
     const [transferPassword, setTransferPassword] = useState<string>("");
-    const [passwordError, setPasswordError] = useState<string | null>(null);
     const [isResendPending, startResendTransition] = useTransition();
 
     const candidates = members.filter((member) => member.role !== "owner");
@@ -120,7 +121,7 @@ export default function DangerSection({
         if (
             selectedId === null ||
             !selectedMember ||
-            transferPassword.length === 0
+            (!isGoogleOnly && transferPassword.length === 0)
         ) {
             return;
         }
@@ -129,7 +130,7 @@ export default function DangerSection({
             const result = await initiateOwnershipTransferAction(
                 slug,
                 selectedId,
-                transferPassword,
+                isGoogleOnly ? undefined : transferPassword,
             );
 
             if (!result.ok) {
@@ -185,7 +186,6 @@ export default function DangerSection({
             setTransferError(null);
             setRequiresRestart(false);
             setTransferPassword("");
-            setPasswordError(null);
 
             window.location.reload();
         });
@@ -335,7 +335,6 @@ export default function DangerSection({
                                         setTransferError(null);
                                         setRequiresRestart(false);
                                         setTransferPassword("");
-                                        setPasswordError(null);
 
                                         return;
                                     }
@@ -371,49 +370,53 @@ export default function DangerSection({
                                         </AlertDialogTitle>
                                         <AlertDialogDescription>
                                             {transferStep === "confirm"
-                                                ? "You will lose owner privileges for this project. The new owner will have to transfer it back if you change your mind."
+                                                ? isGoogleOnly
+                                                    ? `You will lose owner privileges for this project. We'll send a verification code to your email to confirm.`
+                                                    : "You will lose owner privileges for this project. The new owner will have to transfer it back if you change your mind."
                                                 : challenge?.requiresMfa
                                                   ? "Enter the 6-digit code from your authenticator app."
                                                   : "We sent a 6-digit code to your email."}
                                         </AlertDialogDescription>
                                     </AlertDialogHeader>
-                                    {transferStep === "confirm" && (
-                                        <div className="space-y-1.5">
-                                            <Label
-                                                htmlFor="transfer-password"
-                                                className="text-sm"
-                                            >
-                                                Enter your password to confirm
-                                            </Label>
-                                            <PasswordInput
-                                                id="transfer-password"
-                                                autoComplete="current-password"
-                                                autoFocus
-                                                value={transferPassword}
-                                                onChange={(e) =>
-                                                    setTransferPassword(
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                onKeyDown={(e) => {
-                                                    if (e.key === "Enter") {
-                                                        e.preventDefault();
-
-                                                        if (
-                                                            !isTransferPending &&
-                                                            transferPassword.length >
-                                                                0
-                                                        ) {
-                                                            handleStartTransfer();
-                                                        }
+                                    {transferStep === "confirm" &&
+                                        !isGoogleOnly && (
+                                            <div className="space-y-1.5">
+                                                <Label
+                                                    htmlFor="transfer-password"
+                                                    className="text-sm"
+                                                >
+                                                    Enter your password to
+                                                    confirm
+                                                </Label>
+                                                <PasswordInput
+                                                    id="transfer-password"
+                                                    autoComplete="current-password"
+                                                    autoFocus
+                                                    value={transferPassword}
+                                                    onChange={(e) =>
+                                                        setTransferPassword(
+                                                            e.target.value,
+                                                        )
                                                     }
-                                                }}
-                                                placeholder="Your password"
-                                                disabled={isTransferPending}
-                                                className="bg-control placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue"
-                                            />
-                                        </div>
-                                    )}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === "Enter") {
+                                                            e.preventDefault();
+
+                                                            if (
+                                                                !isTransferPending &&
+                                                                transferPassword.length >
+                                                                    0
+                                                            ) {
+                                                                handleStartTransfer();
+                                                            }
+                                                        }
+                                                    }}
+                                                    placeholder="Your password"
+                                                    disabled={isTransferPending}
+                                                    className="bg-control placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue"
+                                                />
+                                            </div>
+                                        )}
                                     {transferStep === "code" && (
                                         <div className="space-y-3">
                                             {challenge?.requiresMfa &&
@@ -543,8 +546,9 @@ export default function DangerSection({
                                                 onClick={handleStartTransfer}
                                                 disabled={
                                                     isTransferPending ||
-                                                    transferPassword.length ===
-                                                        0
+                                                    (!isGoogleOnly &&
+                                                        transferPassword.length ===
+                                                            0)
                                                 }
                                                 className="bg-amber-600 font-semibold text-white hover:bg-amber-700 dark:bg-amber-700 dark:hover:bg-amber-600"
                                             >

@@ -2787,11 +2787,19 @@ export const initiateOwnershipTransfer = async (
         }
 
         const [users] = await pool.execute<
-            (Pick<User, "id" | "password" | "email" | "name" | "mfa_enabled"> &
+            (Pick<
+                User,
+                | "id"
+                | "password"
+                | "email"
+                | "name"
+                | "mfa_enabled"
+                | "auth_provider"
+            > &
                 RowDataPacket)[]
         >(
             `
-                SELECT id, password, email, name, mfa_enabled
+                SELECT id, password, email, name, mfa_enabled, auth_provider
                 FROM users
                 WHERE id = ?
             `,
@@ -2800,7 +2808,7 @@ export const initiateOwnershipTransfer = async (
 
         const user = users[0];
 
-        if (!user || !user.password) {
+        if (!user) {
             res.status(404).json({
                 status: "error",
                 message: "User not found",
@@ -2809,27 +2817,38 @@ export const initiateOwnershipTransfer = async (
             return;
         }
 
-        const isPasswordValid = await bcrypt.compare(
-            validatedData.password,
-            user.password,
-        );
+        if (user.auth_provider !== "google" || user.password) {
+            if (!validatedData.password || !user.password) {
+                res.status(401).json({
+                    status: "error",
+                    message: "Incorrect password",
+                });
 
-        if (!isPasswordValid) {
-            req.log.warn(
-                {
-                    audit: true,
-                    event: "project.password_verification_failed",
-                    operation: "initiateOwnershipTransfer",
-                },
-                "Password verification failed",
+                return;
+            }
+
+            const isPasswordValid = await bcrypt.compare(
+                validatedData.password,
+                user.password,
             );
 
-            res.status(401).json({
-                status: "error",
-                message: "Incorrect password",
-            });
+            if (!isPasswordValid) {
+                req.log.warn(
+                    {
+                        audit: true,
+                        event: "project.password_verification_failed",
+                        operation: "initiateOwnershipTransfer",
+                    },
+                    "Password verification failed",
+                );
 
-            return;
+                res.status(401).json({
+                    status: "error",
+                    message: "Incorrect password",
+                });
+
+                return;
+            }
         }
 
         await pool.execute(
@@ -2840,7 +2859,10 @@ export const initiateOwnershipTransfer = async (
         const rawTempToken = generateRawToken();
         const tempTokenHash = hashToken(rawTempToken);
 
-        if (user.mfa_enabled) {
+        if (
+            (user.auth_provider !== "google" || user.password) &&
+            user.mfa_enabled
+        ) {
             await pool.execute<ResultSetHeader>(
                 `
                     INSERT INTO ownership_transfer_sessions
@@ -2864,8 +2886,10 @@ export const initiateOwnershipTransfer = async (
                 status: "success",
                 message:
                     "Enter the code from your authenticator app to confirm",
-                requiresMfa: true,
-                tempToken: rawTempToken,
+                data: {
+                    requiresMfa: true,
+                    tempToken: rawTempToken,
+                },
             });
 
             return;
@@ -3107,8 +3131,10 @@ export const confirmOwnershipTransfer = async (
 
         if (session.method !== "email") {
             const [userRows] = await pool.execute<
-                (RowDataPacket & { mfa_secret: Buffer | null })[]
-            >("SELECT mfa_secret FROM users WHERE id = ?", [userId]);
+                (Pick<User, "id" | "mfa_secret" | "password"> & RowDataPacket)[]
+            >("SELECT id, mfa_secret, password FROM users WHERE id = ?", [
+                userId,
+            ]);
 
             const user = userRows[0];
 

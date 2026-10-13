@@ -107,6 +107,8 @@ export const setupMfa = async (
             },
         });
     } catch (error) {
+        console.error(error);
+
         req.log.error(
             {
                 err: error,
@@ -537,6 +539,8 @@ export const verifyMfa = async (req: Request, res: Response): Promise<void> => {
 
             return;
         }
+
+        console.error(error);
 
         req.log.error(
             {

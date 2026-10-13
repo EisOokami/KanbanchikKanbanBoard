@@ -451,6 +451,10 @@ export default function ProjectSettingsModal({
                                             name={name}
                                             slug={projectData.slug}
                                             members={projectData.members}
+                                            isGoogleOnly={
+                                                userData.auth_provider ===
+                                                "google"
+                                            }
                                             isPending={isPending}
                                             onOpenChange={onOpenChange}
                                             onSectionChange={setActiveSection}
