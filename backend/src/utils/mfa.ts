@@ -14,11 +14,11 @@ function getEncryptionKey(): Buffer {
         throw new Error("Invalid key");
     }
 
-    if (!/^[0-9a-fA-F]{64}$/.test(key)) {
+    if (Buffer.byteLength(key, "utf8") < 32) {
         throw new Error("Invalid key");
     }
 
-    return Buffer.from(key, "hex");
+    return crypto.createHash("sha256").update(key, "utf8").digest();
 }
 
 export function encryptMfaSecret(plainSecret: string): Buffer {
