@@ -1,6 +1,12 @@
 import type { RowDataPacket } from "mysql2";
 import type { Request } from "express";
 
+declare module "express-serve-static-core" {
+    interface Request {
+        user: { id: number; sid: string };
+    }
+}
+
 export type Priority = "low" | "medium" | "high" | "critical";
 export type Status = "active" | "paused" | "completed" | "archived";
 export type Role = "owner" | "admin" | "member" | "viewer";
@@ -119,7 +125,7 @@ export interface Column extends RowDataPacket {
 }
 
 export interface IGetUserRequest extends Request {
-    user?: any;
+    user: { id: number; sid: string };
 }
 
 export interface FilterOptions {
@@ -165,6 +171,10 @@ export interface RefreshSession extends RowDataPacket {
     expires_at: string;
     replaced_by: string | null;
     replaced_at: string | null;
+    ip: string | null;
+    user_agent: string | null;
+    created_at: string;
+    last_used_at: string;
 }
 
 export interface GoogleProfile {

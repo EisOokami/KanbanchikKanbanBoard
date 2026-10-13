@@ -1001,3 +1001,5 @@ export const confirmOwnershipTransferSchema = z.object({
 export const resendOwnershipTransferSchema = z.object({
     tempToken: z.string().min(1),
 });
+
+export const sessionIdSchema = z.uuid();

@@ -6,7 +6,7 @@ import {
     Register,
     ResetPassword,
 } from "@/types/services";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 
 const baseUrl = process.env.API_URL ?? "http://localhost:3001";
 
@@ -61,6 +61,7 @@ export async function registerService(userData: Register): Promise<
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
+                "User-Agent": (await headers()).get("user-agent") ?? "",
             },
             body: JSON.stringify({ ...userData }),
             credentials: "include",
@@ -115,6 +116,7 @@ export async function loginService(userData: Login): Promise<
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
+                "User-Agent": (await headers()).get("user-agent") ?? "",
             },
             body: JSON.stringify({ ...userData }),
             credentials: "include",
@@ -152,6 +154,7 @@ export async function forgotPasswordService(userData: ForgotPassword): Promise<
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
+                "User-Agent": (await headers()).get("user-agent") ?? "",
             },
             body: JSON.stringify({ ...userData }),
             cache: "no-cache",
@@ -188,6 +191,7 @@ export async function resetPasswordService(userData: ResetPassword): Promise<
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
+                "User-Agent": (await headers()).get("user-agent") ?? "",
             },
             body: JSON.stringify({ ...userData }),
             cache: "no-cache",
@@ -215,7 +219,7 @@ export async function googleExchangeService(code: string): Promise<
     try {
         const response = await fetch(url, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", "User-Agent": (await headers()).get("user-agent") ?? "" },
             body: JSON.stringify({ code }),
             credentials: "include",
             cache: "no-cache",
@@ -282,6 +286,7 @@ export async function resendVerificationService(email: string): Promise<
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
+                "User-Agent": (await headers()).get("user-agent") ?? "",
             },
             body: JSON.stringify({ email }),
             cache: "no-cache",
@@ -321,6 +326,7 @@ export async function emailCodeResendService(tempToken: string): Promise<
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
+                "User-Agent": (await headers()).get("user-agent") ?? "",
             },
             body: JSON.stringify({ tempToken }),
             cache: "no-cache",
@@ -368,6 +374,7 @@ export async function emailCodeVerifyService(
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
+                "User-Agent": (await headers()).get("user-agent") ?? "",
             },
             body: JSON.stringify({ tempToken, code }),
             cache: "no-cache",

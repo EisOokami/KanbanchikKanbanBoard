@@ -15,6 +15,7 @@ import { Button } from "../../shadcn/button";
 import MfaSetupModal from "./mfaSetupModal/MfaSetupModal";
 import MfaDisableModal from "./mfaDisableModal/MfaDisableModal";
 import MfaBackupCodesModal from "./mfaBackupCodesModal/MfaBackupCodesModal";
+import SessionManagement from "./SessionManagement";
 
 const INITIAL_STATE: BaseAction = {
     zodErrors: null,
@@ -336,6 +337,7 @@ export default function SecuritySection({
                     onOpenChange={setBackupCodesOpen}
                 />
             </div>
+            <SessionManagement />
         </div>
     );
 }

@@ -3,6 +3,10 @@ import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { authenticateToken } from "../middlewares/auth.middleware.js";
 import {
+    getSessions,
+    deleteSessions,
+} from "../controllers/sessions.controller.js";
+import {
     me,
     changePassword,
     updateProfile,
@@ -101,9 +105,50 @@ const resendAccountDeletionCodeLimiter = rateLimit({
     handler: rateLimitHandler,
 });
 
+const deleteSessionLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    limit: 5,
+    message: {
+        status: 429,
+        error: "Too many requests",
+        message: "Too many requests. Please try again in 1 hour.",
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: rateLimitHandler,
+});
+
+const deleteSessionsLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    limit: 5,
+    message: {
+        status: 429,
+        error: "Too many requests",
+        message: "Too many requests. Please try again in 1 hour.",
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: rateLimitHandler,
+});
+
 const router = Router();
 
 router.get("/me", authenticateToken, me);
+router.get("/me/sessions", authenticateToken, getSessions);
+router.delete(
+    "/me/sessions/:sessionId",
+    deleteSessionLimiter,
+    authenticateToken,
+    verifyCsrf,
+    deleteSessions,
+);
+router.delete(
+    "/me/sessions",
+    deleteSessionsLimiter,
+    authenticateToken,
+    verifyCsrf,
+    deleteSessions,
+);
 router.post(
     "/update-profile",
     updateProfileLimiter,

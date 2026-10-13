@@ -21,7 +21,11 @@ export async function authenticateToken(
                 .json({ status: "error", message: "Token missing" });
         }
 
-        const { payload } = await verifyAccessToken(token);
+        const refreshToken: unknown = req.cookies?.refreshToken;
+        const { payload } = await verifyAccessToken(
+            token,
+            typeof refreshToken === "string" ? refreshToken : undefined,
+        );
         req.user = payload;
 
         req.log = req.log.child({
@@ -44,6 +48,13 @@ export async function authenticateToken(
                 { err: error, event: "auth.token_verification_failed" },
                 "Token verification failed unexpectedly",
             );
+
+            res.status(500).json({
+                status: "error",
+                message: "Internal server error",
+            });
+
+            return;
         }
 
         res.status(401).json({

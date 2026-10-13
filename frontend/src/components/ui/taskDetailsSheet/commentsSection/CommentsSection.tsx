@@ -318,7 +318,6 @@ export default function CommentsSection({
                                                         type="button"
                                                         size="icon"
                                                         variant="ghost"
-                                                        aria-label="Edit comment"
                                                         onClick={() =>
                                                             startEdit(comment)
                                                         }
@@ -336,7 +335,6 @@ export default function CommentsSection({
                                                         type="button"
                                                         size="icon"
                                                         variant="ghost"
-                                                        aria-label="Delete comment"
                                                         onClick={() =>
                                                             removeComment(
                                                                 comment,

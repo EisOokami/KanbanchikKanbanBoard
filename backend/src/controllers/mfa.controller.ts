@@ -479,14 +479,12 @@ export const verifyMfa = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        const accessToken = await createAccessToken({
-            id: user.id,
-        });
         const refreshToken = await createRefreshToken(
             user.id,
             req.ip,
             req.headers["user-agent"],
         );
+        const accessToken = await createAccessToken({ id: user.id }, refreshToken);
         const csrfToken = generateCsrfToken();
 
         res.cookie("csrfToken", csrfToken, {

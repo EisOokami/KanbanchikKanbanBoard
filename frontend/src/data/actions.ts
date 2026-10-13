@@ -69,6 +69,7 @@ import {
     resendVerificationSchema,
     resetPasswordSchema,
     setPasswordSchema,
+    sessionIdSchema,
     updateCommentSchema,
     updateProfileSchema,
     updateProjectSchema,
@@ -3180,4 +3181,100 @@ export async function moveColumnAction(
     }
 
     revalidatePath(`/project`);
+}
+
+export async function revokeSessionAction(
+    sessionId: string,
+): Promise<
+    | { ok: true; message: string; revokedCount: number }
+    | { ok: false; message: string }
+> {
+    const validatedFields = sessionIdSchema.safeParse(sessionId);
+
+    if (!validatedFields.success) {
+        return {
+            ok: false,
+            message: "Session not found",
+        };
+    }
+
+    const responseData = await mutateData(
+        "DELETE",
+        `/users/me/sessions/${sessionId}`,
+    );
+
+    if (!responseData) {
+        return {
+            ok: false,
+            message: "Ops! Something went wrong. Please try again.",
+        };
+    }
+
+    if (
+        "message" in responseData &&
+        "status" in responseData &&
+        responseData.message &&
+        responseData.status !== "success"
+    ) {
+        return {
+            ok: false,
+            message: responseData.message,
+        };
+    }
+
+    if ("error" in responseData) {
+        console.error(responseData.error);
+
+        return {
+            ok: false,
+            message: "Ops! Something went wrong. Please try again.",
+        };
+    }
+
+    return {
+        ok: true,
+        message: responseData.message,
+        revokedCount: responseData.data.revokedCount,
+    };
+}
+
+export async function revokeOtherSessionsAction(): Promise<
+    | { ok: true; message: string; revokedCount: number }
+    | { ok: false; message: string }
+> {
+    const responseData = await mutateData("DELETE", "/users/me/sessions");
+
+    if (!responseData) {
+        return {
+            ok: false,
+            message: "Ops! Something went wrong. Please try again.",
+        };
+    }
+
+    if (
+        "message" in responseData &&
+        "status" in responseData &&
+        responseData.message &&
+        responseData.status !== "success"
+    ) {
+        return {
+            ok: false,
+            message: responseData.message,
+        };
+    }
+
+    if ("error" in responseData) {
+        console.error(responseData.error);
+
+        return {
+            ok: false,
+            message: "Ops! Something went wrong. Please try again.",
+        };
+    }
+
+    return {
+        ok: true,
+        message: responseData.message,
+        revokedCount: responseData.data.revokedCount,
+    };
 }

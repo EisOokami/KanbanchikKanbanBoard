@@ -1089,3 +1089,5 @@ export const initiateOwnershipTransferSchema = z.object({
         )
         .optional(),
 });
+
+export const sessionIdSchema = z.uuid();

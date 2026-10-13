@@ -77,11 +77,11 @@ export default function AccountSettingsModal({
                 className="flex h-[88vh] max-h-[680px] w-[95vw] max-w-[860px] flex-col gap-0 overflow-hidden rounded-md border-border bg-background-secondary p-0 shadow-xl [&>button:last-child]:hidden"
                 aria-describedby={undefined}
             >
-                <DialogTitle className="hidden"></DialogTitle>
-                <div className="flex flex-1 overflow-hidden">
-                    <nav className="flex w-48 shrink-0 flex-col border-r border-border">
+                <DialogTitle className="sr-only">Account settings</DialogTitle>
+                <div className="flex flex-1 flex-col overflow-hidden sm:flex-row">
+                    <nav className="flex shrink-0 flex-col border-b border-border sm:w-48 sm:border-b-0 sm:border-r">
                         <div className="flex-1 space-y-0 overflow-y-auto px-2 py-3">
-                            <div className="space-y-0.5">
+                            <div className="flex gap-1 sm:block sm:space-y-0.5">
                                 {NAV.map((item) => {
                                     const Icon = item.icon;
                                     const active = activeSection === item.id;
@@ -150,8 +150,8 @@ export default function AccountSettingsModal({
                             </Button>
                         </div>
                     </nav>
-                    <ScrollArea className="flex-1">
-                        <div className="p-6">
+                    <ScrollArea className="min-h-0 min-w-0 flex-1">
+                        <div className="p-3 sm:p-6">
                             {renderSection(activeSection, user)}
                         </div>
                     </ScrollArea>

@@ -5,6 +5,7 @@ const baseUrl = process.env.API_URL ?? "http://localhost:3001";
 export async function refreshAccessToken(
     refreshToken: string,
     csrfToken: string,
+    userAgent?: string,
 ): Promise<{
     accessToken: string;
     refreshToken: string;
@@ -15,6 +16,7 @@ export async function refreshAccessToken(
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
+                ...(userAgent ? { "User-Agent": userAgent } : {}),
                 Cookie: `refreshToken=${refreshToken}; csrfToken=${csrfToken ?? ""}`,
                 "X-CSRF-Token": csrfToken,
             },

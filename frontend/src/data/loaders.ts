@@ -1,6 +1,12 @@
 "use server";
 
-import { FilterOptions, Project, Task, UserData } from "@/types/types";
+import {
+    FilterOptions,
+    Project,
+    Task,
+    UserData,
+    UserSession,
+} from "@/types/types";
 import { getAccessToken, getRefreshToken } from "./getToken";
 import { fetchWithRefresh } from "./fetchWithRefresh";
 
@@ -184,23 +190,40 @@ export async function exportProjectDataAction(
     const accessToken = await getAccessToken();
     const refreshToken = await getRefreshToken();
 
-    try {
-        const response = await fetchWithRefresh(url, accessToken, refreshToken);
+    const response = await fetchWithRefresh(url, accessToken, refreshToken);
 
-        if (!response.ok) {
-            return {
-                status: "error",
-                message: "Failed to export project data",
-            };
-        }
-
+    if (!response.ok) {
         return {
-            status: "success",
-            message: "Project data have been successfully exported",
-            data: await response.text(),
+            status: "error",
+            message: "Failed to export project data",
         };
-    } catch (error) {
-        console.error("Error fetching data:", error);
-        throw error;
     }
+
+    return {
+        status: "success",
+        message: "Project data have been successfully exported",
+        data: await response.text(),
+    };
+}
+
+export async function getUserSessionsData(): Promise<
+    | { status: "success"; message: string; data: UserSession[] }
+    | { status: "error"; message: string }
+> {
+    const url = new URL("/users/me/sessions", baseUrl);
+
+    const fetchedData = await fetchData(url.href, { cache: "no-store" });
+
+    if (fetchedData.status === "error") {
+        return {
+            status: "error",
+            message: fetchedData.message,
+        };
+    }
+
+    return {
+        status: "success",
+        message: fetchedData.message,
+        data: fetchedData.data,
+    };
 }

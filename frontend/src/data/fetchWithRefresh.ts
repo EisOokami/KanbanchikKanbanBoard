@@ -1,4 +1,4 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { refreshAccessToken } from "./refreshAccessToken";
 
 type FetchOptions = RequestInit & { requireAuth?: boolean };
@@ -9,7 +9,7 @@ type RefreshResult = {
 };
 
 const accessTokenConfig = {
-    maxAge: 15,
+    maxAge: 15 * 60,
     path: "/",
     domain: process.env.HOST ?? "localhost",
     httpOnly: true,
@@ -45,7 +45,8 @@ async function refreshOnce(
         return inFlight;
     }
 
-    const promise = refreshAccessToken(refreshToken, csrfToken).finally(() => {
+    const userAgent = (await headers()).get("user-agent") ?? undefined;
+    const promise = refreshAccessToken(refreshToken, csrfToken, userAgent).finally(() => {
         refreshPromises.delete(refreshToken);
     });
 
@@ -65,9 +66,7 @@ export async function fetchWithRefresh(
     const needsCsrf = new Set(["POST", "PUT", "PATCH", "DELETE"]).has(method);
 
     const cookieStore = await cookies();
-    const csrfToken = needsCsrf
-        ? cookieStore.get("csrfToken")?.value
-        : undefined;
+    const csrfToken = cookieStore.get("csrfToken")?.value;
 
     if (needsCsrf && !csrfToken) {
         throw new Error("CSRF token missing");

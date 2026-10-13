@@ -933,13 +933,14 @@ export const verifyLoginEmailCode = async (
             return;
         }
 
-        const accessToken = await createAccessToken({
-            id: user.id,
-        });
         const refreshToken = await createRefreshToken(
             user.id,
             req.ip,
             req.headers["user-agent"],
+        );
+        const accessToken = await createAccessToken(
+            { id: user.id },
+            refreshToken,
         );
         const csrfToken = generateCsrfToken();
 
@@ -1549,13 +1550,14 @@ export const resetPassword = async (
 
         await revokeAllUserSessions(user.id);
 
-        const accessToken = await createAccessToken({
-            id: user.id,
-        });
         const refreshToken = await createRefreshToken(
             user.id,
             req.ip,
             req.headers["user-agent"],
+        );
+        const accessToken = await createAccessToken(
+            { id: user.id },
+            refreshToken,
         );
 
         if (!refreshToken) {
@@ -1778,7 +1780,10 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        const newAccessToken = await createAccessToken({ id: +userId });
+        const newAccessToken = await createAccessToken(
+            { id: +userId },
+            newRefreshToken,
+        );
         const csrfToken = generateCsrfToken();
 
         res.cookie("csrfToken", csrfToken, {
@@ -1820,6 +1825,13 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
                 },
                 "Token rejected",
             );
+
+            res.status(401).json({
+                status: "error",
+                message: "Invalid or expired token",
+            });
+
+            return;
         } else {
             req.log.error(
                 {
@@ -2103,7 +2115,10 @@ export async function googleAuthExchange(req: Request, res: Response) {
             return;
         }
 
-        const accessToken = await createAccessToken({ id: userId });
+        const accessToken = await createAccessToken(
+            { id: userId },
+            refreshToken,
+        );
         const csrfToken = generateCsrfToken();
 
         res.cookie("csrfToken", csrfToken, {

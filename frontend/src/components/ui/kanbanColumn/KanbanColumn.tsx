@@ -80,7 +80,6 @@ export default function KanbanColumn({
                                 {...attributes}
                                 {...listeners}
                                 type="button"
-                                aria-label="Move column"
                                 className="-ml-1 cursor-grab touch-none text-control-text active:cursor-grabbing"
                             >
                                 <DotsSixVerticalIcon

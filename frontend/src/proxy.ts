@@ -54,7 +54,7 @@ export async function proxy(request: NextRequest) {
     let tokens = null;
 
     if (!accessToken && refreshToken && csrfToken) {
-        tokens = await refreshAccessToken(refreshToken, csrfToken);
+        tokens = await refreshAccessToken(refreshToken, csrfToken, request.headers.get("user-agent") ?? undefined);
 
         if (tokens) {
             accessToken = tokens.accessToken;
