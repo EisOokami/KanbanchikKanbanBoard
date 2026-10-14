@@ -47,7 +47,7 @@ export default function AppSidebar({
                             />
                         </div>
                         <span className="whitespace-nowrap text-lg font-medium tracking-tight group-data-[collapsible=icon]:hidden">
-                            Kabanchik
+                            Kanbanchik
                         </span>
                     </div>
                 </SidebarHeader>

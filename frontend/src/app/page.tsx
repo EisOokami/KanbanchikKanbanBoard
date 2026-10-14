@@ -1,17 +1,25 @@
-import Link from "next/link";
+import { Faq } from "@/components/landing/faq/Faq";
+import Features from "@/components/landing/features/Features";
+import FinalCta from "@/components/landing/finalCta/FinalCta";
+import Footer from "@/components/landing/footer/Footer";
+import FounderStory from "@/components/landing/founderStory/FounderStory";
+import Hero from "@/components/landing/hero/Hero";
+import Navbar from "@/components/landing/navbar/Navbar";
+import Workflow from "@/components/landing/workflow/Workflow";
 
 export default function Home() {
     return (
-        <div className="grid h-screen place-content-center gap-3">
-            <Link href="/overview" className="hover:bg-gray-100">
-                Overview
-            </Link>
-            <Link href="/signIn" className="hover:bg-gray-100">
-                Sign in
-            </Link>
-            <Link href="/signUp" className="hover:bg-gray-100">
-                Sing up
-            </Link>
+        <div className="grid h-svh overflow-y-auto scroll-smooth">
+            <Navbar />
+            <main id="main">
+                <Hero />
+                <Features />
+                <Workflow />
+                <FounderStory />
+                <Faq />
+                <FinalCta />
+            </main>
+            <Footer />
         </div>
     );
 }

@@ -44,6 +44,7 @@
         --control-text: #565663;
         --column: #f3f4f6;
         --column-is-over: #e5e7eb;
+        color-scheme: light;
     }
     .dark {
         --background: #080808;
@@ -85,9 +86,85 @@
         --control-text: #8c8e92;
         --column: #181a20;
         --column-is-over: #23262d;
+        color-scheme: dark;
+    }
+
+    * {
+        @apply font-montserrat;
+        @apply border-border;
+    }
+
+    body {
+        @apply bg-background font-sans text-foreground antialiased;
+        text-rendering: optimizeLegibility;
+    }
+
+    :where(a, button, summary, [role="button"], [tabindex]):focus-visible {
+        outline: 2px solid #0096ff;
+        outline-offset: 2px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        ::before,
+        ::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+            scroll-behavior: auto !important;
+        }
     }
 }
 
-* {
-    @apply font-montserrat;
+@layer utilities {
+    .bg-grid {
+        background-image:
+            linear-gradient(
+                to right,
+                hsl(var(--border) / 0.55) 1px,
+                transparent 1px
+            ),
+            linear-gradient(
+                to bottom,
+                hsl(var(--border) / 0.55) 1px,
+                transparent 1px
+            );
+        background-size: 56px 56px;
+        background-position: center top;
+    }
+
+    .mask-fade-b {
+        -webkit-mask-image: linear-gradient(
+            to bottom,
+            #000 0%,
+            #000 35%,
+            transparent 100%
+        );
+        mask-image: linear-gradient(
+            to bottom,
+            #000 0%,
+            #000 35%,
+            transparent 100%
+        );
+    }
+
+    .mask-fade-radial {
+        -webkit-mask-image: radial-gradient(
+            ellipse 80% 90% at 50% 0%,
+            #000 20%,
+            transparent 100%
+        );
+        mask-image: radial-gradient(
+            ellipse 80% 90% at 50% 0%,
+            #000 20%,
+            transparent 100%
+        );
+    }
+
+    .scrollbar-none {
+        scrollbar-width: none;
+    }
+    .scrollbar-none::-webkit-scrollbar {
+        display: none;
+    }
 }
