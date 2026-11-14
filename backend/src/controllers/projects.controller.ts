@@ -3686,7 +3686,7 @@ export const generateProjectSummary = async (
         if (!process.env.GEMINI_API_KEY) {
             res.status(503).json({
                 status: "error",
-                message: "AI generation is not configured yet",
+                message: "AI generation is currently unavailable",
             });
 
             return;

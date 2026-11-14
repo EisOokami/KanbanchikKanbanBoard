@@ -71,7 +71,6 @@ app.use(securityAudit());
 app.use(hpp());
 app.use(helmet());
 app.use(helmet.hidePoweredBy());
-app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
 app.use(limiter);
 app.use(xss());
 app.use(cookieParser());
@@ -85,7 +84,13 @@ app.use("/uploads", uploadsRoutes);
 app.use("/invites", inviteRoutes);
 app.use("/auth/mfa", mfaRoutes);
 
-app.use("/files", express.static(path.join(process.cwd(), "uploads")));
+app.use(
+    "/files",
+    helmet.crossOriginResourcePolicy({
+        policy: "cross-origin",
+    }),
+    express.static(path.join(process.cwd(), "uploads")),
+);
 
 app.use((req: Request, res: Response) => {
     res.status(404).json({ status: "error", message: "Not found" });

@@ -2563,7 +2563,7 @@ export async function generateTaskSubtasks(
         if (!process.env.GEMINI_API_KEY) {
             res.status(503).json({
                 status: "error",
-                message: "AI task breakdown is not configured yet",
+                message: "AI task breakdown is currently unavailable",
             });
 
             return;
@@ -2646,6 +2646,7 @@ export async function generateTaskSubtasks(
         }
 
         const client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
         const response = await client.models.generateContent({
             model: process.env.GEMINI_MODEL || "gemini-3.5-flash-lite",
             contents: JSON.stringify({
@@ -2676,6 +2677,7 @@ export async function generateTaskSubtasks(
         }
 
         const result = generatedSubtasksSchema.parse(JSON.parse(response.text));
+
         const seen = new Set(
             existing.map((subtask) =>
                 subtask.title
@@ -2774,7 +2776,7 @@ export async function addTaskSubtasks(req: IGetUserRequest, res: Response) {
         if (!process.env.GEMINI_API_KEY) {
             res.status(503).json({
                 status: "error",
-                message: "AI task breakdown is not configured yet",
+                message: "AI task breakdown is currently unavailable",
             });
 
             return;
