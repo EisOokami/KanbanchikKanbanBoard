@@ -1,0 +1,16 @@
+FROM node:lts-slim
+WORKDIR /app
+
+COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* .npmrc* ./
+
+RUN corepack enable pnpm && pnpm i --frozen-lockfile;
+
+ENV NODE_ENV=development
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+COPY . .
+
+EXPOSE 3000
+
+CMD ["pnpm", "dev"]
