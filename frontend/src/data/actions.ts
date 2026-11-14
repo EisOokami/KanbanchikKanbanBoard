@@ -74,6 +74,8 @@ import {
     updateProfileSchema,
     updateProjectSchema,
     updateTaskSchema,
+    aiProjectSummarySchema,
+    suggestionsSchema,
 } from "@/libs/validation/validation";
 
 const accessTokenConfig = {
@@ -3276,5 +3278,177 @@ export async function revokeOtherSessionsAction(): Promise<
         ok: true,
         message: responseData.message,
         revokedCount: responseData.data.revokedCount,
+    };
+}
+
+export async function generateProjectSummaryAction(projectId: number): Promise<{
+    ok: boolean;
+    message: string;
+    data?: z.infer<typeof aiProjectSummarySchema>;
+}> {
+    const responseData = await mutateData(
+        "POST",
+        `/projects/${projectId}/ai/summary`,
+    );
+
+    if (!responseData) {
+        console.error("Ops! Something went wrong. Please try again.");
+
+        return {
+            ok: false,
+            message: "Ops! Something went wrong. Please try again or later",
+        };
+    }
+
+    if (
+        "message" in responseData &&
+        "status" in responseData &&
+        responseData.message &&
+        responseData.status === "error"
+    ) {
+        return { ok: false, message: responseData.message };
+    }
+
+    if ("error" in responseData && responseData.error) {
+        console.error(responseData.error);
+
+        return {
+            ok: false,
+            message: "Failed to generate a project summary",
+        };
+    }
+
+    const payload = "data" in responseData ? responseData.data : responseData;
+    const validatedFields = aiProjectSummarySchema.safeParse(payload);
+
+    if (!validatedFields.success) {
+        console.error(validatedFields.error);
+
+        return {
+            ok: false,
+            message: "AI returned an invalid summary. Please try again.",
+        };
+    }
+
+    return {
+        ok: true,
+        message: "Project summary has been generated",
+        data: validatedFields.data,
+    };
+}
+
+export async function generateSubtasksAction(taskId: number): Promise<{
+    ok: boolean;
+    message: string;
+    subtasks?: { title: string }[];
+}> {
+    const responseData = await mutateData(
+        "POST",
+        `/tasks/${taskId}/ai/subtasks`,
+    );
+
+    if (!responseData) {
+        console.error("Ops! Something went wrong. Please try again.");
+
+        return {
+            ok: false,
+            message: "Ops! Something went wrong. Please try again or later",
+        };
+    }
+
+    if (
+        "message" in responseData &&
+        "status" in responseData &&
+        responseData.message &&
+        responseData.status === "error"
+    ) {
+        return { ok: false, message: responseData.message };
+    }
+
+    if ("error" in responseData && responseData.error) {
+        console.error(responseData.error);
+
+        return { ok: false, message: "Failed to generate subtasks" };
+    }
+
+    const validatedFields = z
+        .object({
+            subtasks: suggestionsSchema.min(
+                3,
+                "At least 3 suggestion is required",
+            ),
+        })
+        .safeParse(responseData);
+
+    if (!validatedFields.success) {
+        console.error(validatedFields.error);
+
+        return {
+            ok: false,
+            message: "AI returned invalid subtasks. Please try again.",
+        };
+    }
+
+    return {
+        ok: true,
+        message: "Subtasks have been generated",
+        subtasks: validatedFields.data.subtasks,
+    };
+}
+
+export async function addSuggestedSubtasksAction(
+    taskId: number,
+    suggestions: { title: string }[],
+): Promise<{ ok: boolean; message: string; subtasks?: Subtask[] }> {
+    const validatedFields = suggestionsSchema.safeParse(suggestions);
+
+    if (!validatedFields.success) {
+        return { ok: false, message: "Invalid subtask data" };
+    }
+
+    const responseData = await mutateData("POST", `/tasks/${taskId}/subtasks`, {
+        subtasks: validatedFields.data,
+    });
+
+    if (!responseData) {
+        console.error("Ops! Something went wrong. Please try again.");
+
+        return {
+            ok: false,
+            message: "Ops! Something went wrong. Please try again or later",
+        };
+    }
+
+    if (
+        "message" in responseData &&
+        "status" in responseData &&
+        responseData.message &&
+        responseData.status === "error"
+    ) {
+        return { ok: false, message: responseData.message };
+    }
+
+    if ("error" in responseData && responseData.error) {
+        console.error(responseData.error);
+
+        return { ok: false, message: "Failed to add subtasks" };
+    }
+
+    if ("data" in responseData && Array.isArray(responseData.data)) {
+        const subtasks: Subtask[] = responseData.data.map(
+            (subtask: Subtask) => ({
+                ...subtask,
+                is_done: !!subtask.is_done,
+            }),
+        );
+
+        revalidatePath("/", "layout");
+
+        return { ok: true, message: "Subtasks added", subtasks };
+    }
+
+    return {
+        ok: false,
+        message: "Unable to add subtasks. Please try again.",
     };
 }

@@ -1,10 +1,12 @@
 import { rateLimitHandler } from "../middlewares/securityAudit.middleware.js";
 import { Router } from "express";
 import {
+    addTaskSubtasks,
     createTask,
     createTaskComment,
     deleteTask,
     deleteTaskComment,
+    generateTaskSubtasks,
     getTaskById,
     getTaskFilterOptions,
     getTasks,
@@ -15,6 +17,7 @@ import {
 import { authenticateToken } from "../middlewares/auth.middleware.js";
 import { validateData } from "../middlewares/validation.middleware.js";
 import {
+    addTaskSubtasksSchema,
     createTaskCommentSchema,
     createTaskSchema,
     moveTaskSchema,
@@ -115,6 +118,30 @@ const deleteTaskCommentLimiter = rateLimit({
     handler: rateLimitHandler,
 });
 
+const generateTaskSubtasksLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 5,
+    message: {
+        status: "error",
+        message: "Too many requests. Please try again in 15 minutes.",
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: rateLimitHandler,
+});
+
+const addTaskSubtasksLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 5,
+    message: {
+        status: "error",
+        message: "Too many requests. Please try again in 15 minutes.",
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: rateLimitHandler,
+});
+
 const router = Router();
 
 router.get("/", authenticateToken, getTasks);
@@ -173,6 +200,21 @@ router.delete(
     authenticateToken,
     verifyCsrf,
     deleteTaskComment,
+);
+router.post(
+    "/:id/ai/subtasks",
+    generateTaskSubtasksLimiter,
+    authenticateToken,
+    verifyCsrf,
+    generateTaskSubtasks,
+);
+router.post(
+    "/:id/subtasks",
+    addTaskSubtasksLimiter,
+    authenticateToken,
+    verifyCsrf,
+    validateData(addTaskSubtasksSchema),
+    addTaskSubtasks,
 );
 
 export default router;

@@ -1091,3 +1091,137 @@ export const initiateOwnershipTransferSchema = z.object({
 });
 
 export const sessionIdSchema = z.uuid();
+
+export const aiProjectSummarySchema = z.object({
+    stats: z.object({
+        totalTasks: z
+            .number("Total tasks must be a number")
+            .int("Total tasks must be an integer")
+            .nonnegative("Total tasks cannot be negative"),
+        completedTasks: z
+            .number("Completed tasks must be a number")
+            .int("Completed tasks must be an integer")
+            .nonnegative("Completed tasks cannot be negative"),
+        inProgressTasks: z
+            .number("In-progress tasks must be a number")
+            .int("In-progress tasks must be an integer")
+            .nonnegative("In-progress tasks cannot be negative"),
+        remainingTasks: z
+            .number("Remaining tasks must be a number")
+            .int("Remaining tasks must be an integer")
+            .nonnegative("Remaining tasks cannot be negative"),
+        completionPercentage: z
+            .number("Completion percentage must be a number")
+            .int("Completion percentage must be an integer")
+            .nonnegative("Completion percentage cannot be negative")
+            .max(100, "Completion percentage cannot exceed 100"),
+        overdueTasks: z
+            .number("Overdue tasks must be a number")
+            .int("Overdue tasks must be an integer")
+            .nonnegative("Overdue tasks cannot be negative"),
+        upcomingDeadlines: z
+            .number("Upcoming deadlines must be a number")
+            .int("Upcoming deadlines must be an integer")
+            .nonnegative("Upcoming deadlines cannot be negative"),
+        highPriorityTasks: z
+            .number("High priority tasks must be a number")
+            .int("High priority tasks must be an integer")
+            .nonnegative("High priority tasks cannot be negative"),
+        criticalPriorityTasks: z
+            .number("Critical priority tasks must be a number")
+            .int("Critical priority tasks must be an integer")
+            .nonnegative("Critical priority tasks cannot be negative"),
+        columnsExceedingWip: z
+            .number("Columns exceeding WIP must be a number")
+            .int("Columns exceeding WIP must be an integer")
+            .nonnegative("Columns exceeding WIP cannot be negative"),
+        columns: z.array(
+            z.object({
+                id: z
+                    .number()
+                    .int()
+                    .positive("ID must be a positive number")
+                    .optional(),
+                name: z
+                    .string()
+                    .min(1, "Name is required")
+                    .max(150, "Name must be at most 150 characters"),
+                taskCount: z
+                    .number()
+                    .int()
+                    .nonnegative("Task count cannot be negative"),
+                wipLimit: z
+                    .number()
+                    .int()
+                    .min(1, "WIP limit must be at least 1")
+                    .max(999, "WIP limit cannot exceed 999")
+                    .nullable(),
+            }),
+            "Columns must be an array",
+        ),
+    }),
+    analysis: z.object({
+        summary: z
+            .string()
+            .min(1, "Summary cannot be empty")
+            .max(1600, "Summary must be at most 1600 characters"),
+        health: z.enum(["on_track", "at_risk", "needs_attention"]),
+        highlights: z
+            .array(z.string(), "Highlights must be an array")
+            .max(5, "No more than 5 highlights are allowed"),
+        risks: z
+            .array(
+                z.object({
+                    title: z
+                        .string("Title must be a string")
+                        .trim()
+                        .min(1, "Title cannot be empty")
+                        .max(160, "Title must be at most 160 characters"),
+                    description: z
+                        .string("Description must be a string")
+                        .trim()
+                        .max(700, "Description must be at most 700 characters"),
+                    severity: z.enum(["low", "medium", "high"]),
+                }),
+                "Risks must be an array",
+            )
+            .max(5, "No more than 5 risks are allowed"),
+        recommendations: z
+            .array(
+                z.object({
+                    title: z
+                        .string("Title must be a string")
+                        .trim()
+                        .min(1, "Title cannot be empty")
+                        .max(160, "Title must be at most 160 characters"),
+                    description: z
+                        .string("Description must be a string")
+                        .trim()
+                        .max(700, "Description must be at most 700 characters"),
+                }),
+                "Recommendations must be an array",
+            )
+            .min(2, "At least 2 recommendations are required")
+            .max(5, "No more than 5 recommendations are allowed"),
+    }),
+    generatedAt: z.iso.datetime("generatedAt must be a valid ISO datetime"),
+    referenceDate: z.iso.date(
+        "referenceDate must be a valid ISO date (YYYY-MM-DD)",
+    ),
+    upcomingThrough: z.iso.date(
+        "upcomingThrough must be a valid ISO date (YYYY-MM-DD)",
+    ),
+});
+
+export const suggestionSchema = z.object({
+    title: z
+        .string("Title must be a string")
+        .trim()
+        .min(1, "Title cannot be empty")
+        .max(150, "Title must be at most 150 characters"),
+});
+
+export const suggestionsSchema = z
+    .array(suggestionSchema, "Suggestions must be an array")
+    .min(1, "At least 1 suggestion is required")
+    .max(7, "No more than 7 suggestions are allowed");

@@ -7,6 +7,7 @@ import {
     deleteMember,
     deleteProject,
     exportProjectData,
+    generateProjectSummary,
     getProject,
     getProjects,
     initiateOwnershipTransfer,
@@ -132,6 +133,18 @@ const resendOwnershipTransferCodeLimiter = rateLimit({
     handler: rateLimitHandler,
 });
 
+const aiSummaryLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    limit: 5,
+    message: {
+        status: "error",
+        message: "Too many summary requests. Please try again in a minute.",
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: rateLimitHandler,
+});
+
 const router = Router();
 
 router.get("/", authenticateToken, getProjects);
@@ -200,6 +213,13 @@ router.post(
     verifyCsrf,
     validateData(resendOwnershipTransferSchema),
     resendOwnershipTransferCode,
+);
+router.post(
+    "/:id/ai/summary",
+    aiSummaryLimiter,
+    authenticateToken,
+    verifyCsrf,
+    generateProjectSummary,
 );
 
 export default router;

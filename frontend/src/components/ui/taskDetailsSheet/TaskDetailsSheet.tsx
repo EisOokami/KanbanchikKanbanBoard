@@ -21,6 +21,7 @@ import {
     UpdateTaskFormData,
     Column,
     Priority,
+    Subtask,
 } from "@/types/types";
 import { ActivityEntry } from "@/types/taskDetailsSheet";
 import { CheckIcon, ClockIcon, InfoIcon } from "@phosphor-icons/react";
@@ -87,6 +88,8 @@ export default function TaskDetailsSheet({
         !!task.show_progress,
     );
     const [isChanged, setIsChanged] = useState<boolean>(false);
+    const [isAiSaving, setIsAiSaving] = useState(false);
+    const [hasAddedAiSubtasks, setHasAddedAiSubtasks] = useState(false);
     const [initialValues, setInitialValues] = useState(() => ({
         column: task.column,
         priority: task.priority,
@@ -116,13 +119,61 @@ export default function TaskDetailsSheet({
         newAttachments: [],
         labels: task.labels,
     });
-    const [formState, formAction, isPending] = useActionState(
+    const [formState, formAction, isTaskPending] = useActionState(
         updateTaskAction.bind(null, formData, currentPath),
         INITIAL_STATE,
     );
+    const isPending = isTaskPending || isAiSaving;
+
+    const handleAiSubtasksAdded = (added: Subtask[]) => {
+        setHasAddedAiSubtasks(true);
+
+        setFormData((current) => ({
+            ...current,
+            subtasks: [
+                ...current.subtasks,
+                ...added.filter(
+                    (item) =>
+                        !current.subtasks.some(
+                            (existing) => existing.id === item.id,
+                        ),
+                ),
+            ],
+        }));
+        setInitialFormData((current) => ({
+            ...current,
+            subtasks: [
+                ...current.subtasks,
+                ...added.filter(
+                    (item) =>
+                        !current.subtasks.some(
+                            (existing) => existing.id === item.id,
+                        ),
+                ),
+            ],
+        }));
+        setTask((current) => {
+            const subtasks = [
+                ...current.subtasks,
+                ...added.filter(
+                    (item) =>
+                        !current.subtasks.some(
+                            (existing) => existing.id === item.id,
+                        ),
+                ),
+            ];
+
+            return { ...current, subtasks, subtasks_total: subtasks.length };
+        });
+    };
+
+    const handleOpenChange = (nextOpen: boolean) => {
+        if (!isAiSaving) {
+            onOpenChange(nextOpen, hasAddedAiSubtasks ? task : undefined);
+        }
+    };
 
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setShowProgress(!!task.show_progress);
         setInitialValues({
             ...initialValues,
@@ -132,7 +183,6 @@ export default function TaskDetailsSheet({
     }, [task.show_progress]);
 
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setTask(selectedTask);
         setIsChanged(false);
     }, [selectedTask]);
@@ -142,7 +192,6 @@ export default function TaskDetailsSheet({
             return;
         }
 
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setColumn(task.column);
         setPriority(task.priority);
         setTitle(task.title);
@@ -239,13 +288,18 @@ export default function TaskDetailsSheet({
     );
 
     return (
-        <Sheet open={open} onOpenChange={onOpenChange}>
+        <Sheet open={open} onOpenChange={handleOpenChange}>
             <SheetContent
                 side="right"
                 className="flex min-w-[620px] max-w-[100vw] flex-col gap-0 border-border bg-background-secondary p-0 outline-none [&>button:first-of-type]:hidden"
             >
                 <form
                     action={formAction}
+                    onSubmit={(event) => {
+                        if (isAiSaving) {
+                            event.preventDefault();
+                        }
+                    }}
                     noValidate
                     className="flex min-h-0 flex-1 flex-col"
                 >
@@ -258,7 +312,7 @@ export default function TaskDetailsSheet({
                             column={column}
                             priority={priority}
                             hasPermission={hasPermission}
-                            onOpenChange={onOpenChange}
+                            onOpenChange={handleOpenChange}
                             onColumnChange={setColumn}
                             onPriorityChange={setPriority}
                         />
@@ -352,6 +406,18 @@ export default function TaskDetailsSheet({
                             hasPermission ? (
                                 <>
                                     <SubtasksSection
+                                        taskId={task.id}
+                                        open={open}
+                                        canGenerate={
+                                            hasPermission &&
+                                            (userData.role === "owner" ||
+                                                userData.role === "admin" ||
+                                                userData.id === task.creator_id)
+                                        }
+                                        onAiSubtasksAdded={
+                                            handleAiSubtasksAdded
+                                        }
+                                        onAiSavingChange={setIsAiSaving}
                                         formState={formState}
                                         isPending={isPending}
                                         formData={formData}
@@ -449,7 +515,7 @@ export default function TaskDetailsSheet({
                                     type="button"
                                     variant="outline"
                                     disabled={isPending}
-                                    onClick={() => onOpenChange(false)}
+                                    onClick={() => handleOpenChange(false)}
                                     className="h-8 bg-control px-4 text-sm text-control-text hover:bg-control-active"
                                 >
                                     Discard

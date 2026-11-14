@@ -70,6 +70,8 @@ import {
     SortableContext,
 } from "@dnd-kit/sortable";
 import ColumnOverlay from "@/components/ui/columnOverlay/ColumnOverlay";
+import AIProjectSummary from "@/components/ui/aiProjectSummary/AIProjectSummary";
+import { SparkleIcon } from "@phosphor-icons/react";
 
 interface ProjectProps {
     userData: User;
@@ -92,7 +94,7 @@ export default function Project({
     const [showTaskDetails, setShowTaskDetails] = useState<boolean>(false);
     const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTER);
     const [selectedMode, setSelectedMode] = useState<
-        "kanban" | "list" | "calendar"
+        "overview" | "kanban" | "list" | "calendar"
     >("kanban");
     const [createTaskState, setCreateTaskState] = useState<{
         isOpen: boolean;
@@ -417,9 +419,6 @@ export default function Project({
         [projectData],
     );
 
-    const handleChangeMode = (mode: "kanban" | "list" | "calendar") =>
-        setSelectedMode(mode);
-
     const handleToggleCreateTask = (columnId?: number, data?: Task) => {
         setCreateTaskState((prevState) => ({
             isOpen: !prevState.isOpen,
@@ -474,6 +473,7 @@ export default function Project({
     );
 
     const viewModes = [
+        { id: "overview", label: "Overview", icon: SparkleIcon },
         { id: "kanban", label: "Kanban", icon: KanbanIcon },
         { id: "list", label: "List", icon: ListIcon },
         { id: "calendar", label: "Calendar", icon: CalendarDotsIcon },
@@ -573,15 +573,15 @@ export default function Project({
                         </p>
                     )}
                 </div>
-                <div className="flex items-center justify-between px-8 py-2">
-                    <nav className="space-x-1 rounded-lg border border-border p-1">
+                <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2 sm:px-8">
+                    <nav className="flex flex-wrap gap-1 rounded-lg border border-border p-1">
                         {viewModes.map(({ id, label, icon: Icon }) => (
                             <Button
                                 key={id}
                                 variant={
                                     selectedMode === id ? "default" : "ghost"
                                 }
-                                onClick={() => handleChangeMode(id)}
+                                onClick={() => setSelectedMode(id)}
                                 className={cn(
                                     "shadow-none",
                                     selectedMode === id
@@ -627,8 +627,25 @@ export default function Project({
                 onDragOver={handleDragOver}
                 onDragEnd={handleDragEnd}
             >
-                <main className="flex min-h-0 flex-1 flex-col">
-                    {!hasTasks ? (
+                <main
+                    className={cn(
+                        "flex min-h-0 flex-1 flex-col",
+                        selectedMode === "overview" && "overflow-y-auto",
+                    )}
+                >
+                    <div
+                        className={cn(
+                            "p-4 sm:p-8",
+                            selectedMode !== "overview" && "hidden",
+                        )}
+                    >
+                        <AIProjectSummary
+                            key={projectData.id}
+                            projectId={projectData.id}
+                            projectName={projectData.name}
+                        />
+                    </div>
+                    {selectedMode === "overview" ? null : !hasTasks ? (
                         <div className="flex h-full flex-1 items-center justify-center px-6">
                             <div className="flex max-w-md flex-col items-center text-center">
                                 <div className="mb-5 flex size-20 items-center justify-center rounded-md bg-muted">

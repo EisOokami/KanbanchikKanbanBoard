@@ -1003,3 +1003,75 @@ export const resendOwnershipTransferSchema = z.object({
 });
 
 export const sessionIdSchema = z.uuid();
+
+export const projectAnalysisSchema = z.strictObject({
+    summary: z
+        .string()
+        .trim()
+        .min(1, "Summary cannot be empty")
+        .max(1600, "Summary must be at most 1600 characters"),
+    health: z.enum(["on_track", "at_risk", "needs_attention"]),
+    highlights: z
+        .array(
+            z
+                .string()
+                .trim()
+                .min(1, "Highlight cannot be empty")
+                .max(500, "Highlight must be at most 500 characters"),
+            "Highlights must be an array",
+        )
+        .max(5, "No more than 5 highlights are allowed"),
+    risks: z
+        .array(
+            z.strictObject({
+                title: z
+                    .string("Title must be a string")
+                    .trim()
+                    .min(1, "Title cannot be empty")
+                    .max(160, "Title must be at most 160 characters"),
+                description: z
+                    .string("Description must be a string")
+                    .trim()
+                    .max(700, "Description must be at most 700 characters"),
+                severity: z.enum(
+                    ["low", "medium", "high"],
+                    "Severity must be one of: low, medium, high",
+                ),
+            }),
+            "Risks must be an array",
+        )
+        .max(5, "No more than 5 risks are allowed"),
+    recommendations: z
+        .array(
+            z.strictObject({
+                title: z
+                    .string("Title must be a string")
+                    .trim()
+                    .min(1, "Title cannot be empty")
+                    .max(160, "Title must be at most 160 characters"),
+                description: z
+                    .string("Description must be a string")
+                    .trim()
+                    .max(700, "Description must be at most 700 characters"),
+            }),
+            "Recommendations must be an array",
+        )
+        .min(2, "At least 2 recommendations are required")
+        .max(5, "No more than 5 recommendations are allowed"),
+});
+
+const suggestionSchema = subtaskSchema.pick({ title: true }).strict();
+
+export const generatedSubtasksSchema = z.strictObject({
+    subtasks: z
+        .array(suggestionSchema, "Subtasks must be an array")
+        .min(3, "At least 3 subtasks are required")
+        .max(7, "No more than 7 subtasks are allowed"),
+});
+
+export const addTaskSubtasksSchema = z.strictObject({
+    subtasks: z
+        .array(suggestionSchema, "Subtasks must be an array")
+        .min(1, "At least 1 subtask is required")
+        .max(7, "No more than 7 subtasks are allowed"),
+});

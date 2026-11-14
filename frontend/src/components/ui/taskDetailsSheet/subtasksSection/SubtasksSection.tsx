@@ -10,8 +10,15 @@ import { useState } from "react";
 import { BaseAction } from "@/types/actions";
 import { ZodErrors } from "../../zodErrors/ZodErrors";
 import { Progress } from "../../shadcn/progress";
+import AiSubtasks from "./AiSubtasks";
+import type { Subtask } from "@/types/types";
 
 interface SubtasksSectionProps {
+    taskId: number;
+    open: boolean;
+    canGenerate: boolean;
+    onAiSubtasksAdded: (subtasks: Subtask[]) => void;
+    onAiSavingChange: (saving: boolean) => void;
     formState: BaseAction | undefined;
     isPending: boolean;
     formData: UpdateTaskFormData;
@@ -22,6 +29,11 @@ interface SubtasksSectionProps {
 }
 
 export default function SubtasksSection({
+    taskId,
+    open,
+    canGenerate,
+    onAiSubtasksAdded,
+    onAiSavingChange,
     formData,
     formState,
     isPending,
@@ -279,6 +291,18 @@ export default function SubtasksSection({
                         <PlusIcon weight="duotone" />
                     </Button>
                 </div>
+            )}
+            {open && canGenerate && (
+                <AiSubtasks
+                    taskId={taskId}
+                    disabled={isPending}
+                    existingSubtasks={[
+                        ...formData.subtasks,
+                        ...formData.newSubtasks,
+                    ]}
+                    onAdded={onAiSubtasksAdded}
+                    onBusyChange={onAiSavingChange}
+                />
             )}
             {hasPermission && (
                 <div className="mt-2 flex items-center gap-2">

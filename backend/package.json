@@ -7,13 +7,13 @@
     "scripts": {
         "start": "node dist/app.js",
         "dev": "tsx watch src/app.ts",
-        "build": "tsc",
-        "test:logging": "npm run build && node --test tests/logging.test.mjs"
+        "build": "tsc"
     },
     "keywords": [],
     "author": "",
     "type": "module",
     "dependencies": {
+        "@google/genai": "^2.31.0",
         "@types/cors": "^2.8.19",
         "bcryptjs": "^3.0.3",
         "cookie-parser": "^1.4.7",
