@@ -8,6 +8,7 @@ export interface Register {
 export interface Login {
     email: string;
     password: string;
+    acceptTerms?: boolean;
 }
 
 export interface ForgotPassword {

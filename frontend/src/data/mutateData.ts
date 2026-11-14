@@ -1,4 +1,4 @@
-"use server";
+import "server-only";
 
 import { getAccessToken, getRefreshToken } from "./getToken";
 import { fetchWithRefresh } from "./fetchWithRefresh";
@@ -45,6 +45,7 @@ export async function mutateData(
         );
 
         const data = await response.json();
+
         return data;
     } catch (error) {
         console.log("error", error);

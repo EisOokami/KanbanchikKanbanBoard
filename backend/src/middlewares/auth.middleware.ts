@@ -16,6 +16,8 @@ export async function authenticateToken(
                 : undefined;
 
         if (!token) {
+            res.setHeader("WWW-Authenticate", "Bearer");
+
             return res
                 .status(401)
                 .json({ status: "error", message: "Token missing" });
@@ -56,6 +58,8 @@ export async function authenticateToken(
 
             return;
         }
+
+        res.setHeader("WWW-Authenticate", 'Bearer error="invalid_token"');
 
         res.status(401).json({
             status: "error",

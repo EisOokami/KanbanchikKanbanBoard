@@ -7,6 +7,7 @@ import type {
     Project,
     ProjectInvite,
     ProjectMember,
+    User,
 } from "../types/types.js";
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import {
@@ -230,6 +231,38 @@ export const acceptInvite = async (
             return;
         }
 
+        if (invite.email) {
+            const [users] = await pool.execute<
+                (Pick<User, "email"> & RowDataPacket)[]
+            >("SELECT email FROM users WHERE id = ?", [userId]);
+
+            const user = users[0];
+
+            if (
+                !user ||
+                user.email.trim().toLowerCase() !==
+                    invite.email.trim().toLowerCase()
+            ) {
+                req.log.warn(
+                    {
+                        audit: true,
+                        event: "invite.rejected",
+                        userId,
+                        reason: "email_mismatch",
+                    },
+                    "Invitation rejected",
+                );
+
+                res.status(403).json({
+                    status: "error",
+                    message:
+                        "This invitation was sent to a different email address",
+                });
+
+                return;
+            }
+        }
+
         const [existing] = await pool.execute<ProjectMember[]>(
             `
                 SELECT *
@@ -250,34 +283,62 @@ export const acceptInvite = async (
         }
 
         const connection = await pool.getConnection();
+        let alreadyUsed = false;
 
         try {
             await connection.beginTransaction();
 
-            await connection.execute(
-                `
-                    INSERT INTO project_members
-                        (project_id, user_id, role)
-                    VALUES (?, ?, 'member')
-                `,
-                [invite.project_id, userId],
-            );
-
-            await connection.execute(
+            const [usedResult] = await connection.execute<ResultSetHeader>(
                 `
                     UPDATE project_invites
                     SET used = 1
-                    WHERE id = ?
+                    WHERE id = ? AND used = 0
                 `,
                 [invite.id],
             );
 
-            await connection.commit();
+            if (usedResult.affectedRows === 0) {
+                alreadyUsed = true;
+
+                await connection.rollback();
+            }
+
+            if (usedResult.affectedRows !== 0) {
+                await connection.execute(
+                    `
+                        INSERT INTO project_members
+                            (project_id, user_id, role)
+                        VALUES (?, ?, 'member')
+                    `,
+                    [invite.project_id, userId],
+                );
+
+                await connection.commit();
+            }
         } catch (err) {
             await connection.rollback();
             throw err;
         } finally {
             connection.release();
+        }
+
+        if (alreadyUsed) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "invite.rejected",
+                    userId,
+                    reason: "already_used",
+                },
+                "Invitation rejected",
+            );
+
+            res.status(400).json({
+                status: "error",
+                message: "Invite already used",
+            });
+
+            return;
         }
 
         req.log.info(
@@ -354,6 +415,37 @@ export const memberInvite = async (
             return;
         }
 
+        const [members] = await pool.execute<
+            (Pick<ProjectMember, "role"> & RowDataPacket)[]
+        >(
+            `
+                SELECT role
+                FROM project_members
+                WHERE project_id = ?
+                AND user_id = ?
+                AND role IN ("owner", "admin")
+            `,
+            [project.id, userId],
+        );
+
+        if (!members[0]) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "memberInvite",
+                },
+                "Authorization denied",
+            );
+
+            res.status(403).json({
+                status: "error",
+                message: "Forbidden",
+            });
+
+            return;
+        }
+
         if (validatedData.members && validatedData.members.length) {
             await Promise.all(
                 validatedData.members.map(async (email) => {
@@ -365,10 +457,10 @@ export const memberInvite = async (
                     await pool.execute<ResultSetHeader>(
                         `
                             INSERT INTO project_invites
-                                (project_id, token, created_by, expires_at)
-                            VALUES (?, ?, ?, ?)
+                                (project_id, token, email, created_by, expires_at)
+                            VALUES (?, ?, ?, ?, ?)
                         `,
-                        [project.id, token, userId, expiresAt],
+                        [project.id, token, email, userId, expiresAt],
                     );
 
                     const inviteUrl = `${process.env.FRONTEND_URL}/invite/${token}`;

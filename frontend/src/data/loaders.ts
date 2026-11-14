@@ -179,6 +179,34 @@ export async function getVerifyEmailData(
     return fetchedData;
 }
 
+export async function getConfirmEmailChangeData(
+    token: string,
+): Promise<
+    | { status: "success"; message: string }
+    | { status: "error"; message: string }
+> {
+    if (!token) {
+        return { status: "error", message: "Token missing" };
+    }
+
+    const url = new URL(
+        `/users/confirm-email-change?token=${encodeURIComponent(token)}`,
+        baseUrl,
+    );
+
+    const fetchedData = await fetchData(url.href, { cache: "no-store" });
+
+    if (fetchedData.status === "error") {
+        return {
+            status: "error",
+            message:
+                fetchedData.message || "Unable to confirm the email address",
+        };
+    }
+
+    return fetchedData;
+}
+
 export async function exportProjectDataAction(
     id: number,
 ): Promise<

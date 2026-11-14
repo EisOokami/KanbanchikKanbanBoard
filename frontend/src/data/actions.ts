@@ -81,7 +81,6 @@ import {
 const accessTokenConfig = {
     maxAge: 15 * 60,
     path: "/",
-    domain: process.env.HOST ?? "localhost",
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax" as const,
@@ -89,7 +88,6 @@ const accessTokenConfig = {
 const refreshTokenConfig = {
     maxAge: 60 * 60 * 24 * 7,
     path: "/",
-    domain: process.env.HOST ?? "localhost",
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict" as const,
@@ -196,7 +194,10 @@ export async function loginAction(
         };
     }
 
-    const responseData = await loginService(validatedFields.data);
+    const responseData = await loginService({
+        ...validatedFields.data,
+        ...(formData.get("acceptTerms") === "on" && { acceptTerms: true }),
+    });
 
     if (!responseData) {
         return {
@@ -384,7 +385,13 @@ export async function registerAction(
 }
 
 export async function logoutAction() {
-    const responseData = await mutateData("POST", "/auth/logout");
+    const responseData = await mutateData("POST", "/auth/logout").catch(
+        (error) => {
+            console.error(error);
+
+            return undefined;
+        },
+    );
 
     if (!responseData) {
         console.error("Unauthorized or invalid token");
@@ -1182,6 +1189,7 @@ export async function updateProfileAction(
         surname: formData.get("surname"),
         email: formData.get("email"),
         color: formData.get("color"),
+        currentPassword: formData.get("currentPassword"),
     });
 
     if (!validatedFields.success) {
@@ -1377,8 +1385,8 @@ export async function deleteAccountAction(
                     data: {
                         tempToken,
                         requiresEmailCode: true,
-                        requiresRestart: responseData.data.requiresRelogin,
-                        retryAfter: responseData.data.retryAfter,
+                        requiresRestart: responseData.data?.requiresRestart,
+                        retryAfter: responseData.data?.retryAfter,
                     },
                 };
             }
@@ -1458,15 +1466,15 @@ export async function deleteAccountAction(
                 status: responseData.status,
                 details: null,
                 message:
-                    responseData.data.attemptsLeft !== undefined
+                    responseData.data?.attemptsLeft !== undefined
                         ? `${responseData.message}. Attempts left: ${responseData.data.attemptsLeft}`
                         : responseData.message,
                 data: {
                     tempToken,
                     requiresMfa,
                     requiresEmailCode,
-                    attemptsLeft: responseData.data.attemptsLeft,
-                    requiresRestart: responseData.data.requiresRestart,
+                    attemptsLeft: responseData.data?.attemptsLeft,
+                    requiresRestart: responseData.data?.requiresRestart,
                 },
             };
         }
@@ -2166,6 +2174,8 @@ export async function confirmOwnershipTransferAction(
         return {
             ok: false,
             message: responseData.message,
+            attemptsLeft: responseData.data?.attemptsLeft,
+            requiresRestart: responseData.data?.requiresRestart,
         };
     }
 
@@ -2234,6 +2244,7 @@ export async function resendOwnershipTransferCodeAction(
         return {
             ok: false,
             message: responseData.message,
+            retryAfter: responseData.data?.retryAfter,
         };
     }
 

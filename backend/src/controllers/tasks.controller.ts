@@ -1675,6 +1675,17 @@ export const moveTask = async (req: IGetUserRequest, res: Response) => {
 
         const validatedData = moveTaskSchema.parse(req.body);
 
+        const taskId = +id;
+
+        if (validatedData.taskId !== taskId) {
+            res.status(400).json({
+                status: "error",
+                message: "Task ID mismatch",
+            });
+
+            return;
+        }
+
         const [columns] = await pool.execute<
             (Pick<Column, "name" | "wip_limit" | "project_id"> & {
                 task_count: number;
@@ -1753,22 +1764,23 @@ export const moveTask = async (req: IGetUserRequest, res: Response) => {
         const [result] = await pool.execute<ResultSetHeader>(
             `
                 UPDATE tasks t
-                JOIN projects p ON p.id = ?
+                JOIN columns src ON src.id = t.column_id
+                JOIN projects p ON p.id = src.project_id
                 SET t.column_id = ?, t.position = ?, t.updated_at = NOW()
-                WHERE t.id = ? AND (
+                WHERE t.id = ? AND src.project_id = ? AND (
                     p.id IN (
-                        SELECT 
-                            project_id 
-                            FROM project_members 
+                        SELECT
+                            project_id
+                            FROM project_members
                             WHERE user_id = ? AND role IN ("owner", "admin")
                     ) OR p.owner_id = ? OR t.creator_id = ?
                 )
             `,
             [
-                column.project_id,
                 validatedData.columnId,
                 validatedData.position,
-                validatedData.taskId,
+                taskId,
+                column.project_id,
                 userId,
                 userId,
                 userId,
@@ -1776,9 +1788,18 @@ export const moveTask = async (req: IGetUserRequest, res: Response) => {
         );
 
         if (result.affectedRows === 0) {
-            res.status(400).json({
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "moveTask",
+                },
+                "Authorization denied",
+            );
+
+            res.status(404).json({
                 status: "error",
-                message: "Failed to move task",
+                message: "Task not found or access denied",
             });
 
             return;

@@ -1,4 +1,5 @@
 import { rateLimitHandler } from "../middlewares/securityAudit.middleware.js";
+import { userOrIpKey } from "../utils/rateLimitKeys.js";
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { authenticateToken } from "../middlewares/auth.middleware.js";
@@ -10,6 +11,7 @@ import {
     me,
     changePassword,
     updateProfile,
+    confirmEmailChange,
     setPassword,
     initiateAccountDeletion,
     confirmAccountDeletion,
@@ -37,6 +39,7 @@ const updateProfileLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: userOrIpKey,
     handler: rateLimitHandler,
 });
 
@@ -50,12 +53,27 @@ const changePasswordLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: userOrIpKey,
     handler: rateLimitHandler,
 });
 
 const setPasswordLimiter = rateLimit({
     windowMs: 60 * 60 * 1000,
     limit: 5,
+    message: {
+        status: 429,
+        error: "Too many requests",
+        message: "Too many requests. Please try again in 1 hour.",
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: userOrIpKey,
+    handler: rateLimitHandler,
+});
+
+const confirmEmailChangeLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    limit: 10,
     message: {
         status: 429,
         error: "Too many requests",
@@ -76,6 +94,7 @@ const initiateAccountDeletionLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: userOrIpKey,
     handler: rateLimitHandler,
 });
 
@@ -89,6 +108,7 @@ const confirmAccountDeletionLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: userOrIpKey,
     handler: rateLimitHandler,
 });
 
@@ -102,6 +122,7 @@ const resendAccountDeletionCodeLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: userOrIpKey,
     handler: rateLimitHandler,
 });
 
@@ -115,6 +136,7 @@ const deleteSessionLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: userOrIpKey,
     handler: rateLimitHandler,
 });
 
@@ -128,6 +150,7 @@ const deleteSessionsLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: userOrIpKey,
     handler: rateLimitHandler,
 });
 
@@ -173,6 +196,11 @@ router.post(
     verifyCsrf,
     validateData(setPasswordSchema),
     setPassword,
+);
+router.get(
+    "/confirm-email-change",
+    confirmEmailChangeLimiter,
+    confirmEmailChange,
 );
 router.post(
     "/:id/delete/initiate",

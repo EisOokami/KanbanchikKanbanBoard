@@ -35,6 +35,9 @@ export interface User extends RowDataPacket {
     terms_version: string;
     privacy_accepted_at: string;
     privacy_version: string;
+    pending_email: string | null;
+    email_change_token_hash: string | null;
+    email_change_expires_at: string | null;
 }
 
 export interface Project extends RowDataPacket {
@@ -137,6 +140,7 @@ export interface ProjectInvite extends RowDataPacket {
     id: number;
     project_id: number;
     token: string;
+    email: string | null;
     created_by: number;
     expires_at: string;
     used: number;

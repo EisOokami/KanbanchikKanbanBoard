@@ -1,5 +1,6 @@
-import type { Response } from "express";
+import type { Request, Response } from "express";
 import {
+    tokenSchema,
     changePasswordSchema,
     confirmAccountDeletionSchema,
     deleteAccountSchema,
@@ -28,6 +29,10 @@ import { decryptMfaSecret, generateRawToken, hashToken } from "../utils/mfa.js";
 import { OTP } from "otplib";
 import { emailTemplate } from "../utils/emailTemplate.js";
 import { transporter } from "../utils/email.js";
+import {
+    sendEmailChangeConfirmation,
+    sendEmailChangeNotice,
+} from "../utils/emailChangeEmails.js";
 
 dotenv.config({ quiet: true });
 
@@ -157,18 +162,67 @@ export const updateProfile = async (
             return;
         }
 
-        const [existingUser] = await pool.execute<
-            (Pick<User, "id"> & RowDataPacket)[]
-        >("SELECT id FROM users WHERE email = ? AND id != ?", [email, id]);
+        const [currentUsers] = await pool.execute<
+            (Pick<User, "id" | "name" | "email" | "password"> & RowDataPacket)[]
+        >("SELECT id, name, email, password FROM users WHERE id = ?", [id]);
 
-        if (existingUser.length) {
-            res.status(409).json({
+        const currentUser = currentUsers[0];
+
+        if (!currentUser) {
+            res.status(404).json({
                 status: "error",
-                message: "Email already in use",
+                message: "User not found",
             });
 
             return;
         }
+
+        const isEmailChanged =
+            email.toLowerCase() !== currentUser.email.toLowerCase();
+
+        if (isEmailChanged && currentUser.password) {
+            const isPasswordValid =
+                !!validateData.currentPassword &&
+                (await bcrypt.compare(
+                    validateData.currentPassword,
+                    currentUser.password,
+                ));
+
+            if (!isPasswordValid) {
+                req.log.warn(
+                    {
+                        audit: true,
+                        event: "user.password_verification_failed",
+                        operation: "updateProfile",
+                    },
+                    "Password verification failed",
+                );
+
+                res.status(401).json({
+                    status: "error",
+                    message: "Incorrect password",
+                });
+
+                return;
+            }
+        }
+
+        if (isEmailChanged && !currentUser.password) {
+            const [existingUser] = await pool.execute<
+                (Pick<User, "id"> & RowDataPacket)[]
+            >("SELECT id FROM users WHERE email = ? AND id != ?", [email, id]);
+
+            if (existingUser.length) {
+                res.status(409).json({
+                    status: "error",
+                    message: "Email already in use",
+                });
+
+                return;
+            }
+        }
+
+        const emailChangeToken = isEmailChanged ? generateRawToken() : null;
 
         const updateFields: string[] = [];
         const updateValues: any[] = [];
@@ -183,9 +237,13 @@ export const updateProfile = async (
             updateValues.push(surname);
         }
 
-        if (email) {
-            updateFields.push("email = ?");
-            updateValues.push(email);
+        if (emailChangeToken) {
+            updateFields.push(
+                "pending_email = ?",
+                "email_change_token_hash = ?",
+                "email_change_expires_at = DATE_ADD(NOW(), INTERVAL 24 HOUR)",
+            );
+            updateValues.push(email, hashToken(emailChangeToken));
         }
 
         if (color) {
@@ -261,6 +319,50 @@ export const updateProfile = async (
             return;
         }
 
+        if (emailChangeToken) {
+            try {
+                await Promise.all([
+                    sendEmailChangeConfirmation(
+                        currentUser.name,
+                        email,
+                        emailChangeToken,
+                    ),
+                    sendEmailChangeNotice(
+                        currentUser.name,
+                        currentUser.email,
+                        email,
+                        "requested",
+                    ),
+                ]);
+            } catch (error) {
+                req.log.error(
+                    {
+                        err: error,
+                        event: "email.delivery_failed",
+                        operation: "updateProfile",
+                    },
+                    "Operation failed",
+                );
+
+                res.status(500).json({
+                    status: "error",
+                    message:
+                        "Failed to send the confirmation email. Please try again.",
+                });
+
+                return;
+            }
+
+            req.log.info(
+                {
+                    event: "user.email_change_requested",
+                    audit: true,
+                    userId: id,
+                },
+                "Email change requested",
+            );
+        }
+
         req.log.info(
             { event: "user.profile_updated", audit: true, userId: id },
             "Operation completed",
@@ -268,7 +370,10 @@ export const updateProfile = async (
 
         res.status(200).json({
             status: "success",
-            message: "The profile has been successfully updated",
+            message: emailChangeToken
+                ? "The profile has been updated. To change your email, open the confirmation link we sent to the new address."
+                : "The profile has been successfully updated",
+            ...(emailChangeToken && { data: { pendingEmail: email } }),
             user: [
                 {
                     ...updatedUser[0],
@@ -308,6 +413,153 @@ export const updateProfile = async (
         res.status(500).json({
             status: "error",
             message: "Server error during updating profile",
+        });
+    }
+};
+
+export const confirmEmailChange = async (
+    req: Request,
+    res: Response,
+): Promise<void> => {
+    try {
+        const { token } = tokenSchema.parse(req.query);
+        const tokenHash = hashToken(token);
+
+        const [users] = await pool.execute<
+            (Pick<User, "id" | "name" | "email" | "pending_email"> &
+                RowDataPacket)[]
+        >(
+            `
+                SELECT id, name, email, pending_email
+                FROM users
+                WHERE email_change_token_hash = ?
+                    AND email_change_expires_at > NOW()
+                    AND pending_email IS NOT NULL
+            `,
+            [tokenHash],
+        );
+
+        const user = users[0];
+
+        if (!user || !user.pending_email) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "user.email_change_rejected",
+                    reason: "invalid_or_expired",
+                },
+                "Email change rejected",
+            );
+
+            res.status(400).json({
+                status: "error",
+                message: "Invalid or expired confirmation link",
+            });
+
+            return;
+        }
+
+        const [existingUser] = await pool.execute<
+            (Pick<User, "id"> & RowDataPacket)[]
+        >("SELECT id FROM users WHERE email = ? AND id != ?", [
+            user.pending_email,
+            user.id,
+        ]);
+
+        if (existingUser.length) {
+            res.status(409).json({
+                status: "error",
+                message: "Email already in use",
+            });
+
+            return;
+        }
+
+        const [result] = await pool.execute<ResultSetHeader>(
+            `
+                UPDATE users
+                SET email = pending_email,
+                    pending_email = NULL,
+                    email_change_token_hash = NULL,
+                    email_change_expires_at = NULL,
+                    is_verified = TRUE,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = ? AND email_change_token_hash = ?
+            `,
+            [user.id, tokenHash],
+        );
+
+        if (result.affectedRows === 0) {
+            res.status(400).json({
+                status: "error",
+                message: "Invalid or expired confirmation link",
+            });
+
+            return;
+        }
+
+        req.log.info(
+            { event: "user.email_changed", audit: true, userId: user.id },
+            "Email changed",
+        );
+
+        sendEmailChangeNotice(
+            user.name,
+            user.email,
+            user.pending_email,
+            "completed",
+        ).catch((error: unknown) => {
+            req.log.error(
+                {
+                    err: error,
+                    event: "email.delivery_failed",
+                    operation: "confirmEmailChange",
+                },
+                "Operation failed",
+            );
+        });
+
+        res.status(200).json({
+            status: "success",
+            message:
+                "Your email address has been changed. Use it to sign in from now on.",
+        });
+    } catch (error) {
+        if (error instanceof ZodError) {
+            res.status(400).json({
+                status: "error",
+                message: "Invalid or expired confirmation link",
+            });
+
+            return;
+        }
+
+        if (
+            error &&
+            typeof error === "object" &&
+            "code" in error &&
+            error.code === "ER_DUP_ENTRY"
+        ) {
+            res.status(409).json({
+                status: "error",
+                message: "Email already in use",
+            });
+
+            return;
+        }
+
+        req.log.error(
+            {
+                err: error,
+                event: "user.confirm_email_change_failed",
+                operation: "confirmEmailChange",
+            },
+            "Operation failed",
+        );
+
+        res.status(500).json({
+            status: "error",
+            message: "Server error while changing the email address",
         });
     }
 };
@@ -627,13 +879,13 @@ export const initiateAccountDeletion = async (
         const mailOptions = {
             from: process.env.EMAIL_USER,
             to: user.email,
-            subject: `${code} - confirm ownership transfer`,
+            subject: `${code} - confirm account deletion`,
             html: emailTemplate({
                 logo: "cid:app-logo",
-                title: "Ownership transfer code",
+                title: "Account deletion code",
                 heading: `Hi, ${user.name}!`,
                 description: `
-                        Use this code to confirm transferring project ownership:
+                        Use this code to confirm deleting your account:
                         <br />
                         <p style="font-size:28px;font-weight:700;letter-spacing:6px">${code}</p>
                         It expires in 10 minutes.
@@ -1128,13 +1380,13 @@ export const resendAccountDeletionCode = async (
         const mailOptions = {
             from: process.env.EMAIL_USER,
             to: session.email,
-            subject: `${code} - confirm ownership transfer`,
+            subject: `${code} - confirm account deletion`,
             html: emailTemplate({
                 logo: "cid:app-logo",
-                title: "Ownership transfer code",
+                title: "Account deletion code",
                 heading: `Hi, ${session.name}!`,
                 description: `
-                        Use this code to confirm transferring project ownership:
+                        Use this code to confirm deleting your account:
                         <br />
                         <p style="font-size:28px;font-weight:700;letter-spacing:6px">${code}</p>
                         It expires in 10 minutes.
@@ -1156,7 +1408,7 @@ export const resendAccountDeletionCode = async (
                     {
                         err: error,
                         event: "email.delivery_failed",
-                        operation: "initiateAccountDeletion",
+                        operation: "resendAccountDeletionCode",
                     },
                     "Operation failed",
                 );
@@ -1171,7 +1423,7 @@ export const resendAccountDeletionCode = async (
                 req.log.debug(
                     {
                         event: "email.sent",
-                        operation: "initiateAccountDeletion",
+                        operation: "resendAccountDeletionCode",
                     },
                     "Email accepted by transport",
                 );

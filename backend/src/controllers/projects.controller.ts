@@ -1404,10 +1404,10 @@ export const createProject = async (req: IGetUserRequest, res: Response) => {
                     await pool.execute<ResultSetHeader>(
                         `
                             INSERT INTO project_invites
-                                (project_id, token, created_by, expires_at)
-                            VALUES (?, ?, ?, ?)
+                                (project_id, token, email, created_by, expires_at)
+                            VALUES (?, ?, ?, ?, ?)
                         `,
-                        [projectId, token, userId, expiresAt],
+                        [projectId, token, email, userId, expiresAt],
                     );
 
                     const inviteUrl = `${process.env.FRONTEND_URL}/invite/${token}`;
@@ -1646,6 +1646,126 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
 
         const validatedData = updateProjectSchema.parse(req.body);
 
+        const foreignIds = await Promise.all(
+            (
+                [
+                    [
+                        "columns",
+                        validatedData.columns.map((column) => column.id),
+                    ],
+                    ["labels", validatedData.labels.map((label) => label.id)],
+                    [
+                        "categories",
+                        validatedData.categories.map((category) => category.id),
+                    ],
+                ] as const
+            ).map(async ([table, ids]): Promise<number[]> => {
+                const uniqueIds = [
+                    ...new Set(
+                        ids.filter((id): id is number => id !== undefined),
+                    ),
+                ];
+
+                if (!uniqueIds.length) {
+                    return [];
+                }
+
+                const [rows] = await pool.execute<
+                    ({ id: number } & RowDataPacket)[]
+                >(
+                    `
+                        SELECT id
+                        FROM ${table}
+                        WHERE project_id = ? AND id IN (${uniqueIds.map(() => "?").join(", ")})
+                    `,
+                    [project.id, ...uniqueIds],
+                );
+
+                const ownIds = new Set(rows.map((row) => row.id));
+
+                return uniqueIds.filter((id) => !ownIds.has(id));
+            }),
+        );
+
+        if (foreignIds.some((ids) => ids.length > 0)) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "updateProject",
+                    reason: "foreign_object_id",
+                },
+                "Authorization denied",
+            );
+
+            res.status(404).json({
+                status: "error",
+                message: "Column, label or category not found in this project",
+            });
+
+            return;
+        }
+
+        const [currentMembers] = await pool.execute<
+            (Pick<ProjectMember, "user_id" | "role"> & RowDataPacket)[]
+        >(`SELECT user_id, role FROM project_members WHERE project_id = ?`, [
+            project.id,
+        ]);
+
+        const currentRoles = new Map(
+            currentMembers.map((member) => [member.user_id, member.role]),
+        );
+        const roleChanges = validatedData.members.filter((member) => {
+            const currentRole = currentRoles.get(member.id);
+
+            return currentRole !== undefined && currentRole !== member.role;
+        });
+
+        if (
+            roleChanges.some(
+                (member) =>
+                    member.role === "owner" ||
+                    currentRoles.get(member.id) === "owner",
+            )
+        ) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "updateProject",
+                    reason: "owner_role_change",
+                },
+                "Authorization denied",
+            );
+
+            res.status(403).json({
+                status: "error",
+                message:
+                    "Project ownership can only be changed through ownership transfer",
+            });
+
+            return;
+        }
+
+        if (roleChanges.length && project.owner_id !== userId) {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "updateProject",
+                    reason: "role_change_not_owner",
+                },
+                "Authorization denied",
+            );
+
+            res.status(403).json({
+                status: "error",
+                message: "Only the project owner can change member roles",
+            });
+
+            return;
+        }
+
         const updateFields: string[] = [];
         const updateValues: any[] = [];
 
@@ -1769,13 +1889,14 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
                             `
                                 UPDATE columns 
                                 SET name = ?, position = ?, wip_limit = ?, updated_at = CURRENT_TIMESTAMP
-                                WHERE id = ?
+                                WHERE id = ? AND project_id = ?
                             `,
                             [
                                 column.name,
                                 column.position,
                                 column.wip_limit,
                                 column.id,
+                                project.id,
                             ],
                         );
                     }
@@ -1805,9 +1926,9 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
                             `
                                 UPDATE labels 
                                 SET name = ?, color = ?, updated_at = CURRENT_TIMESTAMP
-                                WHERE id = ?
+                                WHERE id = ? AND project_id = ?
                             `,
-                            [label.name, label.color, label.id],
+                            [label.name, label.color, label.id, project.id],
                         );
                     }
                 }),
@@ -1836,9 +1957,14 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
                             `
                                 UPDATE categories 
                                 SET name = ?, color = ?, updated_at = CURRENT_TIMESTAMP
-                                WHERE id = ?
+                                WHERE id = ? AND project_id = ?
                             `,
-                            [category.name, category.color, category.id],
+                            [
+                                category.name,
+                                category.color,
+                                category.id,
+                                project.id,
+                            ],
                         );
                     }
                 }),
@@ -1859,14 +1985,14 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
             );
         }
 
-        if (validatedData.members && validatedData.members.length) {
+        if (roleChanges.length) {
             await Promise.all(
-                validatedData.members.map(async (member) => {
+                roleChanges.map(async (member) => {
                     await pool.execute<ResultSetHeader>(
                         `
                             UPDATE project_members 
                             SET role = ?
-                            WHERE user_id = ? AND project_id = ?
+                            WHERE user_id = ? AND project_id = ? AND role != "owner"
                         `,
                         [member.role, member.id, project.id],
                     );
@@ -1927,10 +2053,10 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
                     await pool.execute<ResultSetHeader>(
                         `
                             INSERT INTO project_invites
-                                (project_id, token, created_by, expires_at)
-                            VALUES (?, ?, ?, ?)
+                                (project_id, token, email, created_by, expires_at)
+                            VALUES (?, ?, ?, ?, ?)
                         `,
-                        [project.id, token, userId, expiresAt],
+                        [project.id, token, email, userId, expiresAt],
                     );
 
                     const inviteUrl = `${process.env.FRONTEND_URL}/invite/${token}`;
@@ -2330,6 +2456,26 @@ export const changeRole = async (req: IGetUserRequest, res: Response) => {
 
         const validatedData = changeRoleSchema.parse(req.body);
 
+        if (validatedData.role === "owner") {
+            req.log.warn(
+                {
+                    audit: true,
+                    event: "security.authorization_failed",
+                    operation: "changeRole",
+                    reason: "owner_role_change",
+                },
+                "Authorization denied",
+            );
+
+            res.status(403).json({
+                status: "error",
+                message:
+                    "Project ownership can only be changed through ownership transfer",
+            });
+
+            return;
+        }
+
         const [projects] = await pool.execute<
             (Pick<Project, "id"> & RowDataPacket)[]
         >(
@@ -2337,16 +2483,9 @@ export const changeRole = async (req: IGetUserRequest, res: Response) => {
                 SELECT 
                     p.id
                 FROM projects p
-                WHERE p.slug = ? AND (
-                    p.id IN (
-                        SELECT 
-                            project_id 
-                        FROM project_members 
-                        WHERE user_id = ? AND role IN ("owner")
-                    ) OR p.owner_id = ? 
-                )
+                WHERE p.slug = ? AND p.owner_id = ?
             `,
-            [slug, userId, userId],
+            [slug, userId],
         );
 
         if (projects.length === 0) {
@@ -2531,14 +2670,13 @@ export const deleteMember = async (
         const projectId = +id;
 
         const [userAccess] = await pool.execute<
-            (Pick<ProjectMember, "role"> & RowDataPacket)[]
+            (Pick<Project, "id"> & RowDataPacket)[]
         >(
             `
-                SELECT role
-                FROM project_members
-                WHERE project_id = ?
-                AND user_id = ?
-                AND role IN ("owner")
+                SELECT id
+                FROM projects
+                WHERE id = ?
+                AND owner_id = ?
             `,
             [projectId, userId],
         );
@@ -2690,16 +2828,9 @@ export const initiateOwnershipTransfer = async (
                 SELECT 
                     p.id
                 FROM projects p
-                WHERE p.slug = ? AND (
-                    p.id IN (
-                        SELECT 
-                            project_id 
-                        FROM project_members 
-                        WHERE user_id = ? AND role IN ("owner")
-                    ) OR p.owner_id = ? 
-                )
+                WHERE p.slug = ? AND p.owner_id = ?
             `,
-            [slug, userId, userId],
+            [slug, userId],
         );
 
         if (projects.length === 0) {
@@ -3107,10 +3238,10 @@ export const confirmOwnershipTransfer = async (
 
         const [projects] = await pool.execute<
             (Pick<Project, "id"> & RowDataPacket)[]
-        >("SELECT id FROM projects WHERE slug = ? AND id = ?", [
-            slug,
-            session.project_id,
-        ]);
+        >(
+            "SELECT id FROM projects WHERE slug = ? AND id = ? AND owner_id = ?",
+            [slug, session.project_id, userId],
+        );
 
         const project = projects[0];
 

@@ -21,6 +21,7 @@ import { errorMiddleware } from "./middlewares/error.middleware.js";
 import { pinoHttp } from "pino-http";
 import { logger, requestRoute, httpLoggingOptions } from "./utils/logger.js";
 import { securityAudit } from "./middlewares/securityAudit.middleware.js";
+import { userOrIpKey } from "./utils/rateLimitKeys.js";
 
 dotenv.config({ quiet: true });
 
@@ -32,6 +33,7 @@ const limiter = rateLimit({
     limit: 300,
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: userOrIpKey,
     handler: (req, res) => {
         req.log.warn(
             {
@@ -54,7 +56,13 @@ const limiter = rateLimit({
 const hosts = process.env.HOSTS?.split(",");
 const corsUrls = process.env.CORS_URLS?.split(",");
 
-app.set("trust proxy", 1);
+const trustedProxies = process.env.TRUST_PROXY?.split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+if (trustedProxies?.length) {
+    app.set("trust proxy", trustedProxies);
+}
 
 app.disable("x-powered-by");
 app.use(pinoHttp(httpLoggingOptions));
@@ -84,12 +92,70 @@ app.use("/uploads", uploadsRoutes);
 app.use("/invites", inviteRoutes);
 app.use("/auth/mfa", mfaRoutes);
 
+const inlineFileTypes: Readonly<Record<string, string>> = {
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".gif": "image/gif",
+    ".webp": "image/webp",
+    ".avif": "image/avif",
+    ".mp4": "video/mp4",
+    ".webm": "video/webm",
+    ".mpeg": "video/mpeg",
+    ".pdf": "application/pdf",
+};
+
+const downloadFileTypes: Readonly<Record<string, string>> = {
+    ".docx":
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ".xlsx":
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    ".pptx":
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+};
+
+const fileTypeFor = (
+    types: Readonly<Record<string, string>>,
+    extension: string,
+): string | undefined =>
+    Object.hasOwn(types, extension) ? types[extension] : undefined;
+
 app.use(
     "/files",
     helmet.crossOriginResourcePolicy({
         policy: "cross-origin",
     }),
-    express.static(path.join(process.cwd(), "uploads")),
+    express.static(path.join(process.cwd(), "uploads"), {
+        index: false,
+        setHeaders: (res, filePath) => {
+            const extension = path.extname(filePath).toLowerCase();
+            const inlineType = fileTypeFor(inlineFileTypes, extension);
+
+            res.setHeader("X-Content-Type-Options", "nosniff");
+
+            if (inlineType) {
+                res.setHeader("Content-Type", inlineType);
+                res.setHeader("Content-Disposition", "inline");
+
+                if (inlineType !== "application/pdf") {
+                    res.setHeader("Content-Security-Policy", "sandbox");
+                }
+
+                return;
+            }
+
+            res.setHeader(
+                "Content-Type",
+                fileTypeFor(downloadFileTypes, extension) ??
+                    "application/octet-stream",
+            );
+            res.setHeader("Content-Disposition", "attachment");
+            res.setHeader(
+                "Content-Security-Policy",
+                "default-src 'none'; sandbox",
+            );
+        },
+    }),
 );
 
 app.use((req: Request, res: Response) => {

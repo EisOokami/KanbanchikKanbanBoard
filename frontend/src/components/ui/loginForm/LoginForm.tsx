@@ -28,6 +28,7 @@ import {
 } from "@phosphor-icons/react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "../shadcn/input-otp";
 import EmailCodeForm from "../emailCodeForm/EmailCodeForm";
+import { Checkbox } from "../shadcn/checkbox";
 
 const INITIAL_STATE: BaseAction = {
     zodErrors: null,
@@ -294,6 +295,36 @@ export default function LoginForm({ redirect }: Readonly<LoginFormProps>) {
                                 className="size-4 shrink-0"
                             />
                             <p>{formState?.message}</p>
+                        </div>
+                    )}
+                    {formState?.data?.requiresTermsAcceptance && (
+                        <div className="flex items-start gap-2">
+                            <Checkbox
+                                id="acceptTerms"
+                                name="acceptTerms"
+                                className="mt-0.5"
+                            />
+                            <Label
+                                htmlFor="acceptTerms"
+                                className="text-sm font-normal leading-snug text-muted-foreground"
+                            >
+                                I agree to the updated{" "}
+                                <Link
+                                    href="/terms"
+                                    target="_blank"
+                                    className="text-primary underline"
+                                >
+                                    Terms &amp; Conditions
+                                </Link>{" "}
+                                and{" "}
+                                <Link
+                                    href="/privacy"
+                                    target="_blank"
+                                    className="text-primary underline"
+                                >
+                                    Privacy Policy
+                                </Link>
+                            </Label>
                         </div>
                     )}
                     {formState?.data?.requiresVerification && (

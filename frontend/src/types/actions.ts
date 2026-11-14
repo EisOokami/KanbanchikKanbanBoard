@@ -118,6 +118,7 @@ export interface UpdateProfileZodErrors extends BaseZodErrors {
     surname?: string[];
     email?: string[];
     color?: string[];
+    currentPassword?: string[];
 }
 
 export interface ChangePasswordZodErrors extends BaseZodErrors {

@@ -781,6 +781,14 @@ export const updateProfileSchema = z.object({
         .regex(/^#[0-9A-Fa-f]{6}$/, "Color must be a valid HEX value")
         .nullable()
         .optional(),
+    currentPassword: z.preprocess(
+        (value) => (value === null || value === "" ? undefined : value),
+        z
+            .string()
+            .min(8, "Password must be at least 8 characters long")
+            .max(255, "Password must be less than 255 characters long")
+            .optional(),
+    ),
 });
 
 export const changePasswordSchema = z
@@ -1049,7 +1057,10 @@ export const deleteAccountConfirmSchema = z.object({
     code: z
         .string()
         .trim()
-        .regex(/^\d{6}$/, "Enter the 6-digit code"),
+        .regex(
+            /^(\d{6}|[A-Za-z0-9]{4}-[A-Za-z0-9]{4})$/,
+            "Enter the 6-digit code or a backup code",
+        ),
 });
 
 export const deleteAccountResendSchema = z.object({

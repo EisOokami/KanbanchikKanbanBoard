@@ -7,13 +7,13 @@ import {
     ResetPassword,
 } from "@/types/services";
 import { cookies, headers } from "next/headers";
+import { forwardedClientIp } from "./clientIp";
 
 const baseUrl = process.env.API_URL ?? "http://localhost:3001";
 
 const csrfTokenConfig = {
     maxAge: 60 * 60 * 24 * 7,
     path: "/",
-    domain: process.env.HOST ?? "localhost",
     httpOnly: false,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax" as const,
@@ -62,6 +62,7 @@ export async function registerService(userData: Register): Promise<
             headers: {
                 "Content-Type": "application/json",
                 "User-Agent": (await headers()).get("user-agent") ?? "",
+                ...forwardedClientIp(await headers()),
             },
             body: JSON.stringify({ ...userData }),
             credentials: "include",
@@ -117,6 +118,7 @@ export async function loginService(userData: Login): Promise<
             headers: {
                 "Content-Type": "application/json",
                 "User-Agent": (await headers()).get("user-agent") ?? "",
+                ...forwardedClientIp(await headers()),
             },
             body: JSON.stringify({ ...userData }),
             credentials: "include",
@@ -155,6 +157,7 @@ export async function forgotPasswordService(userData: ForgotPassword): Promise<
             headers: {
                 "Content-Type": "application/json",
                 "User-Agent": (await headers()).get("user-agent") ?? "",
+                ...forwardedClientIp(await headers()),
             },
             body: JSON.stringify({ ...userData }),
             cache: "no-cache",
@@ -192,6 +195,7 @@ export async function resetPasswordService(userData: ResetPassword): Promise<
             headers: {
                 "Content-Type": "application/json",
                 "User-Agent": (await headers()).get("user-agent") ?? "",
+                ...forwardedClientIp(await headers()),
             },
             body: JSON.stringify({ ...userData }),
             cache: "no-cache",
@@ -219,7 +223,11 @@ export async function googleExchangeService(code: string): Promise<
     try {
         const response = await fetch(url, {
             method: "POST",
-            headers: { "Content-Type": "application/json", "User-Agent": (await headers()).get("user-agent") ?? "" },
+            headers: {
+                "Content-Type": "application/json",
+                "User-Agent": (await headers()).get("user-agent") ?? "",
+                ...forwardedClientIp(await headers()),
+            },
             body: JSON.stringify({ code }),
             credentials: "include",
             cache: "no-cache",
@@ -249,7 +257,10 @@ export async function mfaVerifyService(data: {
     try {
         const response = await fetch(url, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                ...forwardedClientIp(await headers()),
+            },
             body: JSON.stringify(data),
             credentials: "include",
             cache: "no-cache",
@@ -287,6 +298,7 @@ export async function resendVerificationService(email: string): Promise<
             headers: {
                 "Content-Type": "application/json",
                 "User-Agent": (await headers()).get("user-agent") ?? "",
+                ...forwardedClientIp(await headers()),
             },
             body: JSON.stringify({ email }),
             cache: "no-cache",
@@ -327,6 +339,7 @@ export async function emailCodeResendService(tempToken: string): Promise<
             headers: {
                 "Content-Type": "application/json",
                 "User-Agent": (await headers()).get("user-agent") ?? "",
+                ...forwardedClientIp(await headers()),
             },
             body: JSON.stringify({ tempToken }),
             cache: "no-cache",
@@ -375,6 +388,7 @@ export async function emailCodeVerifyService(
             headers: {
                 "Content-Type": "application/json",
                 "User-Agent": (await headers()).get("user-agent") ?? "",
+                ...forwardedClientIp(await headers()),
             },
             body: JSON.stringify({ tempToken, code }),
             cache: "no-cache",

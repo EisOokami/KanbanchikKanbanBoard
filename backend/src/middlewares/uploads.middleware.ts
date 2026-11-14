@@ -2,23 +2,26 @@ import multer from "multer";
 import path from "path";
 
 const __dirname = path.resolve(path.dirname(""));
-const allowedTypes = [
-    "image/jpeg",
-    "image/png",
-    "image/svg+xml",
-    "image/webp",
-    "image/gif",
-    "image/avif",
-    "application/pdf",
-    "video/mp4",
-    "video/webm",
-    "video/mpeg",
-    "application/msword",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "text/plain",
-    "application/vnd.ms-",
-    "application/vnd.openxmlformats-",
-];
+const allowedTypes: Readonly<Record<string, string>> = {
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+    "image/webp": ".webp",
+    "image/gif": ".gif",
+    "image/avif": ".avif",
+    "application/pdf": ".pdf",
+    "video/mp4": ".mp4",
+    "video/webm": ".webm",
+    "video/mpeg": ".mpeg",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+        ".docx",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+        ".xlsx",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation":
+        ".pptx",
+};
+
+const extensionFor = (mimetype: string): string | undefined =>
+    Object.hasOwn(allowedTypes, mimetype) ? allowedTypes[mimetype] : undefined;
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -36,9 +39,15 @@ const storage = multer.diskStorage({
             );
         }
 
+        const extension = extensionFor(file.mimetype);
+
+        if (!extension) {
+            return cb(new Error("Invalid file type"), "");
+        }
+
         cb(
             null,
-            `${file.fieldname}-${Date.now()}-${Math.random().toString(36).slice(2)}${path.extname(file.originalname)}`,
+            `${file.fieldname}-${Date.now()}-${Math.random().toString(36).slice(2)}${extension}`,
         );
     },
 });
@@ -52,7 +61,7 @@ const upload = multer({
             );
         }
 
-        if (!allowedTypes.some((type) => file.mimetype.startsWith(type))) {
+        if (!extensionFor(file.mimetype)) {
             return cb(new Error("Invalid file type"));
         }
 

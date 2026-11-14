@@ -1,4 +1,5 @@
 import { rateLimitHandler } from "../middlewares/securityAudit.middleware.js";
+import { userOrIpKey } from "../utils/rateLimitKeys.js";
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { authenticateToken } from "../middlewares/auth.middleware.js";
@@ -20,6 +21,7 @@ const setupMfaLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: userOrIpKey,
     handler: rateLimitHandler,
 });
 
@@ -33,6 +35,7 @@ const enableMfaLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: userOrIpKey,
     handler: rateLimitHandler,
 });
 
@@ -59,6 +62,7 @@ const disableMfaLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: userOrIpKey,
     handler: rateLimitHandler,
 });
 
@@ -72,6 +76,7 @@ const regenerateBackupCodesLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: userOrIpKey,
     handler: rateLimitHandler,
 });
 

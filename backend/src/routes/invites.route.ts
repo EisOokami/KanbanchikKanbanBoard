@@ -1,4 +1,5 @@
 import { rateLimitHandler } from "../middlewares/securityAudit.middleware.js";
+import { userOrIpKey } from "../utils/rateLimitKeys.js";
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { authenticateToken } from "../middlewares/auth.middleware.js";
@@ -19,6 +20,7 @@ const generateLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: userOrIpKey,
     handler: rateLimitHandler,
 });
 
@@ -32,6 +34,7 @@ const acceptLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: userOrIpKey,
     handler: rateLimitHandler,
 });
 
@@ -45,6 +48,7 @@ const memberInviteLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: userOrIpKey,
     handler: rateLimitHandler,
 });
 

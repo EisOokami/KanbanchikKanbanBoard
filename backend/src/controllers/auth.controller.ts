@@ -246,7 +246,7 @@ export const verifyEmail = async (
     try {
         const token = req.query.token;
 
-        if (!token) {
+        if (!token || typeof token !== "string") {
             res.status(400).json({
                 status: "error",
                 message: "Verification token is required",
@@ -524,7 +524,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     try {
         const validateData = loginSchema.parse(req.body);
 
-        const { email, password } = validateData;
+        const { email, password, acceptTerms } = validateData;
 
         const [rows] = await pool.execute<
             (Pick<
@@ -580,24 +580,6 @@ export const login = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        if (
-            user.terms_version !== process.env.TERMS_VERSION ||
-            user.privacy_version !== process.env.PRIVACY_VERSION
-        ) {
-            req.log.warn(
-                { audit: true, event: "auth.login_failed", operation: "login" },
-                "Authentication rejected",
-            );
-
-            res.status(401).json({
-                status: "error",
-                message:
-                    "Terms of Service and Privacy Policy update required. Please review and accept the current versions. A link to the latest documents has been sent to your email",
-            });
-
-            return;
-        }
-
         if (!user.is_verified) {
             req.log.warn(
                 { audit: true, event: "auth.login_failed", operation: "login" },
@@ -629,6 +611,63 @@ export const login = async (req: Request, res: Response): Promise<void> => {
             });
 
             return;
+        }
+
+        if (
+            user.terms_version !== process.env.TERMS_VERSION ||
+            user.privacy_version !== process.env.PRIVACY_VERSION
+        ) {
+            if (!acceptTerms) {
+                req.log.warn(
+                    {
+                        audit: true,
+                        event: "auth.login_failed",
+                        operation: "login",
+                        reason: "terms_outdated",
+                    },
+                    "Authentication rejected",
+                );
+
+                res.status(401).json({
+                    status: "error",
+                    message:
+                        "Our Terms & Conditions and Privacy Policy have been updated. Please review and accept them to continue.",
+                    data: {
+                        requiresTermsAcceptance: true,
+                    },
+                });
+
+                return;
+            }
+
+            await pool.execute<ResultSetHeader>(
+                `
+                    UPDATE users
+                    SET terms_accepted_at = ?,
+                        terms_version = ?,
+                        privacy_accepted_at = ?,
+                        privacy_version = ?
+                    WHERE id = ?
+                `,
+                [
+                    new Date(),
+                    process.env.TERMS_VERSION!,
+                    new Date(),
+                    process.env.PRIVACY_VERSION!,
+                    user.id,
+                ],
+            );
+
+            req.log.info(
+                {
+                    event: "auth.terms_accepted",
+                    audit: true,
+                    userId: user.id,
+                    termsVersion: process.env.TERMS_VERSION,
+                    privacyVersion: process.env.PRIVACY_VERSION,
+                },
+                "Operation completed",
+            );
         }
 
         if (user.mfa_enabled) {

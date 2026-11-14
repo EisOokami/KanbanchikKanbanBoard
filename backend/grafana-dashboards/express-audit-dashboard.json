@@ -1,0 +1,542 @@
+{
+  "title": "Express Backend - Security Audit",
+  "uid": "express-audit-security",
+  "tags": [
+    "security",
+    "audit",
+    "express"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 2,
+  "refresh": "30s",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "All requests (for period)",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum(count_over_time({service=\"express-backend\"} | json http_status=\"res.statusCode\", elapsed_ms=\"responseTime\" | elapsed_ms!=\"\" | http_status!=\"\" | __error__=\"\" [$__range])) or vector(0)",
+          "refId": "A",
+          "legendFormat": "",
+          "queryType": "instant",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "0",
+          "decimals": 0,
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "value"
+      },
+      "description": "Number of pino-http HTTP access records: one record per completed request. Business events and application errors do not increase this counter."
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Suspicious requests",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum(count_over_time({service=\"express-backend\"} | json audit_flag=\"audit\", event_name=\"event\" | audit_flag=\"true\" | event_name!=\"\" | __error__=\"\" | event_name=\"security.suspicious_request\" [$__range])) or vector(0)",
+          "refId": "A",
+          "legendFormat": "",
+          "queryType": "instant",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "orange"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "0",
+          "decimals": 0,
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "value"
+      },
+      "description": "Only security.suspicious_request. Successful login, MFA and other events with audit=true are not considered suspicious."
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Rate limit triggered",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum(count_over_time({service=\"express-backend\"} | json audit_flag=\"audit\", event_name=\"event\" | audit_flag=\"true\" | event_name!=\"\" | __error__=\"\" | event_name=\"security.rate_limit_exceeded\" [$__range])) or vector(0)",
+          "refId": "A",
+          "legendFormat": "",
+          "queryType": "instant",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "red"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "0",
+          "decimals": 0,
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "value"
+      },
+      "description": "All security.rate_limit_exceeded events: global limit, route limits and verification attempt limits. Does not depend on the message text or the presence of reasons."
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "HTTP 5xx errors",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum(count_over_time({service=\"express-backend\"} | json http_status=\"res.statusCode\", elapsed_ms=\"responseTime\" | elapsed_ms!=\"\" | http_status!=\"\" | __error__=\"\" | http_status=~\"5[0-9]{2}\" [$__range])) or vector(0)",
+          "refId": "A",
+          "legendFormat": "",
+          "queryType": "instant",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "dark-red"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-red",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "0",
+          "decimals": 0,
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "value"
+      },
+      "description": "Counts only HTTP access records with status 500-599. A separate application error for the same request is not counted again."
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Audit events over time",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 16,
+        "x": 0,
+        "y": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "refId": "A",
+          "legendFormat": "{{event_name}}",
+          "expr": "sum by (event_name) (count_over_time({service=\"express-backend\"} | json audit_flag=\"audit\", event_name=\"event\" | audit_flag=\"true\" | event_name!=\"\" | __error__=\"\" [$__interval]))",
+          "queryType": "range",
+          "editorMode": "code"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 60,
+            "stacking": {
+              "mode": "normal"
+            }
+          },
+          "noValue": "0"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "description": "Successful and rejected security-sensitive operations, grouped by event. Value is the number of events per interval; a single request may contain different audit events.",
+      "interval": "1m"
+    },
+    {
+      "id": 6,
+      "type": "piechart",
+      "title": "Security warnings by event",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 16,
+        "y": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "refId": "A",
+          "legendFormat": "{{event_name}}",
+          "queryType": "instant",
+          "expr": "sum by (event_name) (count_over_time({service=\"express-backend\"} | json audit_flag=\"audit\", event_name=\"event\", log_level=\"level\" | audit_flag=\"true\" | log_level=\"warn\" | event_name!=\"\" | __error__=\"\" [$__range]))",
+          "editorMode": "code"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "values": [
+            "value"
+          ]
+        },
+        "pieType": "donut",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "description": "Only audit=true and level=warn. Distribution by event without double-counting the reasons array; these are signals and rejections, not confirmed attacks."
+    },
+    {
+      "id": 7,
+      "type": "table",
+      "title": "Top 10 IPs with suspicious requests",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 13
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "refId": "A",
+          "queryType": "instant",
+          "format": "table",
+          "expr": "topk(10, sum by (source_ip) (count_over_time({service=\"express-backend\"} | json event_name=\"event\", source_ip=\"ip\" | event_name=\"security.suspicious_request\" | source_ip!=\"\" | __error__=\"\" [$__range])))",
+          "editorMode": "code"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "includeByName": {
+              "source_ip": true,
+              "Value": true
+            },
+            "renameByName": {
+              "source_ip": "IP address",
+              "Value": "Event count"
+            }
+          }
+        }
+      ],
+      "options": {
+        "sortBy": [
+          {
+            "displayName": "Event count",
+            "desc": true
+          }
+        ]
+      },
+      "description": "IPs from security.suspicious_request only. Events without an IP are excluded; the IP is not added to indexed Loki labels."
+    },
+    {
+      "id": 8,
+      "type": "table",
+      "title": "Top 10 routes with HTTP 401 / 403 / 429",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 13
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "refId": "A",
+          "queryType": "instant",
+          "format": "table",
+          "expr": "topk(10, sum by (route_template) (count_over_time({service=\"express-backend\"} | json http_status=\"res.statusCode\", elapsed_ms=\"responseTime\", route_template=\"route\" | elapsed_ms!=\"\" | http_status=~\"401|403|429\" | route_template!=\"\" | route_template!=\"unmatched\" | __error__=\"\" [$__range])))",
+          "editorMode": "code"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "includeByName": {
+              "route_template": true,
+              "Value": true
+            },
+            "renameByName": {
+              "route_template": "Route",
+              "Value": "Event count"
+            }
+          }
+        }
+      ],
+      "options": {
+        "sortBy": [
+          {
+            "displayName": "Event count",
+            "desc": true
+          }
+        ]
+      },
+      "description": "HTTP access records by route template. These statuses do not prove an attack. Records without a resolved route are excluded. Raw URLs, slugs and paths are not logged."
+    },
+    {
+      "id": 9,
+      "type": "logs",
+      "title": "Audit events — full context",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 22
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "refId": "A",
+          "expr": "{service=\"express-backend\"} | json | audit=\"true\" | __error__=\"\"",
+          "queryType": "range",
+          "editorMode": "code"
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "wrapLogMessage": true,
+        "sortOrder": "Descending",
+        "enableLogDetails": true,
+        "dedupStrategy": "none"
+      },
+      "description": "Original JSON with event, reqId, userId and resource identifiers when available. reqId links the audit event to the HTTP record in the panel below. Refreshes every 30 seconds."
+    },
+    {
+      "id": 10,
+      "type": "logs",
+      "title": "All backend logs",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 34
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "refId": "A",
+          "expr": "{service=\"express-backend\"} | json | __error__=\"\"",
+          "queryType": "range",
+          "editorMode": "code"
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "wrapLogMessage": true,
+        "sortOrder": "Descending",
+        "enableLogDetails": true,
+        "dedupStrategy": "none"
+      },
+      "description": "Original JSON is kept without line_format: reqId, event, route, operation, resource identifiers and safe err metadata are available. HTTP 404 is a regular access record, not automatically a security event."
+    }
+  ],
+  "description": "Audit and HTTP observability for structured Pino/pino-http logs. Security events are identified by event, HTTP requests by responseTime and res.statusCode. Loki datasource UID: loki."
+}

@@ -67,10 +67,12 @@ export async function findOrCreateGoogleUser(profile: {
     }
 
     const [byEmail] = await pool.execute<
-        (Pick<User, "id" | "google_id"> & RowDataPacket)[]
-    >(`SELECT id, google_id FROM users WHERE email = ?`, [profile.email]);
+        (Pick<User, "id" | "google_id" | "is_verified"> & RowDataPacket)[]
+    >(`SELECT id, google_id, is_verified FROM users WHERE email = ?`, [
+        profile.email,
+    ]);
 
-    if (byEmail[0]) {
+    if (byEmail[0] && byEmail[0].is_verified) {
         await pool.execute(
             `
                 UPDATE users 
@@ -80,6 +82,29 @@ export async function findOrCreateGoogleUser(profile: {
             `,
             [profile.googleId, profile.avatarUrl, byEmail[0].id],
         );
+
+        return byEmail[0].id;
+    }
+
+    if (byEmail[0]) {
+        const [result] = await pool.execute<ResultSetHeader>(
+            `
+                UPDATE users
+                SET google_id = ?,
+                    auth_provider = 'google',
+                    password = NULL,
+                    is_verified = TRUE,
+                    verification_token = NULL,
+                    verification_token_expires = NULL,
+                    avatar_url = COALESCE(avatar_url, ?)
+                WHERE id = ? AND is_verified = FALSE
+            `,
+            [profile.googleId, profile.avatarUrl, byEmail[0].id],
+        );
+
+        if (result.affectedRows === 0) {
+            throw new Error("Account state changed during Google sign-in");
+        }
 
         return byEmail[0].id;
     }

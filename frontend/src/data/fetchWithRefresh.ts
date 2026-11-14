@@ -1,17 +1,12 @@
+import "server-only";
+
 import { cookies, headers } from "next/headers";
 import { refreshAccessToken } from "./refreshAccessToken";
-
-type FetchOptions = RequestInit & { requireAuth?: boolean };
-type RefreshResult = {
-    accessToken: string;
-    refreshToken: string;
-    csrfToken: string;
-};
+import { forwardedClientIp } from "./clientIp";
 
 const accessTokenConfig = {
     maxAge: 15 * 60,
     path: "/",
-    domain: process.env.HOST ?? "localhost",
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax" as const,
@@ -19,7 +14,6 @@ const accessTokenConfig = {
 const refreshTokenConfig = {
     maxAge: 60 * 60 * 24 * 7,
     path: "/",
-    domain: process.env.HOST ?? "localhost",
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict" as const,
@@ -27,26 +21,40 @@ const refreshTokenConfig = {
 const csrfTokenConfig = {
     maxAge: 60 * 60 * 24 * 7,
     path: "/",
-    domain: process.env.HOST ?? "localhost",
     httpOnly: false,
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict" as const,
 };
 
-const refreshPromises = new Map<string, Promise<RefreshResult | null>>();
+const refreshPromises = new Map();
 
 async function refreshOnce(
     refreshToken: string,
     csrfToken: string,
-): Promise<RefreshResult | null> {
+): Promise<
+    | {
+          status: "success";
+          accessToken: string;
+          refreshToken: string;
+          csrfToken: string;
+      }
+    | { status: "rejected" }
+    | { status: "unavailable" }
+> {
     const inFlight = refreshPromises.get(refreshToken);
 
     if (inFlight) {
         return inFlight;
     }
 
-    const userAgent = (await headers()).get("user-agent") ?? undefined;
-    const promise = refreshAccessToken(refreshToken, csrfToken, userAgent).finally(() => {
+    const incoming = await headers();
+    const userAgent = incoming.get("user-agent") ?? undefined;
+    const promise = refreshAccessToken(
+        refreshToken,
+        csrfToken,
+        userAgent,
+        incoming,
+    ).finally(() => {
         refreshPromises.delete(refreshToken);
     });
 
@@ -59,7 +67,7 @@ export async function fetchWithRefresh(
     url: string | URL,
     accessToken: string | undefined,
     refreshToken: string | undefined,
-    options: FetchOptions = {},
+    options: RequestInit & { requireAuth?: boolean } = {},
     isImage?: boolean,
 ): Promise<Response> {
     const method = (options.method ?? "GET").toUpperCase();
@@ -72,12 +80,15 @@ export async function fetchWithRefresh(
         throw new Error("CSRF token missing");
     }
 
+    const clientIpHeaders = forwardedClientIp(await headers());
+
     const buildHeaders = (
         token: string | undefined,
         cookieRefreshToken: string | undefined,
         currentCsrfToken: string | undefined,
     ) => ({
         ...(!isImage && { "Content-Type": "application/json" }),
+        ...clientIpHeaders,
         ...(token && { Authorization: `Bearer ${token}` }),
         ...(cookieRefreshToken && {
             Cookie: `refreshToken=${cookieRefreshToken}; csrfToken=${currentCsrfToken}`,
@@ -91,10 +102,18 @@ export async function fetchWithRefresh(
         headers: buildHeaders(accessToken, refreshToken, csrfToken),
     });
 
-    if (response.status === 401 && refreshToken && csrfToken) {
+    const isTokenRejected =
+        response.status === 401 &&
+        response.headers.get("www-authenticate")?.startsWith("Bearer");
+
+    if (isTokenRejected && refreshToken && csrfToken) {
         const tokens = await refreshOnce(refreshToken, csrfToken);
 
-        if (!tokens) {
+        if (tokens.status === "unavailable") {
+            return response;
+        }
+
+        if (tokens.status === "rejected") {
             throw new Error("Session expired");
         }
 

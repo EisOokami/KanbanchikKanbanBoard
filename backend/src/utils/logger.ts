@@ -112,7 +112,11 @@ export const logger = pino(
             },
         },
     },
-    pino.destination({ dest: process.env.LOG_FILE || 1, sync: false }),
+    pino.destination({
+        dest: process.env.LOG_FILE || 1,
+        sync: false,
+        mkdir: true,
+    }),
 );
 
 export const httpLoggingOptions: Options<Request, Response> = {

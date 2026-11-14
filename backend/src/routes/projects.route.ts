@@ -1,4 +1,5 @@
 import { rateLimitHandler } from "../middlewares/securityAudit.middleware.js";
+import { userOrIpKey } from "../utils/rateLimitKeys.js";
 import { Router } from "express";
 import {
     changeRole,
@@ -39,6 +40,7 @@ const createProjectLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: userOrIpKey,
     handler: rateLimitHandler,
 });
 
@@ -52,6 +54,7 @@ const updateProjectLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: userOrIpKey,
     handler: rateLimitHandler,
 });
 
@@ -65,6 +68,7 @@ const changeRoleLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: userOrIpKey,
     handler: rateLimitHandler,
 });
 
@@ -78,6 +82,7 @@ const deleteMemberLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: userOrIpKey,
     handler: rateLimitHandler,
 });
 
@@ -91,6 +96,7 @@ const updateTaskCommentLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: userOrIpKey,
     handler: rateLimitHandler,
 });
 
@@ -104,6 +110,7 @@ const initiateOwnershipTransferLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: userOrIpKey,
     handler: rateLimitHandler,
 });
 
@@ -117,6 +124,7 @@ const confirmOwnershipTransferLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: userOrIpKey,
     handler: rateLimitHandler,
 });
 
@@ -130,6 +138,7 @@ const resendOwnershipTransferCodeLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: userOrIpKey,
     handler: rateLimitHandler,
 });
 
@@ -142,6 +151,7 @@ const aiSummaryLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: userOrIpKey,
     handler: rateLimitHandler,
 });
 

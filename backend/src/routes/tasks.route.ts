@@ -1,4 +1,5 @@
 import { rateLimitHandler } from "../middlewares/securityAudit.middleware.js";
+import { userOrIpKey } from "../utils/rateLimitKeys.js";
 import { Router } from "express";
 import {
     addTaskSubtasks,
@@ -37,6 +38,7 @@ const createTaskLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: userOrIpKey,
     handler: rateLimitHandler,
 });
 
@@ -50,6 +52,7 @@ const updateTaskLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: userOrIpKey,
     handler: rateLimitHandler,
 });
 
@@ -63,6 +66,7 @@ const moveTaskLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: userOrIpKey,
     handler: rateLimitHandler,
 });
 
@@ -76,6 +80,7 @@ const deleteTaskLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: userOrIpKey,
     handler: rateLimitHandler,
 });
 
@@ -89,6 +94,7 @@ const createTaskCommentLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: userOrIpKey,
     handler: rateLimitHandler,
 });
 
@@ -102,6 +108,7 @@ const updateTaskCommentLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: userOrIpKey,
     handler: rateLimitHandler,
 });
 
@@ -115,6 +122,7 @@ const deleteTaskCommentLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: userOrIpKey,
     handler: rateLimitHandler,
 });
 
@@ -127,6 +135,7 @@ const generateTaskSubtasksLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: userOrIpKey,
     handler: rateLimitHandler,
 });
 
@@ -139,6 +148,7 @@ const addTaskSubtasksLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: userOrIpKey,
     handler: rateLimitHandler,
 });
 

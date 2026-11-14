@@ -690,19 +690,10 @@ export const disableMfa = async (
             return;
         }
 
-        const [backupCodesResult] = await pool.execute<ResultSetHeader>(
+        await pool.execute<ResultSetHeader>(
             "DELETE FROM mfa_backup_codes WHERE user_id = ?",
             [userId],
         );
-
-        if (backupCodesResult.affectedRows === 0) {
-            res.status(400).json({
-                status: "error",
-                message: "Failed to delete backup codes",
-            });
-
-            return;
-        }
 
         req.log.info(
             { event: "auth.mfa_disabled", audit: true, userId },

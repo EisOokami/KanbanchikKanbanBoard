@@ -1,6 +1,9 @@
 import { rateLimitHandler } from "../middlewares/securityAudit.middleware.js";
+import { ipAndEmailKey, userOrIpKey } from "../utils/rateLimitKeys.js";
 import { Router } from "express";
-import rateLimit from "express-rate-limit";
+import type { Request } from "express";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
+import { jwtVerify } from "jose";
 import {
     forgotPassword,
     googleAuthCallback,
@@ -29,6 +32,9 @@ import {
 import { verifyCsrf } from "../middlewares/csrf.middleware.js";
 import { validateEmailMiddleware } from "../middlewares/emailValidation.middleware.js";
 import { authenticateToken } from "../middlewares/auth.middleware.js";
+import { JOSEError } from "jose/errors";
+
+const refreshSecret = new TextEncoder().encode(process.env.JWT_REFRESH_SECRET);
 
 const registerLimiter = rateLimit({
     windowMs: 60 * 60 * 1000,
@@ -45,7 +51,7 @@ const registerLimiter = rateLimit({
 
 const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    limit: 10,
+    limit: 5,
     message: {
         status: 429,
         error: "Too many requests",
@@ -53,6 +59,7 @@ const loginLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: ipAndEmailKey,
     handler: rateLimitHandler,
 });
 
@@ -149,7 +156,7 @@ const resendVerificationLimiter = rateLimit({
 
 const refreshLimiter = rateLimit({
     windowMs: 60 * 60 * 1000,
-    limit: 5,
+    limit: 30,
     message: {
         status: 429,
         error: "Too many requests",
@@ -157,6 +164,28 @@ const refreshLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: async (req: Request) => {
+        try {
+            const { payload } = await jwtVerify(
+                req.headers.cookie
+                    ?.split(";")
+                    .map((cookie) => cookie.trim())
+                    .find((cookie) => cookie.startsWith("refreshToken="))
+                    ?.slice("refreshToken=".length) ?? "",
+                refreshSecret,
+            );
+
+            if (payload.sub) {
+                return `user:${payload.sub}`;
+            }
+        } catch (error) {
+            if (!(error instanceof JOSEError)) {
+                throw error;
+            }
+        }
+
+        return ipKeyGenerator(req.ip ?? "");
+    },
     handler: rateLimitHandler,
 });
 
@@ -170,6 +199,7 @@ const logoutLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: userOrIpKey,
     handler: rateLimitHandler,
 });
 

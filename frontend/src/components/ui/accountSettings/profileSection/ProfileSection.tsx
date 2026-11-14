@@ -62,8 +62,12 @@ export default function ProfileSection({
         if (formState && formState.status === "success") {
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setIsChanged(false);
+
+            if (formState.data?.pendingEmail) {
+                setEmailValue(userData.email);
+            }
         }
-    }, [formState]);
+    }, [formState, userData.email]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -351,6 +355,32 @@ export default function ProfileSection({
                         </div>
                         <ZodErrors error={formState?.zodErrors?.email} />
                     </FieldRow>
+                    {emailValue.trim().toLowerCase() !==
+                        userData.email.toLowerCase() &&
+                        userData.auth_provider !== "google" && (
+                            <FieldRow
+                                label="Current password"
+                                hint="Required to change your email address"
+                            >
+                                <Input
+                                    type="password"
+                                    name="currentPassword"
+                                    autoComplete="current-password"
+                                    className={cn(
+                                        "h-8 bg-control text-sm placeholder:text-control-text focus-visible:ring-1 focus-visible:ring-bright-blue",
+                                        formState?.zodErrors?.currentPassword
+                                            ? "border-red-500"
+                                            : "",
+                                    )}
+                                    disabled={isPending}
+                                />
+                                <ZodErrors
+                                    error={
+                                        formState?.zodErrors?.currentPassword
+                                    }
+                                />
+                            </FieldRow>
+                        )}
                 </div>
             </div>
             <div className="!mb-4">

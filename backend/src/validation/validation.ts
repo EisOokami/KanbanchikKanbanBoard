@@ -33,6 +33,7 @@ export const loginSchema = z.object({
             /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).+$/,
             "Password must contain at least one uppercase letter, one lowercase letter, one special character and one number",
         ),
+    acceptTerms: z.boolean().optional(),
 });
 
 export const verifyEmailCodeSchema = z.object({
@@ -690,6 +691,11 @@ export const updateProfileSchema = z
             .length(7, "Color must be a valid HEX value")
             .regex(/^#[0-9A-Fa-f]{6}$/, "Color must be a valid HEX value")
             .nullable()
+            .optional(),
+        currentPassword: z
+            .string()
+            .min(8, "Password must be at least 8 characters long")
+            .max(255, "Password must be less than 255 characters long")
             .optional(),
     })
     .refine(

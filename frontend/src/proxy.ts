@@ -5,7 +5,6 @@ import { refreshAccessToken } from "./data/refreshAccessToken";
 const accessTokenConfig = {
     maxAge: 15 * 60,
     path: "/",
-    domain: process.env.HOST ?? "localhost",
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax" as const,
@@ -13,7 +12,6 @@ const accessTokenConfig = {
 const refreshTokenConfig = {
     maxAge: 60 * 60 * 24 * 7,
     path: "/",
-    domain: process.env.HOST ?? "localhost",
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict" as const,
@@ -21,7 +19,6 @@ const refreshTokenConfig = {
 const csrfTokenConfig = {
     maxAge: 60 * 60 * 24 * 7,
     path: "/",
-    domain: process.env.HOST ?? "localhost",
     httpOnly: false,
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict" as const,
@@ -54,9 +51,15 @@ export async function proxy(request: NextRequest) {
     let tokens = null;
 
     if (!accessToken && refreshToken && csrfToken) {
-        tokens = await refreshAccessToken(refreshToken, csrfToken, request.headers.get("user-agent") ?? undefined);
+        const refreshResult = await refreshAccessToken(
+            refreshToken,
+            csrfToken,
+            request.headers.get("user-agent") ?? undefined,
+            request.headers,
+        );
 
-        if (tokens) {
+        if (refreshResult.status === "success") {
+            tokens = refreshResult;
             accessToken = tokens.accessToken;
         }
     }
