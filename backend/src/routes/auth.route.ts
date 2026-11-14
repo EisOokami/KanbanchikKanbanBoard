@@ -28,6 +28,7 @@ import {
 } from "../validation/validation.js";
 import { verifyCsrf } from "../middlewares/csrf.middleware.js";
 import { validateEmailMiddleware } from "../middlewares/emailValidation.middleware.js";
+import { authenticateToken } from "../middlewares/auth.middleware.js";
 
 const registerLimiter = rateLimit({
     windowMs: 60 * 60 * 1000,
@@ -146,6 +147,32 @@ const resendVerificationLimiter = rateLimit({
     handler: rateLimitHandler,
 });
 
+const refreshLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    limit: 5,
+    message: {
+        status: 429,
+        error: "Too many requests",
+        message: "Too many requests. Please try again in 1 hour.",
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: rateLimitHandler,
+});
+
+const logoutLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    limit: 5,
+    message: {
+        status: 429,
+        error: "Too many requests",
+        message: "Too many requests. Please try again in 1 hour.",
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: rateLimitHandler,
+});
+
 const router = Router();
 
 router.post(
@@ -195,8 +222,8 @@ router.post(
     validateData(resetPasswordSchema),
     resetPassword,
 );
-router.post("/refresh", verifyCsrf, refresh);
-router.post("/logout", verifyCsrf, logout);
+router.post("/refresh", refreshLimiter, verifyCsrf, refresh);
+router.post("/logout", logoutLimiter, authenticateToken, verifyCsrf, logout);
 router.get("/google", googleAuthStart);
 router.get("/google/callback", googleAuthCallback);
 router.post("/google/exchange", googleAuthExchangeLimiter, googleAuthExchange);
