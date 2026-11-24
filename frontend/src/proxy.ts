@@ -32,8 +32,21 @@ const protectedAuthRoutes = [
     "/resetPassword",
 ];
 
-const imgSrcUrl = process.env.INTERNAL_IMG_SRC_URL;
-const connectSrcUrl = process.env.INTERNAL_CONNECT_SRC_URL;
+const cspSources = (...values: (string | undefined)[]) => {
+    return values
+        .flatMap((value) => value?.split(/[\s,]+/) ?? [])
+        .filter(Boolean)
+        .join(" ");
+};
+
+const imgSrcUrl = cspSources(
+    process.env.INTERNAL_IMG_SRC_URL,
+    "https://*.googleusercontent.com",
+);
+const connectSrcUrl = cspSources(
+    process.env.INTERNAL_CONNECT_SRC_URL,
+    "https://cdn.jsdelivr.net",
+);
 
 function isProtectedRoute(path: string): boolean {
     return protectedRoutes.some((route) => path.startsWith(route));
@@ -85,9 +98,11 @@ export async function proxy(request: NextRequest) {
             base-uri 'self';
             form-action 'self';
             frame-ancestors 'none';
-            ${process.env.NODE_ENV === "production"
-                ? "upgrade-insecure-requests;"
-                : ""}
+            ${
+                process.env.NODE_ENV === "production"
+                    ? "upgrade-insecure-requests;"
+                    : ""
+            }
         `
         .replace(/\s{2,}/g, " ")
         .trim();
