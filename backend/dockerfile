@@ -20,7 +20,7 @@ RUN npm ci --omit=dev
 
 COPY --from=builder /app/dist ./dist
 
-RUN mkdir -p /var/log/app && chown -R node:node /var/log/app
+RUN mkdir -p /var/logs/app /app/uploads && chown -R node:node /var/logs/app /app/uploads
 USER node
 
 EXPOSE 3001

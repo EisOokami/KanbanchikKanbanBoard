@@ -3,9 +3,8 @@ WORKDIR /app
 
 COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* .npmrc* ./
 
-RUN --mount=type=cache,target=/root/.local/share/pnpm/store
-
-RUN corepack enable pnpm && pnpm i --frozen-lockfile;
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
+    corepack enable pnpm && pnpm i --frozen-lockfile
 
 
 FROM node:lts-slim AS builder
@@ -14,6 +13,28 @@ WORKDIR /app
 COPY --from=dependencies /app/node_modules ./node_modules
 
 COPY . .
+
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_INTERNAL_API_URL
+ARG NEXT_PUBLIC_SITE_URL
+ARG API_PROTOCOL
+ARG API_HOSTNAME
+ARG API_PORT
+ARG ADDITIONAL_PROTOCOL
+ARG ADDITIONAL_HOSTNAME
+ARG ADDITIONAL_PORT
+ARG TERMS_VERSION
+ARG PRIVACY_VERSION
+ARG LEGAL_LAST_TERMS_UPDATED
+ARG LEGAL_EFFECTIVE_TERMS_DATE
+ARG LEGAL_LAST_PRIVACY_UPDATED
+ARG LEGAL_EFFECTIVE_PRIVACY_DATE
+ARG LEGAL_OPERATOR
+ARG LEGAL_CONTACT_EMAIL
+ARG LEGAL_SERVER_PROVIDER
+ARG LEGAL_BACKUP_RETENTION
+ARG LEGAL_REPOSITORY_URL
+ARG LEGAL_LICENSE_URL
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1

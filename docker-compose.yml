@@ -9,10 +9,10 @@ services:
             MARIADB_USER: ${DB_USER}
             MARIADB_PASSWORD: ${DB_PASSWORD}
         ports:
-            - "3306:3306"
+            - "127.0.0.1:3306:3306"
         volumes:
             - mariadb_storage:/var/lib/mysql
-            - ./backend/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+            - ./backend/database/database.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
 
     backend:
         build:
@@ -50,13 +50,23 @@ services:
             PRIVACY_VERSION: ${PRIVACY_VERSION}
             LOG_LEVEL: ${LOG_LEVEL}
             LOG_FILE: ${LOG_FILE}
-            GEMINI_API_KEY: ${GEMINI_API_KEY}
             GEMINI_MODEL: ${GEMINI_MODEL}
+            FILE_URL_SECRET: ${FILE_URL_SECRET:-}
+            FILE_URL_TTL_HOURS: ${FILE_URL_TTL_HOURS:-}
+            LOG_RETENTION_DAYS: ${LOG_RETENTION_DAYS:-}
+            MAX_INVITES_PER_DAY: ${MAX_INVITES_PER_DAY:-}
+            RETENTION_CLEANUP: ${RETENTION_CLEANUP:-}
         depends_on:
             - mariadb
         restart: unless-stopped
         volumes:
             - ./backend/logs:/var/logs/app
+            - ./backend/uploads:/app/uploads
+        logging:
+            driver: json-file
+            options:
+                max-size: "10m"
+                max-file: "5"
         mem_limit: 300m
         cpus: 0.6
 
@@ -65,7 +75,7 @@ services:
         container_name: loki
         restart: unless-stopped
         ports:
-            - "3100:3100"
+            - "127.0.0.1:3100:3100"
         volumes:
             - ./backend/loki-config.yaml:/etc/loki/local-config.yaml:ro
             - loki-data:/loki
@@ -101,10 +111,10 @@ services:
         container_name: grafana
         restart: unless-stopped
         ports:
-            - "3200:3000"
+            - "127.0.0.1:3200:3000"
         environment:
             GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER}
-            GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+            GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?Set GRAFANA_ADMIN_PASSWORD}
             GF_USERS_ALLOW_SIGN_UP: ${GRAFANA_ALLOW_SIGN_UP}
             GF_INSTALL_PLUGINS: ${GRAFANA_INSTALL_PLUGINS}
         volumes:
@@ -120,6 +130,28 @@ services:
     frontend:
         build:
             context: ./frontend
+            args:
+                - NEXT_PUBLIC_API_URL
+                - NEXT_PUBLIC_INTERNAL_API_URL
+                - NEXT_PUBLIC_SITE_URL
+                - API_PROTOCOL
+                - API_HOSTNAME
+                - API_PORT
+                - ADDITIONAL_PROTOCOL
+                - ADDITIONAL_HOSTNAME
+                - ADDITIONAL_PORT
+                - TERMS_VERSION
+                - PRIVACY_VERSION
+                - LEGAL_LAST_TERMS_UPDATED
+                - LEGAL_EFFECTIVE_TERMS_DATE
+                - LEGAL_LAST_PRIVACY_UPDATED
+                - LEGAL_EFFECTIVE_PRIVACY_DATE
+                - LEGAL_OPERATOR
+                - LEGAL_CONTACT_EMAIL
+                - LEGAL_SERVER_PROVIDER
+                - LEGAL_BACKUP_RETENTION
+                - LEGAL_REPOSITORY_URL
+                - LEGAL_LICENSE_URL
         ports:
             - "3000:3000"
         environment:
