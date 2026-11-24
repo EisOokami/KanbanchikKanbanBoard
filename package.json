@@ -1,0 +1,17 @@
+{
+    "name": "kanbanchik",
+    "private": true,
+    "type": "module",
+    "description": "Release tooling for the Kanbanchik monorepo (backend/ and frontend/ keep their own dependencies)",
+    "license": "MIT",
+    "scripts": {
+        "release": "semantic-release"
+    },
+    "devDependencies": {
+        "@semantic-release/changelog": "^7.0.0",
+        "@semantic-release/exec": "^7.1.0",
+        "@semantic-release/git": "^11.0.1",
+        "@semantic-release/github": "^12.0.11",
+        "semantic-release": "^26.0.1"
+    }
+}
