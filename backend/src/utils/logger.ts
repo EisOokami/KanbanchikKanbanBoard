@@ -1,4 +1,6 @@
-import { randomUUID } from "node:crypto";
+import { randomUUID } from "crypto";
+import { readdir, unlink } from "fs/promises";
+import path from "path";
 import type { Options } from "pino-http";
 import pino from "pino";
 import dotenv from "dotenv";
@@ -85,7 +87,83 @@ const sensitiveFields = [
     "headers",
     "credentials",
     "encryptionKey",
+    "apiKey",
+    "geminiApiKey",
 ];
+
+const logFileParts = process.env.LOG_FILE
+    ? path.parse(path.resolve(process.env.LOG_FILE))
+    : null;
+
+function datedLogFile(date = new Date()): string {
+    if (!logFileParts) {
+        throw new Error("LOG_FILE is not set");
+    }
+
+    return path.join(
+        logFileParts.dir,
+        `${logFileParts.name}-${date.toISOString().slice(0, 10)}${logFileParts.ext || ".log"}`,
+    );
+}
+
+const destination = pino.destination({
+    dest: process.env.LOG_FILE ? datedLogFile() : 1,
+    sync: false,
+    mkdir: true,
+});
+
+async function removeExpiredLogFiles() {
+    if (!logFileParts) {
+        return;
+    }
+
+    const escape = (value: string) =>
+        value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const pattern = new RegExp(
+        `^${escape(logFileParts.name)}-(\\d{4}-\\d{2}-\\d{2})${escape(logFileParts.ext || ".log")}$`,
+    );
+    const oldest = new Date(
+        Date.now() -
+            Math.max(1, Number(process.env.LOG_RETENTION_DAYS) || 30) *
+                24 *
+                60 *
+                60 *
+                1000,
+    )
+        .toISOString()
+        .slice(0, 10);
+
+    for (const file of await readdir(logFileParts.dir)) {
+        const date = pattern.exec(file)?.[1];
+
+        if (date && date < oldest) {
+            await unlink(path.join(logFileParts.dir, file)).catch(() => {});
+        }
+    }
+}
+
+function scheduleLogRotation() {
+    if (!logFileParts) {
+        return;
+    }
+
+    void removeExpiredLogFiles().catch(() => {});
+
+    const now = new Date();
+    const nextMidnight = Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate() + 1,
+    );
+
+    setTimeout(
+        () => {
+            destination.reopen(datedLogFile());
+            scheduleLogRotation();
+        },
+        nextMidnight - now.getTime() + 1000,
+    ).unref();
+}
 
 export const logger = pino(
     {
@@ -112,12 +190,10 @@ export const logger = pino(
             },
         },
     },
-    pino.destination({
-        dest: process.env.LOG_FILE || 1,
-        sync: false,
-        mkdir: true,
-    }),
+    destination,
 );
+
+scheduleLogRotation();
 
 export const httpLoggingOptions: Options<Request, Response> = {
     logger,
