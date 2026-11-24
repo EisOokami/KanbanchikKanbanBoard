@@ -17,21 +17,6 @@ CREATE TABLE IF NOT EXISTS `account_deletion_sessions` (
   CONSTRAINT `fk_account_deletion_sessions_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE IF NOT EXISTS `activity_log` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `project_id` int(10) unsigned DEFAULT NULL,
-  `task_id` int(10) unsigned DEFAULT NULL,
-  `user_id` int(10) unsigned DEFAULT NULL,
-  `action` varchar(80) NOT NULL,
-  `payload` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`payload`)),
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  KEY `idx_log_project` (`project_id`),
-  KEY `idx_log_task` (`task_id`),
-  KEY `idx_log_user` (`user_id`),
-  KEY `idx_log_time` (`created_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
 CREATE TABLE IF NOT EXISTS `attachments` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `task_id` int(10) unsigned DEFAULT NULL,
@@ -47,24 +32,6 @@ CREATE TABLE IF NOT EXISTS `attachments` (
   CONSTRAINT `fk_att_task` FOREIGN KEY (`task_id`) REFERENCES `tasks` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_att_uploader` FOREIGN KEY (`uploader_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=71 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-CREATE TABLE IF NOT EXISTS `audit_logs` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `user_id` int(10) unsigned DEFAULT NULL,
-  `action` varchar(64) NOT NULL,
-  `resource` varchar(64) NOT NULL,
-  `resource_id` varchar(64) DEFAULT NULL,
-  `ip_address` varchar(45) DEFAULT NULL,
-  `user_agent` varchar(512) DEFAULT NULL,
-  `metadata` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`metadata`)),
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  KEY `idx_audit_logs_user_id` (`user_id`),
-  KEY `idx_audit_logs_action` (`action`),
-  KEY `idx_audit_logs_resource_resource_id` (`resource`,`resource_id`),
-  KEY `idx_audit_logs_created_at` (`created_at`),
-  CONSTRAINT `fk_audit_logs_user_id` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `categories` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
