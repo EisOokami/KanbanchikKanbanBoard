@@ -41,7 +41,7 @@ export default function StartDateSection({
                             <CalendarIcon weight="duotone" size={16} />
                             {filters.start_date_range?.from
                                 ? filters.start_date_range.to
-                                    ? `${format(filters.start_date_range.from, "MMM d")} → ${format(filters.start_date_range.to, "MMM d")}`
+                                    ? `${format(filters.start_date_range.from, "MMM d")} -> ${format(filters.start_date_range.to, "MMM d")}`
                                     : format(
                                           filters.start_date_range.from,
                                           "MMM d, yyyy",

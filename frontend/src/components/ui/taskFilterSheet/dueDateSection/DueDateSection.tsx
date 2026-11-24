@@ -69,7 +69,7 @@ export default function DueDateSection({
                             <CalendarIcon weight="duotone" size={16} />
                             {filters.date_range?.from
                                 ? filters.date_range.to
-                                    ? `${format(filters.date_range.from, "MMM d")} → ${format(filters.date_range.to, "MMM d")}`
+                                    ? `${format(filters.date_range.from, "MMM d")} -> ${format(filters.date_range.to, "MMM d")}`
                                     : format(
                                           filters.date_range.from,
                                           "MMM d, yyyy",
