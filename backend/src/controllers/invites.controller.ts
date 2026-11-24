@@ -18,6 +18,7 @@ import {
 import { ZodError } from "zod";
 import { transporter } from "../utils/email.js";
 import { emailTemplate } from "../utils/emailTemplate.js";
+import { checkInviteQuota, invitationFooter } from "../utils/invitations.js";
 
 dotenv.config({ quiet: true });
 
@@ -291,7 +292,8 @@ export const acceptInvite = async (
             const [usedResult] = await connection.execute<ResultSetHeader>(
                 `
                     UPDATE project_invites
-                    SET used = 1
+                    SET used = 1,
+                        expires_at = LEAST(expires_at, NOW())
                     WHERE id = ? AND used = 0
                 `,
                 [invite.id],
@@ -446,6 +448,16 @@ export const memberInvite = async (
             return;
         }
 
+        if (
+            !(await checkInviteQuota(
+                res,
+                userId,
+                validatedData.members?.length ?? 0,
+            ))
+        ) {
+            return;
+        }
+
         if (validatedData.members && validatedData.members.length) {
             await Promise.all(
                 validatedData.members.map(async (email) => {
@@ -512,7 +524,10 @@ export const memberInvite = async (
                             `,
                             buttonText: "Open Project",
                             buttonUrl: inviteUrl,
-                            footer: "If you weren't expecting this invitation, you can safely ignore this email.",
+                            footer: await invitationFooter(
+                                userId,
+                                project.name,
+                            ),
                         }),
                         attachments: [
                             {

@@ -18,6 +18,12 @@ const isWithinDateRange = (value: string): boolean => {
     return date >= minDate && date <= maxDate;
 };
 
+export const acceptTermsSchema = z.object({
+    acceptTerms: z.literal(true, {
+        error: "You must accept the Terms of Service and the Privacy Policy",
+    }),
+});
+
 export const loginSchema = z.object({
     email: z
         .email("Invalid email format")
@@ -81,6 +87,9 @@ export const registerSchema = z.object({
         .length(7, "Color must be a valid HEX value")
         .regex(/^#[0-9A-Fa-f]{6}$/, "Color must be a valid HEX value")
         .optional(),
+    terms: z.literal("on", {
+        error: "You must accept the Terms of Service and the Privacy Policy and confirm that you are at least 18",
+    }),
 });
 
 export const resetPasswordSchema = z.object({
@@ -167,14 +176,16 @@ export const createProjectSchema = z.object({
     categories: z
         .array(namedColorSchema)
         .max(100, "A maximum of 100 categories is allowed"),
-    members: z.array(
-        z
-            .email("Invalid email")
-            .trim()
-            .toLowerCase()
-            .min(1, "Email is required")
-            .max(255, "Email must be less than 255 characters long"),
-    ),
+    members: z
+        .array(
+            z
+                .email("Invalid email")
+                .trim()
+                .toLowerCase()
+                .min(1, "Email is required")
+                .max(255, "Email must be less than 255 characters long"),
+        )
+        .max(20, `You can invite up to 20 people at once`),
     columns: z
         .array(columnSchema)
         .min(1, "At least one column is required")
@@ -286,14 +297,16 @@ export const updateProjectSchema = z
             )
             .optional()
             .default([]),
-        emails: z.array(
-            z
-                .email("Invalid email")
-                .trim()
-                .toLowerCase()
-                .min(1, "Email is required")
-                .max(255, "Email must be less than 255 characters long"),
-        ),
+        emails: z
+            .array(
+                z
+                    .email("Invalid email")
+                    .trim()
+                    .toLowerCase()
+                    .min(1, "Email is required")
+                    .max(255, "Email must be less than 255 characters long"),
+            )
+            .max(20, `You can invite up to 20 people at once`),
         columns: z
             .array(columnSchema)
             .max(100, "A maximum of 100 columns is allowed"),
@@ -797,7 +810,8 @@ export const memberInviteSchema = z.object({
                 .min(1, "Email is required")
                 .max(255, "Email must be less than 255 characters long"),
         )
-        .min(1, "At least one member is required"),
+        .min(1, "At least one member is required")
+        .max(20, `You can invite up to 20 people at once`),
 });
 
 export const validateSlugSchema = z.object({

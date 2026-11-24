@@ -34,6 +34,7 @@ import {
 import { generateRawToken, hashToken } from "../utils/mfa.js";
 import { emailTemplate } from "../utils/emailTemplate.js";
 import { sendLoginNotificationEmail } from "../utils/loginNotificationEmail.js";
+import { legalVersions } from "../utils/legal.js";
 import {
     generateEmailCode,
     hashEmailCode,
@@ -1991,7 +1992,9 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
 };
 
 export function googleAuthStart(req: Request, res: Response) {
-    const state = crypto.randomUUID();
+    const state = `${crypto.randomUUID()}${
+        req.query.terms === "accepted" ? ".t" : ""
+    }`;
 
     res.cookie("google_oauth_state", state, {
         httpOnly: true,
@@ -2045,7 +2048,44 @@ export async function googleAuthCallback(req: Request, res: Response) {
             return;
         }
 
-        const userId = await findOrCreateGoogleUser(profile);
+        const googleUser = await findOrCreateGoogleUser(
+            profile,
+            savedState.endsWith(".t"),
+        );
+
+        if (googleUser.status === "terms_required") {
+            req.log.info(
+                {
+                    event: "auth.oauth_terms_required",
+                    operation: "googleAuthCallback",
+                },
+                "Terms acceptance required",
+            );
+
+            res.redirect(
+                `${process.env.FRONTEND_URL}/signIn?error=terms_required`,
+            );
+
+            return;
+        }
+
+        const userId = googleUser.userId;
+
+        if (googleUser.termsAccepted) {
+            const { terms, privacy } = legalVersions();
+
+            req.log.info(
+                {
+                    event: "auth.terms_accepted",
+                    audit: true,
+                    userId,
+                    method: "google",
+                    termsVersion: terms,
+                    privacyVersion: privacy,
+                },
+                "Operation completed",
+            );
+        }
         const exchangeCode = crypto.randomBytes(32).toString("hex");
         const expiresAt = new Date(Date.now() + 60_000);
 
@@ -2134,6 +2174,48 @@ export async function googleAuthExchange(req: Request, res: Response) {
         }
 
         const userId = record.user_id;
+
+        const [mfaUsers] = await pool.execute<
+            (Pick<User, "mfa_enabled"> & RowDataPacket)[]
+        >(`SELECT mfa_enabled FROM users WHERE id = ?`, [userId]);
+
+        if (mfaUsers[0]?.mfa_enabled) {
+            const rawTempToken = generateRawToken();
+
+            await pool.execute<ResultSetHeader>(
+                `
+                    INSERT INTO mfa_login_sessions
+                        (token_hash, user_id, ip_address, user_agent, expires_at)
+                    VALUES (?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 5 MINUTE))
+                `,
+                [
+                    hashToken(rawTempToken),
+                    userId,
+                    req.ip ?? null,
+                    req.headers["user-agent"] ?? null,
+                ],
+            );
+
+            req.log.debug(
+                {
+                    event: "auth.challenge_created",
+                    userId,
+                    method: "totp",
+                    via: "google",
+                },
+                "Login challenge created",
+            );
+
+            res.status(200).json({
+                status: "success",
+                message: "MFA verification required",
+                requiresMfa: true,
+                tempToken: rawTempToken,
+            });
+
+            return;
+        }
+
         const refreshToken = await createRefreshToken(
             userId,
             req.ip,

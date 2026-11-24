@@ -1,5 +1,5 @@
 import express from "express";
-import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import rateLimit from "express-rate-limit";
@@ -9,6 +9,7 @@ import cookieParser from "cookie-parser";
 import { xss } from "express-xss-sanitizer";
 import hostValidation from "host-validation";
 import path from "path";
+import { mkdirSync } from "node:fs";
 import { issueCsrfCookie } from "./middlewares/csrf.middleware.js";
 import projectsRoutes from "./routes/projects.route.js";
 import tasksRoutes from "./routes/tasks.route.js";
@@ -22,8 +23,14 @@ import { pinoHttp } from "pino-http";
 import { logger, requestRoute, httpLoggingOptions } from "./utils/logger.js";
 import { securityAudit } from "./middlewares/securityAudit.middleware.js";
 import { userOrIpKey } from "./utils/rateLimitKeys.js";
+import { legalVersions } from "./utils/legal.js";
+import { startRetentionCleanup } from "./jobs/retentionCleanup.js";
+import { verifyFileRequest } from "./utils/files.js";
 
 dotenv.config({ quiet: true });
+
+legalVersions();
+mkdirSync(path.join(process.cwd(), "uploads"), { recursive: true });
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -56,12 +63,27 @@ const limiter = rateLimit({
 const hosts = process.env.HOSTS?.split(",");
 const corsUrls = process.env.CORS_URLS?.split(",");
 
-const trustedProxies = process.env.TRUST_PROXY?.split(",")
-    .map((value) => value.trim())
-    .filter(Boolean);
+const trustProxySetting = process.env.TRUST_PROXY?.trim().toLowerCase();
 
-if (trustedProxies?.length) {
-    app.set("trust proxy", trustedProxies);
+if (trustProxySetting && trustProxySetting !== "false") {
+    if (trustProxySetting === "true") {
+        logger.warn(
+            { event: "app.trust_proxy_hops" },
+            "TRUST_PROXY=true is treated as one proxy hop; set the proxy address instead",
+        );
+
+        app.set("trust proxy", 1);
+    } else if (/^\d+$/.test(trustProxySetting)) {
+        app.set("trust proxy", Number(trustProxySetting));
+    } else {
+        app.set(
+            "trust proxy",
+            trustProxySetting
+                .split(",")
+                .map((value) => value.trim())
+                .filter(Boolean),
+        );
+    }
 }
 
 app.disable("x-powered-by");
@@ -120,18 +142,38 @@ const fileTypeFor = (
 ): string | undefined =>
     Object.hasOwn(types, extension) ? types[extension] : undefined;
 
+const requireSignedFileUrl = (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+) => {
+    const name = req.path.startsWith("/") ? req.path.slice(1) : req.path;
+
+    if (!verifyFileRequest(name, req.query.exp, req.query.sig)) {
+        res.status(404).json({ status: "error", message: "Not found" });
+
+        return;
+    }
+
+    next();
+};
+
 app.use(
     "/files",
     helmet.crossOriginResourcePolicy({
         policy: "cross-origin",
     }),
+    requireSignedFileUrl,
     express.static(path.join(process.cwd(), "uploads"), {
         index: false,
+        dotfiles: "deny",
+        cacheControl: false,
         setHeaders: (res, filePath) => {
             const extension = path.extname(filePath).toLowerCase();
             const inlineType = fileTypeFor(inlineFileTypes, extension);
 
             res.setHeader("X-Content-Type-Options", "nosniff");
+            res.setHeader("Cache-Control", "private, max-age=3600");
 
             if (inlineType) {
                 res.setHeader("Content-Type", inlineType);
@@ -166,4 +208,6 @@ app.use(errorMiddleware);
 
 app.listen(port, () => {
     logger.info({ event: "app.started", port }, "Server listening");
+
+    startRetentionCleanup();
 });

@@ -27,9 +27,10 @@ import {
     updateTaskSchema,
     validateIdSchema,
 } from "../validation/validation.js";
-import { unlink } from "node:fs/promises";
+import { unlink } from "fs/promises";
 import path from "path";
 import { GoogleGenAI } from "@google/genai";
+import { fileUrl } from "../utils/files.js";
 
 export const getTasks = async (req: IGetUserRequest, res: Response) => {
     try {
@@ -131,12 +132,7 @@ export const getTasks = async (req: IGetUserRequest, res: Response) => {
                 const [members] = await pool.execute<
                     (Pick<
                         User,
-                        | "id"
-                        | "name"
-                        | "surname"
-                        | "color"
-                        | "email"
-                        | "avatar_url"
+                        "id" | "name" | "surname" | "color" | "avatar_url"
                     > &
                         Pick<ProjectMember, "role" | "status" | "joined_at"> &
                         RowDataPacket)[]
@@ -148,7 +144,6 @@ export const getTasks = async (req: IGetUserRequest, res: Response) => {
                             u.surname,
                             u.avatar_url,
                             u.color,
-                            u.email,
                             pm.role,
                             pm.status,
                             pm.joined_at
@@ -294,22 +289,12 @@ export const getTasks = async (req: IGetUserRequest, res: Response) => {
                         slug: task.project_slug,
                         members: projectMembers.map((member) => ({
                             ...projectMembers,
-                            avatar_url:
-                                member.avatar_url === null
-                                    ? null
-                                    : member.avatar_url.startsWith("/files")
-                                      ? `${process.env.BACKEND_URL}${member.avatar_url}`
-                                      : member.avatar_url,
+                            avatar_url: fileUrl(member.avatar_url),
                         })),
                     },
                     members: members.map((member) => ({
                         ...member,
-                        avatar_url:
-                            member.avatar_url === null
-                                ? null
-                                : member.avatar_url.startsWith("/files")
-                                  ? `${process.env.BACKEND_URL}${member.avatar_url}`
-                                  : member.avatar_url,
+                        avatar_url: fileUrl(member.avatar_url),
                     })),
                     labels,
                     categories,
@@ -317,7 +302,7 @@ export const getTasks = async (req: IGetUserRequest, res: Response) => {
                     attachments: attachments.map((attachment) => ({
                         id: attachment.id,
                         filename: attachment.filename,
-                        file_url: `${process.env.BACKEND_URL}${attachment.file_url}`,
+                        file_url: fileUrl(attachment.file_url),
                         mime_type: attachment.mime_type,
                         size_bytes: attachment.size_bytes,
                         created_at: attachment.created_at,
@@ -325,7 +310,7 @@ export const getTasks = async (req: IGetUserRequest, res: Response) => {
                             id: attachment.uploader_id,
                             name: attachment.uploader_name,
                             surname: attachment.uploader_surname,
-                            avatar_url: attachment.uploader_avatar,
+                            avatar_url: fileUrl(attachment.uploader_avatar),
                         },
                     })),
                     column: {
@@ -345,14 +330,7 @@ export const getTasks = async (req: IGetUserRequest, res: Response) => {
                                       id: comment.user_id,
                                       name: comment.name,
                                       surname: comment.surname,
-                                      avatar_url:
-                                          comment.avatar_url === null
-                                              ? null
-                                              : comment.avatar_url.startsWith(
-                                                      "/files",
-                                                  )
-                                                ? `${process.env.BACKEND_URL}${comment.avatar_url}`
-                                                : comment.avatar_url,
+                                      avatar_url: fileUrl(comment.avatar_url),
                                       color: comment.color,
                                   }
                                 : null,
@@ -491,10 +469,7 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
         }
 
         const [members] = await pool.execute<
-            (Pick<
-                User,
-                "id" | "name" | "surname" | "color" | "email" | "avatar_url"
-            > &
+            (Pick<User, "id" | "name" | "surname" | "color" | "avatar_url"> &
                 Pick<ProjectMember, "role" | "status" | "joined_at"> &
                 RowDataPacket)[]
         >(
@@ -505,7 +480,6 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
                     u.surname,
                     u.avatar_url,
                     u.color,
-                    u.email,
                     pm.role,
                     pm.status,
                     pm.joined_at
@@ -648,12 +622,7 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
             },
             members: members.map((member) => ({
                 ...member,
-                avatar_url:
-                    member.avatar_url === null
-                        ? null
-                        : member.avatar_url.startsWith("/files")
-                          ? `${process.env.BACKEND_URL}${member.avatar_url}`
-                          : member.avatar_url,
+                avatar_url: fileUrl(member.avatar_url),
             })),
             labels,
             categories,
@@ -661,7 +630,7 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
             attachments: attachments.map((attachment) => ({
                 id: attachment.id,
                 filename: attachment.filename,
-                file_url: `${process.env.BACKEND_URL}${attachment.file_url}`,
+                file_url: fileUrl(attachment.file_url),
                 mime_type: attachment.mime_type,
                 size_bytes: attachment.size_bytes,
                 created_at: attachment.created_at,
@@ -669,7 +638,7 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
                     id: attachment.uploader_id,
                     name: attachment.uploader_name,
                     surname: attachment.uploader_surname,
-                    avatar_url: attachment.uploader_avatar,
+                    avatar_url: fileUrl(attachment.uploader_avatar),
                 },
             })),
             column: {
@@ -689,12 +658,7 @@ export const getTaskById = async (req: IGetUserRequest, res: Response) => {
                               id: comment.user_id,
                               name: comment.name,
                               surname: comment.surname,
-                              avatar_url:
-                                  comment.avatar_url === null
-                                      ? null
-                                      : comment.avatar_url.startsWith("/files")
-                                        ? `${process.env.BACKEND_URL}${comment.avatar_url}`
-                                        : comment.avatar_url,
+                              avatar_url: fileUrl(comment.avatar_url),
                               color: comment.color,
                           }
                         : null,
@@ -1518,10 +1482,13 @@ export const deleteTask = async (req: IGetUserRequest, res: Response) => {
 
         await Promise.all(
             attachments.map(async (attachment) => {
-                const fileUrl = attachment.file_url.replace(/^\/files/, "");
+                const relativePath = attachment.file_url.replace(
+                    /^\/files/,
+                    "",
+                );
 
                 try {
-                    await unlink(path.join(uploadsDir, fileUrl));
+                    await unlink(path.join(uploadsDir, relativePath));
                 } catch (error) {
                     if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
                         req.log.warn(
@@ -2077,7 +2044,7 @@ export const createTaskComment = async (
                     id: comment.user_id,
                     name: comment.name,
                     surname: comment.surname,
-                    avatar_url: comment.avatar_url,
+                    avatar_url: fileUrl(comment.avatar_url),
                     color: comment.color,
                 },
             },
@@ -2335,7 +2302,7 @@ export const updateTaskComment = async (
                     id: comment.user_id,
                     name: comment.name,
                     surname: comment.surname,
-                    avatar_url: comment.avatar_url,
+                    avatar_url: fileUrl(comment.avatar_url),
                     color: comment.color,
                 },
             },
@@ -2581,10 +2548,16 @@ export async function generateTaskSubtasks(
     res: Response,
 ) {
     try {
-        if (!process.env.GEMINI_API_KEY) {
-            res.status(503).json({
+        const value = req.get("x-gemini-api-key")?.trim();
+        const apiKey =
+            value && /^[A-Za-z0-9._-]{20,200}$/.test(value) ? value : null;
+
+        if (!apiKey) {
+            res.status(400).json({
                 status: "error",
-                message: "AI task breakdown is currently unavailable",
+                code: "GEMINI_API_KEY_REQUIRED",
+                message:
+                    "Add your own Google Gemini API key in Account settings -> AI to use AI features",
             });
 
             return;
@@ -2666,7 +2639,7 @@ export async function generateTaskSubtasks(
             return;
         }
 
-        const client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+        const client = new GoogleGenAI({ apiKey });
 
         const response = await client.models.generateContent({
             model: process.env.GEMINI_MODEL || "gemini-3.5-flash-lite",
@@ -2729,7 +2702,11 @@ export async function generateTaskSubtasks(
             seen.add(key);
         }
 
-        return result;
+        res.status(200).json({
+            status: "success",
+            message: "Subtasks have been generated",
+            subtasks: result.subtasks,
+        });
     } catch (error) {
         if (error instanceof ZodError) {
             const errorMessages = error.issues.map((issue: any) => ({
@@ -2750,6 +2727,17 @@ export async function generateTaskSubtasks(
             typeof error === "object" && error !== null && "status" in error
                 ? error.status
                 : undefined;
+
+        if (status == 400 || status == 401 || status == 403) {
+            res.status(400).json({
+                status: "error",
+                code: "GEMINI_API_KEY_REJECTED",
+                message:
+                    "Google Gemini rejected the request. Check that your API key is valid and has access to the model",
+            });
+
+            return;
+        }
 
         if (status === 429) {
             res.setHeader("Retry-After", "60");
@@ -2794,15 +2782,6 @@ export async function generateTaskSubtasks(
 
 export async function addTaskSubtasks(req: IGetUserRequest, res: Response) {
     try {
-        if (!process.env.GEMINI_API_KEY) {
-            res.status(503).json({
-                status: "error",
-                message: "AI task breakdown is currently unavailable",
-            });
-
-            return;
-        }
-
         const { id } = validateIdSchema.parse(req.params);
 
         const userId = req.user.id;

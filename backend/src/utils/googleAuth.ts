@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import type { GoogleProfile, User } from "../types/types.js";
 import { pool } from "../db/pool.js";
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
+import { legalVersions } from "./legal.js";
 
 dotenv.config({ quiet: true });
 
@@ -51,28 +52,123 @@ export async function exchangeCodeForProfile(
     };
 }
 
-export async function findOrCreateGoogleUser(profile: {
-    googleId: string;
-    email: string;
-    name: string;
-    surname: string;
-    avatarUrl: string | null;
-}): Promise<number> {
+export async function findOrCreateGoogleUser(
+    profile: {
+        googleId: string;
+        email: string;
+        name: string;
+        surname: string;
+        avatarUrl: string | null;
+    },
+    termsAccepted: boolean,
+): Promise<
+    | { status: "ok"; userId: number; termsAccepted: boolean }
+    | { status: "terms_required" }
+> {
     const [byGoogleId] = await pool.execute<
-        (Pick<User, "id"> & RowDataPacket)[]
-    >(`SELECT id FROM users WHERE google_id = ?`, [profile.googleId]);
+        (Pick<
+            User,
+            | "id"
+            | "google_id"
+            | "is_verified"
+            | "terms_version"
+            | "privacy_version"
+        > &
+            RowDataPacket)[]
+    >(
+        `
+            SELECT id, google_id, is_verified, terms_version, privacy_version
+            FROM users
+            WHERE google_id = ?
+        `,
+        [profile.googleId],
+    );
 
-    if (byGoogleId[0]) {
-        return byGoogleId[0].id;
+    const [byEmail] = byGoogleId[0]
+        ? [
+              [] as (Pick<
+                  User,
+                  | "id"
+                  | "google_id"
+                  | "is_verified"
+                  | "terms_version"
+                  | "privacy_version"
+              > &
+                  RowDataPacket)[],
+          ]
+        : await pool.execute<
+              (Pick<
+                  User,
+                  | "id"
+                  | "google_id"
+                  | "is_verified"
+                  | "terms_version"
+                  | "privacy_version"
+              > &
+                  RowDataPacket)[]
+          >(
+              `
+                  SELECT id, google_id, is_verified, terms_version, privacy_version
+                  FROM users
+                  WHERE email = ?
+              `,
+              [profile.email],
+          );
+
+    const existing = byGoogleId[0] ?? byEmail[0];
+
+    if (!existing && !termsAccepted) {
+        return { status: "terms_required" };
     }
 
-    const [byEmail] = await pool.execute<
-        (Pick<User, "id" | "google_id" | "is_verified"> & RowDataPacket)[]
-    >(`SELECT id, google_id, is_verified FROM users WHERE email = ?`, [
-        profile.email,
-    ]);
+    const { terms, privacy } = legalVersions();
 
-    if (byEmail[0] && byEmail[0].is_verified) {
+    if (!existing) {
+        const now = new Date();
+
+        const [result] = await pool.execute<ResultSetHeader>(
+            `
+                INSERT INTO users 
+                    (
+                        email, 
+                        google_id, 
+                        auth_provider, 
+                        name,
+                        surname,
+                        avatar_url, 
+                        password,
+                        terms_accepted_at,
+                        terms_version,
+                        privacy_accepted_at,
+                        privacy_version
+                    )
+                VALUES (?, ?, 'google', ?, ?, ?, NULL, ?, ?, ?, ?)
+            `,
+            [
+                profile.email,
+                profile.googleId,
+                profile.name,
+                profile.surname,
+                profile.avatarUrl,
+                now,
+                terms,
+                now,
+                privacy,
+            ],
+        );
+
+        return { status: "ok", userId: result.insertId, termsAccepted: true };
+    }
+
+    if (
+        (existing.terms_version !== terms ||
+            existing.privacy_version !== privacy) &&
+        !termsAccepted
+    ) {
+        return { status: "terms_required" };
+    }
+
+    if (!byGoogleId[0] && existing.is_verified) {
         await pool.execute(
             `
                 UPDATE users 
@@ -80,13 +176,11 @@ export async function findOrCreateGoogleUser(profile: {
                     avatar_url = COALESCE(avatar_url, ?) 
                 WHERE id = ?
             `,
-            [profile.googleId, profile.avatarUrl, byEmail[0].id],
+            [profile.googleId, profile.avatarUrl, existing.id],
         );
-
-        return byEmail[0].id;
     }
 
-    if (byEmail[0]) {
+    if (!byGoogleId[0] && !existing.is_verified) {
         const [result] = await pool.execute<ResultSetHeader>(
             `
                 UPDATE users
@@ -99,46 +193,38 @@ export async function findOrCreateGoogleUser(profile: {
                     avatar_url = COALESCE(avatar_url, ?)
                 WHERE id = ? AND is_verified = FALSE
             `,
-            [profile.googleId, profile.avatarUrl, byEmail[0].id],
+            [profile.googleId, profile.avatarUrl, existing.id],
         );
 
         if (result.affectedRows === 0) {
             throw new Error("Account state changed during Google sign-in");
         }
-
-        return byEmail[0].id;
     }
 
-    const [result] = await pool.execute<ResultSetHeader>(
-        `
-            INSERT INTO users 
-                (
-                    email, 
-                    google_id, 
-                    auth_provider, 
-                    name,
-                    surname,
-                    avatar_url, 
-                    password,
-                    terms_accepted_at,
-                    terms_version,
-                    privacy_accepted_at,
-                    privacy_version
-                )
-            VALUES (?, ?, 'google', ?, ?, ?, NULL, ?, ?, ?, ?)
-        `,
-        [
-            profile.email,
-            profile.googleId,
-            profile.name,
-            profile.surname,
-            profile.avatarUrl,
-            new Date(),
-            process.env.TERMS_VERSION!,
-            new Date(),
-            process.env.PRIVACY_VERSION!,
-        ],
-    );
+    if (
+        existing.terms_version !== terms ||
+        existing.privacy_version !== privacy
+    ) {
+        const now = new Date();
 
-    return result.insertId;
+        await pool.execute<ResultSetHeader>(
+            `
+                UPDATE users
+                SET terms_accepted_at = ?,
+                    terms_version = ?,
+                    privacy_accepted_at = ?,
+                    privacy_version = ?
+                WHERE id = ?
+            `,
+            [now, terms, now, privacy, existing.id],
+        );
+    }
+
+    return {
+        status: "ok",
+        userId: existing.id,
+        termsAccepted:
+            existing.terms_version !== terms ||
+            existing.privacy_version !== privacy,
+    };
 }

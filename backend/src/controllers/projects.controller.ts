@@ -35,7 +35,7 @@ import {
 import { transporter } from "../utils/email.js";
 import { generateSlug, generateUniqueSlug } from "../utils/slugify.js";
 import path from "path";
-import { unlink } from "node:fs/promises";
+import { unlink } from "fs/promises";
 import { emailTemplate } from "../utils/emailTemplate.js";
 import bcrypt from "bcryptjs";
 import { decryptMfaSecret, generateRawToken, hashToken } from "../utils/mfa.js";
@@ -46,6 +46,8 @@ import {
 } from "../utils/codes.js";
 import { OTP } from "otplib";
 import { GoogleGenAI } from "@google/genai";
+import { fileUrl } from "../utils/files.js";
+import { checkInviteQuota, invitationFooter } from "../utils/invitations.js";
 
 const otp = new OTP({ strategy: "totp" });
 
@@ -212,26 +214,14 @@ export const getProjects = async (req: IGetUserRequest, res: Response) => {
                         owner.length && owner[0]
                             ? {
                                   name: owner[0].name,
-                                  avatar_url:
-                                      owner[0].avatar_url === null
-                                          ? null
-                                          : owner[0].avatar_url.startsWith(
-                                                  "/files",
-                                              )
-                                            ? `${process.env.BACKEND_URL}${owner[0]}`
-                                            : owner[0].avatar_url,
+                                  avatar_url: fileUrl(owner[0].avatar_url),
                               }
                             : null,
                     members: members.map((member) => ({
                         id: member.id,
                         name: member.name,
                         surname: member.surname,
-                        avatar_url:
-                            member.avatar_url === null
-                                ? null
-                                : member.avatar_url.startsWith("/files")
-                                  ? `${process.env.BACKEND_URL}${member.avatar_url}`
-                                  : member.avatar_url,
+                        avatar_url: fileUrl(member.avatar_url),
                         color: member.color,
                         role: member.role,
                         status: member.status,
@@ -484,7 +474,6 @@ export const getProject = async (req: IGetUserRequest, res: Response) => {
                                 | "surname"
                                 | "avatar_url"
                                 | "color"
-                                | "email"
                             > &
                                 Pick<
                                     ProjectMember,
@@ -499,7 +488,6 @@ export const getProject = async (req: IGetUserRequest, res: Response) => {
                                     u.surname,
                                     u.avatar_url,
                                     u.color,
-                                    u.email,
                                     pm.role,
                                     pm.status,
                                     pm.joined_at
@@ -649,12 +637,7 @@ export const getProject = async (req: IGetUserRequest, res: Response) => {
                             },
                             members: members.map((member) => ({
                                 ...member,
-                                avatar_url:
-                                    member.avatar_url === null
-                                        ? null
-                                        : member.avatar_url.startsWith("/files")
-                                          ? `${process.env.BACKEND_URL}${member.avatar_url}`
-                                          : member.avatar_url,
+                                avatar_url: fileUrl(member.avatar_url),
                             })),
                             labels: taskLabels,
                             categories: taskCategories,
@@ -667,14 +650,9 @@ export const getProject = async (req: IGetUserRequest, res: Response) => {
                                               id: comment.user_id,
                                               name: comment.name,
                                               surname: comment.surname,
-                                              avatar_url:
-                                                  comment.avatar_url === null
-                                                      ? null
-                                                      : comment.avatar_url.startsWith(
-                                                              "/files",
-                                                          )
-                                                        ? `${process.env.BACKEND_URL}${comment.avatar_url}`
-                                                        : comment.avatar_url,
+                                              avatar_url: fileUrl(
+                                                  comment.avatar_url,
+                                              ),
                                               color: comment.color,
                                           }
                                         : null,
@@ -684,7 +662,7 @@ export const getProject = async (req: IGetUserRequest, res: Response) => {
                             })),
                             attachments: attachments.map((attachment) => ({
                                 ...attachment,
-                                file_url: `${process.env.BACKEND_URL}${attachment.file_url}`,
+                                file_url: fileUrl(attachment.file_url),
                             })),
                             subtasks_total: subtasksTotal,
                             subtasks_done: subtasksDone,
@@ -728,24 +706,14 @@ export const getProject = async (req: IGetUserRequest, res: Response) => {
                 owner.length && owner[0]
                     ? {
                           name: owner[0].name,
-                          avatar_url:
-                              owner[0].avatar_url === null
-                                  ? null
-                                  : owner[0].avatar_url.startsWith("/files")
-                                    ? `${process.env.BACKEND_URL}${owner[0]}`
-                                    : owner[0].avatar_url,
+                          avatar_url: fileUrl(owner[0].avatar_url),
                       }
                     : null,
             members: members.map((member) => ({
                 id: member.id,
                 name: member.name,
                 surname: member.surname,
-                avatar_url:
-                    member.avatar_url === null
-                        ? null
-                        : member.avatar_url.startsWith("/files")
-                          ? `${process.env.BACKEND_URL}${member.avatar_url}`
-                          : member.avatar_url,
+                avatar_url: fileUrl(member.avatar_url),
                 color: member.color,
                 role: member.role,
                 status: member.status,
@@ -916,6 +884,14 @@ export const exportProjectData = async (
             `,
             [project.id],
         );
+
+        const requesterRole = members.find(
+            (member) => member.id === userId,
+        )?.role;
+        const includeEmails =
+            project.owner_id === userId ||
+            requesterRole === "owner" ||
+            requesterRole === "admin";
 
         const [owner] = await pool.execute<
             (Pick<
@@ -1133,14 +1109,10 @@ export const exportProjectData = async (
                                 id: task.column_id,
                                 name: task.column_name,
                             },
-                            members: members.map((member) => ({
+                            members: members.map(({ email, ...member }) => ({
                                 ...member,
-                                avatar_url:
-                                    member.avatar_url === null
-                                        ? null
-                                        : member.avatar_url.startsWith("/files")
-                                          ? `${process.env.BACKEND_URL}${member.avatar_url}`
-                                          : member.avatar_url,
+                                ...(includeEmails && { email }),
+                                avatar_url: fileUrl(member.avatar_url),
                             })),
                             labels: taskLabels,
                             categories: taskCategories,
@@ -1153,14 +1125,9 @@ export const exportProjectData = async (
                                               id: comment.user_id,
                                               name: comment.name,
                                               surname: comment.surname,
-                                              avatar_url:
-                                                  comment.avatar_url === null
-                                                      ? null
-                                                      : comment.avatar_url.startsWith(
-                                                              "/files",
-                                                          )
-                                                        ? `${process.env.BACKEND_URL}${comment.avatar_url}`
-                                                        : comment.avatar_url,
+                                              avatar_url: fileUrl(
+                                                  comment.avatar_url,
+                                              ),
                                               color: comment.color,
                                           }
                                         : null,
@@ -1170,7 +1137,7 @@ export const exportProjectData = async (
                             })),
                             attachments: attachments.map((attachment) => ({
                                 ...attachment,
-                                file_url: `${process.env.BACKEND_URL}${attachment.file_url}`,
+                                file_url: fileUrl(attachment.file_url),
                             })),
                             subtasks_total: subtasksTotal,
                             subtasks_done: subtasksDone,
@@ -1224,24 +1191,14 @@ export const exportProjectData = async (
                 owner.length && owner[0]
                     ? {
                           name: owner[0].name,
-                          avatar_url:
-                              owner[0].avatar_url === null
-                                  ? null
-                                  : owner[0].avatar_url.startsWith("/files")
-                                    ? `${process.env.BACKEND_URL}${owner[0]}`
-                                    : owner[0].avatar_url,
+                          avatar_url: fileUrl(owner[0].avatar_url),
                       }
                     : null,
             members: members.map((member) => ({
                 id: member.id,
                 name: member.name,
                 surname: member.surname,
-                avatar_url:
-                    member.avatar_url === null
-                        ? null
-                        : member.avatar_url.startsWith("/files")
-                          ? `${process.env.BACKEND_URL}${member.avatar_url}`
-                          : member.avatar_url,
+                avatar_url: fileUrl(member.avatar_url),
                 color: member.color,
                 role: member.role,
                 status: member.status,
@@ -1283,6 +1240,12 @@ export const createProject = async (req: IGetUserRequest, res: Response) => {
         }
 
         const validatedData = createProjectSchema.parse(req.body);
+
+        if (
+            !(await checkInviteQuota(res, userId, validatedData.members.length))
+        ) {
+            return;
+        }
 
         const baseSlug = generateSlug(validatedData.name);
 
@@ -1459,7 +1422,10 @@ export const createProject = async (req: IGetUserRequest, res: Response) => {
                             `,
                             buttonText: "Open Project",
                             buttonUrl: inviteUrl,
-                            footer: "If you weren't expecting this invitation, you can safely ignore this email.",
+                            footer: await invitationFooter(
+                                userId,
+                                validatedData.name,
+                            ),
                         }),
                         attachments: [
                             {
@@ -1645,6 +1611,16 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
         }
 
         const validatedData = updateProjectSchema.parse(req.body);
+
+        if (
+            !(await checkInviteQuota(
+                res,
+                userId,
+                validatedData.emails?.length ?? 0,
+            ))
+        ) {
+            return;
+        }
 
         const foreignIds = await Promise.all(
             (
@@ -2108,7 +2084,10 @@ export const updateProject = async (req: IGetUserRequest, res: Response) => {
                             `,
                             buttonText: "Open Project",
                             buttonUrl: inviteUrl,
-                            footer: "If you weren't expecting this invitation, you can safely ignore this email.",
+                            footer: await invitationFooter(
+                                userId,
+                                validatedData.name,
+                            ),
                         }),
                         attachments: [
                             {
@@ -2372,10 +2351,13 @@ export const deleteProject = async (req: IGetUserRequest, res: Response) => {
 
         await Promise.all(
             attachments.map(async (attachment) => {
-                const fileUrl = attachment.file_url.replace(/^\/files/, "");
+                const relativePath = attachment.file_url.replace(
+                    /^\/files/,
+                    "",
+                );
 
                 try {
-                    await unlink(path.join(uploadsDir, fileUrl));
+                    await unlink(path.join(uploadsDir, relativePath));
                 } catch (error) {
                     if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
                         req.log.warn(
@@ -3814,10 +3796,16 @@ export const generateProjectSummary = async (
     try {
         res.setHeader("Cache-Control", "no-store");
 
-        if (!process.env.GEMINI_API_KEY) {
-            res.status(503).json({
+        const value = req.get("x-gemini-api-key")?.trim();
+        const apiKey =
+            value && /^[A-Za-z0-9._-]{20,200}$/.test(value) ? value : null;
+
+        if (!apiKey) {
+            res.status(400).json({
                 status: "error",
-                message: "AI generation is currently unavailable",
+                code: "GEMINI_API_KEY_REQUIRED",
+                message:
+                    "Add your own Google Gemini API key in Account settings -> AI to use AI features",
             });
 
             return;
@@ -4041,7 +4029,7 @@ export const generateProjectSummary = async (
 
         const generatedAt = new Date().toISOString();
 
-        const client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+        const client = new GoogleGenAI({ apiKey });
 
         const response = await client.models.generateContent({
             model: process.env.GEMINI_MODEL || "gemini-3.5-flash-lite",
@@ -4123,6 +4111,17 @@ export const generateProjectSummary = async (
             typeof error === "object" && error !== null && "status" in error
                 ? error.status
                 : undefined;
+
+        if (status == 400 || status == 401 || status == 403) {
+            res.status(400).json({
+                status: "error",
+                code: "GEMINI_API_KEY_REJECTED",
+                message:
+                    "Google Gemini rejected the request. Check that your API key is valid and has access to the model",
+            });
+
+            return;
+        }
 
         if (status === 429) {
             res.setHeader("Retry-After", "60");

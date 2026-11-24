@@ -17,6 +17,7 @@ import { existsSync, unlinkSync } from "fs";
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import path from "path";
 import dotenv from "dotenv";
+import { fileUrl, removeUnusedStoredFiles } from "../utils/files.js";
 
 dotenv.config({ quiet: true });
 
@@ -72,7 +73,7 @@ export const getAttachments = async (req: IGetUserRequest, res: Response) => {
 
         const attachments = rows.map((row) => ({
             ...row,
-            file_url: `${process.env.BACKEND_URL}${row.file_url}`,
+            file_url: fileUrl(row.file_url),
         }));
 
         res.status(200).json(attachments);
@@ -217,7 +218,7 @@ export const uploadSingle = async (req: IGetUserRequest, res: Response) => {
             data: {
                 id: result.insertId,
                 filename: req.file.originalname,
-                url: `${process.env.BACKEND_URL}/files/${req.file.filename}`,
+                url: fileUrl(`/files/${req.file.filename}`),
                 size: req.file.size,
             },
         });
@@ -256,6 +257,30 @@ export const uploadSingle = async (req: IGetUserRequest, res: Response) => {
 
         res.status(500).json({ status: "error", message: "Database error" });
     }
+};
+
+const removePreviousAvatars = async (userId: number, currentId: number) => {
+    const [previous] = await pool.execute<
+        (Pick<Attachment, "id" | "file_url"> & RowDataPacket)[]
+    >(
+        `
+            SELECT id, file_url
+            FROM attachments
+            WHERE task_id IS NULL AND uploader_id = ? AND id != ?
+        `,
+        [userId, currentId],
+    );
+
+    if (!previous.length) {
+        return;
+    }
+
+    await pool.execute<ResultSetHeader>(
+        `DELETE FROM attachments WHERE id IN (${previous.map(() => "?").join(", ")})`,
+        previous.map((row) => row.id),
+    );
+
+    await removeUnusedStoredFiles(previous.map((row) => row.file_url));
 };
 
 export const uploadAvatar = async (req: IGetUserRequest, res: Response) => {
@@ -328,6 +353,19 @@ export const uploadAvatar = async (req: IGetUserRequest, res: Response) => {
             return;
         }
 
+        await removePreviousAvatars(userId, uploadResult.insertId).catch(
+            (error: unknown) => {
+                req.log.error(
+                    {
+                        err: error,
+                        event: "upload.previous_avatar_removal_failed",
+                        operation: "uploadAvatar",
+                    },
+                    "Operation failed",
+                );
+            },
+        );
+
         req.log.info(
             {
                 event: "upload.completed",
@@ -346,7 +384,7 @@ export const uploadAvatar = async (req: IGetUserRequest, res: Response) => {
             data: {
                 id: uploadResult.insertId,
                 filename: req.file.originalname,
-                url: `${process.env.BACKEND_URL}/files/${req.file.filename}`,
+                url: fileUrl(`/files/${req.file.filename}`),
                 size: req.file.size,
             },
         });
@@ -510,7 +548,7 @@ export const uploadMultiple = async (req: IGetUserRequest, res: Response) => {
             message: "Files were successfully uploaded",
             data: files.map((file) => ({
                 filename: file.originalname,
-                url: `${process.env.BACKEND_URL}/files/${file.filename}`,
+                url: fileUrl(`/files/${file.filename}`),
                 size: file.size,
             })),
         });
@@ -706,8 +744,8 @@ export const deleteAttachment = async (req: IGetUserRequest, res: Response) => {
         }
 
         const __dirname = path.resolve(path.dirname(""));
-        const fileUrl = attachment.file_url.replace(/^\/files/, "");
-        const filePath = path.join(__dirname, "/uploads", fileUrl);
+        const relativePath = attachment.file_url.replace(/^\/files/, "");
+        const filePath = path.join(__dirname, "/uploads", relativePath);
 
         const [rows] = await pool.execute<ResultSetHeader>(
             "DELETE FROM attachments WHERE id = ?",
@@ -847,8 +885,8 @@ export const deleteAvatar = async (req: IGetUserRequest, res: Response) => {
         }
 
         const __dirname = path.resolve(path.dirname(""));
-        const fileUrl = attachment.file_url.replace(/^\/files/, "");
-        const filePath = path.join(__dirname, "/uploads", fileUrl);
+        const relativePath = attachment.file_url.replace(/^\/files/, "");
+        const filePath = path.join(__dirname, "/uploads", relativePath);
 
         if (existsSync(filePath)) {
             unlinkSync(filePath);

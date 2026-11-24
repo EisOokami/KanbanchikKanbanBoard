@@ -9,6 +9,8 @@ import {
 } from "../controllers/sessions.controller.js";
 import {
     me,
+    acceptTerms,
+    exportAccountData,
     changePassword,
     updateProfile,
     confirmEmailChange,
@@ -19,6 +21,7 @@ import {
 } from "../controllers/users.controller.js";
 import { validateData } from "../middlewares/validation.middleware.js";
 import {
+    acceptTermsSchema,
     changePasswordSchema,
     confirmAccountDeletionSchema,
     deleteAccountSchema,
@@ -154,10 +157,52 @@ const deleteSessionsLimiter = rateLimit({
     handler: rateLimitHandler,
 });
 
+const acceptTermsLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    limit: 10,
+    message: {
+        status: 429,
+        error: "Too many requests",
+        message: "Too many requests. Please try again in 1 hour.",
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: userOrIpKey,
+    handler: rateLimitHandler,
+});
+
+const exportAccountDataLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    limit: 10,
+    message: {
+        status: 429,
+        error: "Too many requests",
+        message: "Too many requests. Please try again in 1 hour.",
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: userOrIpKey,
+    handler: rateLimitHandler,
+});
+
 const router = Router();
 
 router.get("/me", authenticateToken, me);
 router.get("/me/sessions", authenticateToken, getSessions);
+router.get(
+    "/me/export",
+    exportAccountDataLimiter,
+    authenticateToken,
+    exportAccountData,
+);
+router.post(
+    "/me/accept-terms",
+    acceptTermsLimiter,
+    authenticateToken,
+    verifyCsrf,
+    validateData(acceptTermsSchema),
+    acceptTerms,
+);
 router.delete(
     "/me/sessions/:sessionId",
     deleteSessionLimiter,

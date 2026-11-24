@@ -15,6 +15,7 @@ import bcrypt from "bcryptjs";
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import type {
     AccountDeletionSession,
+    Attachment,
     IGetUserRequest,
     MfaBackupCode,
     User,
@@ -33,6 +34,8 @@ import {
     sendEmailChangeConfirmation,
     sendEmailChangeNotice,
 } from "../utils/emailChangeEmails.js";
+import { fileUrl, removeUnusedStoredFiles } from "../utils/files.js";
+import { legalVersions } from "../utils/legal.js";
 
 dotenv.config({ quiet: true });
 
@@ -54,6 +57,8 @@ export const me = async (
             return;
         }
 
+        const { terms, privacy } = legalVersions();
+
         const [rows] = await pool.execute<
             (Pick<
                 User,
@@ -65,6 +70,8 @@ export const me = async (
                 | "color"
                 | "mfa_enabled"
                 | "auth_provider"
+                | "terms_version"
+                | "privacy_version"
                 | "created_at"
                 | "updated_at"
             > &
@@ -80,6 +87,8 @@ export const me = async (
                     color,
                     mfa_enabled,
                     auth_provider,
+                    terms_version,
+                    privacy_version,
                     created_at,
                     updated_at
                 FROM users 
@@ -107,15 +116,14 @@ export const me = async (
                 name: user.name,
                 surname: user.surname,
                 email: user.email,
-                avatar_url:
-                    user.avatar_url === null
-                        ? null
-                        : user.avatar_url.startsWith("/files")
-                          ? `${process.env.BACKEND_URL}${user.avatar_url}`
-                          : user.avatar_url,
+                avatar_url: fileUrl(user.avatar_url),
                 color: user.color,
                 mfa_enabled: user.mfa_enabled,
                 auth_provider: user.auth_provider,
+                requires_terms_acceptance: !(
+                    user.terms_version === terms &&
+                    user.privacy_version === privacy
+                ),
                 created_at: user.created_at,
                 updated_at: user.updated_at,
             },
@@ -129,6 +137,292 @@ export const me = async (
         res.status(500).json({
             status: "error",
             message: "Server error during getting user",
+        });
+    }
+};
+
+export const exportAccountData = async (
+    req: IGetUserRequest,
+    res: Response,
+): Promise<void> => {
+    try {
+        const { id } = req.user;
+
+        if (!id) {
+            res.status(401).json({
+                status: "error",
+                message: "Unauthorized",
+            });
+
+            return;
+        }
+
+        const [users] = await pool.execute<RowDataPacket[]>(
+            `
+                SELECT
+                    id,
+                    name,
+                    surname,
+                    email,
+                    pending_email,
+                    auth_provider,
+                    google_id IS NOT NULL AS google_linked,
+                    avatar_url,
+                    color,
+                    mfa_enabled,
+                    mfa_enabled_at,
+                    is_verified,
+                    terms_accepted_at,
+                    terms_version,
+                    privacy_accepted_at,
+                    privacy_version,
+                    created_at,
+                    updated_at
+                FROM users
+                WHERE id = ?
+            `,
+            [id],
+        );
+
+        const user = users[0];
+
+        if (!user) {
+            res.status(404).json({
+                status: "error",
+                message: "User not found",
+            });
+
+            return;
+        }
+
+        const [sessions] = await pool.execute<RowDataPacket[]>(
+            `
+                SELECT 
+                    ip, 
+                    user_agent, 
+                    created_at, 
+                    last_used_at, 
+                    expires_at, 
+                    revoked
+                FROM user_sessions
+                WHERE user_id = ?
+                ORDER BY created_at DESC
+            `,
+            [id],
+        );
+
+        const [projects] = await pool.execute<RowDataPacket[]>(
+            `
+                SELECT 
+                    p.id, 
+                    p.name, 
+                    p.slug, 
+                    pm.role, 
+                    pm.status, 
+                    pm.joined_at
+                FROM project_members pm
+                JOIN projects p ON p.id = pm.project_id
+                WHERE pm.user_id = ?
+                ORDER BY pm.joined_at ASC
+            `,
+            [id],
+        );
+
+        const [assignedTasks] = await pool.execute<RowDataPacket[]>(
+            `
+                SELECT 
+                    t.id, 
+                    t.title, 
+                    c.project_id, 
+                    t.due_date, 
+                    t.priority
+                FROM task_members tm
+                JOIN tasks t ON t.id = tm.task_id
+                JOIN columns c ON c.id = t.column_id
+                WHERE tm.user_id = ?
+                ORDER BY t.id ASC
+            `,
+            [id],
+        );
+
+        const [createdTasks] = await pool.execute<RowDataPacket[]>(
+            `
+                SELECT 
+                    t.id, 
+                    t.title, 
+                    c.project_id, 
+                    t.created_at
+                FROM tasks t
+                JOIN columns c ON c.id = t.column_id
+                WHERE t.creator_id = ?
+                ORDER BY t.id ASC
+            `,
+            [id],
+        );
+
+        const [comments] = await pool.execute<RowDataPacket[]>(
+            `
+                SELECT 
+                    id, 
+                    task_id, 
+                    body, 
+                    created_at, 
+                    updated_at
+                FROM comments
+                WHERE user_id = ?
+                ORDER BY created_at ASC
+            `,
+            [id],
+        );
+
+        const [files] = await pool.execute<RowDataPacket[]>(
+            `
+                SELECT 
+                    id, 
+                    task_id, 
+                    filename, 
+                    file_url, 
+                    mime_type, 
+                    size_bytes, 
+                    created_at
+                FROM attachments
+                WHERE uploader_id = ?
+                ORDER BY created_at ASC
+            `,
+            [id],
+        );
+
+        const [invitations] = await pool.execute<RowDataPacket[]>(
+            `
+                SELECT 
+                    pi.project_id, 
+                    p.name AS project_name, 
+                    pi.created_at, 
+                    pi.expires_at, 
+                    pi.used
+                FROM project_invites pi
+                JOIN projects p ON p.id = pi.project_id
+                WHERE pi.email = ?
+                ORDER BY pi.created_at DESC
+            `,
+            [user.email],
+        );
+
+        req.log.info(
+            { event: "user.data_exported", audit: true, userId: id },
+            "Operation completed",
+        );
+
+        const exportedAt = new Date().toISOString();
+
+        res.setHeader("Cache-Control", "no-store");
+        res.setHeader(
+            "Content-Disposition",
+            `attachment; filename="kanbanchik-account-${exportedAt.slice(0, 10)}.json"`,
+        );
+        res.status(200).json({
+            exportedAt,
+            account: {
+                ...user,
+                google_linked: Boolean(user.google_linked),
+                mfa_enabled: Boolean(user.mfa_enabled),
+                is_verified: Boolean(user.is_verified),
+                avatar_url: fileUrl(user.avatar_url),
+            },
+            sessions: sessions.map((session) => ({
+                ...session,
+                revoked: Boolean(session.revoked),
+            })),
+            projects,
+            assignedTasks,
+            createdTasks,
+            comments,
+            files: files.map((file) => ({
+                ...file,
+                file_url: fileUrl(file.file_url),
+            })),
+            invitationsReceived: invitations.map((invitation) => ({
+                ...invitation,
+                used: Boolean(invitation.used),
+            })),
+        });
+    } catch (error) {
+        req.log.error(
+            {
+                err: error,
+                event: "user.data_export_failed",
+                operation: "exportAccountData",
+            },
+            "Operation failed",
+        );
+
+        res.status(500).json({
+            status: "error",
+            message: "Server error",
+        });
+    }
+};
+
+export const acceptTerms = async (
+    req: IGetUserRequest,
+    res: Response,
+): Promise<void> => {
+    try {
+        const { id } = req.user;
+
+        if (!id) {
+            res.status(401).json({
+                status: "error",
+                message: "Unauthorized",
+            });
+
+            return;
+        }
+
+        const { terms, privacy } = legalVersions();
+        const now = new Date();
+
+        await pool.execute<ResultSetHeader>(
+            `
+                UPDATE users
+                SET terms_accepted_at = ?,
+                    terms_version = ?,
+                    privacy_accepted_at = ?,
+                    privacy_version = ?
+                WHERE id = ?
+            `,
+            [now, terms, now, privacy, id],
+        );
+
+        req.log.info(
+            {
+                event: "auth.terms_accepted",
+                audit: true,
+                userId: id,
+                method: "session",
+                termsVersion: terms,
+                privacyVersion: privacy,
+            },
+            "Operation completed",
+        );
+
+        res.status(200).json({
+            status: "success",
+            message: "Thank you. The updated documents have been accepted",
+        });
+    } catch (error) {
+        req.log.error(
+            {
+                err: error,
+                event: "user.accept_terms_failed",
+                operation: "acceptTerms",
+            },
+            "Operation failed",
+        );
+
+        res.status(500).json({
+            status: "error",
+            message: "Server error",
         });
     }
 };
@@ -377,11 +671,7 @@ export const updateProfile = async (
             user: [
                 {
                     ...updatedUser[0],
-                    avatar_url:
-                        !updatedUser[0].avatar_url ||
-                        updatedUser[0].avatar_url.startsWith("/files")
-                            ? `${process.env.BACKEND_URL}${updatedUser[0].avatar_url}`
-                            : updatedUser[0].avatar_url,
+                    avatar_url: fileUrl(updatedUser[0].avatar_url),
                 },
             ],
         });
@@ -1178,8 +1468,27 @@ export const confirmAccountDeletion = async (
 
         const connection = await pool.getConnection();
 
+        let removedFiles: string[] = [];
+
         try {
             await connection.beginTransaction();
+
+            const [avatarFiles] = await connection.execute<
+                (Pick<Attachment, "file_url"> & RowDataPacket)[]
+            >(
+                `
+                    SELECT file_url
+                    FROM attachments
+                    WHERE task_id IS NULL AND uploader_id = ?
+                    UNION
+                        SELECT avatar_url AS file_url
+                        FROM users
+                        WHERE id = ? AND avatar_url IS NOT NULL
+                `,
+                [paramId, paramId],
+            );
+
+            removedFiles = avatarFiles.map((file) => file.file_url);
 
             await connection.execute<ResultSetHeader>(
                 "DELETE FROM attachments WHERE task_id IS NULL AND uploader_id = ?",
@@ -1233,6 +1542,17 @@ export const confirmAccountDeletion = async (
         } finally {
             connection.release();
         }
+
+        await removeUnusedStoredFiles(removedFiles).catch((error: unknown) => {
+            req.log.error(
+                {
+                    err: error,
+                    event: "user.avatar_file_removal_failed",
+                    operation: "confirmAccountDeletion",
+                },
+                "Operation failed",
+            );
+        });
 
         req.log.info(
             { event: "user.deleted", audit: true, userId },
