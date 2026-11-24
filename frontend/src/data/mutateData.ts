@@ -11,6 +11,7 @@ export async function mutateData(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     payload?: any,
     isImage?: boolean,
+    extraHeaders?: Record<string, string>,
 ): Promise<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     | { status: "error" | "success"; message: string; data?: any }
@@ -40,6 +41,7 @@ export async function mutateData(
                 ...(payload && {
                     body: isImage ? payload : JSON.stringify({ ...payload }),
                 }),
+                ...(extraHeaders && { headers: extraHeaders }),
             },
             isImage,
         );

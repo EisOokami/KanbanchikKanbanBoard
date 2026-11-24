@@ -12,6 +12,7 @@ import {
 } from "../shadcn/card";
 import { cn } from "@/libs/utils";
 import { generateProjectSummaryAction } from "@/data/actions";
+import { readGeminiApiKey } from "@/libs/geminiApiKey";
 import {
     ArrowsClockwiseIcon,
     CheckIcon,
@@ -56,12 +57,26 @@ export default function AIProjectSummary({
             return;
         }
 
+        const apiKey = readGeminiApiKey();
+
+        if (!apiKey) {
+            toast.error("Gemini API key required", {
+                description:
+                    "Add your own Google Gemini API key in Account settings -> AI to use AI features",
+            });
+
+            return;
+        }
+
         inFlight.current = true;
 
         setBusy(true);
 
         try {
-            const response = await generateProjectSummaryAction(projectId);
+            const response = await generateProjectSummaryAction(
+                projectId,
+                apiKey,
+            );
 
             if (!mounted.current) {
                 return;
@@ -218,10 +233,7 @@ export default function AIProjectSummary({
                 </div>
             </CardHeader>
             <CardContent className="space-y-6 break-words text-sm">
-                <span
-                    role="status"
-                    className={busy ? "text-muted-foreground" : "sr-only"}
-                >
+                <span className={busy ? "text-muted-foreground" : "sr-only"}>
                     {busy
                         ? "Analyzing project..."
                         : result

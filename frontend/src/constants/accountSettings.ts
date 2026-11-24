@@ -4,6 +4,7 @@ import {
     MonitorIcon,
     MoonIcon,
     PaletteIcon,
+    SparkleIcon,
     SunIcon,
     UserIcon,
 } from "@phosphor-icons/react";
@@ -11,6 +12,7 @@ import {
 export const NAV: NavItem[] = [
     { id: "profile", label: "Profile", icon: UserIcon },
     { id: "security", label: "Security", icon: LockKeyIcon },
+    { id: "ai", label: "AI", icon: SparkleIcon },
     { id: "appearance", label: "Appearance", icon: PaletteIcon },
 ];
 

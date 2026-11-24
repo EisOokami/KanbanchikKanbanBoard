@@ -23,6 +23,7 @@ import { PasswordInput } from "@/components/ui/shadcn/password-input";
 import { cn } from "@/libs/utils";
 import { GoogleLogoIcon, InfoIcon } from "@phosphor-icons/react";
 import { Checkbox } from "../shadcn/checkbox";
+import LegalConsentText from "../legalConsent/LegalConsentText";
 
 const INITIAL_STATE: BaseAction = {
     zodErrors: null,
@@ -155,22 +156,7 @@ export default function SignUpForm() {
                             htmlFor="terms"
                             className="text-sm font-normal leading-snug text-muted-foreground"
                         >
-                            I agree to the{" "}
-                            <Link
-                                href="/terms"
-                                target="_blank"
-                                className="text-primary underline"
-                            >
-                                Terms &amp; Conditions
-                            </Link>{" "}
-                            and{" "}
-                            <Link
-                                href="/privacy"
-                                target="_blank"
-                                className="text-primary underline"
-                            >
-                                Privacy Policy
-                            </Link>
+                            <LegalConsentText />
                         </Label>
                     </div>
                     <ZodErrors error={formState?.zodErrors?.terms} />
@@ -229,7 +215,7 @@ export default function SignUpForm() {
                 >
                     {googleTermsAccepted ? (
                         <a
-                            href={`${process.env.NEXT_PUBLIC_API_URL}/auth/google`}
+                            href={`${process.env.NEXT_PUBLIC_API_URL}/auth/google?terms=accepted`}
                         >
                             <GoogleLogoIcon
                                 weight="duotone"

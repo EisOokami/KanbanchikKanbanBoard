@@ -77,6 +77,7 @@ export default function DangerZone({ userData }: Readonly<DangerZoneProps>) {
     }, [step, cooldown]);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setCode("");
         setBackupCode("");
         setUseBackupCode(false);
@@ -109,8 +110,10 @@ export default function DangerZone({ userData }: Readonly<DangerZoneProps>) {
                         Delete account
                     </p>
                     <p className="mt-0.5 text-xs text-muted-foreground">
-                        Permanently delete your account and all data. This
-                        cannot be undone.
+                        Permanently delete your account, profile and sessions.
+                        Comments, tasks and files you added to other
+                        people&apos;s projects stay there without your name.
+                        This cannot be undone.
                     </p>
                 </div>
                 <AlertDialog

@@ -1,6 +1,6 @@
 import { Icon } from "@phosphor-icons/react";
 
-export type SectionId = "profile" | "security" | "appearance";
+export type SectionId = "profile" | "security" | "ai" | "appearance";
 export type NavGroup = "Account";
 export type ThemeId = "light" | "dark" | "system";
 

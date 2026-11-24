@@ -5,6 +5,7 @@ import AccountSettingsProvider from "@/context/AccountSettingsProvider";
 import { getProjectsData, getUserData } from "@/data/loaders";
 import { redirect } from "next/navigation";
 import { MobileBlock } from "@/components/ui/mobileBlock/MobileBlock";
+import TermsUpdateDialog from "@/components/ui/termsUpdateDialog/TermsUpdateDialog";
 
 export default async function MainLayout({
     children,
@@ -21,6 +22,7 @@ export default async function MainLayout({
 
     return (
         <>
+            {userData.data.requires_terms_acceptance && <TermsUpdateDialog />}
             <div className="lg:hidden">
                 <MobileBlock />
             </div>

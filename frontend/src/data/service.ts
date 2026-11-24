@@ -215,6 +215,12 @@ export async function googleExchangeService(code: string): Promise<
           status: "success";
           message: string;
       }
+    | {
+          status: "success";
+          message: string;
+          requiresMfa: true;
+          tempToken: string;
+      }
     | { status: "error"; message: string }
     | undefined
 > {

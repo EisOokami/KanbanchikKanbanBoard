@@ -46,7 +46,7 @@ export function Faq() {
                         <p className="mt-4 text-base leading-relaxed text-muted-foreground">
                             Something else on your mind?{" "}
                             <a
-                                href="mailto:help.lakio@gmail.com"
+                                href="mailto:help.prydni@gmail.com"
                                 className="hover:text-bright-blue-ink font-medium text-foreground underline underline-offset-4 transition-colors duration-200"
                             >
                                 Get in touch

@@ -66,7 +66,8 @@ export const registerSchema = z.object({
             "Password must contain at least one uppercase letter, one lowercase letter, one special character and one number",
         ),
     terms: z.literal("on", {
-        message: "You must accept the Terms & Conditions and Privacy Policy",
+        message:
+            "You must accept the Terms of Service and the Privacy Policy and confirm that you are at least 18",
     }),
 });
 

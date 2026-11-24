@@ -23,6 +23,8 @@ import { User, UserData } from "@/types/types";
 import { logoutAction } from "@/data/actions";
 import { Button } from "../shadcn/button";
 import AppearanceSection from "./appearanceSection/AppearanceSection";
+import AISection from "./aiSection/AISection";
+import DataExportSection from "./dataExportSection/DataExportSection";
 
 interface AccountSettingsModalProps {
     open: boolean;
@@ -36,6 +38,7 @@ function renderSection(id: SectionId, userData: User): React.ReactNode {
             return (
                 <>
                     <ProfileSection userData={userData} />
+                    <DataExportSection />
                     <DangerZone userData={userData} />
                 </>
             );
@@ -46,6 +49,8 @@ function renderSection(id: SectionId, userData: User): React.ReactNode {
                     hasPassword={userData.auth_provider === "local"}
                 />
             );
+        case "ai":
+            return <AISection />;
         case "appearance":
             return <AppearanceSection />;
     }

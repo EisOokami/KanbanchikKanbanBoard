@@ -46,6 +46,7 @@ import {
     User,
 } from "@/types/types";
 import { revalidatePath } from "next/cache";
+import { geminiApiKeySchema } from "@/libs/geminiApiKey";
 import {
     changePasswordSchema,
     createCommentSchema,
@@ -101,6 +102,8 @@ export async function loginAction(
     const tempToken = formData.get("tempToken");
 
     if (tempToken) {
+        (await cookies()).delete("google_mfa_challenge");
+
         const validatedFields = mfaVerifySchema.safeParse({
             tempToken,
             token: formData.get("token"),
@@ -382,6 +385,43 @@ export async function registerAction(
             message: responseData.message,
         };
     }
+}
+
+export async function acceptTermsAction(): Promise<{
+    ok: boolean;
+    message: string;
+}> {
+    const responseData = await mutateData("POST", "/users/me/accept-terms", {
+        acceptTerms: true,
+    });
+
+    if (!responseData) {
+        return {
+            ok: false,
+            message: "Ops! Something went wrong. Please try again.",
+        };
+    }
+
+    if (
+        "status" in responseData &&
+        responseData.status === "error" &&
+        responseData.message
+    ) {
+        return { ok: false, message: responseData.message };
+    }
+
+    if ("error" in responseData && responseData.error) {
+        console.error(responseData.error);
+
+        return { ok: false, message: "Failed to accept the documents" };
+    }
+
+    revalidatePath("/", "layout");
+
+    return {
+        ok: true,
+        message: "message" in responseData ? responseData.message : "",
+    };
 }
 
 export async function logoutAction() {
@@ -2283,7 +2323,9 @@ export async function resendOwnershipTransferCodeAction(
 
 export async function exchangeGoogleCodeAction(
     code: string,
-): Promise<{ ok: boolean; message: string } | undefined> {
+): Promise<
+    { ok: boolean; message: string; requiresMfa?: boolean } | undefined
+> {
     const responseData = await googleExchangeService(code);
 
     if (!responseData) {
@@ -2314,6 +2356,19 @@ export async function exchangeGoogleCodeAction(
             ok: false,
             message: "Failed to login",
         };
+    }
+
+    if ("requiresMfa" in responseData && responseData.tempToken) {
+        const cookieStore = await cookies();
+        cookieStore.set("google_mfa_challenge", responseData.tempToken, {
+            maxAge: 5 * 60,
+            path: "/",
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+        });
+
+        return { ok: true, message: responseData.message, requiresMfa: true };
     }
 
     if ("refreshToken" in responseData && "accessToken" in responseData) {
@@ -3292,14 +3347,30 @@ export async function revokeOtherSessionsAction(): Promise<
     };
 }
 
-export async function generateProjectSummaryAction(projectId: number): Promise<{
+export async function generateProjectSummaryAction(
+    projectId: number,
+    geminiApiKey: string,
+): Promise<{
     ok: boolean;
     message: string;
     data?: z.infer<typeof aiProjectSummarySchema>;
 }> {
+    const apiKey = geminiApiKeySchema.safeParse(geminiApiKey);
+
+    if (!apiKey.success) {
+        return {
+            ok: false,
+            message:
+                "Add your own Google Gemini API key in Account settings -> AI to use AI features",
+        };
+    }
+
     const responseData = await mutateData(
         "POST",
         `/projects/${projectId}/ai/summary`,
+        undefined,
+        false,
+        { "X-Gemini-Api-Key": apiKey.data },
     );
 
     if (!responseData) {
@@ -3348,14 +3419,30 @@ export async function generateProjectSummaryAction(projectId: number): Promise<{
     };
 }
 
-export async function generateSubtasksAction(taskId: number): Promise<{
+export async function generateSubtasksAction(
+    taskId: number,
+    geminiApiKey: string,
+): Promise<{
     ok: boolean;
     message: string;
     subtasks?: { title: string }[];
 }> {
+    const apiKey = geminiApiKeySchema.safeParse(geminiApiKey);
+
+    if (!apiKey.success) {
+        return {
+            ok: false,
+            message:
+                "Add your own Google Gemini API key in Account settings -> AI to use AI features",
+        };
+    }
+
     const responseData = await mutateData(
         "POST",
         `/tasks/${taskId}/ai/subtasks`,
+        undefined,
+        false,
+        { "X-Gemini-Api-Key": apiKey.data },
     );
 
     if (!responseData) {

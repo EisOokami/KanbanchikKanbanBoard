@@ -10,6 +10,7 @@ import {
     addSuggestedSubtasksAction,
     generateSubtasksAction,
 } from "@/data/actions";
+import { readGeminiApiKey } from "@/libs/geminiApiKey";
 
 interface AiSubtasksProps {
     taskId: number;
@@ -48,12 +49,23 @@ export default function AiSubtasks({
             return;
         }
 
+        const apiKey = readGeminiApiKey();
+
+        if (!apiKey) {
+            toast.error("Gemini API key required", {
+                description:
+                    "Add your own Google Gemini API key in Account settings -> AI to use AI features",
+            });
+
+            return;
+        }
+
         inFlight.current = true;
 
         setOperation("generate");
 
         try {
-            const result = await generateSubtasksAction(taskId);
+            const result = await generateSubtasksAction(taskId, apiKey);
 
             if (!mounted.current) {
                 return;
@@ -216,8 +228,8 @@ export default function AiSubtasks({
                         Review suggested subtasks
                     </p>
                     <p className="text-xs text-muted-foreground">
-                        Remove any you don't need. Add Subtasks saves this list
-                        immediately.
+                        Remove any you don&apos;t need. Add Subtasks saves this
+                        list immediately.
                     </p>
                     <ol className="space-y-2">
                         {suggestions.map((subtask, index) => (
@@ -280,7 +292,7 @@ export default function AiSubtasks({
                     </div>
                 </div>
             )}
-            <span role="status" className="sr-only">
+            <span className="sr-only">
                 {operation === "generate" ? "Generating subtasks" : ""}
             </span>
         </div>

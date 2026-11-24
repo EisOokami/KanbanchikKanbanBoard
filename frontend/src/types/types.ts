@@ -55,6 +55,7 @@ export interface User extends Omit<Base, "created_at"> {
     status?: "active" | "pending";
     mfa_enabled: boolean;
     auth_provider: "local" | "google";
+    requires_terms_acceptance?: boolean;
 }
 
 export interface Project extends ExtendedBase {

@@ -29,6 +29,7 @@ import {
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "../shadcn/input-otp";
 import EmailCodeForm from "../emailCodeForm/EmailCodeForm";
 import { Checkbox } from "../shadcn/checkbox";
+import LegalConsentText from "../legalConsent/LegalConsentText";
 
 const INITIAL_STATE: BaseAction = {
     zodErrors: null,
@@ -42,17 +43,47 @@ const INITIAL_STATE: BaseAction = {
 
 interface LoginFormProps {
     redirect?: string;
+    oauthError?: string;
+    pendingMfaToken?: string;
 }
 
-export default function LoginForm({ redirect }: Readonly<LoginFormProps>) {
+const oauthErrorMessages: Readonly<Record<string, string>> = {
+    terms_required:
+        "To continue with Google, accept the Terms of Service and confirm that you have read the Privacy Policy.",
+    oauth_state_mismatch:
+        "Google sign-in expired or was interrupted. Please try again.",
+    email_not_verified:
+        "Your Google account email is not verified. Verify it with Google or sign in with a password.",
+    oauth_failed: "Google sign-in failed. Please try again.",
+    missing_code: "Google sign-in failed. Please try again.",
+};
+
+export default function LoginForm({
+    redirect,
+    oauthError,
+    pendingMfaToken,
+}: Readonly<LoginFormProps>) {
+    const [googleTermsAccepted, setGoogleTermsAccepted] =
+        useState<boolean>(false);
     const [backupCode, setBackupCode] = useState<string>("");
     const [useBackupCode, setUseBackupCode] = useState<boolean>(false);
     const [dismissedToken, setDismissedToken] = useState<string | null>(null);
     const [formState, formAction, isPending] = useActionState(
         loginAction,
-        INITIAL_STATE,
+        pendingMfaToken
+            ? {
+                  ...INITIAL_STATE,
+                  data: { requiresMfa: true, tempToken: pendingMfaToken },
+              }
+            : INITIAL_STATE,
     );
     const formRef = useRef<HTMLFormElement>(null);
+
+    const googleTermsRequired = oauthError === "terms_required";
+    const oauthErrorMessage =
+        oauthError && Object.hasOwn(oauthErrorMessages, oauthError)
+            ? oauthErrorMessages[oauthError]
+            : null;
 
     const handleOtpComplete = () => {
         formRef.current?.requestSubmit();
@@ -308,22 +339,7 @@ export default function LoginForm({ redirect }: Readonly<LoginFormProps>) {
                                 htmlFor="acceptTerms"
                                 className="text-sm font-normal leading-snug text-muted-foreground"
                             >
-                                I agree to the updated{" "}
-                                <Link
-                                    href="/terms"
-                                    target="_blank"
-                                    className="text-primary underline"
-                                >
-                                    Terms &amp; Conditions
-                                </Link>{" "}
-                                and{" "}
-                                <Link
-                                    href="/privacy"
-                                    target="_blank"
-                                    className="text-primary underline"
-                                >
-                                    Privacy Policy
-                                </Link>
+                                <LegalConsentText updated />
                             </Label>
                         </div>
                     )}
@@ -374,20 +390,73 @@ export default function LoginForm({ redirect }: Readonly<LoginFormProps>) {
                     <span className="text-xs text-muted-foreground">OR</span>
                     <div className="h-px flex-1 bg-border" />
                 </div>
-                <Button
-                    asChild
-                    type="button"
-                    variant="outline"
-                    className="w-full border-border bg-control text-foreground hover:bg-control-active"
-                >
-                    <a href={`${process.env.NEXT_PUBLIC_API_URL}/auth/google`}>
+                {oauthErrorMessage && (
+                    <div
+                        className={cn(
+                            "mb-3 flex items-start gap-2 text-sm",
+                            googleTermsRequired
+                                ? "text-muted-foreground"
+                                : "text-red-500",
+                        )}
+                    >
+                        <InfoIcon
+                            weight="duotone"
+                            className="mt-0.5 size-4 shrink-0"
+                        />
+                        <p>{oauthErrorMessage}</p>
+                    </div>
+                )}
+                {googleTermsRequired && (
+                    <div className="mb-3 flex items-start gap-2">
+                        <Checkbox
+                            id="googleTerms"
+                            checked={googleTermsAccepted}
+                            onCheckedChange={(checked) =>
+                                setGoogleTermsAccepted(checked === true)
+                            }
+                            className="mt-0.5"
+                        />
+                        <Label
+                            htmlFor="googleTerms"
+                            className="text-sm font-normal leading-snug text-muted-foreground"
+                        >
+                            <LegalConsentText />
+                        </Label>
+                    </div>
+                )}
+                {googleTermsRequired && !googleTermsAccepted ? (
+                    <Button
+                        type="button"
+                        variant="outline"
+                        disabled
+                        className="w-full border-border bg-control text-foreground hover:bg-control-active"
+                    >
                         <GoogleLogoIcon
                             weight="duotone"
                             className="mr-2 size-4"
                         />
                         Continue with Google
-                    </a>
-                </Button>
+                    </Button>
+                ) : (
+                    <Button
+                        asChild
+                        type="button"
+                        variant="outline"
+                        className="w-full border-border bg-control text-foreground hover:bg-control-active"
+                    >
+                        <a
+                            href={`${process.env.NEXT_PUBLIC_API_URL}/auth/google${
+                                googleTermsAccepted ? "?terms=accepted" : ""
+                            }`}
+                        >
+                            <GoogleLogoIcon
+                                weight="duotone"
+                                className="mr-2 size-4"
+                            />
+                            Continue with Google
+                        </a>
+                    </Button>
+                )}
             </CardContent>
             <CardFooter className="flex justify-center">
                 <p className="text-sm text-muted-foreground">
