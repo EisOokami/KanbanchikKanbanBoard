@@ -6,17 +6,11 @@ const footerGroups = [
         title: "Product",
         links: [
             { label: "Features", href: "/#features" },
-            // { label: "Changelog", href: "/changelog" },
+            { label: "How it works", href: "/#how-it-works" },
+            { label: "Founder Story", href: "/#founder-story" },
+            { label: "FAQ", href: "/#faq" },
         ],
     },
-    // {
-    //     title: "Resources",
-    //     links: [
-    //         { label: "Documentation", href: "#" },
-    //         { label: "Help Center", href: "#" },
-    //         { label: "Guides", href: "#" },
-    //     ],
-    // },
     {
         title: "Legal",
         links: [
