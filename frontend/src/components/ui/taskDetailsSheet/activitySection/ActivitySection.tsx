@@ -35,24 +35,28 @@ export default function ActivitySection({
                     <div key={entry.id} className="mb-3">
                         <div className="flex items-start gap-3">
                             <Avatar className="mt-0.5 size-7 shrink-0">
-                                <AvatarImage src={entry.author.avatar_url} />
+                                <AvatarImage src={entry.author?.avatar_url} />
                                 <AvatarFallback
                                     className="text-[10px] font-medium text-white"
                                     style={{
-                                        background: entry.author.color,
+                                        background:
+                                            entry.author?.color ?? "#9ca3af",
                                     }}
                                 >
-                                    {getInitials(
-                                        entry.author.name,
-                                        entry.author.surname,
-                                    )}
+                                    {entry.author
+                                        ? getInitials(
+                                              entry.author.name,
+                                              entry.author.surname,
+                                          )
+                                        : "?"}
                                 </AvatarFallback>
                             </Avatar>
                             <div className="min-w-0 flex-1">
                                 <div className="flex flex-wrap items-center gap-1.5">
                                     <span className="text-xs font-semibold">
-                                        {entry.author.name}{" "}
-                                        {entry.author.surname}
+                                        {entry.author
+                                            ? `${entry.author.name} ${entry.author.surname}`
+                                            : "Deleted user"}
                                     </span>
                                     <span className="ml-auto text-xs text-gray-300">
                                         {formatDistanceToNow(entry.timestamp, {
@@ -75,7 +79,9 @@ export default function ActivitySection({
                                         >
                                             {entry.from}
                                         </span>
-                                        <span className="text-gray-400">→</span>
+                                        <span className="text-gray-400">
+                                            -&gt;
+                                        </span>
                                         <span
                                             className="mx-0.5 rounded px-1.5 py-0.5"
                                             style={{
