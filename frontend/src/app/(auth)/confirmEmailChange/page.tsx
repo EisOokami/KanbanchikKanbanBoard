@@ -39,7 +39,7 @@ export default async function ConfirmEmailChangePage({
                     href="/overview"
                     className="mt-2 inline-flex h-10 items-center justify-center rounded-md bg-bright-blue px-4 text-sm font-medium text-white"
                 >
-                    Go to Kabanchik
+                    Go to Kanbanchik
                 </Link>
             </div>
         </div>

@@ -87,7 +87,7 @@ export const setupMfa = async (
         }
 
         const otpauthUri = otp.generateURI({
-            issuer: "Kabanchik",
+            issuer: "Kanbanchik",
             label: user.email,
             secret,
         });
