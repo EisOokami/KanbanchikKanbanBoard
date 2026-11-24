@@ -45,10 +45,9 @@ const storage = multer.diskStorage({
             return cb(new Error("Invalid file type"), "");
         }
 
-        cb(
-            null,
-            `${file.fieldname}-${Date.now()}-${Math.random().toString(36).slice(2)}${extension}`,
-        );
+        const newStoredFileName = `${file.fieldname.replace(/[^A-Za-z0-9]/g, "").slice(0, 20) || "file"}-${crypto.randomUUID()}${extension}`;
+
+        cb(null, newStoredFileName);
     },
 });
 
