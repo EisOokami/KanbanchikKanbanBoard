@@ -7,8 +7,8 @@
 <h3 align="center">An open-source Kanban workspace for planning, tracking and shipping team projects.</h3>
 
 <p align="center">
-    <a href="https://github.com/EisOokami/KabanchikKanbanBoard/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/EisOokami/KabanchikKanbanBoard?style=social" /></a>
-    <a href="https://github.com/EisOokami/KabanchikKanbanBoard/commits"><img alt="Last commit" src="https://img.shields.io/github/last-commit/EisOokami/KabanchikKanbanBoard" /></a>
+    <a href="https://github.com/EisOokami/KanbanchikKanbanBoard/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/EisOokami/KanbanchikKanbanBoard?style=social" /></a>
+    <a href="https://github.com/EisOokami/KanbanchikKanbanBoard/commits"><img alt="Last commit" src="https://img.shields.io/github/last-commit/EisOokami/KanbanchikKanbanBoard" /></a>
     <a href="./LICENSE"><img alt="License" src="https://img.shields.io/badge/license-MIT-brightgreen" /></a>
     <a href="https://github.com/EisOokami"><img alt="Made by EisOokami" src="https://img.shields.io/badge/made%20by-EisOokami-ff69b4" /></a>
 </p>
@@ -62,8 +62,8 @@ You can run the whole stack with Docker Compose or start each part locally.
 <h3>Cloning</h3>
 
 ```bash
-git clone https://github.com/EisOokami/KabanchikKanbanBoard.git
-cd KabanchikKanbanBoard
+git clone https://github.com/EisOokami/KanbanchikKanbanBoard.git
+cd KanbanchikKanbanBoard
 ```
 
 <h3>Environment variables</h3>
@@ -75,7 +75,7 @@ Docker Compose reads its values from a `.env` file in the project root. For a lo
 | Variable                                                            | Description                                                                                                                                                                                                                                                                                                         |
 | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `NODE_ENV`, `PORT`                                                  | Runtime mode and API port (`3001`)                                                                                                                                                                                                                                                                                  |
-| `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`           | MariaDB connection. `backend/database/database.sql` creates the `kabanchik_board` database, so use that name. In Docker the database port is published on `127.0.0.1` only                                                                                                                                          |
+| `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`           | MariaDB connection. `backend/database/database.sql` creates the `kanbanchik_board` database, so use that name. In Docker the database port is published on `127.0.0.1` only                                                                                                                                         |
 | `DB_ROOT_PASSWORD`                                                  | Root password for the MariaDB container (Docker only)                                                                                                                                                                                                                                                               |
 | `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`                           | Secrets for signing access and refresh tokens                                                                                                                                                                                                                                                                       |
 | `CSRF_SECRET`                                                       | Secret for CSRF tokens                                                                                                                                                                                                                                                                                              |

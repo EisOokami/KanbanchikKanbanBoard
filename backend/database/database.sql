@@ -1,5 +1,5 @@
-CREATE DATABASE IF NOT EXISTS `kabanchik_board`;
-USE `kabanchik_board`;
+CREATE DATABASE IF NOT EXISTS `kanbanchik_board`;
+USE `kanbanchik_board`;
 
 CREATE TABLE IF NOT EXISTS `account_deletion_sessions` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,

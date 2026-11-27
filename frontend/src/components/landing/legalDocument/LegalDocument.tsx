@@ -33,12 +33,12 @@ const legalInfo = {
         "[DO UZUPEŁNIENIA: okres przechowywania kopii zapasowych, np. do 30 dni]",
     repositoryUrl:
         process.env.LEGAL_REPOSITORY_URL ||
-        "https://github.com/EisOokami/KabanchikKanbanBoard",
+        "https://github.com/EisOokami/KanbanchikKanbanBoard",
     licenseUrl:
         process.env.LEGAL_LICENSE_URL ||
         `${
             process.env.LEGAL_REPOSITORY_URL ||
-            "https://github.com/EisOokami/KabanchikKanbanBoard"
+            "https://github.com/EisOokami/KanbanchikKanbanBoard"
         }/blob/main/LICENSE`,
 } as const;
 
