@@ -370,9 +370,6 @@ export default function LegalDocument({
             <main id="main" className="flex-1">
                 <section className="py-12 md:py-16 lg:py-24">
                     <div className="mx-auto w-full max-w-3xl px-4 sm:px-6 lg:px-8">
-                        <p className="mb-6 text-sm text-muted-foreground">
-                            The legal documents are available in Polish only.
-                        </p>
                         <article
                             lang="pl"
                             className="space-y-4 text-[0.9375rem] leading-relaxed text-gray-700 dark:text-gray-300"
